@@ -1,0 +1,73 @@
+{% extends "base.twig" %}
+
+{% block title %}
+    {% if facultad.id %}
+        Editar Facultad - Biblioges
+    {% else %}
+        Nueva Facultad - Biblioges
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <h2 class="card-title mb-4">
+            {% if facultad.id %}
+                Editar Facultad
+            {% else %}
+                Nueva Facultad
+            {% endif %}
+        </h2>
+    <form method="POST" action="{{ app_url }}facultades{% if facultad.id %}/{{ facultad.id }}{% endif %}">
+        {% if facultad.id %}
+        <input type="hidden" name="_method" value="PUT">
+        {% endif %}
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="codigo" class="form-label">Código</label>
+                <input type="text" class="form-control" id="codigo" name="codigo" value="{{ facultad.codigo }}" required>
+            </div>
+            <div class="col-md-6">
+                <label for="nombre" class="form-label">Nombre</label>
+                <input type="text" class="form-control" id="nombre" name="nombre" value="{{ facultad.nombre }}" required>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="sede_id" class="form-label">Sede</label>
+            <select class="form-control" id="sede_id" name="sede_id" required>
+                <option value="">Seleccione una sede</option>
+                {% for sede in sedes %}
+                <option value="{{ sede.id }}" {% if facultad.sede_id == sede.id %}selected{% endif %}>
+                    {{ sede.nombre }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="estado" class="form-label">Estado</label>
+            <select class="form-control" id="estado" name="estado" required>
+                <option value="1" {% if facultad.estado %}selected{% endif %}>Activo</option>
+                <option value="0" {% if not facultad.estado %}selected{% endif %}>Inactivo</option>
+            </select>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <a href="{{ app_url }}facultades" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Cancelar
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i>
+                {% if facultad.id %}
+                    Actualizar
+                {% else %}
+                    Guardar
+                {% endif %}
+            </button>
+        </div>
+    </form>
+    </div>
+</div>
+{% endblock %} 

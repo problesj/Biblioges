@@ -1,0 +1,77 @@
+{% extends 'base.twig' %}
+
+{% block title %}Panel de Administración{% endblock %}
+
+{% block authenticated_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h3 class="card-title">Panel de Administración</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Usuarios</h5>
+                                    <p class="card-text">Gestionar usuarios del sistema</p>
+                                    <a href="{{ app_url }}usuarios" class="btn btn-primary">Administrar</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Carreras</h5>
+                                    <p class="card-text">Gestionar carreras</p>
+                                    <a href="{{ app_url }}carreras" class="btn btn-primary">Administrar</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Facultades</h5>
+                                    <p class="card-text">Gestionar facultades</p>
+                                    <a href="{{ app_url }}facultades" class="btn btn-primary">Administrar</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Sedes</h5>
+                                    <p class="card-text">Gestionar sedes</p>
+                                    <a href="{{ app_url }}sedes" class="btn btn-primary">Administrar</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Departamentos</h5>
+                                    <p class="card-text">Gestionar departamentos</p>
+                                    <a href="{{ app_url }}departamentos" class="btn btn-primary">Administrar</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Asignaturas</h5>
+                                    <p class="card-text">Gestionar asignaturas</p>
+                                    <a href="{{ app_url }}asignaturas" class="btn btn-primary">Administrar</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

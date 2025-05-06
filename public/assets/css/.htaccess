@@ -1,0 +1,17 @@
+# Configuración de tipos MIME para archivos CSS
+<FilesMatch "\.css$">
+    ForceType text/css
+    Header set Content-Type "text/css; charset=UTF-8"
+    Header unset X-Content-Type-Options
+</FilesMatch>
+
+# Permitir acceso directo
+<FilesMatch "\.css$">
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>
+
+# Deshabilitar la reescritura de URL para archivos CSS
+<IfModule mod_rewrite.c>
+    RewriteEngine Off
+</IfModule> 

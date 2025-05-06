@@ -1,0 +1,102 @@
+{% extends 'layouts/app.twig' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Listado de Facultades</h3>
+                    <div class="card-tools">
+                        <a href="{{ app_url }}facultades/create" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus"></i> Nueva Facultad
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Filtros -->
+                    <form method="get" class="mb-3">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="sede_id">Sede</label>
+                                    <select name="sede_id" id="sede_id" class="form-control">
+                                        <option value="">Todas las sedes</option>
+                                        {% for sede in sedes %}
+                                            <option value="{{ sede.id }}" {{ filtros.sede_id == sede.id ? 'selected' : '' }}>
+                                                {{ sede.nombre }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="estado">Estado</label>
+                                    <select name="estado" id="estado" class="form-control">
+                                        <option value="">Todos los estados</option>
+                                        <option value="1" {{ filtros.estado == '1' ? 'selected' : '' }}>Activo</option>
+                                        <option value="0" {{ filtros.estado == '0' ? 'selected' : '' }}>Inactivo</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>&nbsp;</label>
+                                    <button type="submit" class="btn btn-primary btn-block">Filtrar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Tabla de facultades -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Sede</th>
+                                    <th>Código</th>
+                                    <th>Nombre</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for facultad in facultades %}
+                                    <tr>
+                                        <td>{{ facultad.sede.nombre }}</td>
+                                        <td>{{ facultad.codigo }}</td>
+                                        <td>{{ facultad.nombre }}</td>
+                                        <td>
+                                            {% if facultad.estado %}
+                                                <span class="badge badge-success">Activo</span>
+                                            {% else %}
+                                                <span class="badge badge-danger">Inactivo</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{{ app_url }}facultades/{{ facultad.id }}/edit" class="btn btn-info btn-sm">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form action="{{ app_url }}facultades/{{ facultad.id }}" method="POST" class="d-inline">
+                                                <input type="hidden" name="_method" value="DELETE">
+                                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Está seguro de eliminar esta facultad?')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center">No se encontraron facultades</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

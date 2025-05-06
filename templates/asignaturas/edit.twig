@@ -1,0 +1,431 @@
+{% extends "base.twig" %}
+
+{% block title %}Editar Asignatura - Biblioges{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Editar Asignatura</h1>
+        <a href="{{ app_url }}asignaturas" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form id="editAsignaturaForm" method="POST" action="{{ app_url }}asignaturas/{{ asignatura.id }}/actualizar">
+                <!-- Datos Básicos -->
+                <h5 class="mb-3">Datos Básicos</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="nombre" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" value="{{ asignatura.nombre }}" required>
+                        <div class="invalid-feedback" id="nombreError"></div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="tipo" class="form-label">Tipo</label>
+                        <select class="form-select" id="tipo" name="tipo" required>
+                            <option value="">Seleccione un tipo</option>
+                            <option value="REGULAR" {% if asignatura.tipo == 'REGULAR' %}selected{% endif %}>Regular</option>
+                            <option value="FORMACION_BASICA" {% if asignatura.tipo == 'FORMACION_BASICA' %}selected{% endif %}>Formación Básica</option>
+                            <option value="FORMACION_GENERAL" {% if asignatura.tipo == 'FORMACION_GENERAL' %}selected{% endif %}>Formación General</option>
+                            <option value="FORMACION_IDIOMAS" {% if asignatura.tipo == 'FORMACION_IDIOMAS' %}selected{% endif %}>Formación Idiomas</option>
+                            <option value="FORMACION_PROFESIONAL" {% if asignatura.tipo == 'FORMACION_PROFESIONAL' %}selected{% endif %}>Formación Profesional</option>
+                            <option value="FORMACION_VALORES" {% if asignatura.tipo == 'FORMACION_VALORES' %}selected{% endif %}>Formación Valores</option>
+                            <option value="FORMACION_ESPECIALIDAD" {% if asignatura.tipo == 'FORMACION_ESPECIALIDAD' %}selected{% endif %}>Formación Especialidad</option>
+                            <option value="FORMACION_ELECTIVA" {% if asignatura.tipo == 'FORMACION_ELECTIVA' %}selected{% endif %}>Formación Electiva</option>
+                            <option value="FORMACION_ESPECIAL" {% if asignatura.tipo == 'FORMACION_ESPECIAL' %}selected{% endif %}>Formación Especial</option>
+                        </select>
+                        <div class="invalid-feedback" id="tipoError"></div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="vigencia_desde" class="form-label">Vigencia Desde</label>
+                        <input type="number" class="form-control" id="vigencia_desde" name="vigencia_desde" 
+                               value="{{ asignatura.vigencia_desde }}" required
+                               min="100000" max="999999" pattern="\d{6}" 
+                               title="Debe ser un número de 6 dígitos">
+                        <small class="form-text text-muted">Formato: AAAAXX (4 dígitos año + 2 dígitos secuencia)</small>
+                        <div class="invalid-feedback" id="vigenciaDesdeError"></div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="vigencia_hasta" class="form-label">Vigencia Hasta</label>
+                        <input type="number" class="form-control" id="vigencia_hasta" name="vigencia_hasta"
+                               value="{{ asignatura.vigencia_hasta }}"
+                               min="100000" max="999999" pattern="\d{6}"
+                               title="Debe ser un número de 6 dígitos">
+                        <small class="form-text text-muted">Formato: AAAAXX (4 dígitos año + 2 dígitos secuencia)</small>
+                        <div class="invalid-feedback" id="vigenciaHastaError"></div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="periodicidad" class="form-label">Periodicidad</label>
+                        <select class="form-select" id="periodicidad" name="periodicidad" required>
+                            <option value="">Seleccione una periodicidad</option>
+                            <option value="semestral" {% if asignatura.periodicidad == 'semestral' %}selected{% endif %}>Semestral</option>
+                            <option value="anual" {% if asignatura.periodicidad == 'anual' %}selected{% endif %}>Anual</option>
+                        </select>
+                        <div class="invalid-feedback" id="periodicidadError"></div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="estado" class="form-label">Estado</label>
+                        <select class="form-select" id="estado" name="estado" required>
+                            <option value="1" {% if asignatura.estado == 1 %}selected{% endif %}>Activa</option>
+                            <option value="0" {% if asignatura.estado == 0 %}selected{% endif %}>Inactiva</option>
+                        </select>
+                        <div class="invalid-feedback" id="estadoError"></div>
+                    </div>
+                </div>
+
+                <!-- Datos por Departamento -->
+                <h5 class="mb-3 mt-4">Datos por Departamento</h5>
+                <div id="codigosContainer">
+                    {% for info in asignatura.departamentos %}
+                    <div class="row mb-3 codigo-row">
+                        <div class="col-md-4">
+                            <label for="departamento_id_{{ loop.index0 }}" class="form-label">Departamento</label>
+                            <select class="form-control select-departamento" 
+                                    name="codigos[{{ loop.index0 }}][departamento_id]" 
+                                    data-index="{{ loop.index0 }}" required>
+                                <option value="">Seleccione un departamento</option>
+                                {% for departamento in departamentos %}
+                                <option value="{{ departamento.id }}" 
+                                        {% if departamento.id == info.departamento_id %}selected{% endif %}>
+                                    {{ departamento.sede_nombre }} - {{ departamento.facultad_nombre }} - {{ departamento.departamento_nombre }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback" id="departamentoError_{{ loop.index0 }}"></div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="codigo_{{ loop.index0 }}" class="form-label">Código de Asignatura</label>
+                                <input type="text" class="form-control" id="codigo_{{ loop.index0 }}" 
+                                       name="codigos[{{ loop.index0 }}][codigo]" 
+                                       value="{{ info.codigo_asignatura }}" required>
+                                <div class="invalid-feedback" id="codigoError_{{ loop.index0 }}"></div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="cantidad_alumnos_{{ loop.index0 }}" class="form-label">Cantidad de Alumnos</label>
+                                <input type="number" class="form-control" id="cantidad_alumnos_{{ loop.index0 }}" 
+                                       name="codigos[{{ loop.index0 }}][cantidad_alumnos]" 
+                                       value="{{ info.cantidad_alumnos }}" min="1" required>
+                                <div class="invalid-feedback" id="cantidadAlumnosError_{{ loop.index0 }}"></div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)" 
+                                    {% if loop.index0 == 0 %}style="display: none;"{% endif %}>
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <button type="button" class="btn btn-secondary" onclick="addRow()">
+                            <i class="fas fa-plus"></i> Agregar Otro Código
+                        </button>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let codigoCount = {{ asignatura.departamentos|length - 1 }};
+
+// Función para manejar el cambio en el tipo de asignatura
+function handleTipoChange() {
+    const tipoSelect = document.getElementById('tipo');
+    const codigosContainer = document.getElementById('codigosContainer');
+    const addRowButton = document.querySelector('button[onclick="addRow()"]');
+    
+    if (tipoSelect.value === 'FORMACION_ELECTIVA') {
+        // Mantener el botón de agregar códigos visible para Formación Electiva
+        if (addRowButton) {
+            addRowButton.style.display = 'block';
+        }
+        
+        // Actualizar todas las filas existentes
+        document.querySelectorAll('.codigo-row').forEach((row, index) => {
+            const cantInput = row.querySelector(`input[name$="[cantidad_alumnos]"]`);
+            const depSelect = row.querySelector(`select[name^="codigos["]`);
+            if (cantInput && depSelect) {
+                cantInput.value = '0';
+                cantInput.disabled = true;
+                depSelect.disabled = true;
+            }
+        });
+    } else {
+        // Restaurar el estado normal para otros tipos
+        if (addRowButton) {
+            addRowButton.style.display = 'block';
+        }
+        
+        // Restaurar todas las filas existentes
+        document.querySelectorAll('.codigo-row').forEach(row => {
+            const cantInput = row.querySelector(`input[name$="[cantidad_alumnos]"]`);
+            const depSelect = row.querySelector(`select[name^="codigos["]`);
+            if (cantInput && depSelect) {
+                cantInput.disabled = false;
+                depSelect.disabled = false;
+            }
+        });
+    }
+}
+
+function addRow() {
+    codigoCount++;
+    const container = document.getElementById('codigosContainer');
+    const newRow = document.createElement('div');
+    newRow.className = 'row mb-3 codigo-row';
+    newRow.innerHTML = `
+        <div class="col-md-4">
+            <label for="departamento_id_${codigoCount}" class="form-label">Departamento</label>
+            <select class="form-control select-departamento" 
+                    name="codigos[${codigoCount}][departamento_id]" 
+                    data-index="${codigoCount}" required>
+                <option value="">Seleccione un departamento</option>
+                {% for departamento in departamentos %}
+                <option value="{{ departamento.id }}">
+                    {{ departamento.sede_nombre }} - {{ departamento.facultad_nombre }} - {{ departamento.departamento_nombre }}
+                </option>
+                {% endfor %}
+            </select>
+            <div class="invalid-feedback" id="departamentoError_${codigoCount}"></div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="codigo_${codigoCount}" class="form-label">Código de Asignatura</label>
+                <input type="text" class="form-control" id="codigo_${codigoCount}" name="codigos[${codigoCount}][codigo]" required>
+                <div class="invalid-feedback" id="codigoError_${codigoCount}"></div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="cantidad_alumnos_${codigoCount}" class="form-label">Cantidad de Alumnos</label>
+                <input type="number" class="form-control" id="cantidad_alumnos_${codigoCount}" name="codigos[${codigoCount}][cantidad_alumnos]" min="1" required>
+                <div class="invalid-feedback" id="cantidadAlumnosError_${codigoCount}"></div>
+            </div>
+        </div>
+
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    container.appendChild(newRow);
+
+    // Si es Formación Electiva, aplicar las restricciones a la nueva fila
+    if (document.getElementById('tipo').value === 'FORMACION_ELECTIVA') {
+        const cantInput = newRow.querySelector(`input[name$="[cantidad_alumnos]"]`);
+        const depSelect = newRow.querySelector(`select[name^="codigos["]`);
+        if (cantInput && depSelect) {
+            cantInput.value = '0';
+            cantInput.disabled = true;
+            depSelect.value = document.getElementById('departamento_id_0').value;
+            depSelect.disabled = true;
+        }
+    }
+}
+
+function removeRow(button) {
+    const row = button.closest('.codigo-row');
+    row.remove();
+    reindexRows();
+}
+
+function reindexRows() {
+    const rows = document.querySelectorAll('.codigo-row');
+    rows.forEach((row, index) => {
+        const depSelect = row.querySelector('select[name^="codigos["]');
+        const codInput = row.querySelector('input[name$="[codigo]"]');
+        const cantInput = row.querySelector('input[name$="[cantidad_alumnos]"]');
+        
+        if (depSelect && codInput && cantInput) {
+            depSelect.name = `codigos[${index}][departamento_id]`;
+            depSelect.id = `departamento_id_${index}`;
+            codInput.name = `codigos[${index}][codigo]`;
+            codInput.id = `codigo_${index}`;
+            cantInput.name = `codigos[${index}][cantidad_alumnos]`;
+            cantInput.id = `cantidad_alumnos_${index}`;
+            row.querySelector(`[id^="departamentoError"]`).id = `departamentoError_${index}`;
+            row.querySelector(`[id^="codigoError"]`).id = `codigoError_${index}`;
+            row.querySelector(`[id^="cantidadAlumnosError"]`).id = `cantidadAlumnosError_${index}`;
+        }
+    });
+    
+    codigoCount = Math.max(0, rows.length - 1);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Agregar el event listener para el cambio de tipo
+    const tipoSelect = document.getElementById('tipo');
+    if (tipoSelect) {
+        tipoSelect.addEventListener('change', handleTipoChange);
+    }
+    
+    // Aplicar la lógica inicial según el tipo de asignatura
+    handleTipoChange();
+
+    document.getElementById('editAsignaturaForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        
+        const formData = new FormData(this);
+        const data = {
+            nombre: formData.get('nombre'),
+            tipo: formData.get('tipo'),
+            vigencia_desde: formData.get('vigencia_desde'),
+            vigencia_hasta: formData.get('vigencia_hasta'),
+            periodicidad: formData.get('periodicidad'),
+            estado: formData.get('estado'),
+            codigos: []
+        };
+
+        // Validaciones del frontend
+        let errores = {};
+
+        if (!data.nombre) {
+            errores['nombre'] = 'El nombre de la asignatura es requerido';
+        }
+
+        if (!data.tipo) {
+            errores['tipo'] = 'El tipo de asignatura es requerido';
+        }
+
+        if (!data.vigencia_desde) {
+            errores['vigencia_desde'] = 'La fecha de inicio de vigencia es requerida';
+        }
+
+        if (!data.periodicidad) {
+            errores['periodicidad'] = 'La periodicidad es requerida';
+        }
+
+        const codigoRows = document.querySelectorAll('.codigo-row');
+        let hasValidCodigo = false;
+
+        codigoRows.forEach((row, index) => {
+            const depSelect = row.querySelector('select[name^="codigos["]');
+            const codInput = row.querySelector('input[name$="[codigo]"]');
+            const cantInput = row.querySelector('input[name$="[cantidad_alumnos]"]');
+            
+            if (depSelect && codInput && cantInput) {
+                const codigo = codInput.value.trim();
+                
+                if (codigo) {
+                    hasValidCodigo = true;
+                    if (data.tipo === 'FORMACION_ELECTIVA') {
+                        data.codigos.push({
+                            departamento_id: depSelect.value,
+                            codigo: codigo,
+                            cantidad_alumnos: '0'
+                        });
+                    } else {
+                        if (!depSelect.value) {
+                            errores[`departamento_${index}`] = 'El departamento es requerido';
+                            depSelect.classList.add('is-invalid');
+                        }
+                        if (!cantInput.value || cantInput.value < 1) {
+                            errores[`cantidad_alumnos_${index}`] = 'La cantidad de alumnos debe ser mayor a 0';
+                            cantInput.classList.add('is-invalid');
+                        }
+                        data.codigos.push({
+                            departamento_id: depSelect.value,
+                            codigo: codigo,
+                            cantidad_alumnos: cantInput.value
+                        });
+                    }
+                } else {
+                    errores[`codigo_${index}`] = 'El código de asignatura es requerido';
+                    codInput.classList.add('is-invalid');
+                }
+            }
+        });
+
+        if (!hasValidCodigo) {
+            errores['codigos'] = 'Debe ingresar al menos un código de asignatura';
+        }
+
+        // Si hay errores, mostrarlos y detener el envío
+        if (Object.keys(errores).length > 0) {
+            Object.entries(errores).forEach(([field, message]) => {
+                const errorDiv = document.getElementById(`${field}Error`);
+                if (errorDiv) {
+                    errorDiv.textContent = message;
+                    const input = document.getElementById(field);
+                    if (input) {
+                        input.classList.add('is-invalid');
+                    }
+                }
+            });
+            return;
+        }
+        
+        try {
+            const response = await fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                alert('Asignatura actualizada exitosamente');
+                window.location.href = '{{ app_url }}asignaturas';
+            } else {
+                if (result.errors) {
+                    Object.entries(result.errors).forEach(([field, message]) => {
+                        const errorDiv = document.getElementById(`${field}Error`);
+                        if (errorDiv) {
+                            const input = document.getElementById(field);
+                            if (input) {
+                                input.classList.add('is-invalid');
+                            }
+                            errorDiv.textContent = message;
+                        }
+                    });
+                } else {
+                    alert('Error al actualizar la asignatura: ' + result.message);
+                }
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error al procesar la solicitud');
+        }
+    });
+});
+</script>
+{% endblock %} 

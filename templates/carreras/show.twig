@@ -1,0 +1,184 @@
+{% extends "base.twig" %}
+
+{% block title %}Detalles de Carrera - Sistema de Bibliografía{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Botón para ocultar/mostrar el panel lateral -->
+    <button id="sidebarToggle" class="btn btn-link d-md-none rounded-circle mr-3">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Detalles de la Carrera</h1>
+        <div>
+            <a href="{{ app_url }}carreras/{{ carrera.id }}/edit" class="btn btn-primary me-2">
+                <i class="fas fa-edit"></i> Editar
+            </a>
+            <a href="{{ app_url }}carreras" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Información General</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Nombre de la Carrera:</label>
+                        <p>{{ carrera.nombre }}</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Tipo de Programa:</label>
+                        <p>{{ carrera.tipo_programa == 'P' ? 'Pregrado' : 'Postgrado' }}</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Estado:</label>
+                        <p>
+                            {% if carrera.estado == 1 %}
+                                <span class="badge bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactivo</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label class="font-weight-bold">URL del Libro:</label>
+                        <p>
+                            {% if carrera.url_libro %}
+                                <a href="{{ carrera.url_libro }}" target="_blank">{{ carrera.url_libro }}</a>
+                            {% else %}
+                                Sin información
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Códigos de Carrera</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Vigencia</th>
+                            <th>Facultad</th>
+                            <th>Sede</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set codigos = carrera.codigos|split('\n') %}
+                        {% set vigencias_desde = carrera.vigencias_desde|split('\n') %}
+                        {% set vigencias_hasta = carrera.vigencias_hasta|split('\n') %}
+                        {% set facultades = carrera.facultades|split('\n') %}
+                        {% set sedes = carrera.sedes|split('\n') %}
+                        
+                        {% for i in 0..(codigos|length - 1) %}
+                            <tr>
+                                <td>{{ codigos[i] }}</td>
+                                <td>
+                                    {{ vigencias_desde[i] }} - {{ vigencias_hasta[i] }}
+                                </td>
+                                <td>{{ facultades[i] }}</td>
+                                <td>{{ sedes[i] }}</td>
+                                <td>
+                                    <span class="badge bg-success">Activo</span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Asignaturas Vinculadas</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Semestre</th>
+                            <th>Nombre de Asignatura</th>
+                            <th>Tipo</th>
+                            <th>Periodicidad</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if carrera.asignaturas is defined and carrera.asignaturas|length > 0 %}
+                            {% for asignatura in carrera.asignaturas %}
+                                <tr>
+                                    <td>{{ asignatura.semestre }}</td>
+                                    <td>{{ asignatura.nombre }}</td>
+                                    <td>{{ asignatura.tipo }}</td>
+                                    <td>{{ asignatura.periodicidad }}</td>
+                                    <td>
+                                        {% if asignatura.estado == 1 %}
+                                            <span class="badge bg-success">Activo</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactivo</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">No hay asignaturas vinculadas a esta carrera</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle del panel lateral
+        $('#sidebarToggle').click(function() {
+            $('body').toggleClass('sidebar-toggled');
+            $('.sidebar').toggleClass('toggled');
+            if ($('.sidebar').hasClass('toggled')) {
+                $('.sidebar .collapse').collapse('hide');
+            }
+        });
+
+        // Inicializar DataTables para la tabla de códigos
+        $('#dataTable').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+            },
+            paging: false,
+            info: false,
+            searching: false,
+            ordering: false
+        });
+    });
+</script>
+{% endblock %} 

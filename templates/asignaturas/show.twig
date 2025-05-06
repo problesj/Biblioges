@@ -1,0 +1,110 @@
+{% extends "base.twig" %}
+
+{% block title %}Detalles de Asignatura - Sistema de Bibliografía{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Detalles de Asignatura</h1>
+        <a href="{{ app_url }}asignaturas" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <!-- Datos comunes -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Información General</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Nombre:</strong> {{ asignatura.nombre }}</p>
+                    <p><strong>Tipo:</strong> {{ asignatura.tipo }}</p>
+                    <p><strong>Vigencia:</strong> {{ asignatura.vigencia_desde }} - {{ asignatura.vigencia_hasta ?: 'Sin fecha de término' }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Periodicidad:</strong> {{ asignatura.periodicidad }}</p>
+                    <p><strong>Estado:</strong> 
+                        <span class="badge {% if asignatura.estado == 1 %}bg-success{% else %}bg-danger{% endif %} text-white">
+                            {{ asignatura.estado == 1 ? 'Activo' : 'Inactivo' }}
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Códigos asociados -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Códigos Asociados</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Código Asignatura</th>
+                            <th>Sede - Facultad - Departamento</th>
+                            <th>Cantidad de Alumnos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for info in asignatura.departamentos %}
+                            <tr>
+                                <td>{{ info.codigo_asignatura }}</td>
+                                <td>{{ info.sede_nombre }} - {{ info.facultad_nombre }} - {{ info.departamento_nombre }}</td>
+                                <td>{{ info.cantidad_alumnos }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% if asignatura.tipo == 'FORMACION_ELECTIVA' %}
+        <!-- Asignaturas vinculadas (solo para Formación Electiva) -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Asignaturas Vinculadas</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Nombre</th>
+                                <th>Tipo</th>
+                                <th>Estado</th>
+                                <th>Periodicidad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for asignatura_vinculada in asignatura.vinculadas %}
+                                <tr>
+                                    <td>{{ asignatura_vinculada.codigo_asignatura }}</td>
+                                    <td>{{ asignatura_vinculada.nombre }}</td>
+                                    <td>{{ asignatura_vinculada.tipo }}</td>
+                                    <td>
+                                        <span class="badge {% if asignatura_vinculada.estado == 1 %}bg-success{% else %}bg-danger{% endif %} text-white">
+                                            {{ asignatura_vinculada.estado == 1 ? 'Activo' : 'Inactivo' }}
+                                        </span>
+                                    </td>
+                                    <td>{{ asignatura_vinculada.periodicidad }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/js/asignaturas.js"></script>
+{% endblock %} 

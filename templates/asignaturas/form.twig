@@ -1,0 +1,107 @@
+{% extends "base.twig" %}
+
+{% block title %}
+    {% if asignatura.id %}
+        Editar Asignatura - Biblioges
+    {% else %}
+        Nueva Asignatura - Biblioges
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <h2 class="card-title mb-4">
+            {% if asignatura.id %}
+                Editar Asignatura
+            {% else %}
+                Nueva Asignatura
+            {% endif %}
+        </h2>
+
+        <form method="POST" action="{{ app_url }}asignaturas{% if asignatura.id %}/{{ asignatura.id }}{% endif %}">
+            {% if asignatura.id %}
+            <input type="hidden" name="_method" value="PUT">
+            {% endif %}
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="codigo" class="form-label">Código</label>
+                    <input type="text" class="form-control" id="codigo" name="codigo" value="{{ asignatura.codigo }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="nombre" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="nombre" name="nombre" value="{{ asignatura.nombre }}" required>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="departamento" class="form-label">Departamento</label>
+                    <select class="form-select" id="departamento" name="departamento_id" required>
+                        <option value="">Seleccione un departamento</option>
+                        {% for departamento in departamentos %}
+                        <option value="{{ departamento.id }}" {% if asignatura.departamento_id == departamento.id %}selected{% endif %}>
+                            {{ departamento.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="carrera" class="form-label">Carrera</label>
+                    <select class="form-select" id="carrera" name="carrera_id" required>
+                        <option value="">Seleccione una carrera</option>
+                        {% for carrera in carreras %}
+                        <option value="{{ carrera.id }}" {% if asignatura.carrera_id == carrera.id %}selected{% endif %}>
+                            {{ carrera.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="semestre" class="form-label">Semestre</label>
+                    <select class="form-select" id="semestre" name="semestre" required>
+                        <option value="">Seleccione el semestre</option>
+                        {% for i in 1..10 %}
+                        <option value="{{ i }}" {% if asignatura.semestre == i %}selected{% endif %}>
+                            {{ i }}° Semestre
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="creditos" class="form-label">Créditos</label>
+                    <input type="number" class="form-control" id="creditos" name="creditos" value="{{ asignatura.creditos }}" required min="1" max="10">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="descripcion" class="form-label">Descripción</label>
+                <textarea class="form-control" id="descripcion" name="descripcion" rows="3">{{ asignatura.descripcion }}</textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="estado" class="form-label">Estado</label>
+                <select class="form-select" id="estado" name="estado" required>
+                    <option value="1" {% if asignatura.estado %}selected{% endif %}>Activo</option>
+                    <option value="0" {% if not asignatura.estado %}selected{% endif %}>Inactivo</option>
+                </select>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a href="{{ app_url }}asignaturas" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary">
+                    {% if asignatura.id %}
+                        Actualizar
+                    {% else %}
+                        Crear
+                    {% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %} 

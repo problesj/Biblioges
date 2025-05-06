@@ -1,0 +1,168 @@
+{% extends "base.twig" %}
+
+{% block title %}Dashboard - Sistema de Bibliografía{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
+    </div>
+
+    <!-- Tarjetas de resumen -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Bibliografías Declaradas</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totalBibliografias }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-list fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Bibliografías Disponibles</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totalDisponibles }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-book fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Asignaturas</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totalAsignaturas }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-book-open fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Carreras</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totalCarreras }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-graduation-cap fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Tabla de bibliografías recientes -->
+        <div class="col-xl-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Bibliografías Declaradas Recientes</h6>
+                    <a href="{{ app_url }}bibliografias-declaradas" class="btn btn-primary btn-sm">
+                        <i class="fas fa-list"></i> Ver Todas
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Título</th>
+                                    <th>Autor(es)</th>
+                                    <th>Tipo</th>
+                                    <th>Formato</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for bibliografia in bibliografiasRecientes %}
+                                <tr>
+                                    <td>{{ bibliografia.titulo }}</td>
+                                    <td>{{ bibliografia.autores }}</td>
+                                    <td>{{ bibliografia.tipo }}</td>
+                                    <td>{{ bibliografia.formato }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No hay bibliografías recientes</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de asignaturas recientes -->
+        <div class="col-xl-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Asignaturas Recientes</h6>
+                    <a href="{{ app_url }}asignaturas" class="btn btn-primary btn-sm">
+                        <i class="fas fa-list"></i> Ver Todas
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Tipo</th>
+                                    <th>Periodicidad</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for asignatura in asignaturasRecientes %}
+                                <tr>
+                                    <td>{{ asignatura.nombre }}</td>
+                                    <td>{{ asignatura.tipo }}</td>
+                                    <td>{{ asignatura.periodicidad }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No hay asignaturas recientes</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Aquí puedes agregar scripts específicos del dashboard si son necesarios
+</script>
+{% endblock %} 

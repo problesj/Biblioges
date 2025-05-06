@@ -1,0 +1,64 @@
+{% extends "base.twig" %}
+
+{% block title %}Editar Sede{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Editar Sede</h3>
+                </div>
+                <div class="card-body">
+                    {% if error %}
+                        <div class="alert alert-danger">{{ error }}</div>
+                    {% endif %}
+
+                    <form action="{{ app_url }}sedes/{{ sede.id }}" method="post">
+                        <input type="hidden" name="_method" value="PUT">
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="codigo">Código de Sede *</label>
+                                    <input type="text" class="form-control" id="codigo" name="codigo" value="{{ sede.codigo }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="nombre">Nombre de Sede *</label>
+                                    <input type="text" class="form-control" id="nombre" name="nombre" value="{{ sede.nombre }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="estado">Estado</label>
+                                    <select class="form-control" id="estado" name="estado">
+                                        <option value="1" {{ sede.estado == 1 ? 'selected' : '' }}>Activo</option>
+                                        <option value="0" {{ sede.estado == 0 ? 'selected' : '' }}>Inactivo</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Guardar Cambios
+                                </button>
+                                <a href="{{ app_url }}sedes" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

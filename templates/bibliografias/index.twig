@@ -1,0 +1,140 @@
+{% extends "base.twig" %}
+
+{% block title %}Bibliografías Declaradas - Sistema de Bibliografía{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Bibliografías Declaradas</h1>
+
+    <!-- Filtros -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Filtros de Búsqueda</h6>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ app_url }}bibliografias-declaradas" class="row g-3">
+                <div class="col-md-4">
+                    <label for="asignatura" class="form-label">Asignatura</label>
+                    <select class="form-select" id="asignatura" name="asignatura">
+                        <option value="">Todas las asignaturas</option>
+                        {% for asignatura in asignaturas %}
+                            <option value="{{ asignatura.id }}" {% if filtros.asignatura == asignatura.id %}selected{% endif %}>
+                                {{ asignatura.nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="tipo" class="form-label">Tipo</label>
+                    <select class="form-select" id="tipo" name="tipo">
+                        <option value="">Todos los tipos</option>
+                        <option value="libro" {% if filtros.tipo == 'libro' %}selected{% endif %}>Libro</option>
+                        <option value="articulo" {% if filtros.tipo == 'articulo' %}selected{% endif %}>Artículo</option>
+                        <option value="software" {% if filtros.tipo == 'software' %}selected{% endif %}>Software</option>
+                        <option value="sitio_web" {% if filtros.tipo == 'sitio_web' %}selected{% endif %}>Sitio Web</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="estado" class="form-label">Estado</label>
+                    <select class="form-select" id="estado" name="estado">
+                        <option value="">Todos los estados</option>
+                        <option value="1" {% if filtros.estado == '1' %}selected{% endif %}>Activa</option>
+                        <option value="0" {% if filtros.estado == '0' %}selected{% endif %}>No Activa</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Filtrar</button>
+                    <a href="{{ app_url }}bibliografias-declaradas" class="btn btn-secondary">Limpiar filtros</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">Lista de Bibliografías</h6>
+            <a href="{{ app_url }}bibliografias-declaradas/crear" class="btn btn-sm btn-primary">Nueva Bibliografía</a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>
+                                <a href="{{ app_url }}bibliografias-declaradas?orden=titulo&direccion={{ filtros.orden == 'titulo' and filtros.direccion == 'asc' ? 'desc' : 'asc' }}{{ filtros.asignatura ? '&asignatura=' ~ filtros.asignatura : '' }}{{ filtros.tipo ? '&tipo=' ~ filtros.tipo : '' }}{{ filtros.estado is not null ? '&estado=' ~ filtros.estado : '' }}">
+                                    Título
+                                    {% if filtros.orden == 'titulo' %}
+                                        <i class="fas fa-sort-{{ filtros.direccion == 'asc' ? 'up' : 'down' }}"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th>Autores</th>
+                            <th>Asignaturas</th>
+                            <th>
+                                <a href="{{ app_url }}bibliografias-declaradas?orden=tipo&direccion={{ filtros.orden == 'tipo' and filtros.direccion == 'asc' ? 'desc' : 'asc' }}{{ filtros.asignatura ? '&asignatura=' ~ filtros.asignatura : '' }}{{ filtros.tipo ? '&tipo=' ~ filtros.tipo : '' }}{{ filtros.estado is not null ? '&estado=' ~ filtros.estado : '' }}">
+                                    Tipo
+                                    {% if filtros.orden == 'tipo' %}
+                                        <i class="fas fa-sort-{{ filtros.direccion == 'asc' ? 'up' : 'down' }}"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ app_url }}bibliografias-declaradas?orden=anio_publicacion&direccion={{ filtros.orden == 'anio_publicacion' and filtros.direccion == 'asc' ? 'desc' : 'asc' }}{{ filtros.asignatura ? '&asignatura=' ~ filtros.asignatura : '' }}{{ filtros.tipo ? '&tipo=' ~ filtros.tipo : '' }}{{ filtros.estado is not null ? '&estado=' ~ filtros.estado : '' }}">
+                                    Año
+                                    {% if filtros.orden == 'anio_publicacion' %}
+                                        <i class="fas fa-sort-{{ filtros.direccion == 'asc' ? 'up' : 'down' }}"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bibliografia in bibliografias %}
+                        <tr>
+                            <td>{{ bibliografia.id }}</td>
+                            <td>{{ bibliografia.titulo }}</td>
+                            <td>{{ bibliografia.autores }}</td>
+                            <td>
+                                {% if bibliografia.asignaturas_vinculadas != 'Sin asignaturas' %}
+                                    {% for asignatura in bibliografia.asignaturas_vinculadas|split(';') %}
+                                        {{ asignatura|trim }}<br>
+                                    {% endfor %}
+                                {% else %}
+                                    Sin asignaturas vinculadas
+                                {% endif %}
+                            </td>
+                            <td>{{ bibliografia.tipo }}</td>
+                            <td>{{ bibliografia.anio_publicacion }}</td>
+                            <td>
+                                {% if bibliografia.estado_bibliografia == 1 %}
+                                    <span class="badge bg-success text-white">Activa</span>
+                                {% else %}
+                                    <span class="badge bg-danger text-white">No Activa</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/editar" class="btn btn-sm btn-warning">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Aquí puedes agregar scripts específicos de la página si son necesarios
+</script>
+{% endblock %} 

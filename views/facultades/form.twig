@@ -1,0 +1,81 @@
+{% extends 'layouts/app.twig' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        {% if facultad.id %}
+                            Editar Facultad
+                        {% else %}
+                            Nueva Facultad
+                        {% endif %}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ app_url }}facultades{% if facultad.id %}/{{ facultad.id }}{% endif %}">
+                        {% if facultad.id %}
+                            <input type="hidden" name="_method" value="PUT">
+                        {% endif %}
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="sede_id">Sede *</label>
+                                    <select name="sede_id" id="sede_id" class="form-control" required>
+                                        <option value="">Seleccione una sede</option>
+                                        {% for sede in sedes %}
+                                            <option value="{{ sede.id }}" {{ facultad.sede_id == sede.id ? 'selected' : '' }}>
+                                                {{ sede.nombre }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="codigo">Código *</label>
+                                    <input type="text" class="form-control" id="codigo" name="codigo" value="{{ facultad.codigo }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="nombre">Nombre *</label>
+                                    <input type="text" class="form-control" id="nombre" name="nombre" value="{{ facultad.nombre }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="estado">Estado</label>
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="estado" name="estado" value="1" {{ facultad.estado ? 'checked' : '' }}>
+                                        <label class="custom-control-label" for="estado">Activo</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    {% if facultad.id %}
+                                        Actualizar
+                                    {% else %}
+                                        Crear
+                                    {% endif %}
+                                </button>
+                                <a href="{{ app_url }}facultades" class="btn btn-secondary">Cancelar</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

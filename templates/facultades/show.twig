@@ -1,0 +1,88 @@
+{% extends "base.twig" %}
+
+{% block title %}
+    {{ facultad.nombre }} - Biblioges
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h2 class="card-title mb-0">Detalles de la Facultad</h2>
+        <div>
+            <a href="{{ app_url }}facultades/{{ facultad.id }}/edit" class="btn btn-primary me-2">
+                <i class="fas fa-edit"></i> Editar
+            </a>
+            <a href="{{ app_url }}facultades" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h4>Información General</h4>
+                <table class="table">
+                    <tr>
+                        <th>Código:</th>
+                        <td>{{ facultad.codigo }}</td>
+                    </tr>
+                    <tr>
+                        <th>Nombre:</th>
+                        <td>{{ facultad.nombre }}</td>
+                    </tr>
+                    <tr>
+                        <th>Sede:</th>
+                        <td>{{ facultad.sede.nombre }}</td>
+                    </tr>
+                    <tr>
+                        <th>Estado:</th>
+                        <td>
+                            {% if facultad.estado %}
+                                <span class="badge bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactivo</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <h4>Departamentos</h4>
+            {% if facultad.departamentos|length > 0 %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for departamento in facultad.departamentos %}
+                        <tr>
+                            <td>{{ departamento.codigo }}</td>
+                            <td>{{ departamento.nombre }}</td>
+                            <td>
+                                {% if departamento.estado %}
+                                    <span class="badge bg-success">Activo</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactivo</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                No hay departamentos registrados en esta facultad.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

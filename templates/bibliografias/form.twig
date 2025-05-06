@@ -1,0 +1,126 @@
+{% extends "base.twig" %}
+
+{% block title %}
+    {% if bibliografia.id %}
+        Editar Bibliografía - Biblioges
+    {% else %}
+        Nueva Bibliografía - Biblioges
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <h2 class="card-title mb-4">
+            {% if bibliografia.id %}
+                Editar Bibliografía
+            {% else %}
+                Nueva Bibliografía
+            {% endif %}
+        </h2>
+
+        <form method="POST" action="{{ app_url }}bibliografias{% if bibliografia.id %}/{{ bibliografia.id }}{% endif %}">
+            {% if bibliografia.id %}
+            <input type="hidden" name="_method" value="PUT">
+            {% endif %}
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="titulo" class="form-label">Título</label>
+                    <input type="text" class="form-control" id="titulo" name="titulo" value="{{ bibliografia.titulo }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="tipo" class="form-label">Tipo</label>
+                    <select class="form-select" id="tipo" name="tipo" required>
+                        <option value="">Seleccione un tipo</option>
+                        <option value="libro" {% if bibliografia.tipo == 'libro' %}selected{% endif %}>Libro</option>
+                        <option value="articulo" {% if bibliografia.tipo == 'articulo' %}selected{% endif %}>Artículo</option>
+                        <option value="software" {% if bibliografia.tipo == 'software' %}selected{% endif %}>Software</option>
+                        <option value="sitio_web" {% if bibliografia.tipo == 'sitio_web' %}selected{% endif %}>Sitio Web</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="asignatura" class="form-label">Asignatura</label>
+                    <select class="form-select" id="asignatura" name="asignatura_id" required>
+                        <option value="">Seleccione una asignatura</option>
+                        {% for asignatura in asignaturas %}
+                        <option value="{{ asignatura.id }}" {% if bibliografia.asignatura_id == asignatura.id %}selected{% endif %}>
+                            {{ asignatura.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="anio_publicacion" class="form-label">Año de Publicación</label>
+                    <input type="number" class="form-control" id="anio_publicacion" name="anio_publicacion" value="{{ bibliografia.anio_publicacion }}" required>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="editorial" class="form-label">Editorial</label>
+                    <input type="text" class="form-control" id="editorial" name="editorial" value="{{ bibliografia.editorial }}">
+                </div>
+                <div class="col-md-6">
+                    <label for="isbn" class="form-label">ISBN</label>
+                    <input type="text" class="form-control" id="isbn" name="isbn" value="{{ bibliografia.isbn }}">
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="doi" class="form-label">DOI</label>
+                    <input type="text" class="form-control" id="doi" name="doi" value="{{ bibliografia.doi }}">
+                </div>
+                <div class="col-md-6">
+                    <label for="url" class="form-label">URL</label>
+                    <input type="url" class="form-control" id="url" name="url" value="{{ bibliografia.url }}">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="autores" class="form-label">Autores</label>
+                <select class="form-select" id="autores" name="autores[]" multiple required>
+                    {% for autor in autores %}
+                    <option value="{{ autor.id }}" {% if autor.id in bibliografia.autores_ids %}selected{% endif %}>
+                        {{ autor.nombre }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="estado" class="form-label">Estado</label>
+                <select class="form-select" id="estado" name="estado" required>
+                    <option value="1" {% if bibliografia.estado %}selected{% endif %}>Activo</option>
+                    <option value="0" {% if not bibliografia.estado %}selected{% endif %}>Inactivo</option>
+                </select>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a href="{{ app_url }}bibliografias" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary">
+                    {% if bibliografia.id %}
+                        Actualizar
+                    {% else %}
+                        Crear
+                    {% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Inicializar el select múltiple de autores
+    new TomSelect("#autores", {
+        plugins: ['remove_button'],
+        placeholder: 'Seleccione los autores'
+    });
+</script>
+{% endblock %} 

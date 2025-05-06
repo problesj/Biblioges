@@ -1,0 +1,16 @@
+# Forzar el tipo MIME correcto para archivos CSS
+<FilesMatch "\.css$">
+    ForceType text/css
+    Header set Content-Type "text/css"
+</FilesMatch>
+
+# Permitir acceso directo a archivos estáticos
+<FilesMatch "\.(css|js|jpg|jpeg|png|gif)$">
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>
+
+# Configuración de caché
+<FilesMatch "\.(css|js|jpg|jpeg|png|gif)$">
+    Header set Cache-Control "max-age=31536000, public"
+</FilesMatch> 

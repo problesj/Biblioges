@@ -1,0 +1,110 @@
+{% extends 'base.twig' %}
+
+{% block title %}Nuevo Departamento{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Nuevo Departamento</h6>
+            <a href="{{ app_url }}departamentos" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left me-2"></i>Volver
+            </a>
+        </div>
+        <div class="card-body">
+            {% if error %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                {{ error }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endif %}
+
+            <form method="POST" action="{{ app_url }}departamentos" id="departamentoForm" class="needs-validation" novalidate>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="codigo" class="form-label">Código del Departamento <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="codigo" name="codigo" required 
+                                pattern="[A-Za-z0-9]+" title="Solo se permiten letras y números"
+                                placeholder="Ingrese el código">
+                            <div class="invalid-feedback">
+                                Por favor ingrese un código válido (solo letras y números)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="nombre" class="form-label">Nombre del Departamento <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="nombre" name="nombre" required
+                                placeholder="Ingrese el nombre">
+                            <div class="invalid-feedback">
+                                Por favor ingrese el nombre del departamento
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="facultad_id" class="form-label">Facultad <span class="text-danger">*</span></label>
+                            <select class="form-select" id="facultad_id" name="facultad_id" required>
+                                <option value="">Seleccione una facultad</option>
+                                {% for facultad in facultades %}
+                                    <option value="{{ facultad.id }}">{{ facultad.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">
+                                Por favor seleccione una facultad
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="estado" class="form-label">Estado <span class="text-danger">*</span></label>
+                            <select class="form-select" id="estado" name="estado" required>
+                                <option value="1">Activo</option>
+                                <option value="0">Inactivo</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Por favor seleccione un estado
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Guardar
+                            </button>
+                            <a href="{{ app_url }}departamentos" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Validación del formulario usando Bootstrap
+(function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+            form.classList.add('was-validated')
+        }, false)
+    })
+})()
+</script>
+{% endblock %} 

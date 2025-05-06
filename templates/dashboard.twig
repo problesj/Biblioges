@@ -1,0 +1,82 @@
+{% extends "base.twig" %}
+
+{% block title %}Dashboard - Biblioges{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Tarjetas de estadísticas -->
+    <div class="col-md-3 mb-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title">Bibliografías</h5>
+                <h2 class="card-text">{{ stats.bibliografias }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">Asignaturas</h5>
+                <h2 class="card-text">{{ stats.asignaturas }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title">Carreras</h5>
+                <h2 class="card-text">{{ stats.carreras }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <h5 class="card-title">Usuarios</h5>
+                <h2 class="card-text">{{ stats.usuarios }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bibliografías recientes -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Bibliografías Recientes</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Título</th>
+                        <th>Asignatura</th>
+                        <th>Tipo</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for biblio in bibliografias %}
+                    <tr>
+                        <td>{{ biblio.titulo }}</td>
+                        <td>{{ biblio.asignatura_nombre }}</td>
+                        <td>{{ biblio.tipo }}</td>
+                        <td>{{ biblio.fecha_creacion|date('d/m/Y') }}</td>
+                        <td>
+                            <a href="{{ app_url }}bibliografias/{{ biblio.id }}" class="btn btn-sm btn-primary">
+                                Ver
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center">No hay bibliografías recientes</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,93 @@
+{% extends 'base.twig' %}
+
+{% block title %}Bibliografías Disponibles{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Bibliografías Disponibles</h1>
+        <a href="{{ url_for('bibliografias-disponibles.create') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nueva Bibliografía Disponible
+        </a>
+    </div>
+
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    {% if bibliografias|length > 0 %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Título</th>
+                        <th>Tipo</th>
+                        <th>Disponibilidad</th>
+                        <th>Sede</th>
+                        <th>Ejemplares</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bibliografia in bibliografias %}
+                        <tr>
+                            <td>{{ bibliografia.bibliografiaDeclarada.titulo }}</td>
+                            <td>{{ bibliografia.bibliografiaDeclarada.tipo }}</td>
+                            <td>
+                                {% if bibliografia.tipo_disponibilidad == 'fisico' %}
+                                    <span class="badge bg-primary">Físico</span>
+                                {% elseif bibliografia.tipo_disponibilidad == 'digital' %}
+                                    <span class="badge bg-info">Digital</span>
+                                {% else %}
+                                    <span class="badge bg-success">Mixto</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ bibliografia.sede ? bibliografia.sede.nombre : 'N/A' }}</td>
+                            <td>
+                                {% if bibliografia.tipo_disponibilidad != 'digital' %}
+                                    Físicos: {{ bibliografia.ejemplares }}<br>
+                                {% endif %}
+                                {% if bibliografia.tipo_disponibilidad != 'fisico' %}
+                                    Digitales: {{ bibliografia.ejemplares_digitales }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if bibliografia.estado %}
+                                    <span class="badge bg-success">Activo</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('bibliografias-disponibles.show', {id: bibliografia.id}) }}" 
+                                       class="btn btn-sm btn-info" title="Ver">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('bibliografias-disponibles.edit', {id: bibliografia.id}) }}" 
+                                       class="btn btn-sm btn-warning" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form action="{{ url_for('bibliografias-disponibles.destroy', {id: bibliografia.id}) }}" 
+                                          method="POST" class="d-inline" 
+                                          onsubmit="return confirm('¿Está seguro de eliminar esta bibliografía disponible?');">
+                                        <input type="hidden" name="_METHOD" value="DELETE">
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Eliminar">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            No hay bibliografías disponibles registradas.
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 

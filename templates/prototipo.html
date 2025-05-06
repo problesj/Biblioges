@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiblioGes - Sistema de Gestión de Bibliografías</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background-color: #343a40;
+            color: white;
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,.75);
+        }
+        .sidebar .nav-link:hover {
+            color: white;
+        }
+        .sidebar .nav-link.active {
+            color: white;
+            background-color: rgba(255,255,255,.1);
+        }
+        .main-content {
+            padding: 20px;
+        }
+        .stat-card {
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 px-0 sidebar">
+                <div class="d-flex flex-column p-3">
+                    <h4 class="mb-4">BiblioGes</h4>
+                    <ul class="nav nav-pills flex-column mb-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link active">
+                                <i class="bi bi-house-door me-2"></i>
+                                Inicio
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="bi bi-book me-2"></i>
+                                Bibliografías
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="bi bi-mortarboard me-2"></i>
+                                Asignaturas
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="bi bi-building me-2"></i>
+                                Carreras
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="bi bi-building me-2"></i>
+                                Sedes
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="bi bi-building me-2"></i>
+                                Facultades
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="bi bi-building me-2"></i>
+                                Departamentos
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="bi bi-people me-2"></i>
+                                Usuarios
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="bi bi-file-earmark-text me-2"></i>
+                                Reportes
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="bi bi-person me-2"></i>
+                                Perfil
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 main-content">
+                <h2 class="mb-4">Panel de Control</h2>
+                
+                <!-- Statistics Cards -->
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="stat-card bg-primary text-white">
+                            <h5>Bibliografías</h5>
+                            <h3><?php echo $stats['bibliografias']; ?></h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card bg-success text-white">
+                            <h5>Asignaturas</h5>
+                            <h3><?php echo $stats['asignaturas']; ?></h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card bg-info text-white">
+                            <h5>Carreras</h5>
+                            <h3><?php echo $stats['carreras']; ?></h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card bg-warning text-white">
+                            <h5>Usuarios</h5>
+                            <h3><?php echo $stats['usuarios']; ?></h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Bibliographies -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Bibliografías Recientes</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Título</th>
+                                        <th>Autor</th>
+                                        <th>Tipo</th>
+                                        <th>Asignatura</th>
+                                        <th>Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($bibliografias as $bibliografia): ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($bibliografia['titulo']); ?></td>
+                                        <td><?php echo htmlspecialchars($bibliografia['autor']); ?></td>
+                                        <td><?php echo htmlspecialchars($bibliografia['tipo']); ?></td>
+                                        <td><?php echo htmlspecialchars($bibliografia['asignatura_nombre']); ?></td>
+                                        <td><?php echo date('d/m/Y', strtotime($bibliografia['fecha_creacion'])); ?></td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/bibliografias.js"></script>
+    <script src="js/asignaturas.js"></script>
+    <script src="js/carreras.js"></script>
+    <script src="js/sedes.js"></script>
+    <script src="js/facultades.js"></script>
+    <script src="js/departamentos.js"></script>
+    <script src="js/usuarios.js"></script>
+    <script src="js/reportes.js"></script>
+    <script src="js/perfil.js"></script>
+</body>
+</html> 

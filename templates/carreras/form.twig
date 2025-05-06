@@ -1,0 +1,82 @@
+{% extends "base.twig" %}
+
+{% block title %}
+    {% if carrera.id %}
+        Editar Carrera - Biblioges
+    {% else %}
+        Nueva Carrera - Biblioges
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <h2 class="card-title mb-4">
+            {% if carrera.id %}
+                Editar Carrera
+            {% else %}
+                Nueva Carrera
+            {% endif %}
+        </h2>
+
+        <form method="POST" action="{{ app_url }}carreras{% if carrera.id %}/{{ carrera.id }}{% endif %}">
+            {% if carrera.id %}
+            <input type="hidden" name="_method" value="PUT">
+            {% endif %}
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="codigo" class="form-label">Código</label>
+                    <input type="text" class="form-control" id="codigo" name="codigo" value="{{ carrera.codigo }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="nombre" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="nombre" name="nombre" value="{{ carrera.nombre }}" required>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="sede" class="form-label">Sede</label>
+                    <select class="form-select" id="sede" name="sede_id" required>
+                        <option value="">Seleccione una sede</option>
+                        {% for sede in sedes %}
+                        <option value="{{ sede.id }}" {% if carrera.sede_id == sede.id %}selected{% endif %}>
+                            {{ sede.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="duracion" class="form-label">Duración (semestres)</label>
+                    <input type="number" class="form-control" id="duracion" name="duracion" value="{{ carrera.duracion }}" required min="1" max="20">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="descripcion" class="form-label">Descripción</label>
+                <textarea class="form-control" id="descripcion" name="descripcion" rows="3">{{ carrera.descripcion }}</textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="estado" class="form-label">Estado</label>
+                <select class="form-select" id="estado" name="estado" required>
+                    <option value="1" {% if carrera.estado %}selected{% endif %}>Activo</option>
+                    <option value="0" {% if not carrera.estado %}selected{% endif %}>Inactivo</option>
+                </select>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a href="{{ app_url }}carreras" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary">
+                    {% if carrera.id %}
+                        Actualizar
+                    {% else %}
+                        Crear
+                    {% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %} 

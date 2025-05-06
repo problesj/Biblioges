@@ -1,0 +1,64 @@
+{% extends "base.twig" %}
+
+{% block title %}
+    {% if sede.id %}
+        Editar Sede - Biblioges
+    {% else %}
+        Nueva Sede - Biblioges
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <h2 class="card-title mb-4">
+            {% if sede.id %}
+                Editar Sede
+            {% else %}
+                Nueva Sede
+            {% endif %}
+        </h2>
+
+        <form method="POST" action="{{ app_url }}sedes{% if sede.id %}/{{ sede.id }}{% endif %}">
+            {% if sede.id %}
+            <input type="hidden" name="_method" value="PUT">
+            {% endif %}
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="codigo" class="form-label">Código</label>
+                    <input type="text" class="form-control" id="codigo" name="codigo" value="{{ sede.codigo }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="nombre" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="nombre" name="nombre" value="{{ sede.nombre }}" required>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="direccion" class="form-label">Dirección</label>
+                <textarea class="form-control" id="direccion" name="direccion" rows="3" required>{{ sede.direccion }}</textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="estado" class="form-label">Estado</label>
+                <select class="form-select" id="estado" name="estado" required>
+                    <option value="1" {% if sede.estado %}selected{% endif %}>Activo</option>
+                    <option value="0" {% if not sede.estado %}selected{% endif %}>Inactivo</option>
+                </select>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a href="{{ app_url }}sedes" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary">
+                    {% if sede.id %}
+                        Actualizar
+                    {% else %}
+                        Crear
+                    {% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %} 

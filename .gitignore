@@ -1,0 +1,29 @@
+node_modules
+node_modules
+
+# Archivos de sesión
+storage/framework/sessions/*
+!storage/framework/sessions/.gitkeep
+
+# Archivos de caché
+storage/framework/cache/*
+!storage/framework/cache/.gitkeep
+
+# Archivos de logs
+storage/logs/*
+!storage/logs/.gitkeep
+
+# Archivos de entorno
+.env
+.env.*
+!.env.example
+
+# Archivos de IDE
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db

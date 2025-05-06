@@ -1,0 +1,80 @@
+{% extends 'base.twig' %}
+
+{% block title %}Editar Departamento{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Editar Departamento</h6>
+        </div>
+        <div class="card-body">
+            {% if error %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                {{ error }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {{ clean_error_message()|raw }}
+            {% endif %}
+
+            <form method="POST" action="{{ app_url }}departamentos/{{ departamento.id }}">
+                <input type="hidden" name="_method" value="PUT">
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="codigo" class="form-label">Código del Departamento</label>
+                            <input type="text" class="form-control" id="codigo" name="codigo" required 
+                                pattern="[A-Za-z0-9]+" title="Solo se permiten letras y números"
+                                value="{{ departamento.codigo }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="nombre" class="form-label">Nombre del Departamento</label>
+                            <input type="text" class="form-control" id="nombre" name="nombre" required
+                                value="{{ departamento.nombre }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="facultad_id" class="form-label">Facultad</label>
+                            <select class="form-select" id="facultad_id" name="facultad_id" required>
+                                <option value="">Seleccione una facultad</option>
+                                {% for facultad in facultades %}
+                                    <option value="{{ facultad.id }}" 
+                                        {% if facultad.id == departamento.facultad_id %}selected{% endif %}>
+                                        {{ facultad.nombre }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="estado" class="form-label">Estado</label>
+                            <select class="form-select" id="estado" name="estado" required>
+                                <option value="1" {% if departamento.estado == 1 %}selected{% endif %}>Activo</option>
+                                <option value="0" {% if departamento.estado == 0 %}selected{% endif %}>Inactivo</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                            <a href="{{ app_url }}departamentos" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 
