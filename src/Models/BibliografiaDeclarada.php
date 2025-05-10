@@ -27,15 +27,17 @@ class BibliografiaDeclarada extends Model
         'doi',
         'url',
         'estado',
-        'asignatura_id'
+        'formato'
     ];
 
     /**
-     * Obtener la asignatura a la que pertenece la bibliografía.
+     * Obtener las asignaturas asociadas a la bibliografía.
      */
-    public function asignatura()
+    public function asignaturas()
     {
-        return $this->belongsTo(Asignatura::class);
+        return $this->belongsToMany(Asignatura::class, 'asignaturas_bibliografias', 'bibliografia_id', 'asignatura_id')
+            ->withPivot('tipo_bibliografia', 'estado')
+            ->withTimestamps('fecha_creacion', 'fecha_actualizacion');
     }
 
     /**
@@ -43,8 +45,9 @@ class BibliografiaDeclarada extends Model
      */
     public function autores()
     {
-        return $this->belongsToMany(Autor::class, 'bibliografias_autores')
-            ->withTimestamps();
+        return $this->belongsToMany(Autor::class, 'bibliografias_autores', 'bibliografia_id', 'autor_id')
+            ->withPivot('fecha_creacion', 'fecha_actualizacion')
+            ->withTimestamps('fecha_creacion', 'fecha_actualizacion');
     }
 
     /**
@@ -63,8 +66,18 @@ class BibliografiaDeclarada extends Model
                 return $this->hasOne(Software::class, 'bibliografia_id');
             case 'sitio_web':
                 return $this->hasOne(SitioWeb::class, 'bibliografia_id');
-            default:
+            case 'generico':
                 return $this->hasOne(Generico::class, 'bibliografia_id');
+            default:
+                return null;
         }
+    }
+
+    /**
+     * Obtener las bibliografías disponibles asociadas.
+     */
+    public function disponibles()
+    {
+        return $this->hasMany(BibliografiaDisponible::class, 'bibliografia_declarada_id');
     }
 } 

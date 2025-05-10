@@ -1,124 +1,71 @@
-# Sistema de Gestión de Bibliografías Universitarias
+# Sistema de Gestión de Bibliografía
 
-Sistema web para gestionar y generar reportes de bibliografías de carreras universitarias.
+Sistema web para la gestión de bibliografía académica, desarrollado para la Universidad Nacional de Córdoba.
+
+## Características
+
+- Gestión de bibliografías declaradas
+- Administración de asignaturas y departamentos
+- Control de autores y sus obras
+- Sistema de mallas curriculares
+- Gestión de usuarios y roles
+- Reportes y estadísticas
 
 ## Requisitos
 
-- PHP 8.0 o superior
-- PostgreSQL 12 o superior
+- PHP 7.4 o superior
+- MySQL 5.7 o superior
 - Composer
-- Node.js y npm (para el frontend)
+- Node.js y NPM (para assets)
 
 ## Instalación
 
 1. Clonar el repositorio:
 ```bash
-git clone [url-del-repositorio]
-cd bibliografia
+git clone [URL_DEL_REPOSITORIO]
+cd biblioges
 ```
 
-2. Instalar dependencias de PHP:
+2. Instalar dependencias:
 ```bash
 composer install
+npm install
 ```
 
-3. Configurar variables de entorno:
+3. Configurar el entorno:
 ```bash
 cp .env.example .env
+# Editar .env con los datos de conexión a la base de datos
 ```
-Editar el archivo `.env` con los datos de conexión a la base de datos y otras configuraciones.
 
 4. Crear la base de datos:
 ```bash
-psql -U postgres
-CREATE DATABASE bibliografia;
-\q
+mysql -u root -p < database/schema.sql
 ```
 
-5. Ejecutar migraciones:
+5. Iniciar el servidor:
 ```bash
-psql -U postgres -d bibliografia -f database/schema.sql
-```
-
-6. Instalar dependencias del frontend:
-```bash
-cd public
-npm install
+php -S localhost:8000 -t public
 ```
 
 ## Estructura del Proyecto
 
 ```
-bibliografia/
-├── public/             # Archivos públicos y frontend
-├── src/                # Código fuente PHP
-│   ├── Controllers/    # Controladores
-│   ├── Models/         # Modelos
-│   ├── Middleware/     # Middleware
-│   └── config/         # Configuraciones
-├── templates/          # Plantillas Twig
-├── database/           # Scripts de base de datos
-└── vendor/            # Dependencias PHP
+biblioges/
+├── config/             # Configuraciones
+├── database/          # Migraciones y seeds
+├── public/            # Punto de entrada y assets
+├── src/              # Código fuente
+│   ├── Controllers/  # Controladores
+│   ├── Models/       # Modelos
+│   └── Views/        # Vistas
+└── templates/        # Plantillas Twig
 ```
-
-## Uso
-
-1. Iniciar el servidor de desarrollo:
-```bash
-php -S localhost:8000 -t public
-```
-
-2. Acceder a la aplicación:
-```
-http://localhost:8000
-```
-
-## Funcionalidades
-
-- Gestión de carreras (pregrado y postgrado)
-- Gestión de asignaturas
-- Gestión de bibliografías
-- Reportes de cobertura por asignatura y carrera
-- Sistema de autenticación y autorización
-- Interfaz responsiva
-
-## Roles de Usuario
-
-- Administrador: Acceso total al sistema
-- Administrador de Bibliografías: Gestión de bibliografías
-- Usuario: Consulta de reportes
-
-## API Endpoints
-
-### Autenticación
-- POST /auth/login
-- POST /auth/logout
-
-### Carreras
-- GET /carreras
-- GET /carreras/{id}
-- POST /carreras
-- PUT /carreras/{id}
-- DELETE /carreras/{id}
-
-### Asignaturas
-- GET /asignaturas
-- GET /asignaturas/{codigo}
-- POST /asignaturas
-- PUT /asignaturas/{codigo}
-- DELETE /asignaturas/{codigo}
-
-### Bibliografías
-- GET /bibliografias
-- GET /bibliografias/{id}
-- POST /bibliografias
-- PUT /bibliografias/{id}
-- DELETE /bibliografias/{id}
-
-### Reportes
-- GET /reportes/cobertura-asignatura/{codigo}
-- GET /reportes/cobertura-carrera/{id}
 
 ## Licencia
 
-Este proyecto está bajo la Licencia MIT. 
+Este proyecto es privado y confidencial. Todos los derechos reservados.
+
+## Contacto
+
+Para más información, contactar al administrador del sistema. 

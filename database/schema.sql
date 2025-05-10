@@ -1,3 +1,5 @@
+
+DROP DATABASE IF EXISTS bibliografia;
 -- Crear la base de datos si no existe
 CREATE DATABASE IF NOT EXISTS bibliografia CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -99,7 +101,7 @@ CREATE TABLE IF NOT EXISTS asignaturas (
 CREATE TABLE IF NOT EXISTS asignaturas_formacion (
     id INT AUTO_INCREMENT PRIMARY KEY,
     asignatura_formacion_id INT NOT NULL COMMENT 'ID de la asignatura de formación (padre)',
-    asignatura_regular_id INT NOT NULL COMMENT 'ID de la asignatura regular (hijo)',
+    asignatura_regular_id INT NOT NULL COMMENT 'ID de la asignatura formacion (hijo)',
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (asignatura_formacion_id) REFERENCES asignaturas(id) ON DELETE CASCADE,
@@ -299,22 +301,22 @@ CREATE TRIGGER before_insert_asignaturas_formacion
 BEFORE INSERT ON asignaturas_formacion
 FOR EACH ROW
 BEGIN
-    DECLARE tipo_formacion VARCHAR(20);
-    DECLARE tipo_regular VARCHAR(20);
+    DECLARE tipo_formacion VARCHAR(50);
+    DECLARE tipo_regular VARCHAR(50);
     
     -- Obtener tipos de las asignaturas
     SELECT tipo INTO tipo_formacion FROM asignaturas WHERE id = NEW.asignatura_formacion_id;
     SELECT tipo INTO tipo_regular FROM asignaturas WHERE id = NEW.asignatura_regular_id;
     
     -- Validar tipos
-    IF tipo_formacion = 'REGULAR' THEN
+    IF tipo_formacion != 'FORMACION_ELECTIVA' THEN
         SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'La asignatura padre debe ser de tipo formación';
+        SET MESSAGE_TEXT = 'La asignatura padre debe ser de tipo formación electiva';
     END IF;
     
-    IF tipo_regular == 'REGULAR' THEN
+    IF tipo_regular = 'REGULAR' || tipo_regular = 'FORMACION_ELECTIVA' THEN
         SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'La asignatura hijo debe ser distinta de tipo regular';
+        SET MESSAGE_TEXT = 'La asignatura hijo debe ser distinta de tipo regular o formación electiva';
     END IF;
 END//
 
@@ -322,22 +324,22 @@ CREATE TRIGGER before_update_asignaturas_formacion
 BEFORE UPDATE ON asignaturas_formacion
 FOR EACH ROW
 BEGIN
-    DECLARE tipo_formacion VARCHAR(20);
-    DECLARE tipo_regular VARCHAR(20);
+    DECLARE tipo_formacion VARCHAR(50);
+    DECLARE tipo_regular VARCHAR(50);
     
     -- Obtener tipos de las asignaturas
     SELECT tipo INTO tipo_formacion FROM asignaturas WHERE id = NEW.asignatura_formacion_id;
     SELECT tipo INTO tipo_regular FROM asignaturas WHERE id = NEW.asignatura_regular_id;
     
     -- Validar tipos
-    IF tipo_formacion = 'REGULAR' THEN
+    IF tipo_formacion != 'FORMACION_ELECTIVA' THEN
         SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'La asignatura padre debe ser de tipo formación';
+        SET MESSAGE_TEXT = 'La asignatura padre debe ser de tipo formación electiva';
     END IF;
     
-    IF tipo_regular = 'REGULAR' THEN
+    IF tipo_regular = 'REGULAR' || tipo_regular = 'FORMACION_ELECTIVA' THEN
         SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'La asignatura hijo debe ser distinta de tipo regular';
+        SET MESSAGE_TEXT = 'La asignatura hijo debe ser distinta de tipo regular o formación electiva';
     END IF;
 END//
 
@@ -345,15 +347,15 @@ CREATE TRIGGER before_insert_asignaturas_bibliografias
 BEFORE INSERT ON asignaturas_bibliografias
 FOR EACH ROW
 BEGIN
-    DECLARE tipo_asignatura VARCHAR(20);
+    DECLARE tipo_asignatura VARCHAR(50);
     
     -- Obtener tipo de la asignatura
     SELECT tipo INTO tipo_asignatura FROM asignaturas WHERE id = NEW.asignatura_id;
     
     -- Validar tipo
-    IF tipo_asignatura != 'REGULAR' THEN
+    IF tipo_asignatura = 'FORMACION_ELECTIVA' THEN
         SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Solo se pueden vincular bibliografías con asignaturas de tipo REGULAR';
+        SET MESSAGE_TEXT = 'No se puede vincular bibliografías con asignaturas de tipo FORMACION_ELECTIVA';
     END IF;
 END//
 
@@ -361,15 +363,15 @@ CREATE TRIGGER before_update_asignaturas_bibliografias
 BEFORE UPDATE ON asignaturas_bibliografias
 FOR EACH ROW
 BEGIN
-    DECLARE tipo_asignatura VARCHAR(20);
+    DECLARE tipo_asignatura VARCHAR(50);
     
     -- Obtener tipo de la asignatura
     SELECT tipo INTO tipo_asignatura FROM asignaturas WHERE id = NEW.asignatura_id;
     
     -- Validar tipo
-    IF tipo_asignatura != 'REGULAR' THEN
+    IF tipo_asignatura = 'FORMACION_ELECTIVA' THEN
         SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Solo se pueden vincular bibliografías con asignaturas de tipo REGULAR';
+        SET MESSAGE_TEXT = 'No se puede vincular bibliografías con asignaturas de tipo FORMACION_ELECTIVA';
     END IF;
 END//
 DELIMITER ;
@@ -398,15 +400,15 @@ INSERT INTO carreras (nombre, tipo_programa, estado) VALUES
 -- Ejemplo de asignaturas
 INSERT INTO asignaturas (nombre, tipo, vigencia_desde, vigencia_hasta, periodicidad) VALUES 
 -- Asignaturas regulares
-('Programación I', 'REGULAR', '201910', '999999', 'semestral'),
-('Base de Datos', 'REGULAR', '201910', '999999', 'semestral'),
+('Programación I', 'FORMACION_PROFESIONAL', '201910', '999999', 'semestral'),
+('Base de Datos', 'FORMACION_PROFESIONAL', '201910', '999999', 'semestral'),
 ('Matemática I', 'REGULAR', '201910', '999999', 'anual'),
-('Inglés I', 'REGULAR', '201910', '999999', 'semestral'),
-('Ética Profesional', 'REGULAR', '201910', '999999', 'semestral'),
+('Inglés I', 'FORMACION_IDIOMAS', '201910', '999999', 'semestral'),
+('Ética Profesional', 'FORMACION_VALORES', '201910', '999999', 'semestral'),
 -- Asignaturas de formación
-('Formación Básica en Programación', 'FORMACION_BASICA', '201910', '999999', 'semestral'),
-('Formación General en Idiomas', 'FORMACION_IDIOMAS', '201910', '999999', 'semestral'),
-('Formación en Valores', 'FORMACION_VALORES', '201910', '999999', 'semestral');
+('Formación Básica en Programación', 'FORMACION_ELECTIVA', '201910', '999999', 'semestral'),
+('Formación General en Idiomas', 'FORMACION_ELECTIVA', '201910', '999999', 'semestral'),
+('Formación en Valores', 'FORMACION_ELECTIVA', '201910', '999999', 'semestral');
 
 INSERT INTO asignaturas_departamentos (asignatura_id, departamento_id, cantidad_alumnos, codigo_asignatura) VALUES 
 (1, 1, 50, 'PROG-00123'),

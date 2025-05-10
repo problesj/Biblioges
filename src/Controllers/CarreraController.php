@@ -332,11 +332,11 @@ class CarreraController
             // Obtener datos de la carrera
             $sql = "SELECT 
                         c.*,
-                        GROUP_CONCAT(DISTINCT ce.codigo_carrera) as codigos_carrera,
-                        GROUP_CONCAT(DISTINCT s.nombre) as sedes,
-                        GROUP_CONCAT(DISTINCT f.nombre) as facultades,
-                        GROUP_CONCAT(DISTINCT ce.vigencia_desde) as vigencias_desde,
-                        GROUP_CONCAT(DISTINCT ce.vigencia_hasta) as vigencias_hasta
+                        GROUP_CONCAT(ce.codigo_carrera) as codigos_carrera,
+                        GROUP_CONCAT(s.nombre) as sedes,
+                        GROUP_CONCAT(f.nombre) as facultades,
+                        GROUP_CONCAT(ce.vigencia_desde) as vigencias_desde,
+                        GROUP_CONCAT(ce.vigencia_hasta) as vigencias_hasta
                     FROM carreras c
                     LEFT JOIN carreras_espejos ce ON c.id = ce.carrera_id
                     LEFT JOIN sedes s ON ce.sede_id = s.id
@@ -354,12 +354,35 @@ class CarreraController
                 exit;
             }
 
+            // Log para debug
+            error_log('Datos de carrera antes de procesar: ' . print_r($carrera, true));
+
             // Procesar los resultados para asegurar el formato correcto
-            $carrera['sedes'] = $carrera['sedes'] ? explode(',', $carrera['sedes']) : [];
-            $carrera['facultades'] = $carrera['facultades'] ? explode(',', $carrera['facultades']) : [];
-            $carrera['codigos_carrera'] = $carrera['codigos_carrera'] ? explode(',', $carrera['codigos_carrera']) : [];
-            $carrera['vigencias_desde'] = $carrera['vigencias_desde'] ? explode(',', $carrera['vigencias_desde']) : [];
-            $carrera['vigencias_hasta'] = $carrera['vigencias_hasta'] ? explode(',', $carrera['vigencias_hasta']) : [];
+            //$carrera['sedes'] = [];
+            //$carrera['facultades'] = [];
+            //$carrera['codigos_carrera'] = [];
+            //$carrera['vigencias_desde'] = [];
+            //$carrera['vigencias_hasta'] = [];
+
+            // Procesar cada campo solo si existe y es una cadena
+            if (isset($carrera['sedes']) && is_string($carrera['sedes'])) {
+                $carrera['sedes'] = array_filter(explode(',', $carrera['sedes']));
+            }
+            if (isset($carrera['facultades']) && is_string($carrera['facultades'])) {
+                $carrera['facultades'] = array_filter(explode(',', $carrera['facultades']));
+            }
+            if (isset($carrera['codigos_carrera']) && is_string($carrera['codigos_carrera'])) {
+                $carrera['codigos_carrera'] = array_filter(explode(',', $carrera['codigos_carrera']));
+            }
+            if (isset($carrera['vigencias_desde']) && is_string($carrera['vigencias_desde'])) {
+                $carrera['vigencias_desde'] = array_filter(explode(',', $carrera['vigencias_desde']));
+            }
+            if (isset($carrera['vigencias_hasta']) && is_string($carrera['vigencias_hasta'])) {
+                $carrera['vigencias_hasta'] = array_filter(explode(',', $carrera['vigencias_hasta']));
+            }
+
+            // Log para debug después de procesar
+            error_log('Datos de carrera después de procesar: ' . print_r($carrera, true));
 
             // Obtener asignaturas vinculadas a través de la tabla mallas
             $sql_asignaturas = "SELECT 
@@ -402,6 +425,8 @@ class CarreraController
                 'session' => $_SESSION
             ]);
         } catch (\Exception $e) {
+            error_log('Error en CarreraController::show: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
             $this->session->set('error', 'Error al obtener los datos de la carrera: ' . $e->getMessage());
             header('Location: ' . Config::get('app_url') . 'carreras');
             exit;

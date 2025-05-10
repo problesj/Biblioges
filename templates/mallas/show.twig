@@ -1,0 +1,300 @@
+{% extends "base.twig" %}
+
+{% block title %}Malla Curricular - {{ carrera.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Información de la Carrera -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Información de la Carrera</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <p><strong>Nombre:</strong> {{ carrera.nombre }}</p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Tipo de Programa:</strong>
+                        {% if carrera.tipo_programa == 'P' %}
+                            Pregrado
+                        {% elseif carrera.tipo_programa == 'G' %}
+                            Postgrado
+                        {% elseif carrera.tipo_programa == 'O' %}
+                            Otro
+                        {% else %}
+                            {{ carrera.tipo_programa }}
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Estado:</strong>
+                        {% if carrera.estado == 1 %}
+                            <span class="badge bg-success">Activo</span>
+                        {% else %}
+                            <span class="badge bg-danger">Inactivo</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información de Carreras Espejo -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Información de Carreras Espejo</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Código</th>
+                            <th>Vigencia Desde</th>
+                            <th>Vigencia Hasta</th>
+                            <th>Sede</th>
+                            <th>Facultad</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for codigo in carrera.codigos_carrera %}
+                        <tr>
+                            <td>{{ codigo }}</td>
+                            <td>{{ carrera.vigencias_desde[loop.index0] }}</td>
+                            <td>{{ carrera.vigencias_hasta[loop.index0] }}</td>
+                            <td>{{ carrera.sedes[loop.index0] }}</td>
+                            <td>{{ carrera.facultades[loop.index0] }}</td>
+                            <td>
+                                {% if carrera.estado == 1 %}
+                                    <span class="badge bg-success">Activo</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactivo</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Asignaturas -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Asignaturas de la Malla</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Tipo</th>
+                            <th>Periodicidad</th>
+                            <th>Semestre</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if carrera.asignaturas is defined and carrera.asignaturas|length > 0 %}
+                            {% for asignatura in carrera.asignaturas %}
+                            <tr>
+                                <td>{{ asignatura.nombre }}</td>
+                                <td>{{ asignatura.tipo }}</td>
+                                <td>{{ asignatura.periodicidad }}</td>
+                                <td>{{ asignatura.semestre }}</td>
+                                <td>
+                                    {% if asignatura.estado == 1 %}
+                                        <span class="badge bg-success">Activo</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inactivo</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-info btn-detalles" data-id="{{ asignatura.id }}" data-tipo="{{ asignatura.tipo }}">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center">No hay asignaturas registradas</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="d-flex gap-2 mb-4">
+        <a href="{{ app_url }}mallas" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+</div>
+
+<!-- Modal para detalles de asignatura -->
+<div class="modal fade" id="modalDetalles" tabindex="-1" aria-labelledby="modalDetallesLabel">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalDetallesLabel">Detalles de la Asignatura</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Contenido para asignaturas regulares -->
+                <div id="detallesRegular">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Departamento</th>
+                                    <th>Vigencia Desde</th>
+                                    <th>Vigencia Hasta</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detallesRegularBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Contenido para asignaturas de formación electiva -->
+                <div id="detallesElectiva" style="display: none;">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Estado</th>
+                                    <th>Periodicidad</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detallesElectivaBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const app_url = "{{ app_url }}";
+    const modalDetalles = new bootstrap.Modal(document.getElementById('modalDetalles'));
+    const detallesRegular = document.getElementById('detallesRegular');
+    const detallesElectiva = document.getElementById('detallesElectiva');
+    const modalElement = document.getElementById('modalDetalles');
+    let lastFocusedElement = null;
+    
+    // Manejar clic en botón de detalles
+    document.querySelectorAll('.btn-detalles').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const asignaturaId = this.dataset.id;
+            const tipo = this.dataset.tipo;
+            
+            // Guardar el elemento que tenía el foco
+            lastFocusedElement = document.activeElement;
+            
+            // Mostrar el contenido correspondiente según el tipo
+            if (tipo === 'FORMACION_ELECTIVA') {
+                detallesRegular.style.display = 'none';
+                detallesElectiva.style.display = 'block';
+                cargarDetallesElectiva(asignaturaId);
+            } else {
+                detallesRegular.style.display = 'block';
+                detallesElectiva.style.display = 'none';
+                cargarDetallesRegular(asignaturaId);
+            }
+            
+            modalDetalles.show();
+        });
+    });
+
+    // Manejar el cierre del modal
+    modalElement.addEventListener('hidden.bs.modal', function () {
+        // Remover la clase modal-open del body
+        document.body.classList.remove('modal-open');
+        // Remover el padding-right que Bootstrap agrega
+        document.body.style.paddingRight = '';
+        // Remover el backdrop
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) {
+            backdrop.remove();
+        }
+        // Restaurar el foco al elemento anterior
+        if (lastFocusedElement) {
+            lastFocusedElement.focus();
+        }
+    });
+    
+    // Función para cargar detalles de asignatura regular
+    function cargarDetallesRegular(asignaturaId) {
+        fetch(`${app_url}api/asignaturas/${asignaturaId}/detalles`)
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('detallesRegularBody');
+                tbody.innerHTML = '';
+                
+                data.forEach(detalle => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${detalle.codigo || '-'}</td>
+                            <td>${detalle.departamento || '-'}</td>
+                            <td>${detalle.vigencia_desde || '-'}</td>
+                            <td>${detalle.vigencia_hasta || '-'}</td>
+                        </tr>
+                    `;
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al cargar los detalles de la asignatura');
+            });
+    }
+    
+    // Función para cargar detalles de asignatura electiva
+    function cargarDetallesElectiva(asignaturaId) {
+        fetch(`${app_url}api/asignaturas/${asignaturaId}/vinculadas`)
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('detallesElectivaBody');
+                tbody.innerHTML = '';
+                
+                data.forEach(asignatura => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${asignatura.nombre}</td>
+                            <td>
+                                ${asignatura.estado == 1 
+                                    ? '<span class="badge bg-success">Activo</span>' 
+                                    : '<span class="badge bg-danger">Inactivo</span>'}
+                            </td>
+                            <td>${asignatura.periodicidad}</td>
+                        </tr>
+                    `;
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al cargar las asignaturas vinculadas');
+            });
+    }
+});
+</script>
+{% endblock %}
+{% endblock %} 

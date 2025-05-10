@@ -5,6 +5,13 @@ namespace src\Models;
 class Autor extends BaseModel
 {
     /**
+     * La tabla asociada con el modelo.
+     *
+     * @var string
+     */
+    protected $table = 'autores';
+
+    /**
      * Los atributos que deberían ser asignados en masa.
      *
      * @var array
@@ -20,7 +27,8 @@ class Autor extends BaseModel
      */
     public function bibliografias()
     {
-        return $this->belongsToMany(BibliografiaDeclarada::class, 'bibliografias_autores')
-            ->withTimestamps();
+        return $this->belongsToMany(BibliografiaDeclarada::class, 'bibliografias_autores', 'autor_id', 'bibliografia_id')
+            ->withPivot('fecha_creacion', 'fecha_actualizacion')
+            ->withTimestamps('fecha_creacion', 'fecha_actualizacion');
     }
 } 

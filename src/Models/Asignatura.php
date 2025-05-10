@@ -40,12 +40,24 @@ class Asignatura extends Model
     ];
 
     /**
+     * Obtener el departamento principal de la asignatura.
+     */
+    public function departamento()
+    {
+        return $this->belongsToMany(Departamento::class, 'asignaturas_departamentos')
+            ->withPivot('codigo_asignatura', 'cantidad_alumnos')
+            ->withTimestamps('fecha_creacion', 'fecha_actualizacion')
+            ->first();
+    }
+
+    /**
      * Obtener los departamentos donde se dicta la asignatura.
      */
     public function departamentos()
     {
         return $this->belongsToMany(Departamento::class, 'asignaturas_departamentos')
-            ->withTimestamps();
+            ->withPivot('codigo_asignatura', 'cantidad_alumnos')
+            ->withTimestamps('fecha_creacion', 'fecha_actualizacion');
     }
 
     /**

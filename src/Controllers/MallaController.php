@@ -141,45 +141,179 @@ class MallaController
             exit;
         }
 
-        // Obtener la carrera
-        $stmt = $this->pdo->prepare("
-            SELECT c.*, 
-                   GROUP_CONCAT(DISTINCT ce.codigo_carrera) as codigos_carrera,
-                   GROUP_CONCAT(DISTINCT s.nombre) as sedes,
-                   GROUP_CONCAT(DISTINCT f.nombre) as facultades
-            FROM carreras c
-            LEFT JOIN carreras_espejos ce ON c.id = ce.carrera_id
-            LEFT JOIN sedes s ON ce.sede_id = s.id
-            LEFT JOIN facultades f ON ce.facultad_id = f.id
-            WHERE c.id = ?
-            GROUP BY c.id
-        ");
-        $stmt->execute([$id]);
-        $carrera = $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            // Obtener datos de la carrera
+            $sql = "SELECT 
+                        c.*,
+                        GROUP_CONCAT(ce.codigo_carrera) as codigos_carrera,
+                        GROUP_CONCAT(s.nombre) as sedes,
+                        GROUP_CONCAT(f.nombre) as facultades,
+                        GROUP_CONCAT(ce.vigencia_desde) as vigencias_desde,
+                        GROUP_CONCAT(ce.vigencia_hasta) as vigencias_hasta
+                    FROM carreras c
+                    LEFT JOIN carreras_espejos ce ON c.id = ce.carrera_id
+                    LEFT JOIN sedes s ON ce.sede_id = s.id
+                    LEFT JOIN facultades f ON ce.facultad_id = f.id
+                    WHERE c.id = ?
+                    GROUP BY c.id";
 
-        if (!$carrera) {
-            $this->session->set('error', 'Carrera no encontrada');
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$id]);
+            $carrera = $stmt->fetch();
+
+            if (!$carrera) {
+                $this->session->set('error', 'Carrera no encontrada');
+                header('Location: ' . Config::get('app_url') . 'mallas');
+                exit;
+            }
+
+            // Procesar los resultados para asegurar el formato correcto
+            $carrera['sedes'] = $carrera['sedes'] ? explode(',', $carrera['sedes']) : [];
+            $carrera['facultades'] = $carrera['facultades'] ? explode(',', $carrera['facultades']) : [];
+            $carrera['codigos_carrera'] = $carrera['codigos_carrera'] ? explode(',', $carrera['codigos_carrera']) : [];
+            $carrera['vigencias_desde'] = $carrera['vigencias_desde'] ? explode(',', $carrera['vigencias_desde']) : [];
+            $carrera['vigencias_hasta'] = $carrera['vigencias_hasta'] ? explode(',', $carrera['vigencias_hasta']) : [];
+
+            // Obtener asignaturas vinculadas a través de la tabla mallas
+            $sql_asignaturas = "SELECT 
+                                a.id,
+                                a.nombre,
+                                a.tipo,
+                                a.periodicidad,
+                                a.estado,
+                                m.semestre
+                            FROM asignaturas a
+                            INNER JOIN mallas m ON a.id = m.asignatura_id
+                            WHERE m.carrera_id = ?
+                            ORDER BY m.semestre, a.nombre";
+
+            $stmt = $this->pdo->prepare($sql_asignaturas);
+            $stmt->execute([$id]);
+            $carrera['asignaturas'] = $stmt->fetchAll();
+
+            // Obtener datos del usuario
+            $user_id = $this->session->get('user_id');
+            $sql_user = "SELECT id, nombre, email FROM usuarios WHERE id = ?";
+            $stmt = $this->pdo->prepare($sql_user);
+            $stmt->execute([$user_id]);
+            $user = $stmt->fetch();
+
+            // Obtener mensajes de sesión y limpiarlos
+            $success = $this->session->get('success');
+            $error = $this->session->get('error');
+            $this->session->remove('success');
+            $this->session->remove('error');
+
+            // Renderizar la vista
+            echo $this->twig->render('mallas/show.twig', [
+                'carrera' => $carrera,
+                'app_url' => Config::get('app_url'),
+                'user' => $user,
+                'success' => $success,
+                'error' => $error,
+                'current_page' => 'mallas',
+                'session' => $_SESSION
+            ]);
+        } catch (\Exception $e) {
+            $this->session->set('error', 'Error al obtener los datos de la malla: ' . $e->getMessage());
             header('Location: ' . Config::get('app_url') . 'mallas');
             exit;
         }
+    }
 
-        // Procesar los resultados para asegurar el formato correcto
-        $carrera['sedes'] = $carrera['sedes'] ? explode(',', $carrera['sedes']) : [];
-        $carrera['facultades'] = $carrera['facultades'] ? explode(',', $carrera['facultades']) : [];
-        $carrera['codigos_carrera'] = $carrera['codigos_carrera'] ? explode(',', $carrera['codigos_carrera']) : [];
+    public function edit($id)
+    {
+        // Verificar autenticación
+        if (!$this->session->get('user_id')) {
+            $this->session->set('error', 'Por favor inicie sesión para acceder a las mallas');
+            header('Location: ' . Config::get('app_url') . 'login');
+            exit;
+        }
 
-        // Obtener usuario actual
-        $stmt = $this->pdo->prepare("SELECT * FROM usuarios WHERE id = ?");
-        $stmt->execute([$this->session->get('user_id')]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            // Obtener datos de la carrera
+            $sql = "SELECT 
+                        c.*,
+                        GROUP_CONCAT(ce.codigo_carrera) as codigos_carrera,
+                        GROUP_CONCAT(s.nombre) as sedes,
+                        GROUP_CONCAT(f.nombre) as facultades,
+                        GROUP_CONCAT(ce.vigencia_desde) as vigencias_desde,
+                        GROUP_CONCAT(ce.vigencia_hasta) as vigencias_hasta
+                    FROM carreras c
+                    LEFT JOIN carreras_espejos ce ON c.id = ce.carrera_id
+                    LEFT JOIN sedes s ON ce.sede_id = s.id
+                    LEFT JOIN facultades f ON ce.facultad_id = f.id
+                    WHERE c.id = ?
+                    GROUP BY c.id";
 
-        // Renderizar la vista
-        echo $this->twig->render('mallas/show.twig', [
-            'carrera' => $carrera,
-            'user' => $user,
-            'app_url' => Config::get('app_url'),
-            'current_page' => 'mallas',
-            'session' => $_SESSION
-        ]);
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$id]);
+            $carrera = $stmt->fetch();
+
+            if (!$carrera) {
+                $this->session->set('error', 'Carrera no encontrada');
+                header('Location: ' . Config::get('app_url') . 'mallas');
+                exit;
+            }
+
+            // Procesar los resultados para asegurar el formato correcto
+            $carrera['sedes'] = $carrera['sedes'] ? explode(',', $carrera['sedes']) : [];
+            $carrera['facultades'] = $carrera['facultades'] ? explode(',', $carrera['facultades']) : [];
+            $carrera['codigos_carrera'] = $carrera['codigos_carrera'] ? explode(',', $carrera['codigos_carrera']) : [];
+            $carrera['vigencias_desde'] = $carrera['vigencias_desde'] ? explode(',', $carrera['vigencias_desde']) : [];
+            $carrera['vigencias_hasta'] = $carrera['vigencias_hasta'] ? explode(',', $carrera['vigencias_hasta']) : [];
+
+            // Obtener asignaturas vinculadas a través de la tabla mallas
+            $sql_asignaturas = "SELECT 
+                                a.id,
+                                a.nombre,
+                                a.tipo,
+                                a.periodicidad,
+                                a.estado,
+                                m.semestre
+                            FROM asignaturas a
+                            INNER JOIN mallas m ON a.id = m.asignatura_id
+                            WHERE m.carrera_id = ?
+                            ORDER BY m.semestre, a.nombre";
+
+            $stmt = $this->pdo->prepare($sql_asignaturas);
+            $stmt->execute([$id]);
+            $carrera['asignaturas'] = $stmt->fetchAll();
+
+            // Obtener todas las sedes para el selector
+            $sql_sedes = "SELECT * FROM sedes ORDER BY nombre";
+            $stmt = $this->pdo->prepare($sql_sedes);
+            $stmt->execute();
+            $sedes = $stmt->fetchAll();
+
+            // Obtener datos del usuario
+            $user_id = $this->session->get('user_id');
+            $sql_user = "SELECT id, nombre, email FROM usuarios WHERE id = ?";
+            $stmt = $this->pdo->prepare($sql_user);
+            $stmt->execute([$user_id]);
+            $user = $stmt->fetch();
+
+            // Obtener mensajes de sesión y limpiarlos
+            $success = $this->session->get('success');
+            $error = $this->session->get('error');
+            $this->session->remove('success');
+            $this->session->remove('error');
+
+            // Renderizar la vista
+            echo $this->twig->render('mallas/edit.twig', [
+                'carrera' => $carrera,
+                'sedes' => $sedes,
+                'app_url' => Config::get('app_url'),
+                'user' => $user,
+                'success' => $success,
+                'error' => $error,
+                'current_page' => 'mallas',
+                'session' => $_SESSION
+            ]);
+        } catch (\Exception $e) {
+            $this->session->set('error', 'Error al obtener los datos de la malla: ' . $e->getMessage());
+            header('Location: ' . Config::get('app_url') . 'mallas');
+            exit;
+        }
     }
 } 

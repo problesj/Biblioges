@@ -7,12 +7,18 @@ use App\Core\Session;
 use PDO;
 use PDOException;
 use App\Core\Config;
+use src\Models\BibliografiaDeclarada;
+use src\Models\Autor;
+use src\Models\Asignatura;
+use App\Core\Request;
+use App\Core\Response;
 
 class BibliografiaDeclaradaController
 {
     protected $session;
     protected $pdo;
     protected $twig;
+    protected $flash;
 
     public function __construct()
     {
@@ -41,9 +47,13 @@ class BibliografiaDeclaradaController
         // Usar la instancia global de Twig
         global $twig;
         $this->twig = $twig;
+
+        // Usar la instancia global de Flash
+        global $flash;
+        $this->flash = $flash;
     }
 
-    public function index()
+    public function index(Request $request = null, Response $response = null): Response
     {
         // Verificar autenticación
         if (!$this->session->get('user_id')) {
@@ -68,126 +78,94 @@ class BibliografiaDeclaradaController
         $camposOrdenamiento = ['id', 'titulo', 'tipo', 'anio_publicacion', 'estado'];
         $filtros['orden'] = in_array($filtros['orden'], $camposOrdenamiento) ? $filtros['orden'] : 'titulo';
 
-        // Obtener todas las asignaturas para el filtro
-        $asignaturas = $this->pdo->query("
-            SELECT id, nombre 
-            FROM asignaturas 
-            ORDER BY nombre
-        ")->fetchAll();
-
         // Construir la consulta base
-        $sql = "
-            SELECT 
-                b.id,
-                b.titulo,
-                b.tipo,
-                b.anio_publicacion,
-                b.estado as estado_bibliografia,
-                COALESCE(
-                    GROUP_CONCAT(
-                        DISTINCT CONCAT(a.nombre, ' (', a.tipo, ')')
-                        SEPARATOR '; '
-                    ),
-                    'Sin asignaturas'
-                ) as asignaturas_vinculadas,
-                COALESCE(
-                    GROUP_CONCAT(CONCAT(au.apellidos, ', ', au.nombres) SEPARATOR '; '),
-                    'Sin información'
-                ) as autores
-            FROM bibliografias_declaradas b 
-            LEFT JOIN asignaturas_bibliografias ab ON b.id = ab.bibliografia_id
-            LEFT JOIN asignaturas a ON ab.asignatura_id = a.id 
-            LEFT JOIN bibliografias_autores ba ON b.id = ba.bibliografia_id
-            LEFT JOIN autores au ON ba.autor_id = au.id
-        ";
+        $query = BibliografiaDeclarada::with([
+            'autores',
+            'asignaturas.departamentos.facultad.sede'
+        ]);
 
-        // Agregar condiciones de filtro
-        $where = [];
-        $params = [];
-
+        // Aplicar filtros
         if (!empty($filtros['asignatura'])) {
-            $where[] = "a.id = :asignatura_id";
-            $params[':asignatura_id'] = $filtros['asignatura'];
+            $query->whereHas('asignaturas', function($q) use ($filtros) {
+                $q->where('asignaturas.id', $filtros['asignatura']);
+            });
         }
-
         if (!empty($filtros['tipo'])) {
-            $where[] = "b.tipo = :tipo";
-            $params[':tipo'] = $filtros['tipo'];
+            $query->where('tipo', $filtros['tipo']);
+        }
+        if (!empty($filtros['estado'])) {
+            $query->where('estado', $filtros['estado'] === 'A');
         }
 
-        if ($filtros['estado'] !== '') {
-            $where[] = "b.estado = :estado";
-            $params[':estado'] = $filtros['estado'];
+        // Aplicar ordenamiento
+        $query->orderBy($filtros['orden'], $filtros['direccion']);
+
+        // Obtener resultados
+        $bibliografias = $query->get();
+
+        // Obtener todas las asignaturas para el filtro
+        $asignaturas = Asignatura::where('estado', true)->orderBy('nombre')->get();
+
+        // Crear una nueva respuesta si no se proporciona una
+        if (!$response) {
+            $response = new Response();
         }
-
-        // Agregar condiciones WHERE si existen
-        if (!empty($where)) {
-            $sql .= " WHERE " . implode(" AND ", $where);
-        }
-
-        // Agregar GROUP BY
-        $sql .= " GROUP BY b.id, b.titulo, b.tipo, b.anio_publicacion, b.estado";
-
-        // Agregar ORDER BY con ordenamiento por defecto
-        if (empty($_GET['orden'])) {
-            $sql .= " ORDER BY b.titulo ASC, autores ASC, b.anio_publicacion DESC";
-        } else {
-            $sql .= " ORDER BY b." . $filtros['orden'] . " " . $filtros['direccion'];
-        }
-
-        // Preparar y ejecutar la consulta
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($params);
-        $bibliografias = $stmt->fetchAll();
-
-        // Obtener datos del usuario
-        $user_id = $this->session->get('user_id');
-        $sql_user = "SELECT id, nombre, email FROM usuarios WHERE id = ?";
-        $stmt = $this->pdo->prepare($sql_user);
-        $stmt->execute([$user_id]);
-        $user = $stmt->fetch();
 
         // Renderizar la vista
-        echo $this->twig->render('bibliografias/index.twig', [
+        return $this->render($response, 'bibliografias_declaradas/index.twig', [
             'bibliografias' => $bibliografias,
             'asignaturas' => $asignaturas,
             'filtros' => $filtros,
-            'app_url' => Config::get('app_url'),
-            'user' => $user,
-            'session' => $_SESSION
+            'app_url' => Config::get('app_url')
         ]);
     }
 
     /**
      * Muestra el formulario para crear una nueva bibliografía declarada.
      */
-    public function create(Request $request, Response $response): Response
+    public function create(Request $request = null, Response $response = null): Response
     {
-        $autores = Autor::where('estado', true)->get();
-        $asignaturas = Asignatura::where('estado', true)->get();
+        // Verificar autenticación
+        if (!$this->session->get('user_id')) {
+            $this->session->set('error', 'Por favor inicie sesión para acceder a las bibliografías');
+            header('Location: ' . Config::get('app_url') . 'login');
+            exit;
+        }
 
+        $autores = Autor::orderBy('apellidos')->get();
+        $asignaturas = Asignatura::where('estado', true)->orderBy('nombre')->get();
+
+        // Crear una nueva respuesta si no se proporciona una
+        if (!$response) {
+            $response = new Response();
+        }
+
+        // Renderizar la vista
         return $this->render($response, 'bibliografias_declaradas/form.twig', [
+            'bibliografia' => new BibliografiaDeclarada(),
             'autores' => $autores,
-            'asignaturas' => $asignaturas
+            'asignaturas' => $asignaturas,
+            'app_url' => Config::get('app_url')
         ]);
     }
 
     /**
      * Almacena una nueva bibliografía declarada.
      */
-    public function store(Request $request, Response $response): Response
+    public function store(Request $request = null, Response $response = null): Response
     {
-        $data = $request->getParsedBody();
+        $data = $request ? $request->getParsedBody() : $_POST;
 
         try {
             $bibliografia = new BibliografiaDeclarada();
             $bibliografia->titulo = $data['titulo'];
             $bibliografia->tipo = $data['tipo'];
             $bibliografia->anio_publicacion = $data['anio_publicacion'];
-            $bibliografia->editorial = $data['editorial'];
-            $bibliografia->isbn = $data['isbn'];
-            $bibliografia->doi = $data['doi'];
-            $bibliografia->url = $data['url'];
+            $bibliografia->editorial = $data['editorial'] ?? null;
+            $bibliografia->isbn = $data['isbn'] ?? null;
+            $bibliografia->doi = $data['doi'] ?? null;
+            $bibliografia->url = $data['url'] ?? null;
+            $bibliografia->formato = $data['formato'] ?? 'impreso';
             $bibliografia->asignatura_id = $data['asignatura_id'];
             $bibliografia->estado = true;
             $bibliografia->save();
@@ -197,63 +175,112 @@ class BibliografiaDeclaradaController
                 $bibliografia->autores()->attach($data['autores']);
             }
 
-            return $response->withHeader('Location', '/bibliografias-declaradas')
-                ->withStatus(302);
+            $this->flash->addMessage('success', 'Bibliografía declarada creada exitosamente.');
+            header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas');
+            exit;
         } catch (\Exception $e) {
-            return $this->render($response, 'bibliografias_declaradas/form.twig', [
-                'error' => 'Error al crear la bibliografía declarada: ' . $e->getMessage(),
-                'autores' => Autor::where('estado', true)->get(),
-                'asignaturas' => Asignatura::where('estado', true)->get(),
-                'data' => $data
-            ]);
+            $this->flash->addMessage('error', 'Error al crear la bibliografía declarada: ' . $e->getMessage());
+            if ($response) {
+                return $this->render($response, 'bibliografias_declaradas/form.twig', [
+                    'bibliografia' => new BibliografiaDeclarada($data),
+                    'autores' => Autor::orderBy('apellidos')->get(),
+                    'asignaturas' => Asignatura::where('estado', true)->orderBy('nombre')->get(),
+                    'error' => $e->getMessage()
+                ]);
+            } else {
+                echo $this->twig->render('bibliografias_declaradas/form.twig', [
+                    'bibliografia' => new BibliografiaDeclarada($data),
+                    'autores' => Autor::orderBy('apellidos')->get(),
+                    'asignaturas' => Asignatura::where('estado', true)->orderBy('nombre')->get(),
+                    'error' => $e->getMessage(),
+                    'app_url' => Config::get('app_url')
+                ]);
+                return null;
+            }
         }
     }
 
     /**
      * Muestra los detalles de una bibliografía declarada.
      */
-    public function show(Request $request, Response $response, array $args): Response
+    public function show(Request $request = null, Response $response = null, array $args = []): Response
     {
-        $bibliografia = BibliografiaDeclarada::with(['autores', 'asignatura'])
-            ->findOrFail($args['id']);
+        $id = $args['id'] ?? $_GET['id'] ?? null;
+        if (!$id) {
+            header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas');
+            exit;
+        }
 
-        return $this->render($response, 'bibliografias_declaradas/show.twig', [
-            'bibliografia' => $bibliografia
-        ]);
+        $bibliografia = BibliografiaDeclarada::with(['autores', 'asignatura.departamento.facultad.sede'])
+            ->findOrFail($id);
+
+        if ($response) {
+            return $this->render($response, 'bibliografias_declaradas/show.twig', [
+                'bibliografia' => $bibliografia
+            ]);
+        } else {
+            echo $this->twig->render('bibliografias_declaradas/show.twig', [
+                'bibliografia' => $bibliografia,
+                'app_url' => Config::get('app_url')
+            ]);
+            return null;
+        }
     }
 
     /**
      * Muestra el formulario para editar una bibliografía declarada.
      */
-    public function edit(Request $request, Response $response, array $args): Response
+    public function edit(Request $request = null, Response $response = null, array $args = []): Response
     {
-        $bibliografia = BibliografiaDeclarada::with('autores')->findOrFail($args['id']);
-        $autores = Autor::where('estado', true)->get();
-        $asignaturas = Asignatura::where('estado', true)->get();
+        $id = $args['id'] ?? $_GET['id'] ?? null;
+        if (!$id) {
+            header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas');
+            exit;
+        }
 
-        return $this->render($response, 'bibliografias_declaradas/form.twig', [
-            'bibliografia' => $bibliografia,
-            'autores' => $autores,
-            'asignaturas' => $asignaturas
-        ]);
+        $bibliografia = BibliografiaDeclarada::with('autores')->findOrFail($id);
+        $autores = Autor::where('estado', true)->orderBy('nombre')->get();
+        $asignaturas = Asignatura::where('estado', true)->orderBy('nombre')->get();
+
+        if ($response) {
+            return $this->render($response, 'bibliografias_declaradas/form.twig', [
+                'bibliografia' => $bibliografia,
+                'autores' => $autores,
+                'asignaturas' => $asignaturas
+            ]);
+        } else {
+            echo $this->twig->render('bibliografias_declaradas/form.twig', [
+                'bibliografia' => $bibliografia,
+                'autores' => $autores,
+                'asignaturas' => $asignaturas,
+                'app_url' => Config::get('app_url')
+            ]);
+            return null;
+        }
     }
 
     /**
      * Actualiza una bibliografía declarada existente.
      */
-    public function update(Request $request, Response $response, array $args): Response
+    public function update(Request $request = null, Response $response = null, array $args = []): Response
     {
-        $data = $request->getParsedBody();
+        $id = $args['id'] ?? $_POST['id'] ?? null;
+        if (!$id) {
+            header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas');
+            exit;
+        }
+
+        $data = $request ? $request->getParsedBody() : $_POST;
 
         try {
-            $bibliografia = BibliografiaDeclarada::findOrFail($args['id']);
+            $bibliografia = BibliografiaDeclarada::findOrFail($id);
             $bibliografia->titulo = $data['titulo'];
             $bibliografia->tipo = $data['tipo'];
             $bibliografia->anio_publicacion = $data['anio_publicacion'];
-            $bibliografia->editorial = $data['editorial'];
-            $bibliografia->isbn = $data['isbn'];
-            $bibliografia->doi = $data['doi'];
-            $bibliografia->url = $data['url'];
+            $bibliografia->editorial = $data['editorial'] ?? null;
+            $bibliografia->isbn = $data['isbn'] ?? null;
+            $bibliografia->doi = $data['doi'] ?? null;
+            $bibliografia->url = $data['url'] ?? null;
             $bibliografia->asignatura_id = $data['asignatura_id'];
             $bibliografia->estado = isset($data['estado']);
             $bibliografia->save();
@@ -261,37 +288,83 @@ class BibliografiaDeclaradaController
             // Actualizar autores
             if (isset($data['autores']) && is_array($data['autores'])) {
                 $bibliografia->autores()->sync($data['autores']);
+            } else {
+                $bibliografia->autores()->detach();
             }
 
-            return $response->withHeader('Location', '/bibliografias-declaradas')
-                ->withStatus(302);
+            $this->flash->addMessage('success', 'Bibliografía declarada actualizada exitosamente.');
+            header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas');
+            exit;
         } catch (\Exception $e) {
-            return $this->render($response, 'bibliografias_declaradas/form.twig', [
-                'error' => 'Error al actualizar la bibliografía declarada: ' . $e->getMessage(),
-                'bibliografia' => BibliografiaDeclarada::find($args['id']),
-                'autores' => Autor::where('estado', true)->get(),
-                'asignaturas' => Asignatura::where('estado', true)->get(),
-                'data' => $data
-            ]);
+            $this->flash->addMessage('error', 'Error al actualizar la bibliografía declarada: ' . $e->getMessage());
+            if ($response) {
+                return $this->render($response, 'bibliografias_declaradas/form.twig', [
+                    'bibliografia' => BibliografiaDeclarada::find($id),
+                    'autores' => Autor::where('estado', true)->get(),
+                    'asignaturas' => Asignatura::where('estado', true)->get(),
+                    'error' => $e->getMessage()
+                ]);
+            } else {
+                echo $this->twig->render('bibliografias_declaradas/form.twig', [
+                    'bibliografia' => BibliografiaDeclarada::find($id),
+                    'autores' => Autor::where('estado', true)->get(),
+                    'asignaturas' => Asignatura::where('estado', true)->get(),
+                    'error' => $e->getMessage(),
+                    'app_url' => Config::get('app_url')
+                ]);
+                return null;
+            }
         }
     }
 
     /**
      * Elimina una bibliografía declarada.
      */
-    public function destroy(Request $request, Response $response, array $args): Response
+    public function destroy(Request $request = null, Response $response = null, array $args = []): Response
     {
+        $id = $args['id'] ?? $_POST['id'] ?? null;
+        if (!$id) {
+            header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas');
+            exit;
+        }
+
         try {
-            $bibliografia = BibliografiaDeclarada::findOrFail($args['id']);
+            $bibliografia = BibliografiaDeclarada::findOrFail($id);
+            
+            // Verificar si hay bibliografías disponibles asociadas
+            if ($bibliografia->disponibles()->count() > 0) {
+                throw new \Exception('No se puede eliminar la bibliografía porque tiene ejemplares disponibles asociados.');
+            }
+
+            // Eliminar relaciones con autores
+            $bibliografia->autores()->detach();
+            
+            // Eliminar la bibliografía
             $bibliografia->delete();
 
-            return $response->withHeader('Location', '/bibliografias-declaradas')
-                ->withStatus(302);
+            $this->flash->addMessage('success', 'Bibliografía declarada eliminada exitosamente.');
         } catch (\Exception $e) {
-            return $this->render($response, 'bibliografias_declaradas/index.twig', [
-                'error' => 'Error al eliminar la bibliografía declarada: ' . $e->getMessage(),
-                'bibliografias' => BibliografiaDeclarada::with(['autores', 'asignatura'])->get()
-            ]);
+            $this->flash->addMessage('error', 'Error al eliminar la bibliografía declarada: ' . $e->getMessage());
         }
+
+        header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas');
+        exit;
+    }
+
+    protected function render(Response $response, string $template, array $data = []): Response
+    {
+        // Agregar variables globales a la plantilla
+        $data['app_url'] = Config::get('app_url');
+        $data['session'] = $_SESSION;
+        $data['current_page'] = 'bibliografias-declaradas';
+        
+        // Renderizar la plantilla
+        $content = $this->twig->render($template, $data);
+        
+        // Establecer el contenido en la respuesta
+        header('Content-Type: text/html; charset=utf-8');
+        echo $content;
+        
+        return $response;
     }
 } 

@@ -18,7 +18,7 @@
                 Nueva Bibliografía Declarada
             {% endif %}
         </h1>
-        <a href="{{ url_for('bibliografias-declaradas.index') }}" class="btn btn-secondary">
+        <a href="{{ app_url }}bibliografias-declaradas" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Volver
         </a>
     </div>
@@ -29,7 +29,7 @@
 
     <div class="card">
         <div class="card-body">
-            <form method="POST" action="{% if bibliografia.id %}{{ url_for('bibliografias-declaradas.update', {id: bibliografia.id}) }}{% else %}{{ url_for('bibliografias-declaradas.store') }}{% endif %}">
+            <form method="POST" action="{% if bibliografia.id %}{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}{% else %}{{ app_url }}bibliografias-declaradas{% endif %}">
                 {% if bibliografia.id %}
                     <input type="hidden" name="_METHOD" value="PUT">
                 {% endif %}

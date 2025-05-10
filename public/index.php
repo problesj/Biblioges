@@ -564,6 +564,80 @@ if (preg_match('/^mallas\/(\d+)$/', $path, $matches) && $_SERVER['REQUEST_METHOD
     exit;
 }
 
+// Verificar si la ruta es para editar una malla
+if (preg_match('/^mallas\/(\d+)\/edit$/', $path, $matches) && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    $controller = new \App\Controllers\MallaController();
+    $controller->edit($matches[1]);
+    exit;
+}
+
+// Rutas de la API
+if (preg_match('/^api\/facultades\/sede\/(\d+)$/', $path, $matches) && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    error_log('Ruta de facultades por sede accedida. Sede ID: ' . $matches[1]); // Log para depuración
+    error_log('Ruta completa: ' . $path); // Log para depuración
+    error_log('Método: ' . $_SERVER['REQUEST_METHOD']); // Log para depuración
+    
+    header('Content-Type: application/json');
+    $controller = new \App\Controllers\ApiController();
+    $controller->getFacultadesBySede($matches[1]);
+    exit;
+}
+
+if (preg_match('/^api\/departamentos\/(\d+)\/(\d+)$/', $path, $matches) && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    $controller = new \App\Controllers\ApiController();
+    $controller->getDepartamentos($matches[1], $matches[2]);
+    exit;
+}
+
+if (preg_match('/^api\/asignaturas\/departamento\/(\d+)$/', $path, $matches) && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    $controller = new \App\Controllers\ApiController();
+    $controller->getAsignaturasDepartamento($matches[1]);
+    exit;
+}
+
+if (preg_match('/^api\/mallas\/(\d+)$/', $path, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $controller = new \App\Controllers\ApiController();
+    $controller->updateMalla($matches[1]);
+    exit;
+}
+
+if (preg_match('/^api\/asignaturas\/(\d+)\/detalles$/', $path, $matches) && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    $controller = new \App\Controllers\ApiController();
+    $controller->getDetallesAsignatura($matches[1]);
+    exit;
+}
+
+if (preg_match('/^api\/asignaturas\/(\d+)\/vinculadas$/', $path, $matches) && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    $controller = new \App\Controllers\ApiController();
+    $controller->getAsignaturasVinculadas($matches[1]);
+    exit;
+}
+
+// Verificar si la ruta es para crear y almacenar bibliografías declaradas
+if ($path === 'bibliografias-declaradas') {
+    $controller = new \App\Controllers\BibliografiaDeclaradaController();
+    if (isset($pathSegments[1])) {
+        if ($pathSegments[1] === 'create') {
+            $controller->create();
+        } else if ($pathSegments[1] === 'store') {
+            $controller->store();
+        } else if (is_numeric($pathSegments[1])) {
+            if (isset($pathSegments[2]) && $pathSegments[2] === 'edit') {
+                $controller->edit($pathSegments[1]);
+            } else if (isset($pathSegments[2]) && $pathSegments[2] === 'update') {
+                $controller->update($pathSegments[1]);
+            } else if (isset($pathSegments[2]) && $pathSegments[2] === 'delete') {
+                $controller->destroy($pathSegments[1]);
+            } else {
+                $controller->show($pathSegments[1]);
+            }
+        }
+    } else {
+        $controller->index();
+    }
+    exit;
+}
+
 // Dividir la ruta en segmentos para el enrutamiento
 $pathSegments = explode('/', $path);
 
@@ -595,7 +669,25 @@ switch ($pathSegments[0]) {
         break;
     case 'bibliografias-declaradas':
         $controller = new \App\Controllers\BibliografiaDeclaradaController();
-        $controller->index();
+        if (isset($pathSegments[1])) {
+            if ($pathSegments[1] === 'create') {
+                $controller->create();
+            } else if ($pathSegments[1] === 'store') {
+                $controller->store();
+            } else if (is_numeric($pathSegments[1])) {
+                if (isset($pathSegments[2]) && $pathSegments[2] === 'edit') {
+                    $controller->edit($pathSegments[1]);
+                } else if (isset($pathSegments[2]) && $pathSegments[2] === 'update') {
+                    $controller->update($pathSegments[1]);
+                } else if (isset($pathSegments[2]) && $pathSegments[2] === 'delete') {
+                    $controller->destroy($pathSegments[1]);
+                } else {
+                    $controller->show($pathSegments[1]);
+                }
+            }
+        } else {
+            $controller->index();
+        }
         break;
     case 'carreras':
         $controller = new \App\Controllers\CarreraController();

@@ -86,20 +86,14 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% set codigos = carrera.codigos|split('\n') %}
-                        {% set vigencias_desde = carrera.vigencias_desde|split('\n') %}
-                        {% set vigencias_hasta = carrera.vigencias_hasta|split('\n') %}
-                        {% set facultades = carrera.facultades|split('\n') %}
-                        {% set sedes = carrera.sedes|split('\n') %}
-                        
-                        {% for i in 0..(codigos|length - 1) %}
+                        {% for i in 0..(carrera.codigos_carrera|length - 1) %}
                             <tr>
-                                <td>{{ codigos[i] }}</td>
+                                <td>{{ carrera.codigos_carrera[i] }}</td>
                                 <td>
-                                    {{ vigencias_desde[i] }} - {{ vigencias_hasta[i] }}
+                                    {{ carrera.vigencias_desde[i] }} - {{ carrera.vigencias_hasta[i] }}
                                 </td>
-                                <td>{{ facultades[i] }}</td>
-                                <td>{{ sedes[i] }}</td>
+                                <td>{{ carrera.facultades[i] }}</td>
+                                <td>{{ carrera.sedes[i] }}</td>
                                 <td>
                                     <span class="badge bg-success">Activo</span>
                                 </td>
