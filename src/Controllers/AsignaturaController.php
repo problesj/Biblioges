@@ -793,15 +793,62 @@ class AsignaturaController extends BaseController
     public function destroy($id)
     {
         try {
-            $this->asignaturaModel->delete($id);
-            return Response::json([
-                'message' => 'Asignatura eliminada exitosamente'
-            ]);
+            // Verificar autenticación
+            if (!$this->session->get('user_id')) {
+                $this->session->set('error', 'No autorizado');
+                header('Location: ' . Config::get('app_url') . 'login');
+                exit;
+            }
+
+            // Iniciar transacción
+            $this->db->beginTransaction();
+
+            try {
+                // Verificar si la asignatura existe
+                $stmt = $this->db->prepare("SELECT id FROM asignaturas WHERE id = ?");
+                $stmt->execute([$id]);
+                if (!$stmt->fetch()) {
+                    throw new \Exception('Asignatura no encontrada');
+                }
+
+                // Eliminar relaciones en asignaturas_departamentos
+                $stmt = $this->db->prepare("DELETE FROM asignaturas_departamentos WHERE asignatura_id = ?");
+                $stmt->execute([$id]);
+
+                // Eliminar relaciones en asignaturas_formacion
+                $stmt = $this->db->prepare("DELETE FROM asignaturas_formacion WHERE asignatura_formacion_id = ? OR asignatura_regular_id = ?");
+                $stmt->execute([$id, $id]);
+
+                // Eliminar relaciones en mallas
+                $stmt = $this->db->prepare("DELETE FROM mallas WHERE asignatura_id = ?");
+                $stmt->execute([$id]);
+
+                // Eliminar relaciones en asignaturas_bibliografias
+                $stmt = $this->db->prepare("DELETE FROM asignaturas_bibliografias WHERE asignatura_id = ?");
+                $stmt->execute([$id]);
+
+                // Finalmente, eliminar la asignatura
+                $stmt = $this->db->prepare("DELETE FROM asignaturas WHERE id = ?");
+                $stmt->execute([$id]);
+
+                // Confirmar transacción
+                $this->db->commit();
+
+                // Establecer mensaje de éxito y redirigir
+                $this->session->set('success', 'Asignatura eliminada exitosamente');
+                header('Location: ' . Config::get('app_url') . 'asignaturas');
+                exit;
+
+            } catch (\Exception $e) {
+                // Revertir transacción en caso de error
+                $this->db->rollBack();
+                throw $e;
+            }
         } catch (\Exception $e) {
-            return Response::json([
-                'message' => 'Error al eliminar la asignatura',
-                'error' => $e->getMessage()
-            ], 500);
+            error_log("Error en AsignaturaController@destroy: " . $e->getMessage());
+            $this->session->set('error', 'Error al eliminar la asignatura: ' . $e->getMessage());
+            header('Location: ' . Config::get('app_url') . 'asignaturas');
+            exit;
         }
     }
 

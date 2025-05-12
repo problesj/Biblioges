@@ -185,52 +185,30 @@ class __TwigTemplate_cb8122c50c7c21b18f880e5b0ecb548b extends Template
                     <tbody>
                         ";
         // line 89
-        $context["codigos"] = Twig\Extension\CoreExtension::split($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "codigos", [], "any", false, false, false, 89), "
-");
-        // line 90
-        yield "                        ";
-        $context["vigencias_desde"] = Twig\Extension\CoreExtension::split($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "vigencias_desde", [], "any", false, false, false, 90), "
-");
-        // line 91
-        yield "                        ";
-        $context["vigencias_hasta"] = Twig\Extension\CoreExtension::split($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "vigencias_hasta", [], "any", false, false, false, 91), "
-");
-        // line 92
-        yield "                        ";
-        $context["facultades"] = Twig\Extension\CoreExtension::split($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "facultades", [], "any", false, false, false, 92), "
-");
-        // line 93
-        yield "                        ";
-        $context["sedes"] = Twig\Extension\CoreExtension::split($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "sedes", [], "any", false, false, false, 93), "
-");
-        // line 94
-        yield "                        
-                        ";
-        // line 95
         $context['_parent'] = $context;
-        $context['_seq'] = CoreExtension::ensureTraversable(range(0, (Twig\Extension\CoreExtension::length($this->env->getCharset(), ($context["codigos"] ?? null)) - 1)));
+        $context['_seq'] = CoreExtension::ensureTraversable(range(0, (Twig\Extension\CoreExtension::length($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "codigos_carrera", [], "any", false, false, false, 89)) - 1)));
         foreach ($context['_seq'] as $context["_key"] => $context["i"]) {
-            // line 96
+            // line 90
             yield "                            <tr>
                                 <td>";
-            // line 97
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v0 = ($context["codigos"] ?? null)) && is_array($_v0) || $_v0 instanceof ArrayAccess ? ($_v0[$context["i"]] ?? null) : null), "html", null, true);
+            // line 91
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v0 = CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "codigos_carrera", [], "any", false, false, false, 91)) && is_array($_v0) || $_v0 instanceof ArrayAccess ? ($_v0[$context["i"]] ?? null) : null), "html", null, true);
             yield "</td>
                                 <td>
                                     ";
-            // line 99
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v1 = ($context["vigencias_desde"] ?? null)) && is_array($_v1) || $_v1 instanceof ArrayAccess ? ($_v1[$context["i"]] ?? null) : null), "html", null, true);
+            // line 93
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v1 = CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "vigencias_desde", [], "any", false, false, false, 93)) && is_array($_v1) || $_v1 instanceof ArrayAccess ? ($_v1[$context["i"]] ?? null) : null), "html", null, true);
             yield " - ";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v2 = ($context["vigencias_hasta"] ?? null)) && is_array($_v2) || $_v2 instanceof ArrayAccess ? ($_v2[$context["i"]] ?? null) : null), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v2 = CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "vigencias_hasta", [], "any", false, false, false, 93)) && is_array($_v2) || $_v2 instanceof ArrayAccess ? ($_v2[$context["i"]] ?? null) : null), "html", null, true);
             yield "
                                 </td>
                                 <td>";
-            // line 101
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v3 = ($context["facultades"] ?? null)) && is_array($_v3) || $_v3 instanceof ArrayAccess ? ($_v3[$context["i"]] ?? null) : null), "html", null, true);
+            // line 95
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v3 = CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "facultades", [], "any", false, false, false, 95)) && is_array($_v3) || $_v3 instanceof ArrayAccess ? ($_v3[$context["i"]] ?? null) : null), "html", null, true);
             yield "</td>
                                 <td>";
-            // line 102
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v4 = ($context["sedes"] ?? null)) && is_array($_v4) || $_v4 instanceof ArrayAccess ? ($_v4[$context["i"]] ?? null) : null), "html", null, true);
+            // line 96
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v4 = CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "sedes", [], "any", false, false, false, 96)) && is_array($_v4) || $_v4 instanceof ArrayAccess ? ($_v4[$context["i"]] ?? null) : null), "html", null, true);
             yield "</td>
                                 <td>
                                     <span class=\"badge bg-success\">Activo</span>
@@ -241,7 +219,7 @@ class __TwigTemplate_cb8122c50c7c21b18f880e5b0ecb548b extends Template
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_key'], $context['i'], $context['_parent']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 108
+        // line 102
         yield "                    </tbody>
                 </table>
             </div>
@@ -266,44 +244,44 @@ class __TwigTemplate_cb8122c50c7c21b18f880e5b0ecb548b extends Template
                     </thead>
                     <tbody>
                         ";
-        // line 131
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "asignaturas", [], "any", true, true, false, 131) && (Twig\Extension\CoreExtension::length($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "asignaturas", [], "any", false, false, false, 131)) > 0))) {
-            // line 132
+        // line 125
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "asignaturas", [], "any", true, true, false, 125) && (Twig\Extension\CoreExtension::length($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "asignaturas", [], "any", false, false, false, 125)) > 0))) {
+            // line 126
             yield "                            ";
             $context['_parent'] = $context;
-            $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "asignaturas", [], "any", false, false, false, 132));
+            $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "asignaturas", [], "any", false, false, false, 126));
             foreach ($context['_seq'] as $context["_key"] => $context["asignatura"]) {
-                // line 133
+                // line 127
                 yield "                                <tr>
                                     <td>";
-                // line 134
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "semestre", [], "any", false, false, false, 134), "html", null, true);
+                // line 128
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "semestre", [], "any", false, false, false, 128), "html", null, true);
                 yield "</td>
                                     <td>";
-                // line 135
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "nombre", [], "any", false, false, false, 135), "html", null, true);
+                // line 129
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "nombre", [], "any", false, false, false, 129), "html", null, true);
                 yield "</td>
                                     <td>";
-                // line 136
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "tipo", [], "any", false, false, false, 136), "html", null, true);
+                // line 130
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "tipo", [], "any", false, false, false, 130), "html", null, true);
                 yield "</td>
                                     <td>";
-                // line 137
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "periodicidad", [], "any", false, false, false, 137), "html", null, true);
+                // line 131
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "periodicidad", [], "any", false, false, false, 131), "html", null, true);
                 yield "</td>
                                     <td>
                                         ";
-                // line 139
-                if ((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "estado", [], "any", false, false, false, 139) == 1)) {
-                    // line 140
+                // line 133
+                if ((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "estado", [], "any", false, false, false, 133) == 1)) {
+                    // line 134
                     yield "                                            <span class=\"badge bg-success\">Activo</span>
                                         ";
                 } else {
-                    // line 142
+                    // line 136
                     yield "                                            <span class=\"badge bg-danger\">Inactivo</span>
                                         ";
                 }
-                // line 144
+                // line 138
                 yield "                                    </td>
                                 </tr>
                             ";
@@ -311,16 +289,16 @@ class __TwigTemplate_cb8122c50c7c21b18f880e5b0ecb548b extends Template
             $_parent = $context['_parent'];
             unset($context['_seq'], $context['_key'], $context['asignatura'], $context['_parent']);
             $context = array_intersect_key($context, $_parent) + $_parent;
-            // line 147
+            // line 141
             yield "                        ";
         } else {
-            // line 148
+            // line 142
             yield "                            <tr>
                                 <td colspan=\"5\" class=\"text-center\">No hay asignaturas vinculadas a esta carrera</td>
                             </tr>
                         ";
         }
-        // line 152
+        // line 146
         yield "                    </tbody>
                 </table>
             </div>
@@ -331,14 +309,14 @@ class __TwigTemplate_cb8122c50c7c21b18f880e5b0ecb548b extends Template
         yield from [];
     }
 
-    // line 160
+    // line 154
     /**
      * @return iterable<null|scalar|\Stringable>
      */
     public function block_scripts(array $context, array $blocks = []): iterable
     {
         $macros = $this->macros;
-        // line 161
+        // line 155
         yield "<script>
     document.addEventListener('DOMContentLoaded', function() {
         // Toggle del panel lateral
@@ -387,7 +365,7 @@ class __TwigTemplate_cb8122c50c7c21b18f880e5b0ecb548b extends Template
      */
     public function getDebugInfo(): array
     {
-        return array (  342 => 161,  335 => 160,  324 => 152,  318 => 148,  315 => 147,  307 => 144,  303 => 142,  299 => 140,  297 => 139,  292 => 137,  288 => 136,  284 => 135,  280 => 134,  277 => 133,  272 => 132,  270 => 131,  245 => 108,  233 => 102,  229 => 101,  222 => 99,  217 => 97,  214 => 96,  210 => 95,  207 => 94,  203 => 93,  199 => 92,  195 => 91,  191 => 90,  188 => 89,  162 => 65,  158 => 63,  150 => 61,  148 => 60,  137 => 51,  133 => 49,  129 => 47,  127 => 46,  117 => 39,  108 => 33,  90 => 18,  82 => 15,  71 => 6,  64 => 5,  53 => 3,  42 => 1,);
+        return array (  320 => 155,  313 => 154,  302 => 146,  296 => 142,  293 => 141,  285 => 138,  281 => 136,  277 => 134,  275 => 133,  270 => 131,  266 => 130,  262 => 129,  258 => 128,  255 => 127,  250 => 126,  248 => 125,  223 => 102,  211 => 96,  207 => 95,  200 => 93,  195 => 91,  192 => 90,  188 => 89,  162 => 65,  158 => 63,  150 => 61,  148 => 60,  137 => 51,  133 => 49,  129 => 47,  127 => 46,  117 => 39,  108 => 33,  90 => 18,  82 => 15,  71 => 6,  64 => 5,  53 => 3,  42 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -480,20 +458,14 @@ class __TwigTemplate_cb8122c50c7c21b18f880e5b0ecb548b extends Template
                         </tr>
                     </thead>
                     <tbody>
-                        {% set codigos = carrera.codigos|split('\\n') %}
-                        {% set vigencias_desde = carrera.vigencias_desde|split('\\n') %}
-                        {% set vigencias_hasta = carrera.vigencias_hasta|split('\\n') %}
-                        {% set facultades = carrera.facultades|split('\\n') %}
-                        {% set sedes = carrera.sedes|split('\\n') %}
-                        
-                        {% for i in 0..(codigos|length - 1) %}
+                        {% for i in 0..(carrera.codigos_carrera|length - 1) %}
                             <tr>
-                                <td>{{ codigos[i] }}</td>
+                                <td>{{ carrera.codigos_carrera[i] }}</td>
                                 <td>
-                                    {{ vigencias_desde[i] }} - {{ vigencias_hasta[i] }}
+                                    {{ carrera.vigencias_desde[i] }} - {{ carrera.vigencias_hasta[i] }}
                                 </td>
-                                <td>{{ facultades[i] }}</td>
-                                <td>{{ sedes[i] }}</td>
+                                <td>{{ carrera.facultades[i] }}</td>
+                                <td>{{ carrera.sedes[i] }}</td>
                                 <td>
                                     <span class=\"badge bg-success\">Activo</span>
                                 </td>

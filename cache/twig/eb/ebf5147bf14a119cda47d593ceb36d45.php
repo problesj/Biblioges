@@ -293,7 +293,7 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
             yield "\" href=\"";
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
             yield "bibliografias-declaradas\">
-                            <i class=\"fas fa-list\"></i> Bibliografía Declarada
+                            <i class=\"fas fa-book\"></i> Bibliografía Declarada
                         </a>
                     </li>
                     <li class=\"nav-item\">
@@ -826,7 +826,7 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                     </li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link {% if current_page == 'bibliografias-declaradas' %}active{% endif %}\" href=\"{{ app_url }}bibliografias-declaradas\">
-                            <i class=\"fas fa-list\"></i> Bibliografía Declarada
+                            <i class=\"fas fa-book\"></i> Bibliografía Declarada
                         </a>
                     </li>
                     <li class=\"nav-item\">
