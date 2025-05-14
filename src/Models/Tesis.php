@@ -2,8 +2,12 @@
 
 namespace src\Models;
 
-class Tesis extends BaseModel
+use Illuminate\Database\Eloquent\Model;
+
+class Tesis extends Model
 {
+    protected $table = 'tesis';
+
     /**
      * Los atributos que deberían ser asignados en masa.
      *
@@ -27,6 +31,6 @@ class Tesis extends BaseModel
      */
     public function carrera()
     {
-        return $this->belongsTo(Carrera::class);
+        return $this->belongsTo(Carrera::class, 'carrera_id');
     }
 } 

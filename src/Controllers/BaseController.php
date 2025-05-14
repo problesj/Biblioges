@@ -41,8 +41,20 @@ class BaseController
     protected function render(Response $response, string $template, array $data = []): Response
     {
         global $twig;
-        $response->getBody()->write($twig->render($template, $data));
-        return $response;
+        try {
+            error_log('Renderizando plantilla: ' . $template);
+            error_log('Datos pasados a la plantilla: ' . print_r($data, true));
+            
+            $content = $twig->render($template, $data);
+            error_log('Plantilla renderizada correctamente');
+            
+            $response->getBody()->write($content);
+            return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
+        } catch (\Exception $e) {
+            error_log('Error al renderizar la plantilla: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            throw $e;
+        }
     }
 
     /**

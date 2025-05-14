@@ -23,11 +23,16 @@ class BibliografiaDeclarada extends Model
         'tipo',
         'anio_publicacion',
         'editorial',
-        'isbn',
-        'doi',
+        'edicion',
         'url',
-        'estado',
-        'formato'
+        'nota',
+        'formato',
+        'estado'
+    ];
+
+    protected $casts = [
+        'anio_publicacion' => 'integer',
+        'estado' => 'boolean'
     ];
 
     /**
@@ -46,7 +51,6 @@ class BibliografiaDeclarada extends Model
     public function autores()
     {
         return $this->belongsToMany(Autor::class, 'bibliografias_autores', 'bibliografia_id', 'autor_id')
-            ->withPivot('fecha_creacion', 'fecha_actualizacion')
             ->withTimestamps('fecha_creacion', 'fecha_actualizacion');
     }
 
@@ -79,5 +83,35 @@ class BibliografiaDeclarada extends Model
     public function disponibles()
     {
         return $this->hasMany(BibliografiaDisponible::class, 'bibliografia_declarada_id');
+    }
+
+    public function libro()
+    {
+        return $this->hasOne(Libro::class, 'bibliografia_id');
+    }
+
+    public function tesis()
+    {
+        return $this->hasOne(Tesis::class, 'bibliografia_id');
+    }
+
+    public function articulo()
+    {
+        return $this->hasOne(Articulo::class, 'bibliografia_id');
+    }
+
+    public function generico()
+    {
+        return $this->hasOne(Generico::class, 'bibliografia_id');
+    }
+
+    public function sitioWeb()
+    {
+        return $this->hasOne(SitioWeb::class, 'bibliografia_id');
+    }
+
+    public function software()
+    {
+        return $this->hasOne(Software::class, 'bibliografia_id');
     }
 } 

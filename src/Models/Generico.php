@@ -2,8 +2,12 @@
 
 namespace src\Models;
 
-class Generico extends BaseModel
+use Illuminate\Database\Eloquent\Model;
+
+class Generico extends Model
 {
+    protected $table = 'genericos';
+
     /**
      * Los atributos que deberían ser asignados en masa.
      *

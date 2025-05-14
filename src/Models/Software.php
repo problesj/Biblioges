@@ -2,8 +2,12 @@
 
 namespace src\Models;
 
-class Software extends BaseModel
+use Illuminate\Database\Eloquent\Model;
+
+class Software extends Model
 {
+    protected $table = 'software';
+
     /**
      * Los atributos que deberían ser asignados en masa.
      *

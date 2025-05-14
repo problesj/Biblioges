@@ -11,11 +11,13 @@ return new class extends Migration
         Capsule::schema()->create('bibliografias_declaradas', function (Blueprint $table) {
             $table->id();
             $table->string('titulo');
-            $table->enum('tipo', ['libro', 'articulo', 'software', 'sitio_web']);
+            $table->enum('tipo', ['libro', 'articulo', 'tesis', 'software', 'sitio_web', 'generico']);
             $table->integer('anio_publicacion');
             $table->string('editorial');
-            $table->string('formato');
-            $table->foreignId('asignatura_id')->constrained('asignaturas');
+            $table->string('edicion')->nullable();
+            $table->string('url')->nullable();
+            $table->text('nota')->nullable();
+            $table->enum('formato', ['impreso', 'electronico', 'ambos']);
             $table->enum('estado', ['A', 'I'])->default('A');
             $table->timestamps();
         });

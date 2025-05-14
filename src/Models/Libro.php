@@ -2,8 +2,12 @@
 
 namespace src\Models;
 
-class Libro extends BaseModel
+use Illuminate\Database\Eloquent\Model;
+
+class Libro extends Model
 {
+    protected $table = 'libros';
+
     /**
      * Los atributos que deberían ser asignados en masa.
      *

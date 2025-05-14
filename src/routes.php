@@ -82,6 +82,13 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->put('/bibliografias-declaradas/{id}', [BibliografiaDeclaradaController::class, 'update'])->setName('bibliografias-declaradas.update');
     $group->delete('/bibliografias-declaradas/{id}', [BibliografiaDeclaradaController::class, 'destroy'])->setName('bibliografias-declaradas.destroy');
 
+    // Rutas para vincular asignaturas
+    $group->get('/bibliografias-declaradas/{id}/vincular', [BibliografiaDeclaradaController::class, 'vincular'])->setName('bibliografias-declaradas.vincular');
+    $group->post('/bibliografias-declaradas/{id}/vincularMultiple', [BibliografiaDeclaradaController::class, 'vincularMultiple'])->setName('bibliografias-declaradas.vincularMultiple');
+    $group->post('/bibliografias-declaradas/{id}/desvincularMultiple', [BibliografiaDeclaradaController::class, 'desvincularMultiple'])->setName('bibliografias-declaradas.desvincularMultiple');
+    $group->post('/bibliografias-declaradas/{id}/vincularSingle', [BibliografiaDeclaradaController::class, 'vincularSingle'])->setName('bibliografias-declaradas.vincularSingle');
+    $group->post('/bibliografias-declaradas/{id}/desvincularSingle/{vinculacionId}', [BibliografiaDeclaradaController::class, 'desvincularSingle'])->setName('bibliografias-declaradas.desvincularSingle');
+
     // Reportes
     $group->get('/reportes/cobertura-asignatura/{codigo}', [ReporteController::class, 'coberturaAsignatura']);
     $group->get('/reportes/cobertura-carrera/{id}', [ReporteController::class, 'coberturaCarrera']);

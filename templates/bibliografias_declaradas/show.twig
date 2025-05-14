@@ -7,10 +7,10 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Detalles de Bibliografía Declarada</h1>
         <div>
-            <a href="{{ url_for('bibliografias-declaradas.edit', {id: bibliografia.id}) }}" class="btn btn-warning">
+            <a href="{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/edit" class="btn btn-primary">
                 <i class="fas fa-edit"></i> Editar
             </a>
-            <a href="{{ url_for('bibliografias-declaradas.index') }}" class="btn btn-secondary">
+            <a href="{{ app_url }}bibliografias-declaradas" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Volver
             </a>
         </div>
@@ -18,54 +18,72 @@
 
     <div class="card">
         <div class="card-body">
-            <h5 class="card-title">Información General</h5>
             <div class="row">
-                <div class="col-md-6">
-                    <p><strong>Título:</strong> {{ bibliografia.titulo }}</p>
-                    <p><strong>Tipo:</strong> {{ bibliografia.tipo }}</p>
-                    <p><strong>Asignatura:</strong> {{ bibliografia.asignatura.nombre }}</p>
-                    <p><strong>Autores:</strong></p>
-                    <ul>
-                        {% for autor in bibliografia.autores %}
-                            <li>{{ autor.nombre }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                <div class="col-md-6">
-                    <p><strong>Año de Publicación:</strong> {{ bibliografia.anio_publicacion }}</p>
-                    <p><strong>Editorial:</strong> {{ bibliografia.editorial }}</p>
-                    <p><strong>ISBN:</strong> {{ bibliografia.isbn }}</p>
-                    <p><strong>DOI:</strong> {{ bibliografia.doi }}</p>
-                    <p><strong>URL:</strong>
-                        {% if bibliografia.url %}
-                            <a href="{{ bibliografia.url }}" target="_blank">
-                                {{ bibliografia.url }}
-                            </a>
-                        {% else %}
-                            N/A
-                        {% endif %}
-                    </p>
-                    <p><strong>Estado:</strong>
-                        {% if bibliografia.estado %}
-                            <span class="badge bg-success">Activo</span>
-                        {% else %}
-                            <span class="badge bg-danger">Inactivo</span>
-                        {% endif %}
-                    </p>
-                </div>
-            </div>
+                <div class="col-md-12">
+                    <!-- Tipo de Bibliografía -->
+                    <div class="mb-4">
+                        <h3 class="text-primary">{{ bibliografia.tipo|title }}</h3>
+                    </div>
 
-            <h5 class="mt-4">Información de la Asignatura</h5>
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong>Departamento:</strong> {{ bibliografia.asignatura.departamento.nombre }}</p>
-                    <p><strong>Facultad:</strong> {{ bibliografia.asignatura.departamento.facultad.nombre }}</p>
-                    <p><strong>Sede:</strong> {{ bibliografia.asignatura.departamento.facultad.sede.nombre }}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong>Tipo:</strong> {{ bibliografia.asignatura.tipo }}</p>
-                    <p><strong>Vigencia:</strong> {{ bibliografia.asignatura.vigencia_desde }} - {{ bibliografia.asignatura.vigencia_hasta }}</p>
-                    <p><strong>Periodicidad:</strong> {{ bibliografia.asignatura.periodicidad }}</p>
+                    <!-- Título -->
+                    <div class="mb-3">
+                        <h2>{{ bibliografia.titulo }}</h2>
+                    </div>
+
+                    <!-- Autores -->
+                    <div class="mb-3">
+                        <h4>Autor(es):</h4>
+                        <ul class="list-unstyled">
+                            {% for autor in bibliografia.autores %}
+                                <li>{{ autor.apellidos }}, {{ autor.nombres }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <!-- Información General -->
+                    <div class="mb-3">
+                        <p><strong>Año de Edición:</strong> {{ bibliografia.anio_publicacion }}</p>
+                        <p><strong>Editorial:</strong> {{ bibliografia.editorial }}</p>
+                        {% if bibliografia.edicion %}
+                            <p><strong>Edición:</strong> {{ bibliografia.edicion }}</p>
+                        {% endif %}
+                        <p><strong>Formato:</strong> {{ bibliografia.formato|title }}</p>
+                        {% if bibliografia.url %}
+                            <p>
+                                <strong>URL:</strong> 
+                                <a href="{{ bibliografia.url }}" target="_blank" class="btn btn-sm btn-info">
+                                    <i class="fas fa-external-link-alt"></i> Abrir enlace
+                                </a>
+                            </p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Datos Específicos según Tipo -->
+                    <div class="mb-3">
+                        <h4>Datos Específicos:</h4>
+                        {% if bibliografia.tipo == 'libro' %}
+                            <p><strong>ISBN:</strong> {{ bibliografia.isbn }}</p>
+                        {% elseif bibliografia.tipo == 'articulo' %}
+                            <p><strong>Título de Revista:</strong> {{ bibliografia.titulo_revista }}</p>
+                            <p><strong>ISSN:</strong> {{ bibliografia.issn }}</p>
+                            <p><strong>Cronología:</strong> {{ bibliografia.cronologia }}</p>
+                        {% elseif bibliografia.tipo == 'generico' %}
+                            <p><strong>Descripción:</strong> {{ bibliografia.descripcion }}</p>
+                        {% elseif bibliografia.tipo == 'tesis' %}
+                            <p><strong>Carrera:</strong> {{ bibliografia.carrera.nombre }}</p>
+                        {% elseif bibliografia.tipo == 'software' %}
+                            <p><strong>Versión:</strong> {{ bibliografia.version }}</p>
+                        {% elseif bibliografia.tipo == 'sitio_web' %}
+                            <p><strong>Fecha de Consulta:</strong> {{ bibliografia.fecha_consulta|date('d/m/Y') }}</p>
+                        {% endif %}
+                    </div>
+
+                    {% if bibliografia.nota %}
+                        <div class="mb-3">
+                            <h4>Nota:</h4>
+                            <p>{{ bibliografia.nota }}</p>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

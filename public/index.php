@@ -613,29 +613,81 @@ if (preg_match('/^api\/asignaturas\/(\d+)\/vinculadas$/', $path, $matches) && $_
     exit;
 }
 
-// Verificar si la ruta es para crear y almacenar bibliografías declaradas
-if ($path === 'bibliografias-declaradas') {
+// Rutas para bibliografías declaradas
+if (strpos($path, 'bibliografias-declaradas') === 0) {
     $controller = new \App\Controllers\BibliografiaDeclaradaController();
-    if (isset($pathSegments[1])) {
-        if ($pathSegments[1] === 'create') {
-            $controller->create();
-        } else if ($pathSegments[1] === 'store') {
+    
+    // Ruta base: /bibliografias-declaradas
+    if ($path === 'bibliografias-declaradas') {
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $controller->index();
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $controller->store();
-        } else if (is_numeric($pathSegments[1])) {
-            if (isset($pathSegments[2]) && $pathSegments[2] === 'edit') {
-                $controller->edit($pathSegments[1]);
-            } else if (isset($pathSegments[2]) && $pathSegments[2] === 'update') {
-                $controller->update($pathSegments[1]);
-            } else if (isset($pathSegments[2]) && $pathSegments[2] === 'delete') {
-                $controller->destroy($pathSegments[1]);
-            } else {
-                $controller->show($pathSegments[1]);
-            }
         }
-    } else {
-        $controller->index();
+        exit;
     }
-    exit;
+
+    // Ruta para crear: /bibliografias-declaradas/create
+    if ($path === 'bibliografias-declaradas/create') {
+        $controller->create();
+        exit;
+    }
+
+    // Ruta para vincular: /bibliografias-declaradas/{id}/vincular
+    if (preg_match('/^bibliografias-declaradas\/(\d+)\/vincular$/', $path, $matches)) {
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $controller->vincular($matches[1]);
+        }
+        exit;
+    }
+
+    // Ruta para vincular múltiples: /bibliografias-declaradas/{id}/vincularMultiple
+    if (preg_match('/^bibliografias-declaradas\/(\d+)\/vincularMultiple$/', $path, $matches)) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->vincularMultiple($matches[1]);
+        }
+        exit;
+    }
+
+    // Ruta para desvincular múltiples: /bibliografias-declaradas/{id}/desvincularMultiple
+    if (preg_match('/^bibliografias-declaradas\/(\d+)\/desvincularMultiple$/', $path, $matches)) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->desvincularMultiple($matches[1]);
+        }
+        exit;
+    }
+
+    // Ruta para editar: /bibliografias-declaradas/{id}/edit
+    if (preg_match('/^bibliografias-declaradas\/(\d+)\/edit$/', $path, $matches)) {
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $controller->edit($matches[1]);
+        }
+        exit;
+    }
+
+    // Ruta para actualizar: /bibliografias-declaradas/{id}/update
+    if (preg_match('/^bibliografias-declaradas\/(\d+)\/update$/', $path, $matches)) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->update($matches[1]);
+        }
+        exit;
+    }
+
+    // Ruta para eliminar: /bibliografias-declaradas/{id}/delete
+    if (preg_match('/^bibliografias-declaradas\/(\d+)\/delete$/', $path, $matches)) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->destroy($matches[1]);
+        }
+        exit;
+    }
+
+    // Ruta para ver detalles: /bibliografias-declaradas/{id}
+    if (preg_match('/^bibliografias-declaradas\/(\d+)$/', $path, $matches)) {
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $controller->show($matches[1]);
+        }
+        exit;
+    }
 }
 
 // Dividir la ruta en segmentos para el enrutamiento
@@ -681,8 +733,6 @@ switch ($pathSegments[0]) {
                     $controller->update($pathSegments[1]);
                 } else if (isset($pathSegments[2]) && $pathSegments[2] === 'delete') {
                     $controller->destroy($pathSegments[1]);
-                } else {
-                    $controller->show($pathSegments[1]);
                 }
             }
         } else {

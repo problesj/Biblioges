@@ -29,54 +29,31 @@
 
     <div class="card">
         <div class="card-body">
-            <form method="POST" action="{% if bibliografia.id %}{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}{% else %}{{ app_url }}bibliografias-declaradas{% endif %}">
-                {% if bibliografia.id %}
+            <form method="POST" action="{{ isEdit ? app_url ~ 'bibliografias-declaradas/' ~ bibliografia.id : app_url ~ 'bibliografias-declaradas' }}" id="bibliografiaForm">
+                {% if isEdit %}
                     <input type="hidden" name="_METHOD" value="PUT">
                 {% endif %}
 
                 <div class="row">
+                    <!-- Primera columna -->
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label for="titulo" class="form-label">Título</label>
+                            <label for="titulo" class="form-label">Título <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="titulo" name="titulo" 
                                    value="{{ bibliografia.titulo }}" required>
                         </div>
 
                         <div class="mb-3">
-                            <label for="tipo" class="form-label">Tipo</label>
-                            <select class="form-select" id="tipo" name="tipo" required>
-                                <option value="">Seleccione un tipo</option>
-                                <option value="libro" {% if bibliografia.tipo == 'libro' %}selected{% endif %}>Libro</option>
-                                <option value="articulo" {% if bibliografia.tipo == 'articulo' %}selected{% endif %}>Artículo</option>
-                                <option value="software" {% if bibliografia.tipo == 'software' %}selected{% endif %}>Software</option>
-                                <option value="sitio_web" {% if bibliografia.tipo == 'sitio_web' %}selected{% endif %}>Sitio Web</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="anio_publicacion" class="form-label">Año de Publicación</label>
+                            <label for="anio_publicacion" class="form-label">Año de Edición <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="anio_publicacion" name="anio_publicacion" 
-                                   value="{{ bibliografia.anio_publicacion }}" min="1900" max="{{ 'now'|date('Y') }}" required>
+                                   value="{{ bibliografia.anio_publicacion }}" min="1900" max="{{ 'now'|date('Y') }}" 
+                                   maxlength="4" pattern="\d{4}" required>
                         </div>
 
                         <div class="mb-3">
-                            <label for="editorial" class="form-label">Editorial</label>
-                            <input type="text" class="form-control" id="editorial" name="editorial" 
-                                   value="{{ bibliografia.editorial }}">
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="isbn" class="form-label">ISBN</label>
-                            <input type="text" class="form-control" id="isbn" name="isbn" 
-                                   value="{{ bibliografia.isbn }}">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="doi" class="form-label">DOI</label>
-                            <input type="text" class="form-control" id="doi" name="doi" 
-                                   value="{{ bibliografia.doi }}">
+                            <label for="edicion" class="form-label">Edición</label>
+                            <input type="text" class="form-control" id="edicion" name="edicion" 
+                                   value="{{ bibliografia.edicion }}">
                         </div>
 
                         <div class="mb-3">
@@ -86,60 +63,503 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="asignatura_id" class="form-label">Asignatura</label>
-                            <select class="form-select" id="asignatura_id" name="asignatura_id" required>
-                                <option value="">Seleccione una asignatura</option>
-                                {% for asignatura in asignaturas %}
-                                    <option value="{{ asignatura.id }}" {% if bibliografia.asignatura_id == asignatura.id %}selected{% endif %}>
-                                        {{ asignatura.nombre }}
+                            <label for="formato" class="form-label">Formato <span class="text-danger">*</span></label>
+                            <select class="form-select" id="formato" name="formato" required>
+                                <option value="impreso" {% if bibliografia.formato == 'impreso' %}selected{% endif %}>Impreso</option>
+                                <option value="electronico" {% if bibliografia.formato == 'electronico' %}selected{% endif %}>Electrónico</option>
+                                <option value="ambos" {% if bibliografia.formato == 'ambos' %}selected{% endif %}>Ambos</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="nota" class="form-label">Nota</label>
+                            <textarea class="form-control" id="nota" name="nota" rows="3">{{ bibliografia.nota }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="tipo" class="form-label">Tipo <span class="text-danger">*</span></label>
+                            <select class="form-select" id="tipo" name="tipo" required>
+                                <option value="">Seleccione un tipo</option>
+                                <option value="libro" {% if bibliografia.tipo == 'libro' %}selected{% endif %}>Libro</option>
+                                <option value="articulo" {% if bibliografia.tipo == 'articulo' %}selected{% endif %}>Artículo</option>
+                                <option value="tesis" {% if bibliografia.tipo == 'tesis' %}selected{% endif %}>Tesis</option>
+                                <option value="software" {% if bibliografia.tipo == 'software' %}selected{% endif %}>Software</option>
+                                <option value="sitio_web" {% if bibliografia.tipo == 'sitio_web' %}selected{% endif %}>Sitio Web</option>
+                                <option value="generico" {% if bibliografia.tipo == 'generico' %}selected{% endif %}>Genérico</option>
+                            </select>
+                        </div>
+                        </div>
+
+                    <!-- Segunda columna -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="editorial" class="form-label">Editorial</label>
+                            <select class="form-select" id="editorial" name="editorial">
+                                <option value="">Seleccione una editorial</option>
+                                {% for editorial in editoriales %}
+                                    <option value="{{ editorial }}" {% if bibliografia.editorial == editorial %}selected{% endif %}>{{ editorial }}</option>
+                                {% endfor %}
+                                <option value="otra">Otra...</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="nuevaEditorialContainer" style="display: none;">
+                            <label for="nueva_editorial" class="form-label">Nueva Editorial</label>
+                            <input type="text" class="form-control" id="nueva_editorial" name="nueva_editorial">
+                        </div>
+                        </div>
+                    </div>
+
+                <!-- Campos específicos según el tipo -->
+                <div id="camposEspecificos">
+                    <!-- Libro -->
+                    <div class="tipo-campo" id="camposLibro" style="display: none;">
+                        <h3 class="mb-3">Datos del Libro</h3>
+                        <div class="mb-3">
+                            <label for="isbn" class="form-label">ISBN</label>
+                            <input type="text" class="form-control" id="isbn" name="isbn" 
+                                   value="{{ bibliografia.isbn }}">
+                        </div>
+                        </div>
+
+                    <!-- Tesis -->
+                    <div class="tipo-campo" id="camposTesis" style="display: none;">
+                        <h3 class="mb-3">Datos de la Tesis</h3>
+                        <div class="mb-3">
+                            <label for="carrera_id" class="form-label">Carrera</label>
+                            <select class="form-select" id="carrera_id" name="carrera_id">
+                                <option value="">Seleccione una carrera</option>
+                                {% for carrera in carreras %}
+                                    <option value="{{ carrera.id }}" {% if bibliografia.carrera_id == carrera.id %}selected{% endif %}>
+                                        {{ carrera.nombre }}
                                     </option>
                                 {% endfor %}
                             </select>
                         </div>
+                        </div>
 
-                        {% if bibliografia.id %}
+                    <!-- Artículo -->
+                    <div class="tipo-campo" id="camposArticulo" style="display: none;">
+                        <h3 class="mb-3">Datos del Artículo</h3>
+                        <div class="mb-3">
+                            <label for="issn" class="form-label">ISSN</label>
+                            <input type="text" class="form-control" id="issn" name="issn" 
+                                   value="{{ bibliografia.issn }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="titulo_revista" class="form-label">Título de la Revista</label>
+                            <select class="form-select" id="titulo_revista" name="titulo_revista">
+                                <option value="">Seleccione una revista</option>
+                                {% for revista in revistas %}
+                                    <option value="{{ revista }}" {% if bibliografia.titulo_revista == revista %}selected{% endif %}>{{ revista }}</option>
+                                {% endfor %}
+                                <option value="otra">Otra...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="nuevaRevistaContainer" style="display: none;">
+                            <label for="nueva_revista" class="form-label">Nueva Revista</label>
+                            <input type="text" class="form-control" id="nueva_revista" name="nueva_revista">
+                        </div>
+                        <div class="mb-3">
+                            <label for="cronologia" class="form-label">Cronología</label>
+                            <input type="text" class="form-control" id="cronologia" name="cronologia" 
+                                   value="{{ bibliografia.cronologia }}">
+                        </div>
+                    </div>
+
+                    <!-- Genérico -->
+                    <div class="tipo-campo" id="camposGenerico" style="display: none;">
+                        <h3 class="mb-3">Datos Genéricos</h3>
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="descripcion" name="descripcion" rows="3">{{ bibliografia.descripcion }}</textarea>
+                        </div>
+                        </div>
+
+                    <!-- Sitio Web -->
+                    <div class="tipo-campo" id="camposSitioWeb" style="display: none;">
+                        <h3 class="mb-3">Datos del Sitio Web</h3>
                             <div class="mb-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="estado" name="estado" 
-                                           {% if bibliografia.estado %}checked{% endif %}>
-                                    <label class="form-check-label" for="estado">
-                                        Activo
-                                    </label>
+                            <label for="fecha_consulta" class="form-label">Fecha de Consulta <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="fecha_consulta" name="fecha_consulta" 
+                                   value="{{ bibliografia.fecha_consulta|date('Y-m-d') }}" required>
+                            <small class="form-text text-muted">Seleccione la fecha en que se consultó el sitio web</small>
                                 </div>
                             </div>
-                        {% endif %}
+
+                    <!-- Software -->
+                    <div class="tipo-campo" id="camposSoftware" style="display: none;">
+                        <h3 class="mb-3">Datos del Software</h3>
+                        <div class="mb-3">
+                            <label for="version" class="form-label">Versión</label>
+                            <input type="text" class="form-control" id="version" name="version" 
+                                   value="{{ bibliografia.version }}">
+                        </div>
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Autores</label>
+                <!-- Autores -->
+                <div class="mt-4">
+                    <h3 class="mb-3">Autores</h3>
                     <div class="row">
-                        {% for autor in autores %}
-                            <div class="col-md-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="autores[]" 
-                                           value="{{ autor.id }}" id="autor_{{ autor.id }}"
-                                           {% if bibliografia.id and bibliografia.autores.contains(autor) %}checked{% endif %}>
-                                    <label class="form-check-label" for="autor_{{ autor.id }}">
-                                        {{ autor.nombre }}
-                                    </label>
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label">Autores Disponibles</label>
                                 </div>
+                                <select class="form-select" id="autoresDisponibles" multiple size="10" style="height: auto;">
+                        {% for autor in autores %}
+                                        <option value="{{ autor.id }}" data-apellidos="{{ autor.apellidos }}" data-nombres="{{ autor.nombres }}" data-genero="{{ autor.genero }}">
+                                            {{ autor.apellidos }}, {{ autor.nombres }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="mt-2">
+                                    <button type="button" class="btn btn-sm btn-success" id="agregarAutorSeleccionado">
+                                        <i class="fas fa-arrow-right"></i> Agregar Seleccionados
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="card-title mb-0">Autores Seleccionados</h5>
+                                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#nuevoAutorModal">
+                                        <i class="fas fa-plus"></i> Nuevo Autor
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div id="autoresSeleccionados" class="list-group">
+                                        {% for autor in autoresSeleccionados %}
+                                            <div class="list-group-item d-flex justify-content-between align-items-center" data-autor-id="{{ autor.id }}">
+                                                <div>
+                                                    <strong>{{ autor.apellidos }}, {{ autor.nombres }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">{{ autor.genero }}</small>
+                                                </div>
+                                                <button type="button" class="btn btn-sm btn-danger" onclick="eliminarAutor('{{ autor.id }}')">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
                             </div>
                         {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <div class="text-end mt-4">
                     <button type="submit" class="btn btn-primary">
-                        {% if bibliografia.id %}
-                            <i class="fas fa-save"></i> Guardar Cambios
-                        {% else %}
-                            <i class="fas fa-plus"></i> Crear
-                        {% endif %}
+                        <i class="fas fa-save"></i> Guardar
                     </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<!-- Modal para Nuevo Autor -->
+<div class="modal fade" id="nuevoAutorModal" tabindex="-1" aria-labelledby="nuevoAutorModalLabel">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="nuevoAutorModalLabel">Nuevo Autor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="nuevoAutorForm" onsubmit="return false;">
+                    <div class="mb-3">
+                        <label for="apellidos" class="form-label">Apellidos</label>
+                        <input type="text" class="form-control" id="apellidos" name="apellidos" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nombres" class="form-label">Nombres</label>
+                        <input type="text" class="form-control" id="nombres" name="nombres" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="genero" class="form-label">Género</label>
+                        <select class="form-select" id="genero" name="genero" required>
+                            <option value="">Seleccione un género</option>
+                            <option value="masculino">Masculino</option>
+                            <option value="femenino">Femenino</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="guardarAutor">Agregar Temporalmente</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoSelect = document.getElementById('tipo');
+    const camposEspecificos = document.getElementById('camposEspecificos');
+    const tipoCampos = document.querySelectorAll('.tipo-campo');
+    
+    function mostrarCamposEspecificos() {
+        // Ocultar todos los campos específicos
+        tipoCampos.forEach(campo => {
+            campo.style.display = 'none';
+        });
+        
+        // Mostrar los campos correspondientes al tipo seleccionado
+        const tipoSeleccionado = tipoSelect.value;
+        console.log('Tipo seleccionado:', tipoSeleccionado);
+        
+        if (tipoSeleccionado) {
+            // Convertir el tipo a formato camelCase para el ID
+            const tipoFormateado = tipoSeleccionado.split('_').map((word, index) => {
+                return index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1);
+            }).join('');
+            
+            const camposTipo = document.getElementById('campos' + tipoFormateado.charAt(0).toUpperCase() + tipoFormateado.slice(1));
+            console.log('ID buscado:', 'campos' + tipoFormateado.charAt(0).toUpperCase() + tipoFormateado.slice(1));
+            console.log('Elemento campos:', camposTipo);
+            
+            if (camposTipo) {
+                camposTipo.style.display = 'block';
+                console.log('Mostrando campos para:', tipoSeleccionado);
+                
+                // Si es sitio web, asegurarse de que el campo de fecha sea requerido
+                if (tipoSeleccionado === 'sitio_web') {
+                    const fechaConsulta = document.getElementById('fecha_consulta');
+                    console.log('Campo fecha_consulta:', fechaConsulta);
+                    if (fechaConsulta) {
+                        fechaConsulta.required = true;
+                        console.log('Campo fecha_consulta marcado como requerido');
+                    }
+                }
+            }
+        }
+    }
+    
+    // Mostrar campos específicos al cargar la página
+    mostrarCamposEspecificos();
+    
+    // Mostrar campos específicos cuando cambie el tipo
+    tipoSelect.addEventListener('change', mostrarCamposEspecificos);
+    
+    // Manejar la visibilidad de la nueva editorial
+    const editorialSelect = document.getElementById('editorial');
+    const nuevaEditorialContainer = document.getElementById('nuevaEditorialContainer');
+    
+    editorialSelect.addEventListener('change', function() {
+        nuevaEditorialContainer.style.display = this.value === 'otra' ? 'block' : 'none';
+    });
+    
+    // Manejar la visibilidad de la nueva revista
+    const tituloRevistaSelect = document.getElementById('titulo_revista');
+    const nuevaRevistaContainer = document.getElementById('nuevaRevistaContainer');
+    
+    if (tituloRevistaSelect) {
+        tituloRevistaSelect.addEventListener('change', function() {
+            nuevaRevistaContainer.style.display = this.value === 'otra' ? 'block' : 'none';
+        });
+    }
+
+    // Manejo de autores
+    const autoresDisponibles = document.getElementById('autoresDisponibles');
+    const autoresSeleccionados = document.getElementById('autoresSeleccionados');
+    const agregarAutorBtn = document.getElementById('agregarAutorSeleccionado');
+    let autoresSeleccionadosList = new Set();
+
+    // Función para agregar autor a la lista de seleccionados
+    function agregarAutorALista(autor) {
+        // Verificar si el autor ya está en la lista visual
+        const autorExistente = document.querySelector(`#autoresSeleccionados [data-autor-id="${autor.id}"]`);
+        if (autorExistente) return;
+
+        const autorElement = document.createElement('div');
+        autorElement.className = 'list-group-item d-flex justify-content-between align-items-center';
+        autorElement.dataset.autorId = autor.id;
+        autorElement.innerHTML = `
+            <div>
+                <strong>${autor.apellidos}, ${autor.nombres}</strong>
+                <br>
+                <small class="text-muted">${autor.genero}</small>
+            </div>
+            <button type="button" class="btn btn-sm btn-danger" onclick="eliminarAutor('${autor.id}')">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        autoresSeleccionados.appendChild(autorElement);
+        autoresSeleccionadosList.add(autor.id);
+    }
+
+    // Función para eliminar autor de la lista
+    window.eliminarAutor = function(id) {
+        const autorElement = document.querySelector(`#autoresSeleccionados [data-autor-id="${id}"]`);
+        if (autorElement) {
+            autorElement.remove();
+            autoresSeleccionadosList.delete(id);
+        }
+    };
+
+    // Agregar autores seleccionados
+    agregarAutorBtn.addEventListener('click', function() {
+        const seleccionados = Array.from(autoresDisponibles.selectedOptions);
+        if (seleccionados.length === 0) return;
+
+        const fragment = document.createDocumentFragment();
+        seleccionados.forEach(option => {
+            if (!option.value) return;
+            
+            const autor = {
+                id: option.value,
+                apellidos: option.dataset.apellidos || '',
+                nombres: option.dataset.nombres || '',
+                genero: option.dataset.genero || ''
+            };
+            
+            if (autor.apellidos && autor.nombres) {
+                agregarAutorALista(autor);
+            }
+        });
+        
+        // Limpiar la selección después de agregar
+        autoresDisponibles.selectedIndex = -1;
+    });
+
+    // Manejo de nuevo autor
+    const nuevoAutorForm = document.getElementById('nuevoAutorForm');
+    const guardarAutorBtn = document.getElementById('guardarAutor');
+    const apellidosInput = document.getElementById('apellidos');
+    const nombresInput = document.getElementById('nombres');
+    const generoSelect = document.getElementById('genero');
+    const nuevoAutorModal = document.getElementById('nuevoAutorModal');
+    
+    guardarAutorBtn.addEventListener('click', function() {
+        // Validar el formulario
+        if (!nuevoAutorForm.checkValidity()) {
+            nuevoAutorForm.reportValidity();
+            return;
+        }
+
+        const apellidos = apellidosInput.value.trim();
+        const nombres = nombresInput.value.trim();
+        const genero = generoSelect.value;
+
+        if (!apellidos || !nombres || !genero) {
+            return;
+        }
+
+        const autorId = 'temp_' + Date.now();
+        
+        // Verificar si el autor ya existe
+        const autorExistente = document.querySelector(`#autoresSeleccionados [data-autor-id="${autorId}"]`);
+        if (autorExistente) {
+            return;
+        }
+
+        const autor = {
+            id: autorId,
+            apellidos: apellidos,
+            nombres: nombres,
+            genero: genero
+        };
+        
+        agregarAutorALista(autor);
+        
+        // Limpiar el formulario antes de cerrar el modal
+        nuevoAutorForm.reset();
+        
+        // Cerrar el modal usando el API de Bootstrap
+        const modal = bootstrap.Modal.getInstance(nuevoAutorModal);
+        if (modal) {
+            modal.hide();
+        }
+    });
+
+    // Modificar el envío del formulario
+    document.getElementById('bibliografiaForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        // Obtener los autores seleccionados
+        const autores = Array.from(autoresSeleccionados.children)
+            .filter(element => element.dataset.autorId)
+            .map(element => {
+                const id = element.dataset.autorId;
+                const [apellidos, nombres] = element.querySelector('strong').textContent.split(', ');
+                const genero = element.querySelector('small').textContent;
+                return { id, apellidos, nombres, genero };
+            });
+        
+        // Agregar los autores al formData
+        formData.append('autores', JSON.stringify(autores));
+        
+        // Enviar el formulario
+        fetch(this.action, {
+            method: this.method,
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
+        })
+        .then(async response => {
+            const contentType = response.headers.get('content-type');
+            console.log('Content-Type:', contentType);
+            
+            // Obtener el texto de la respuesta para debug
+            const text = await response.text();
+            console.log('Respuesta del servidor:', text);
+            
+            if (contentType && contentType.includes('application/json')) {
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    console.error('Error al parsear JSON:', e);
+                    throw new Error('La respuesta no es JSON válido');
+                }
+            }
+            throw new Error('La respuesta no es JSON válido');
+        })
+        .then(data => {
+            if (data.success) {
+                window.location.href = data.redirect;
+            } else {
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                } else {
+                    mostrarError(data.message || 'Error al guardar la bibliografía');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            mostrarError('Error al guardar la bibliografía. Por favor, intente nuevamente.');
+        });
+    });
+
+    // Función para mostrar errores
+    function mostrarError(mensaje) {
+        // Eliminar mensajes de error anteriores
+        const erroresAnteriores = document.querySelectorAll('.alert-danger');
+        erroresAnteriores.forEach(error => error.remove());
+
+        // Crear nuevo mensaje de error
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger mt-3';
+        alertDiv.textContent = mensaje;
+
+        // Insertar el mensaje al principio del formulario
+        const form = document.getElementById('bibliografiaForm');
+        form.insertBefore(alertDiv, form.firstChild);
+    }
+});
+</script>
+{% endblock %}
 {% endblock %} 

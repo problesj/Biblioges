@@ -28,7 +28,6 @@ class Autor extends BaseModel
     public function bibliografias()
     {
         return $this->belongsToMany(BibliografiaDeclarada::class, 'bibliografias_autores', 'autor_id', 'bibliografia_id')
-            ->withPivot('fecha_creacion', 'fecha_actualizacion')
             ->withTimestamps('fecha_creacion', 'fecha_actualizacion');
     }
 } 
