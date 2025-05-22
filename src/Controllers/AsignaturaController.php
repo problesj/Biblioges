@@ -59,6 +59,7 @@ class AsignaturaController extends BaseController
             }
 
             // Obtener filtros directamente de $_GET
+            $nombre = $_GET['nombre'] ?? null;
             $tipo = $_GET['tipo'] ?? null;
             $departamento = $_GET['departamento'] ?? null;
             $estado = $_GET['estado'] ?? null;
@@ -79,6 +80,11 @@ class AsignaturaController extends BaseController
 
             $params = [];
             $where = [];
+
+            if ($nombre) {
+                $where[] = "a.nombre LIKE :nombre";
+                $params[':nombre'] = "%{$nombre}%";
+            }
 
             if ($tipo) {
                 $where[] = "a.tipo = :tipo";
@@ -122,6 +128,7 @@ class AsignaturaController extends BaseController
                 'asignaturas' => $asignaturas,
                 'departamentos' => $departamentos,
                 'filtros' => [
+                    'nombre' => $nombre,
                     'tipo' => $tipo,
                     'departamento' => $departamento,
                     'estado' => $estado
@@ -429,15 +436,17 @@ class AsignaturaController extends BaseController
                 // Confirmar la transacción
             $this->db->commit();
 
+                // Establecer mensaje de éxito
+                $this->session->set('success', 'Asignatura creada exitosamente');
+
                 if ($isAjax) {
                     header('Content-Type: application/json; charset=utf-8');
                     echo json_encode(['success' => true, 'message' => 'Asignatura creada exitosamente']);
                     exit;
-                } else {
-                    $this->session->set('success', 'Asignatura creada exitosamente');
+                }
+
                     header('Location: ' . Config::get('app_url') . 'asignaturas');
                     exit;
-                }
 
             } catch (\Exception $e) {
                 // Revertir la transacción en caso de error
@@ -672,7 +681,7 @@ class AsignaturaController extends BaseController
 
             if (!empty($errores)) {
                 if ($isAjax) {
-                    header('Content-Type: application/json');
+                    header('Content-Type: application/json; charset=utf-8');
                     echo json_encode(['success' => false, 'errors' => $errores]);
                     exit;
                 } else {
@@ -761,15 +770,17 @@ class AsignaturaController extends BaseController
 
                 $this->db->commit();
 
+                // Establecer mensaje de éxito
+                $this->session->set('success', 'Asignatura actualizada exitosamente');
+
                 if ($isAjax) {
-                    header('Content-Type: application/json');
+                    header('Content-Type: application/json; charset=utf-8');
                     echo json_encode(['success' => true, 'message' => 'Asignatura actualizada exitosamente']);
                     exit;
-                } else {
-                    $this->session->set('success', 'Asignatura actualizada exitosamente');
+                }
+
                     header('Location: ' . Config::get('app_url') . 'asignaturas');
                     exit;
-                }
 
             } catch (\Exception $e) {
                 $this->db->rollBack();
@@ -779,7 +790,7 @@ class AsignaturaController extends BaseController
             error_log("Error en AsignaturaController@update: " . $e->getMessage());
             
             if ($isAjax) {
-                header('Content-Type: application/json');
+                header('Content-Type: application/json; charset=utf-8');
                 echo json_encode(['success' => false, 'message' => 'Error al actualizar la asignatura: ' . $e->getMessage()]);
                 exit;
             } else {
@@ -795,22 +806,34 @@ class AsignaturaController extends BaseController
         try {
             // Verificar autenticación
             if (!$this->session->get('user_id')) {
+                if ($this->isAjaxRequest()) {
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode(['success' => false, 'message' => 'No autorizado']);
+                    exit;
+                }
                 $this->session->set('error', 'No autorizado');
                 header('Location: ' . Config::get('app_url') . 'login');
                 exit;
             }
 
-            // Iniciar transacción
-            $this->db->beginTransaction();
-
-            try {
                 // Verificar si la asignatura existe
                 $stmt = $this->db->prepare("SELECT id FROM asignaturas WHERE id = ?");
                 $stmt->execute([$id]);
                 if (!$stmt->fetch()) {
-                    throw new \Exception('Asignatura no encontrada');
+                if ($this->isAjaxRequest()) {
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode(['success' => false, 'message' => 'Asignatura no encontrada']);
+                    exit;
+                }
+                $this->session->set('error', 'Asignatura no encontrada');
+                header('Location: ' . Config::get('app_url') . 'asignaturas');
+                exit;
                 }
 
+            // Iniciar transacción
+            $this->db->beginTransaction();
+
+            try {
                 // Eliminar relaciones en asignaturas_departamentos
                 $stmt = $this->db->prepare("DELETE FROM asignaturas_departamentos WHERE asignatura_id = ?");
                 $stmt->execute([$id]);
@@ -834,8 +857,15 @@ class AsignaturaController extends BaseController
                 // Confirmar transacción
                 $this->db->commit();
 
-                // Establecer mensaje de éxito y redirigir
+                // Establecer mensaje de éxito
                 $this->session->set('success', 'Asignatura eliminada exitosamente');
+                
+                if ($this->isAjaxRequest()) {
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode(['success' => true, 'message' => 'Asignatura eliminada exitosamente']);
+                    exit;
+                }
+
                 header('Location: ' . Config::get('app_url') . 'asignaturas');
                 exit;
 
@@ -846,6 +876,16 @@ class AsignaturaController extends BaseController
             }
         } catch (\Exception $e) {
             error_log("Error en AsignaturaController@destroy: " . $e->getMessage());
+            
+            if ($this->isAjaxRequest()) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Error al eliminar la asignatura: ' . $e->getMessage()
+                ]);
+                exit;
+            }
+            
             $this->session->set('error', 'Error al eliminar la asignatura: ' . $e->getMessage());
             header('Location: ' . Config::get('app_url') . 'asignaturas');
             exit;

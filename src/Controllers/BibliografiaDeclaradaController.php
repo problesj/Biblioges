@@ -63,12 +63,32 @@ class BibliografiaDeclaradaController
 
     public function index(Request $request = null, Response $response = null): Response
     {
+        // Crear una nueva respuesta si no se proporciona una
+        if (!$response) {
+            $response = new Response();
+        }
+
         // Verificar autenticación
         if (!$this->session->get('user_id')) {
-            $this->session->set('error', 'Por favor inicie sesión para acceder a las bibliografías');
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Por favor inicie sesión para acceder a las bibliografías',
+                    'redirect' => Config::get('app_url') . 'login'
+                ]);
+                return $response;
+            }
+            
+            $_SESSION['error'] = 'Por favor inicie sesión para acceder a las bibliografías';
             header('Location: ' . Config::get('app_url') . 'login');
             exit;
         }
+
+        try {
+            // Obtener mensajes de sesión y limpiarlos
+            $swal = $this->session->get('swal');
+            $this->session->remove('swal');
 
         // Obtener filtros de la URL
         $filtros = [
@@ -89,78 +109,108 @@ class BibliografiaDeclaradaController
         $filtros['orden'] = in_array($filtros['orden'], $camposOrdenamiento) ? $filtros['orden'] : 'titulo';
 
         // Construir la consulta base
-        $query = BibliografiaDeclarada::with([
-            'autores',
-            'asignaturas.departamentos.facultad.sede'
-        ]);
+            $sql = "SELECT b.*, 
+                   GROUP_CONCAT(DISTINCT CONCAT(a.apellidos, ', ', a.nombres) SEPARATOR '; ') as autores,
+                   GROUP_CONCAT(DISTINCT CONCAT(asig.nombre, ' (', ab.tipo_bibliografia, ')') SEPARATOR '; ') as asignaturas
+                   FROM bibliografias_declaradas b
+                   LEFT JOIN bibliografias_autores ba ON b.id = ba.bibliografia_id
+                   LEFT JOIN autores a ON ba.autor_id = a.id
+                   LEFT JOIN asignaturas_bibliografias ab ON b.id = ab.bibliografia_id
+                   LEFT JOIN asignaturas asig ON ab.asignatura_id = asig.id";
+
+            $params = [];
+            $where = [];
 
         // Aplicar filtros de búsqueda
         if (!empty($filtros['busqueda'])) {
             $busqueda = '%' . $filtros['busqueda'] . '%';
             switch ($filtros['tipo_busqueda']) {
                 case 'titulo':
-                    $query->where('titulo', 'LIKE', $busqueda);
+                        $where[] = "b.titulo LIKE ?";
+                        $params[] = $busqueda;
                     break;
                 case 'autor':
-                    $query->whereHas('autores', function($q) use ($busqueda) {
-                        $q->where(function($q) use ($busqueda) {
-                            $q->where('nombres', 'LIKE', $busqueda)
-                              ->orWhere('apellidos', 'LIKE', $busqueda);
-                        });
-                    });
+                        $where[] = "(a.nombres LIKE ? OR a.apellidos LIKE ?)";
+                        $params[] = $busqueda;
+                        $params[] = $busqueda;
                     break;
                 case 'editorial':
-                    $query->where('editorial', 'LIKE', $busqueda);
+                        $where[] = "b.editorial LIKE ?";
+                        $params[] = $busqueda;
+                        break;
+                    case 'asignatura':
+                        $where[] = "asig.nombre LIKE ?";
+                        $params[] = $busqueda;
                     break;
                 default: // 'todos'
-                    $query->where(function($q) use ($busqueda) {
-                        $q->where('titulo', 'LIKE', $busqueda)
-                          ->orWhere('editorial', 'LIKE', $busqueda)
-                          ->orWhereHas('autores', function($q) use ($busqueda) {
-                              $q->where(function($q) use ($busqueda) {
-                                  $q->where('nombres', 'LIKE', $busqueda)
-                                    ->orWhere('apellidos', 'LIKE', $busqueda);
-                              });
-                          });
-                    });
+                        $where[] = "(b.titulo LIKE ? OR b.editorial LIKE ? OR a.nombres LIKE ? OR a.apellidos LIKE ? OR asig.nombre LIKE ?)";
+                        $params[] = $busqueda;
+                        $params[] = $busqueda;
+                        $params[] = $busqueda;
+                        $params[] = $busqueda;
+                        $params[] = $busqueda;
                     break;
             }
         }
 
         // Aplicar otros filtros
-        if (!empty($filtros['asignatura'])) {
-            $query->whereHas('asignaturas', function($q) use ($filtros) {
-                $q->where('asignaturas.id', $filtros['asignatura']);
-            });
-        }
         if (!empty($filtros['tipo'])) {
-            $query->where('tipo', $filtros['tipo']);
+                $where[] = "b.tipo = ?";
+                $params[] = $filtros['tipo'];
         }
         if (!empty($filtros['estado'])) {
-            $query->where('estado', $filtros['estado'] === 'A');
-        }
+                $where[] = "b.estado = ?";
+                $params[] = $filtros['estado'] === 'A' ? 1 : 0;
+            }
+            if (!empty($filtros['asignatura'])) {
+                $where[] = "ab.asignatura_id = ?";
+                $params[] = $filtros['asignatura'];
+            }
 
-        // Aplicar ordenamiento
-        $query->orderBy($filtros['orden'], $filtros['direccion']);
+            // Agregar condiciones WHERE si existen
+            if (!empty($where)) {
+                $sql .= " WHERE " . implode(" AND ", $where);
+            }
 
-        // Obtener resultados
-        $bibliografias = $query->get();
+            // Agregar GROUP BY
+            $sql .= " GROUP BY b.id";
 
-        // Obtener todas las asignaturas para el filtro
-        $asignaturas = Asignatura::where('estado', true)->orderBy('nombre')->get();
+            // Agregar ORDER BY
+            $sql .= " ORDER BY b." . $filtros['orden'] . " " . $filtros['direccion'];
 
-        // Crear una nueva respuesta si no se proporciona una
-        if (!$response) {
-            $response = new Response();
-        }
+            // Ejecutar la consulta
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            $bibliografias = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Obtener todas las asignaturas para el filtro
+            $stmt = $this->pdo->query("SELECT id, nombre FROM asignaturas WHERE estado = 1 ORDER BY nombre");
+            $asignaturas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         // Renderizar la vista
         return $this->render($response, 'bibliografias_declaradas/index.twig', [
             'bibliografias' => $bibliografias,
             'asignaturas' => $asignaturas,
             'filtros' => $filtros,
-            'app_url' => Config::get('app_url')
-        ]);
+                'app_url' => Config::get('app_url'),
+                'swal' => $swal
+            ]);
+        } catch (\Exception $e) {
+            error_log('Error en index: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Error al cargar las bibliografías: ' . $e->getMessage()
+                ]);
+            } else {
+                $_SESSION['error'] = 'Error al cargar las bibliografías: ' . $e->getMessage();
+                header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas');
+            }
+            return $response;
+        }
     }
 
     /**
@@ -170,29 +220,43 @@ class BibliografiaDeclaradaController
     {
         // Verificar autenticación
         if (!$this->session->get('user_id')) {
-            $this->session->set('error', 'Por favor inicie sesión para acceder a las bibliografías');
+            $_SESSION['error'] = 'Por favor inicie sesión para acceder a las bibliografías';
             header('Location: ' . Config::get('app_url') . 'login');
             exit;
         }
 
-        $autores = Autor::orderBy('apellidos')->get();
-        $editoriales = BibliografiaDeclarada::distinct()->pluck('editorial')->filter();
-        $revistas = Articulo::distinct()->pluck('titulo_revista')->filter();
-        $carreras = Carrera::where('estado', true)->orderBy('nombre')->get();
+        // Generar token de sesión
+        $token = bin2hex(random_bytes(32));
+        $this->session->set('form_token', $token);
 
-        // Crear una nueva respuesta si no se proporciona una
-        if (!$response) {
-            $response = new Response();
-        }
-
-        // Renderizar la vista
+        // Obtener editoriales
+        $editoriales = $this->getEditoriales();
+        
+        // Obtener revistas
+        $revistas = $this->getRevistas();
+        
+        // Obtener autores
+        $autores = $this->getAutores();
+        
+        // Obtener carreras
+        $stmt = $this->pdo->query("
+            SELECT id, nombre 
+            FROM carreras 
+            WHERE estado = 1 
+            ORDER BY nombre
+        ");
+        $carreras = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
         return $this->render($response, 'bibliografias_declaradas/form.twig', [
-            'bibliografia' => new BibliografiaDeclarada(),
-            'autores' => $autores,
+            'bibliografia' => new \stdClass(),
             'editoriales' => $editoriales,
             'revistas' => $revistas,
+            'autores' => $autores,
             'carreras' => $carreras,
-            'app_url' => Config::get('app_url')
+            'app_url' => Config::get('app_url'),
+            'session' => [
+                'form_token' => $token
+            ]
         ]);
     }
 
@@ -201,139 +265,96 @@ class BibliografiaDeclaradaController
      */
     public function store(Request $request = null, Response $response = null): Response
     {
-        error_log('Iniciando método store()');
+        error_log('=== INICIO MÉTODO STORE ===');
         
         // Verificar autenticación
         if (!$this->session->get('user_id')) {
-            error_log('Usuario no autenticado');
             if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
                 header('Content-Type: application/json');
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Por favor inicie sesión para continuar',
+                    'message' => 'Por favor inicie sesión para acceder a las bibliografías',
                     'redirect' => Config::get('app_url') . 'login'
                 ]);
-                exit;
+                return $response;
             }
-            $this->session->set('error', 'Por favor inicie sesión para acceder a las bibliografías');
+            
+            $_SESSION['error'] = 'Por favor inicie sesión para acceder a las bibliografías';
             header('Location: ' . Config::get('app_url') . 'login');
             exit;
         }
 
-        error_log('Usuario autenticado: ' . $this->session->get('user_id'));
+        // Verificar si es una petición AJAX
+        $esAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+                  strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+        error_log('Es petición AJAX: ' . ($esAjax ? 'Sí' : 'No'));
         
-        $isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
-        error_log('Es petición AJAX: ' . ($isAjax ? 'Sí' : 'No'));
+        // Obtener los datos según el tipo de petición
+        if ($esAjax) {
+            $datos = json_decode(file_get_contents('php://input'), true);
+        } else {
+            $datos = $_POST;
+        }
+        
+        error_log('Datos recibidos: ' . print_r($datos, true));
+        
+        // Verificar token de sesión para prevenir doble envío
+        $token = $datos['_token'] ?? '';
+        $sessionToken = $this->session->get('form_token');
+        
+        if (!$token || !$sessionToken || $token !== $sessionToken) {
+            // Token inválido o no coincide
+            if ($esAjax) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Token de seguridad inválido'
+                ]);
+                return new Response();
+            }
+            
+            $_SESSION['error'] = 'Token de seguridad inválido';
+            header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas');
+            return new Response();
+        }
+        
+        // Generar nuevo token para la siguiente solicitud
+        $newToken = bin2hex(random_bytes(32));
+        $this->session->set('form_token', $newToken);
+        
+        // Decodificar los autores
+        $autores = json_decode($datos['autores'] ?? '[]', true);
+        error_log('Autores decodificados: ' . print_r($autores, true));
         
         try {
-            error_log('Iniciando transacción');
             $this->pdo->beginTransaction();
             
-            $data = $_POST;
-            error_log('Datos recibidos: ' . print_r($data, true));
-            
-            // Verificar si ya existe una bibliografía con el mismo título
-            $stmt = $this->pdo->prepare("SELECT id FROM bibliografias_declaradas WHERE titulo = :titulo");
-            $stmt->execute([':titulo' => $data['titulo']]);
-            if ($stmt->fetch()) {
-                throw new \Exception('Ya existe una bibliografía con el mismo título.');
-            }
-            
-            // Crear la bibliografía
-            $stmt = $this->pdo->prepare("
-                INSERT INTO bibliografias_declaradas (
-                    titulo, tipo, anio_publicacion, editorial, edicion, 
-                    url, nota, formato, estado
-                ) VALUES (
-                    :titulo, :tipo, :anio_publicacion, :editorial, :edicion,
-                    :url, :nota, :formato, :estado
-                )
-            ");
-
-            // Determinar el valor de la editorial
-            $editorial = $data['editorial'];
-            if ($editorial === 'otra' && !empty($data['nueva_editorial'])) {
-                $editorial = $data['nueva_editorial'];
-            }
-
-            $params = [
-                ':titulo' => $data['titulo'],
-                ':tipo' => $data['tipo'],
-                ':anio_publicacion' => $data['anio_publicacion'],
-                ':editorial' => $editorial,
-                ':edicion' => $data['edicion'] ?? null,
-                ':url' => $data['url'] ?? null,
-                ':nota' => $data['nota'] ?? null,
-                ':formato' => $data['formato'] ?? null,
-                ':estado' => true
-            ];
-            
-            error_log('Ejecutando inserción con parámetros: ' . print_r($params, true));
-            $stmt->execute($params);
-
-            $bibliografiaId = $this->pdo->lastInsertId();
-            error_log('ID de bibliografía creada: ' . $bibliografiaId);
-
-            // Procesar autores
-            if (isset($data['autores'])) {
-                $autores = json_decode($data['autores'], true);
-                error_log('Autores a guardar: ' . print_r($autores, true));
-                
-                if (is_array($autores)) {
-                    foreach ($autores as $autor) {
-                        // Verificar si el autor es nuevo (tiene ID temporal)
-                        if (strpos($autor['id'], 'temp_') === 0) {
-                            // Verificar si ya existe un autor con el mismo nombre y apellido
+            // Insertar la bibliografía
                             $stmt = $this->pdo->prepare("
-                                SELECT id FROM autores 
-                                WHERE apellidos = :apellidos 
-                                AND nombres = :nombres
+                INSERT INTO bibliografias_declaradas (
+                    titulo, anio_publicacion, edicion, url, formato, 
+                    nota, tipo, editorial, estado
+                ) VALUES (
+                    :titulo, :anio_publicacion, :edicion, :url, :formato,
+                    :nota, :tipo, :editorial, :estado
+                )
                             ");
                             
                             $stmt->execute([
-                                ':apellidos' => $autor['apellidos'],
-                                ':nombres' => $autor['nombres']
-                            ]);
-                            
-                            $autorExistente = $stmt->fetch();
-                            
-                            if ($autorExistente) {
-                                $autorId = $autorExistente['id'];
-                            } else {
-                                // Insertar nuevo autor
-                                $stmt = $this->pdo->prepare("
-                                    INSERT INTO autores (apellidos, nombres, genero)
-                                    VALUES (:apellidos, :nombres, :genero)
-                                ");
-                                
-                                $stmt->execute([
-                                    ':apellidos' => $autor['apellidos'],
-                                    ':nombres' => $autor['nombres'],
-                                    ':genero' => ucfirst(strtolower($autor['genero']))
-                                ]);
-                                
-                                $autorId = $this->pdo->lastInsertId();
-                            }
-                        } else {
-                            $autorId = $autor['id'];
-                        }
-
-                        // Vincular autor con la bibliografía
-                        $stmt = $this->pdo->prepare("
-                            INSERT INTO bibliografias_autores (bibliografia_id, autor_id)
-                            VALUES (:bibliografia_id, :autor_id)
-                        ");
-
-                        $stmt->execute([
-                            ':bibliografia_id' => $bibliografiaId,
-                            ':autor_id' => $autorId
-                        ]);
-                    }
-                }
-            }
-
-            // Procesar datos específicos según el tipo
-            switch ($data['tipo']) {
+                ':titulo' => $datos['titulo'] ?? '',
+                ':anio_publicacion' => $datos['anio_publicacion'] ?? null,
+                ':edicion' => $datos['edicion'] ?? null,
+                ':url' => $datos['url'] ?? null,
+                ':formato' => $datos['formato'] ?? 'impreso',
+                ':nota' => $datos['nota'] ?? null,
+                ':tipo' => $datos['tipo'] ?? null,
+                ':editorial' => ($datos['editorial'] ?? '') === 'otra' ? ($datos['nueva_editorial'] ?? '') : ($datos['editorial'] ?? ''),
+                ':estado' => $datos['estado'] ?? 1
+            ]);
+            
+            $bibliografiaId = $this->pdo->lastInsertId();
+            
+            // Insertar datos específicos según el tipo
+            switch ($datos['tipo'] ?? '') {
                 case 'libro':
                     $stmt = $this->pdo->prepare("
                         INSERT INTO libros (bibliografia_id, isbn)
@@ -341,7 +362,7 @@ class BibliografiaDeclaradaController
                     ");
                     $stmt->execute([
                         ':bibliografia_id' => $bibliografiaId,
-                        ':isbn' => $data['isbn'] ?? null
+                        ':isbn' => $datos['isbn'] ?? null
                     ]);
                     break;
 
@@ -352,20 +373,23 @@ class BibliografiaDeclaradaController
                     ");
                     $stmt->execute([
                         ':bibliografia_id' => $bibliografiaId,
-                        ':carrera_id' => $data['carrera_id'] ?? null
+                        ':carrera_id' => $datos['carrera_id'] ?? null
                     ]);
                     break;
 
                 case 'articulo':
                     $stmt = $this->pdo->prepare("
-                        INSERT INTO articulos (bibliografia_id, issn, titulo_revista, cronologia)
-                        VALUES (:bibliografia_id, :issn, :titulo_revista, :cronologia)
+                        INSERT INTO articulos (
+                            bibliografia_id, issn, titulo_revista, cronologia
+                        ) VALUES (
+                            :bibliografia_id, :issn, :titulo_revista, :cronologia
+                        )
                     ");
                     $stmt->execute([
                         ':bibliografia_id' => $bibliografiaId,
-                        ':issn' => $data['issn'] ?? null,
-                        ':titulo_revista' => $data['titulo_revista'] === 'otra' ? $data['nueva_revista'] : $data['titulo_revista'],
-                        ':cronologia' => $data['cronologia'] ?? null
+                        ':issn' => $datos['issn'] ?? null,
+                        ':titulo_revista' => ($datos['titulo_revista'] ?? '') === 'otra' ? ($datos['nueva_revista'] ?? '') : ($datos['titulo_revista'] ?? ''),
+                        ':cronologia' => $datos['cronologia'] ?? null
                     ]);
                     break;
 
@@ -376,26 +400,19 @@ class BibliografiaDeclaradaController
                     ");
                     $stmt->execute([
                         ':bibliografia_id' => $bibliografiaId,
-                        ':descripcion' => $data['descripcion'] ?? null
+                        ':descripcion' => $datos['descripcion'] ?? null
                     ]);
                     break;
 
                 case 'sitio_web':
-                    error_log('Procesando sitio web. Datos recibidos: ' . print_r($data, true));
-                    if (empty($data['fecha_consulta'])) {
-                        error_log('Error: fecha_consulta está vacía');
-                        throw new \Exception('La fecha de consulta es requerida para sitios web.');
-                    }
-                    error_log('Fecha de consulta: ' . $data['fecha_consulta']);
                     $stmt = $this->pdo->prepare("
                         INSERT INTO sitios_web (bibliografia_id, fecha_consulta)
                         VALUES (:bibliografia_id, :fecha_consulta)
                     ");
                     $stmt->execute([
                         ':bibliografia_id' => $bibliografiaId,
-                        ':fecha_consulta' => $data['fecha_consulta']
+                        ':fecha_consulta' => $datos['fecha_consulta'] ?? null
                     ]);
-                    error_log('Sitio web insertado correctamente');
                     break;
 
                 case 'software':
@@ -405,49 +422,78 @@ class BibliografiaDeclaradaController
                     ");
                     $stmt->execute([
                         ':bibliografia_id' => $bibliografiaId,
-                        ':version' => $data['version'] ?? null
+                        ':version' => $datos['version'] ?? null
                     ]);
                     break;
             }
 
-            error_log('Confirmando transacción');
+            // Procesar los autores
+            if (!empty($autores)) {
+                foreach ($autores as $autor) {
+                    error_log('Procesando autor en store: ' . print_r($autor, true));
+                    
+                    if ($autor['es_nuevo'] || strpos($autor['temp_id'] ?? '', 'temp_') === 0) {
+                        // Es un autor nuevo
+                        $stmt = $this->pdo->prepare("
+                            INSERT INTO autores (apellidos, nombres, genero)
+                            VALUES (?, ?, ?)
+                        ");
+                        $stmt->execute([
+                            $autor['apellidos'],
+                            $autor['nombres'],
+                            $autor['genero']
+                        ]);
+                        $autorId = $this->pdo->lastInsertId();
+                        error_log('Nuevo autor insertado con ID: ' . $autorId);
+                    } else {
+                        // Es un autor existente
+                        $autorId = $autor['id'];
+                    }
+                    
+                    if ($autorId) {
+                        // Vincular autor con la bibliografía
+                        $stmt = $this->pdo->prepare("
+                            INSERT INTO bibliografias_autores (bibliografia_id, autor_id)
+                            VALUES (?, ?)
+                        ");
+                        $stmt->execute([
+                            $bibliografiaId,
+                            $autorId
+                        ]);
+                        error_log('Autor vinculado con ID: ' . $autorId);
+                    }
+                }
+            }
+            
             $this->pdo->commit();
 
-            if ($isAjax) {
-                error_log('Enviando respuesta AJAX');
-                ob_clean();
-                header('Content-Type: application/json');
+            if ($esAjax) {
                 echo json_encode([
                     'success' => true,
-                    'message' => 'Bibliografía declarada creada exitosamente.',
+                    'message' => 'Bibliografía creada exitosamente',
                     'redirect' => Config::get('app_url') . 'bibliografias-declaradas'
                 ]);
-                exit;
+                return new Response();
             }
 
-            $this->flash->addMessage('success', 'Bibliografía declarada creada exitosamente.');
             header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas');
-            exit;
+            return new Response();
 
-        } catch (\Exception $e) {
-            error_log('Error en store(): ' . $e->getMessage());
-            error_log('Stack trace: ' . $e->getTraceAsString());
-            
+        } catch (Exception $e) {
             $this->pdo->rollBack();
+            error_log('Error en store: ' . $e->getMessage());
 
-            if ($isAjax) {
-                ob_clean();
-                header('Content-Type: application/json');
+            if ($esAjax) {
                 echo json_encode([
                     'success' => false,
                     'message' => 'Error al crear la bibliografía: ' . $e->getMessage()
                 ]);
-                exit;
+                return new Response();
             }
 
-            $this->flash->addMessage('error', 'Error al crear la bibliografía: ' . $e->getMessage());
+            $_SESSION['error'] = 'Error al crear la bibliografía: ' . $e->getMessage();
             header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas/create');
-            exit;
+            return new Response();
         }
     }
 
@@ -456,6 +502,17 @@ class BibliografiaDeclaradaController
      */
     public function show($id = null, Request $request = null, Response $response = null): Response
     {
+        // Verificar autenticación
+        if (!$this->session->get('user_id')) {
+            $this->session->set('swal', [
+                'icon' => 'error',
+                'title' => 'Error de acceso',
+                'text' => 'Por favor inicie sesión para acceder a las bibliografías'
+            ]);
+            header('Location: ' . Config::get('app_url') . 'login');
+            exit;
+        }
+
         if (!$id) {
             $id = $_GET['id'] ?? null;
         }
@@ -465,56 +522,54 @@ class BibliografiaDeclaradaController
             exit;
         }
 
-        // Obtener la bibliografía con sus relaciones
-        $stmt = $this->pdo->prepare("
-            SELECT b.*, 
-                   l.isbn,
-                   t.carrera_id,
-                   a.issn, a.titulo_revista, a.cronologia,
-                   g.descripcion,
-                   sw.fecha_consulta,
-                   s.version,
-                   c.nombre as carrera_nombre
-            FROM bibliografias_declaradas b
-            LEFT JOIN libros l ON b.id = l.bibliografia_id
-            LEFT JOIN tesis t ON b.id = t.bibliografia_id
-            LEFT JOIN articulos a ON b.id = a.bibliografia_id
-            LEFT JOIN genericos g ON b.id = g.bibliografia_id
-            LEFT JOIN sitios_web sw ON b.id = sw.bibliografia_id
-            LEFT JOIN software s ON b.id = s.bibliografia_id
-            LEFT JOIN carreras c ON t.carrera_id = c.id
-            WHERE b.id = :id
-        ");
-        $stmt->execute([':id' => $id]);
-        $bibliografia = $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            // Obtener la bibliografía completa con sus datos específicos
+            $bibliografia = $this->obtenerBibliografiaCompleta($id);
 
         if (!$bibliografia) {
-            $this->flash->addMessage('error', 'Bibliografía no encontrada');
+                throw new \Exception('Bibliografía no encontrada');
+        }
+
+            // Obtener las asignaturas vinculadas
+        $stmt = $this->pdo->prepare("
+                SELECT 
+                    ab.id as vinculacion_id,
+                    a.id, 
+                    a.nombre,
+                    GROUP_CONCAT(DISTINCT TRIM(ad.codigo_asignatura) ORDER BY TRIM(ad.codigo_asignatura) SEPARATOR '\n') as codigos,
+                    ab.tipo_bibliografia
+                FROM asignaturas_bibliografias ab
+                JOIN asignaturas a ON ab.asignatura_id = a.id
+                LEFT JOIN asignaturas_departamentos ad ON a.id = ad.asignatura_id
+                WHERE ab.bibliografia_id = ?
+                GROUP BY ab.id, a.id, a.nombre, ab.tipo_bibliografia
+                ORDER BY MIN(TRIM(ad.codigo_asignatura)), a.nombre
+            ");
+            $stmt->execute([$id]);
+            $asignaturas_vinculadas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Obtener mensajes de sesión y limpiarlos
+            $swal = $this->session->get('swal');
+            $this->session->remove('swal');
+
+            // Debug: Imprimir datos de la bibliografía
+            error_log('Datos de la bibliografía: ' . print_r($bibliografia, true));
+
+            return $this->render($response, 'bibliografias_declaradas/show.twig', [
+                'bibliografia' => $bibliografia,
+                'asignaturas_vinculadas' => $asignaturas_vinculadas,
+                'app_url' => Config::get('app_url'),
+                'swal' => $swal
+            ]);
+        } catch (\Exception $e) {
+            $this->session->set('swal', [
+                'icon' => 'error',
+                'title' => 'Error',
+                'text' => 'Error al obtener los datos de la bibliografía: ' . $e->getMessage()
+            ]);
             header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas');
             exit;
         }
-
-        // Obtener los autores de la bibliografía
-        $stmt = $this->pdo->prepare("
-            SELECT a.* 
-            FROM autores a
-            JOIN bibliografias_autores ba ON a.id = ba.autor_id
-            WHERE ba.bibliografia_id = :bibliografia_id
-            ORDER BY a.apellidos, a.nombres
-        ");
-        $stmt->execute([':bibliografia_id' => $id]);
-        $bibliografia['autores'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Crear una nueva respuesta si no se proporciona una
-        if (!$response) {
-            $response = new Response();
-        }
-
-        // Renderizar la vista
-            return $this->render($response, 'bibliografias_declaradas/show.twig', [
-                'bibliografia' => $bibliografia,
-                'app_url' => Config::get('app_url')
-            ]);
     }
 
     /**
@@ -524,84 +579,56 @@ class BibliografiaDeclaradaController
     {
         // Verificar autenticación
         if (!$this->session->get('user_id')) {
-            $this->session->set('error', 'Por favor inicie sesión para acceder a las bibliografías');
+            $this->session->set('swal', [
+                'icon' => 'error',
+                'title' => 'Error de acceso',
+                'text' => 'Por favor inicie sesión para acceder a las bibliografías'
+            ]);
             header('Location: ' . Config::get('app_url') . 'login');
             exit;
         }
 
-        // Obtener la bibliografía con sus relaciones
-        $stmt = $this->pdo->prepare("
-            SELECT b.*, 
-                   l.isbn,
-                   t.carrera_id,
-                   a.issn, a.titulo_revista, a.cronologia,
-                   g.descripcion,
-                   sw.fecha_consulta,
-                   s.version
-            FROM bibliografias_declaradas b
-            LEFT JOIN libros l ON b.id = l.bibliografia_id
-            LEFT JOIN tesis t ON b.id = t.bibliografia_id
-            LEFT JOIN articulos a ON b.id = a.bibliografia_id
-            LEFT JOIN genericos g ON b.id = g.bibliografia_id
-            LEFT JOIN sitios_web sw ON b.id = sw.bibliografia_id
-            LEFT JOIN software s ON b.id = s.bibliografia_id
-            WHERE b.id = :id
-        ");
-        $stmt->execute([':id' => $id]);
-        $bibliografia = $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            $bibliografia = $this->obtenerBibliografiaCompleta($id);
 
         if (!$bibliografia) {
-            $this->flash->addMessage('error', 'Bibliografía no encontrada');
+                $this->session->set('swal', [
+                    'icon' => 'error',
+                    'title' => 'Error',
+                    'text' => 'Bibliografía no encontrada'
+                ]);
             header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas');
             exit;
         }
 
-        // Obtener los autores de la bibliografía
-        $stmt = $this->pdo->prepare("
-            SELECT a.* 
-            FROM autores a
-            JOIN bibliografias_autores ba ON a.id = ba.autor_id
-            WHERE ba.bibliografia_id = :bibliografia_id
-        ");
-        $stmt->execute([':bibliografia_id' => $id]);
-        $autoresSeleccionados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $autores = Autor::orderBy('apellidos')->get();
+            $editoriales = BibliografiaDeclarada::distinct()->pluck('editorial')->filter();
+            $revistas = Articulo::distinct()->pluck('titulo_revista')->filter();
+            $carreras = Carrera::where('estado', true)->orderBy('nombre')->get();
 
-        // Obtener todos los autores para el selector
-        $stmt = $this->pdo->prepare("SELECT * FROM autores ORDER BY apellidos, nombres");
-        $stmt->execute();
-        $todosAutores = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            // Obtener mensajes de sesión y limpiarlos
+            $swal = $this->session->get('swal');
+            $this->session->remove('swal');
 
-        // Obtener editoriales existentes
-        $stmt = $this->pdo->prepare("SELECT DISTINCT editorial FROM bibliografias_declaradas WHERE editorial IS NOT NULL ORDER BY editorial");
-        $stmt->execute();
-        $editoriales = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-        // Obtener revistas existentes
-        $stmt = $this->pdo->prepare("SELECT DISTINCT titulo_revista FROM articulos WHERE titulo_revista IS NOT NULL ORDER BY titulo_revista");
-        $stmt->execute();
-        $revistas = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-        // Obtener carreras
-        $stmt = $this->pdo->prepare("SELECT * FROM carreras WHERE estado = 1 ORDER BY nombre");
-        $stmt->execute();
-        $carreras = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Crear una nueva respuesta si no se proporciona una
-        if (!$response) {
-            $response = new Response();
-        }
-
-        // Renderizar la vista
             return $this->render($response, 'bibliografias_declaradas/form.twig', [
                 'bibliografia' => $bibliografia,
-            'autores' => $todosAutores,
-            'autoresSeleccionados' => $autoresSeleccionados,
+                'autores' => $autores,
             'editoriales' => $editoriales,
             'revistas' => $revistas,
             'carreras' => $carreras,
+                'app_url' => Config::get('app_url'),
             'isEdit' => true,
-                'app_url' => Config::get('app_url')
+                'swal' => $swal
             ]);
+        } catch (\Exception $e) {
+            $this->session->set('swal', [
+                'icon' => 'error',
+                'title' => 'Error',
+                'text' => 'Error al obtener los datos de la bibliografía: ' . $e->getMessage()
+            ]);
+            header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas');
+            exit;
+        }
     }
 
     /**
@@ -609,235 +636,235 @@ class BibliografiaDeclaradaController
      */
     public function update($id, Request $request = null, Response $response = null): Response
     {
-        $data = $request ? $request->getParsedBody() : $_POST;
-        $isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
-
         try {
-            $this->pdo->beginTransaction();
-
-            // Verificar si existe otra bibliografía con el mismo título (excluyendo la actual)
-            $stmt = $this->pdo->prepare("
-                SELECT id FROM bibliografias_declaradas 
-                WHERE titulo = :titulo AND id != :id
-            ");
-            $stmt->execute([
-                ':titulo' => $data['titulo'],
-                ':id' => $id
-            ]);
+            error_log('=== INICIO MÉTODO UPDATE ===');
+        error_log('ID recibido: ' . $id);
             
-            if ($stmt->fetch()) {
-                throw new \Exception('Ya existe una bibliografía con el mismo título.');
-            }
-
-            // Actualizar la bibliografía
-            $stmt = $this->pdo->prepare("
-                UPDATE bibliografias_declaradas 
-                SET titulo = :titulo,
-                    tipo = :tipo,
-                    anio_publicacion = :anio_publicacion,
-                    editorial = :editorial,
-                    edicion = :edicion,
-                    url = :url,
-                    nota = :nota,
-                    formato = :formato
-                WHERE id = :id
-            ");
-
-            // Determinar el valor de la editorial
-            $editorial = $data['editorial'];
-            if ($editorial === 'otra' && !empty($data['nueva_editorial'])) {
-                $editorial = $data['nueva_editorial'];
-            }
-
-            $params = [
-                ':id' => $id,
-                ':titulo' => $data['titulo'],
-                ':tipo' => $data['tipo'],
-                ':anio_publicacion' => $data['anio_publicacion'],
-                ':editorial' => $editorial,
-                ':edicion' => $data['edicion'] ?? null,
-                ':url' => $data['url'] ?? null,
-                ':nota' => $data['nota'] ?? null,
-                ':formato' => $data['formato'] ?? null
-            ];
-
-            $stmt->execute($params);
-
-            // Actualizar los detalles específicos según el tipo
-            switch ($data['tipo']) {
-                case 'libro':
-                    $stmt = $this->pdo->prepare("
-                        UPDATE libros 
-                        SET isbn = :isbn
-                        WHERE bibliografia_id = :bibliografia_id
-                    ");
-                    $stmt->execute([
-                        ':bibliografia_id' => $id,
-                        ':isbn' => $data['isbn'] ?? null
-                    ]);
-                    break;
-
-                case 'tesis':
-                    $stmt = $this->pdo->prepare("
-                        UPDATE tesis 
-                        SET carrera_id = :carrera_id
-                        WHERE bibliografia_id = :bibliografia_id
-                    ");
-                    $stmt->execute([
-                        ':bibliografia_id' => $id,
-                        ':carrera_id' => $data['carrera_id'] ?? null
-                    ]);
-                    break;
-
-                case 'articulo':
-                    $stmt = $this->pdo->prepare("
-                        UPDATE articulos 
-                        SET issn = :issn,
-                            titulo_revista = :titulo_revista,
-                            cronologia = :cronologia
-                        WHERE bibliografia_id = :bibliografia_id
-                    ");
-                    $stmt->execute([
-                        ':bibliografia_id' => $id,
-                        ':issn' => $data['issn'] ?? null,
-                        ':titulo_revista' => $data['titulo_revista'] === 'otra' ? $data['nueva_revista'] : $data['titulo_revista'],
-                        ':cronologia' => $data['cronologia'] ?? null
-                    ]);
-                    break;
-
-                case 'generico':
-                    $stmt = $this->pdo->prepare("
-                        UPDATE genericos 
-                        SET descripcion = :descripcion
-                        WHERE bibliografia_id = :bibliografia_id
-                    ");
-                    $stmt->execute([
-                        ':bibliografia_id' => $id,
-                        ':descripcion' => $data['descripcion'] ?? null
-                    ]);
-                    break;
-
-                case 'sitio_web':
-                    if (empty($data['fecha_consulta'])) {
-                        throw new \Exception('La fecha de consulta es requerida para sitios web.');
-                    }
-                    $stmt = $this->pdo->prepare("
-                        UPDATE sitios_web 
-                        SET fecha_consulta = :fecha_consulta
-                        WHERE bibliografia_id = :bibliografia_id
-                    ");
-                    $stmt->execute([
-                        ':bibliografia_id' => $id,
-                        ':fecha_consulta' => $data['fecha_consulta']
-                    ]);
-                    break;
-
-                case 'software':
-                    $stmt = $this->pdo->prepare("
-                        UPDATE software 
-                        SET version = :version
-                        WHERE bibliografia_id = :bibliografia_id
-                    ");
-                    $stmt->execute([
-                        ':bibliografia_id' => $id,
-                        ':version' => $data['version'] ?? null
-                    ]);
-                    break;
-            }
-
-            // Actualizar autores
-            if (isset($data['autores'])) {
-                // Primero eliminar todas las relaciones existentes
-                $stmt = $this->pdo->prepare("DELETE FROM bibliografias_autores WHERE bibliografia_id = :bibliografia_id");
-                $stmt->execute([':bibliografia_id' => $id]);
-
-                // Luego agregar las nuevas relaciones
-                $autores = json_decode($data['autores'], true);
-                if (is_array($autores)) {
-                    foreach ($autores as $autor) {
-                        // Verificar si el autor es nuevo (tiene ID temporal)
-                        if (strpos($autor['id'], 'temp_') === 0) {
-                            // Verificar si ya existe un autor con el mismo nombre y apellido
-                            $stmt = $this->pdo->prepare("
-                                SELECT id FROM autores 
-                                WHERE apellidos = :apellidos 
-                                AND nombres = :nombres
-                            ");
-                            
-                            $stmt->execute([
-                                ':apellidos' => $autor['apellidos'],
-                                ':nombres' => $autor['nombres']
-                            ]);
-                            
-                            $autorExistente = $stmt->fetch();
-                            
-                            if ($autorExistente) {
-                                $autorId = $autorExistente['id'];
-            } else {
-                                // Insertar nuevo autor
-                                $stmt = $this->pdo->prepare("
-                                    INSERT INTO autores (apellidos, nombres, genero)
-                                    VALUES (:apellidos, :nombres, :genero)
-                                ");
-                                
-                                $stmt->execute([
-                                    ':apellidos' => $autor['apellidos'],
-                                    ':nombres' => $autor['nombres'],
-                                    ':genero' => ucfirst(strtolower($autor['genero']))
-                                ]);
-                                
-                                $autorId = $this->pdo->lastInsertId();
-                            }
-                        } else {
-                            $autorId = $autor['id'];
-                        }
-
-                        // Vincular autor con la bibliografía
-                        $stmt = $this->pdo->prepare("
-                            INSERT INTO bibliografias_autores (bibliografia_id, autor_id)
-                            VALUES (:bibliografia_id, :autor_id)
-                        ");
-
-                        $stmt->execute([
-                            ':bibliografia_id' => $id,
-                            ':autor_id' => $autorId
-                        ]);
-                    }
-                }
-            }
-
-            $this->pdo->commit();
-
-            if ($isAjax) {
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Bibliografía actualizada exitosamente.',
-                    'redirect' => Config::get('app_url') . 'bibliografias-declaradas'
-                ]);
-                exit;
-            }
-
-            $this->flash->addMessage('success', 'Bibliografía actualizada exitosamente.');
-            header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas');
-            exit;
-
-        } catch (\Exception $e) {
-            $this->pdo->rollBack();
-            
-            if ($isAjax) {
+            // Verificar autenticación
+            if (!$this->session->get('user_id')) {
                 header('Content-Type: application/json');
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Error al actualizar la bibliografía: ' . $e->getMessage()
+                    'message' => 'Por favor inicie sesión para acceder a las bibliografías',
+                    'redirect' => Config::get('app_url') . 'login'
                 ]);
-                exit;
+                return $response;
+            }
+        
+        // Limpiar cualquier salida anterior
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+        
+            // Verificar si es una petición AJAX
+            $isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+                      strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+            error_log('Es petición AJAX: ' . ($isAjax ? 'Sí' : 'No'));
+
+            // Obtener los datos del cuerpo de la petición
+            $jsonData = file_get_contents('php://input');
+            $data = json_decode($jsonData, true);
+            error_log('Datos JSON recibidos: ' . print_r($data, true));
+
+            if (!$data) {
+                throw new \Exception('No se recibieron datos válidos');
             }
 
-            $this->flash->addMessage('error', 'Error al actualizar la bibliografía: ' . $e->getMessage());
-            header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas/' . $id . '/edit');
-            exit;
+            // Verificar que la bibliografía existe
+            $stmt = $this->pdo->prepare("SELECT id FROM bibliografias_declaradas WHERE id = ?");
+            $stmt->execute([$id]);
+            if (!$stmt->fetch()) {
+                throw new \Exception('La bibliografía no existe');
+            }
+
+            // Obtener los autores
+            $autores = json_decode($data['autores'] ?? '[]', true);
+            error_log('Autores decodificados: ' . print_r($autores, true));
+
+            // Iniciar transacción
+            $this->pdo->beginTransaction();
+            
+            try {
+                // Actualizar la bibliografía base
+                $sql = "UPDATE bibliografias_declaradas SET 
+                    titulo = ?, 
+                    anio_publicacion = ?, 
+                    edicion = ?, 
+                    url = ?, 
+                    formato = ?, 
+                    nota = ?, 
+                    tipo = ?, 
+                    editorial = ?, 
+                    estado = ?,
+                    fecha_actualizacion = CURRENT_TIMESTAMP
+                    WHERE id = ?";
+                
+                $stmt = $this->pdo->prepare($sql);
+
+                $params = [
+                    $data['titulo'],
+                    $data['anio_publicacion'],
+                    $data['edicion'] ?? null,
+                    $data['url'] ?? null,
+                    $data['formato'],
+                    $data['nota'] ?? null,
+                    $data['tipo'],
+                    $data['editorial'] === 'otra' ? $data['nueva_editorial'] : $data['editorial'],
+                    $data['estado'] ?? 1,
+                    $id
+                ];
+                
+                error_log('Parámetros para actualización base: ' . print_r($params, true));
+                $stmt->execute($params);
+
+                // Eliminar todas las vinculaciones de autores existentes
+                $stmt = $this->pdo->prepare("DELETE FROM bibliografias_autores WHERE bibliografia_id = ?");
+                $stmt->execute([$id]);
+                error_log('Vinculaciones de autores eliminadas');
+
+                // Procesar autores
+                if (!empty($autores)) {
+                    foreach ($autores as $autor) {
+                        error_log('Procesando autor: ' . print_r($autor, true));
+                        
+                        if ($autor['es_nuevo'] || strpos($autor['temp_id'] ?? '', 'temp_') === 0) {
+                            // Es un autor nuevo
+                $stmt = $this->pdo->prepare("
+                                INSERT INTO autores (apellidos, nombres, genero)
+                                VALUES (?, ?, ?)
+                ");
+                $stmt->execute([
+                                $autor['apellidos'],
+                                $autor['nombres'],
+                                $autor['genero']
+                            ]);
+                            $autorId = $this->pdo->lastInsertId();
+                            error_log('Nuevo autor insertado con ID: ' . $autorId);
+                        } else {
+                            // Es un autor existente
+                            $autorId = $autor['id'];
+                        }
+
+                        // Vincular el autor con la bibliografía
+                $stmt = $this->pdo->prepare("
+                            INSERT INTO bibliografias_autores (bibliografia_id, autor_id)
+                            VALUES (?, ?)
+                        ");
+                        $stmt->execute([$id, $autorId]);
+                        error_log('Autor vinculado con ID: ' . $autorId);
+                    }
+                }
+
+                // Actualizar campos específicos según el tipo
+                switch ($data['tipo']) {
+                    case 'libro':
+                        $stmt = $this->pdo->prepare("
+                            UPDATE libros SET isbn = ? WHERE bibliografia_id = ?
+                        ");
+                        $stmt->execute([$data['isbn'] ?? null, $id]);
+                        break;
+
+                    case 'tesis':
+                            $stmt = $this->pdo->prepare("
+                            UPDATE tesis SET carrera_id = ? WHERE bibliografia_id = ?
+                        ");
+                        $stmt->execute([$data['carrera_id'] ?? null, $id]);
+                        break;
+
+                    case 'articulo':
+                        $stmt = $this->pdo->prepare("
+                            UPDATE articulos SET 
+                                issn = ?, 
+                                titulo_revista = ?, 
+                                cronologia = ? 
+                            WHERE bibliografia_id = ?
+                        ");
+                        $stmt->execute([
+                            $data['issn'] ?? null,
+                            $data['titulo_revista'] === 'otra' ? $data['nueva_revista'] : $data['titulo_revista'],
+                            $data['cronologia'] ?? null,
+                            $id
+                        ]);
+                        break;
+
+                    case 'generico':
+                        $stmt = $this->pdo->prepare("
+                            UPDATE genericos SET descripcion = ? WHERE bibliografia_id = ?
+                        ");
+                        $stmt->execute([$data['descripcion'] ?? null, $id]);
+                        break;
+
+                    case 'sitio_web':
+                        $stmt = $this->pdo->prepare("
+                            UPDATE sitios_web SET fecha_consulta = ? WHERE bibliografia_id = ?
+                        ");
+                        $stmt->execute([$data['fecha_consulta'] ?? null, $id]);
+                        break;
+
+                    case 'software':
+                        $stmt = $this->pdo->prepare("
+                            UPDATE software SET version = ? WHERE bibliografia_id = ?
+                        ");
+                        $stmt->execute([$data['version'] ?? null, $id]);
+                        break;
+                }
+
+                // Confirmar transacción
+                $this->pdo->commit();
+
+                // Enviar respuesta de éxito
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Bibliografía actualizada correctamente',
+                    'redirect' => Config::get('app_url') . 'bibliografias-declaradas'
+                ]);
+                return $response;
+
+            } catch (\Exception $e) {
+                // Revertir transacción en caso de error
+                $this->pdo->rollBack();
+                throw $e;
+            }
+        } catch (\Exception $e) {
+            error_log('Error en BibliografiaDeclaradaController::update: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            
+            // Enviar respuesta de error
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Ha ocurrido un error al actualizar la bibliografía: ' . $e->getMessage()
+            ]);
+            return $response;
         }
+    }
+
+    private function sendJsonResponse(bool $success, string $message, ?string $redirect = null): void
+    {
+        // Limpiar cualquier salida anterior
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+
+        // Preparar la respuesta
+                $response = [
+            'success' => $success,
+            'message' => $message
+        ];
+
+        if ($redirect) {
+            $response['redirect'] = $redirect;
+        }
+
+        // Enviar headers
+        header('Content-Type: application/json');
+        header('Cache-Control: no-store, no-cache, must-revalidate');
+        header('Pragma: no-cache');
+
+        // Enviar respuesta
+            echo json_encode($response);
+            exit;
     }
 
     /**
@@ -845,81 +872,86 @@ class BibliografiaDeclaradaController
      */
     public function destroy($id = null, Request $request = null, Response $response = null): Response
     {
-        if (!$id) {
-            $id = $_POST['id'] ?? null;
-        }
-
-        if (!$id) {
-            $_SESSION['error'] = 'ID de bibliografía no proporcionado';
-            header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas');
+        try {
+            // Verificar autenticación
+            if (!$this->session->get('user_id')) {
+                $this->session->set('swal', [
+                    'icon' => 'error',
+                    'title' => 'Error de acceso',
+                    'text' => 'Por favor inicie sesión para acceder a las bibliografías'
+                ]);
+                header('Location: ' . Config::get('app_url') . 'login');
             exit;
         }
-
-        try {
-            $this->pdo->beginTransaction();
 
             // Verificar si la bibliografía tiene asignaturas vinculadas
             $stmt = $this->pdo->prepare("
                 SELECT COUNT(*) as total 
                 FROM asignaturas_bibliografias 
-                WHERE bibliografia_id = :id
+                WHERE bibliografia_id = ?
             ");
-            $stmt->execute([':id' => $id]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $stmt->execute([$id]);
+            $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($result['total'] > 0) {
-                throw new \Exception('No se puede eliminar la bibliografía porque está vinculada a una o más asignaturas.');
+            if ($resultado['total'] > 0) {
+                $this->session->set('swal', [
+                    'icon' => 'error',
+                    'title' => 'No se puede eliminar',
+                    'text' => 'No es posible eliminar esta bibliografía porque tiene asignaturas vinculadas. Por favor, desvincule las asignaturas primero.'
+                ]);
+                header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas');
+                exit;
             }
 
-            // Eliminar relaciones con autores (solo la relación, no los autores)
-            $stmt = $this->pdo->prepare("DELETE FROM bibliografias_autores WHERE bibliografia_id = :id");
-            $stmt->execute([':id' => $id]);
+            // Iniciar transacción
+            $this->pdo->beginTransaction();
 
-            // Eliminar datos específicos según el tipo
-            $stmt = $this->pdo->prepare("SELECT tipo FROM bibliografias_declaradas WHERE id = :id");
-            $stmt->execute([':id' => $id]);
-            $bibliografia = $stmt->fetch(PDO::FETCH_ASSOC);
+            // Eliminar relaciones primero
+            $this->pdo->exec("DELETE FROM bibliografias_autores WHERE bibliografia_id = " . $id);
 
-            if ($bibliografia) {
-                switch ($bibliografia['tipo']) {
-                    case 'libro':
-                        $stmt = $this->pdo->prepare("DELETE FROM libros WHERE bibliografia_id = :id");
-                        break;
-                    case 'tesis':
-                        $stmt = $this->pdo->prepare("DELETE FROM tesis WHERE bibliografia_id = :id");
-                        break;
-                    case 'articulo':
-                        $stmt = $this->pdo->prepare("DELETE FROM articulos WHERE bibliografia_id = :id");
-                        break;
-                    case 'generico':
-                        $stmt = $this->pdo->prepare("DELETE FROM genericos WHERE bibliografia_id = :id");
-                        break;
-                    case 'sitio_web':
-                        $stmt = $this->pdo->prepare("DELETE FROM sitios_web WHERE bibliografia_id = :id");
-                        break;
-                    case 'software':
-                        $stmt = $this->pdo->prepare("DELETE FROM software WHERE bibliografia_id = :id");
-                        break;
-                }
-                if (isset($stmt)) {
-                    $stmt->execute([':id' => $id]);
-                }
-            }
+            // Eliminar detalles específicos según el tipo
+            $this->pdo->exec("DELETE FROM libros WHERE bibliografia_id = " . $id);
+            $this->pdo->exec("DELETE FROM tesis WHERE bibliografia_id = " . $id);
+            $this->pdo->exec("DELETE FROM articulos WHERE bibliografia_id = " . $id);
+            $this->pdo->exec("DELETE FROM genericos WHERE bibliografia_id = " . $id);
+            $this->pdo->exec("DELETE FROM sitios_web WHERE bibliografia_id = " . $id);
+            $this->pdo->exec("DELETE FROM software WHERE bibliografia_id = " . $id);
 
-            // Finalmente, eliminar la bibliografía
-            $stmt = $this->pdo->prepare("DELETE FROM bibliografias_declaradas WHERE id = :id");
-            $stmt->execute([':id' => $id]);
+            // Finalmente, eliminar la bibliografía base
+            $this->pdo->exec("DELETE FROM bibliografias_declaradas WHERE id = " . $id);
 
+            // Confirmar transacción
             $this->pdo->commit();
-            $_SESSION['success'] = 'Bibliografía declarada eliminada exitosamente.';
+
+            // Establecer mensaje de éxito
+            $this->session->set('swal', [
+                'icon' => 'success',
+                'title' => 'Éxito',
+                'text' => 'Bibliografía eliminada correctamente'
+            ]);
+
+            // Redirigir al listado
+            header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas');
+            exit;
 
         } catch (\Exception $e) {
+            // Revertir transacción en caso de error
             $this->pdo->rollBack();
-            $_SESSION['error'] = 'Error al eliminar la bibliografía declarada: ' . $e->getMessage();
-        }
+            
+            error_log('Error en destroy: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
 
-        header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas');
-        exit;
+            // Establecer mensaje de error
+            $this->session->set('swal', [
+                'icon' => 'error',
+                'title' => 'Error',
+                'text' => 'Error al eliminar la bibliografía: ' . $e->getMessage()
+            ]);
+
+            // Redirigir al listado
+            header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas');
+            exit;
+        }
     }
 
     /**
@@ -1014,18 +1046,19 @@ class BibliografiaDeclaradaController
             error_log('Obteniendo asignaturas vinculadas');
             $stmt = $this->pdo->prepare("
                 SELECT 
-                    ab.id,
+                    ab.id as vinculacion_id,
+                    a.id, 
                     a.nombre,
-                    GROUP_CONCAT(DISTINCT TRIM(ad.codigo_asignatura) ORDER BY TRIM(ad.codigo_asignatura) SEPARATOR '\n') as codigo_asignatura,
+                    GROUP_CONCAT(DISTINCT TRIM(ad.codigo_asignatura) ORDER BY TRIM(ad.codigo_asignatura) SEPARATOR '\n') as codigos,
                     ab.tipo_bibliografia
                 FROM asignaturas_bibliografias ab
-                JOIN asignaturas a ON a.id = ab.asignatura_id
+                JOIN asignaturas a ON ab.asignatura_id = a.id
                 LEFT JOIN asignaturas_departamentos ad ON a.id = ad.asignatura_id
-                WHERE ab.bibliografia_id = :id
-                GROUP BY ab.id, a.nombre, ab.tipo_bibliografia
+                WHERE ab.bibliografia_id = ?
+                GROUP BY ab.id, a.id, a.nombre, ab.tipo_bibliografia
                 ORDER BY MIN(TRIM(ad.codigo_asignatura)), a.nombre
             ");
-            $stmt->execute([':id' => $id]);
+            $stmt->execute([$id]);
             $asignaturas_vinculadas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             error_log('Asignaturas vinculadas obtenidas: ' . print_r($asignaturas_vinculadas, true));
 
@@ -1069,8 +1102,8 @@ class BibliografiaDeclaradaController
             error_log('Error en método vincular: ' . $e->getMessage());
             error_log('Stack trace: ' . $e->getTraceAsString());
             $_SESSION['error'] = 'Error al cargar la página: ' . $e->getMessage();
-            header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas');
-            exit;
+        header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas');
+        exit;
         }
     }
 
@@ -1122,58 +1155,68 @@ class BibliografiaDeclaradaController
      */
     public function vincularSingle($id = null, Request $request = null, Response $response = null): Response
     {
+        // Verificar autenticación
+        if (!$this->session->get('user_id')) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Por favor inicie sesión para continuar',
+                'redirect' => Config::get('app_url') . 'login'
+            ]);
+            exit;
+        }
+
         try {
-            if (!$id) {
-                return $this->jsonResponse(['success' => false, 'message' => 'ID de bibliografía no proporcionado']);
-            }
-
             $data = json_decode(file_get_contents('php://input'), true);
+            
             if (!isset($data['asignatura_id']) || !isset($data['tipo_bibliografia'])) {
-                return $this->jsonResponse(['success' => false, 'message' => 'Datos incompletos']);
+                throw new \Exception('Faltan datos requeridos');
             }
 
-            // Verificar si la vinculación ya existe
-            $stmt = $this->pdo->prepare("
-                SELECT COUNT(*) as total 
-                FROM asignaturas_bibliografias 
-                WHERE bibliografia_id = :bibliografia_id 
-                AND asignatura_id = :asignatura_id
-            ");
-            $stmt->execute([
-                ':bibliografia_id' => $id,
-                ':asignatura_id' => $data['asignatura_id']
-            ]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $this->pdo->beginTransaction();
 
-            if ($result['total'] > 0) {
-                return $this->jsonResponse([
-                    'success' => false,
-                    'message' => 'La asignatura ya está vinculada a esta bibliografía'
-                ]);
+            // Verificar si ya existe la vinculación
+            $stmt = $this->pdo->prepare("
+                SELECT id FROM bibliografias_asignaturas 
+                WHERE bibliografia_id = ? AND asignatura_id = ?
+            ");
+            $stmt->execute([$id, $data['asignatura_id']]);
+            
+            if ($stmt->fetch()) {
+                throw new \Exception('La asignatura ya está vinculada a esta bibliografía');
             }
 
-            // Crear la vinculación
+            // Insertar la vinculación
             $stmt = $this->pdo->prepare("
-                INSERT INTO asignaturas_bibliografias 
-                (bibliografia_id, asignatura_id, tipo_bibliografia) 
-                VALUES (:bibliografia_id, :asignatura_id, :tipo_bibliografia)
+                INSERT INTO bibliografias_asignaturas (bibliografia_id, asignatura_id, tipo_bibliografia)
+                VALUES (?, ?, ?)
             ");
             $stmt->execute([
-                ':bibliografia_id' => $id,
-                ':asignatura_id' => $data['asignatura_id'],
-                ':tipo_bibliografia' => $data['tipo_bibliografia']
+                $id,
+                $data['asignatura_id'],
+                $data['tipo_bibliografia']
             ]);
 
-            return $this->jsonResponse([
+            $this->pdo->commit();
+
+            header('Content-Type: application/json');
+            echo json_encode([
                 'success' => true,
                 'message' => 'Asignatura vinculada exitosamente'
             ]);
+            exit;
 
         } catch (\Exception $e) {
-            return $this->jsonResponse([
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+
+            header('Content-Type: application/json');
+            echo json_encode([
                 'success' => false,
                 'message' => 'Error al vincular la asignatura: ' . $e->getMessage()
             ]);
+            exit;
         }
     }
 
@@ -1182,179 +1225,123 @@ class BibliografiaDeclaradaController
      */
     public function desvincularSingle($id = null, $vinculacionId = null, Request $request = null, Response $response = null): Response
     {
-        if (!$id || !$vinculacionId) {
-            return $this->jsonResponse(['success' => false, 'message' => 'Parámetros incompletos']);
+        // Verificar autenticación
+        if (!$this->session->get('user_id')) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Por favor inicie sesión para continuar',
+                'redirect' => Config::get('app_url') . 'login'
+            ]);
+            exit;
         }
 
         try {
+            $this->pdo->beginTransaction();
+
+            // Eliminar la vinculación
             $stmt = $this->pdo->prepare("
-                DELETE FROM asignaturas_bibliografias 
-                WHERE id = :vinculacion_id 
-                AND bibliografia_id = :bibliografia_id
+                DELETE FROM bibliografias_asignaturas 
+                WHERE id = ? AND bibliografia_id = ?
             ");
-            $stmt->execute([
-                ':vinculacion_id' => $vinculacionId,
-                ':bibliografia_id' => $id
+            $stmt->execute([$vinculacionId, $id]);
+
+            $this->pdo->commit();
+
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'message' => 'Asignatura desvinculada exitosamente'
             ]);
-
-            if ($stmt->rowCount() === 0) {
-                throw new \Exception('No se encontró la vinculación');
-            }
-
-            return $this->jsonResponse(['success' => true, 'message' => 'Asignatura desvinculada exitosamente']);
+            exit;
 
         } catch (\Exception $e) {
-            return $this->jsonResponse(['success' => false, 'message' => $e->getMessage()]);
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al desvincular la asignatura: ' . $e->getMessage()
+            ]);
+            exit;
         }
     }
 
     /**
      * Vincula múltiples asignaturas a la bibliografía.
      */
-    public function vincularMultiple($id = null, Request $request = null, Response $response = null): void
+    public function vincularMultiple($id)
     {
-        error_log('=== INICIO VINCULAR MULTIPLE ===');
-        error_log('Método llamado con ID: ' . $id);
-        error_log('Método HTTP: ' . $_SERVER['REQUEST_METHOD']);
-        error_log('Headers recibidos: ' . print_r(getallheaders(), true));
-        
-        // Limpiar cualquier salida anterior
-        while (ob_get_level()) {
-            ob_end_clean();
-        }
-        
-        // Asegurar que la respuesta sea JSON
-        header('Content-Type: application/json; charset=utf-8');
-        header('Cache-Control: no-store, no-cache, must-revalidate');
-        header('Pragma: no-cache');
-        
         try {
-            if (!$id) {
-                error_log('Error: ID no proporcionado');
-                echo json_encode(['success' => false, 'message' => 'ID de bibliografía no proporcionado']);
-                return;
-            }
-
-            // Obtener los datos JSON del cuerpo de la petición
-            $rawInput = file_get_contents('php://input');
-            error_log('Datos raw recibidos: ' . $rawInput);
-
-            if (empty($rawInput)) {
-                error_log('Error: No se recibieron datos en el cuerpo de la petición');
-                echo json_encode(['success' => false, 'message' => 'No se recibieron datos en el cuerpo de la petición']);
-                return;
-            }
-
-            // Decodificar el JSON
-            $data = json_decode($rawInput, true);
-            error_log('Datos decodificados: ' . print_r($data, true));
+            // Obtener los datos del cuerpo de la petición
+            $json = file_get_contents('php://input');
+            $data = json_decode($json, true);
             
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                error_log('Error al decodificar JSON: ' . json_last_error_msg());
-                echo json_encode(['success' => false, 'message' => 'Error al procesar los datos: ' . json_last_error_msg()]);
-                return;
-            }
-
-            // Validar la estructura de los datos
             if (!isset($data['asignaturas']) || !is_array($data['asignaturas'])) {
-                error_log('Error: No se encontraron asignaturas en los datos. Datos recibidos: ' . print_r($data, true));
-                echo json_encode(['success' => false, 'message' => 'No se encontraron asignaturas para vincular']);
-                return;
+                throw new Exception('Datos de asignaturas no válidos');
             }
 
-            // Validar que cada asignatura tenga los campos requeridos
-            foreach ($data['asignaturas'] as $index => $asignatura) {
-                if (!isset($asignatura['asignatura_id']) || !isset($asignatura['tipo_bibliografia'])) {
-                    error_log("Error: Datos incompletos en la asignatura {$index}: " . print_r($asignatura, true));
-                    echo json_encode(['success' => false, 'message' => 'Datos incompletos en una o más asignaturas']);
-                    return;
-                }
-            }
-
-            if (empty($data['asignaturas'])) {
-                error_log('Error: El array de asignaturas está vacío');
-                echo json_encode(['success' => false, 'message' => 'No se proporcionaron asignaturas para vincular']);
-                return;
-            }
-
-            // Verificar que la bibliografía existe
-            $stmt = $this->pdo->prepare("SELECT id FROM bibliografias_declaradas WHERE id = :id");
-            $stmt->execute([':id' => $id]);
-            if (!$stmt->fetch()) {
-                error_log('Error: Bibliografía no encontrada');
-                echo json_encode(['success' => false, 'message' => 'Bibliografía no encontrada']);
-                return;
-            }
-
-            // Procesar cada asignatura
-            $vinculacionesExitosas = 0;
+            $this->pdo->beginTransaction();
+            
+            $vinculadas = 0;
             $errores = [];
 
             foreach ($data['asignaturas'] as $asignatura) {
-                error_log('Procesando asignatura: ' . print_r($asignatura, true));
-                
                 try {
-                    // Verificar que la asignatura existe
-                    $stmt = $this->pdo->prepare("SELECT id FROM asignaturas WHERE id = :id");
-                    $stmt->execute([':id' => $asignatura['asignatura_id']]);
-                    if (!$stmt->fetch()) {
-                        $errores[] = "Asignatura {$asignatura['asignatura_id']} no encontrada";
-                        continue;
-                    }
-
-                    // Verificar si la vinculación ya existe
+                    // Verificar si ya existe la vinculación
                     $stmt = $this->pdo->prepare("
-                        SELECT COUNT(*) as total 
+                        SELECT COUNT(*) 
                         FROM asignaturas_bibliografias 
-                        WHERE bibliografia_id = :bibliografia_id 
-                        AND asignatura_id = :asignatura_id
+                        WHERE bibliografia_id = ? AND asignatura_id = ?
                     ");
-                    $stmt->execute([
-                        ':bibliografia_id' => $id,
-                        ':asignatura_id' => $asignatura['asignatura_id']
-                    ]);
-                    $result = $stmt->fetch(PDO::FETCH_ASSOC);
-
-                    if ($result['total'] > 0) {
+                    $stmt->execute([$id, $asignatura['asignatura_id']]);
+                    
+                    if ($stmt->fetchColumn() > 0) {
                         $errores[] = "La asignatura {$asignatura['asignatura_id']} ya está vinculada";
                         continue;
                     }
 
-                    // Crear la vinculación
+                    // Insertar la vinculación
                     $stmt = $this->pdo->prepare("
                         INSERT INTO asignaturas_bibliografias 
                         (bibliografia_id, asignatura_id, tipo_bibliografia) 
-                        VALUES (:bibliografia_id, :asignatura_id, :tipo_bibliografia)
+                        VALUES (?, ?, ?)
                     ");
                     $stmt->execute([
-                        ':bibliografia_id' => $id,
-                        ':asignatura_id' => $asignatura['asignatura_id'],
-                        ':tipo_bibliografia' => $asignatura['tipo_bibliografia']
+                        $id,
+                        $asignatura['asignatura_id'],
+                        $asignatura['tipo_bibliografia']
                     ]);
-
-                    $vinculacionesExitosas++;
-                    error_log('Asignatura vinculada exitosamente: ' . $asignatura['asignatura_id']);
-                } catch (\Exception $e) {
-                    error_log('Error al vincular asignatura: ' . $e->getMessage());
+                    
+                    $vinculadas++;
+                } catch (Exception $e) {
                     $errores[] = "Error al vincular asignatura {$asignatura['asignatura_id']}: " . $e->getMessage();
                 }
             }
 
-            if ($vinculacionesExitosas > 0) {
-                $mensaje = "Se vincularon {$vinculacionesExitosas} asignaturas correctamente.";
+            $this->pdo->commit();
+            
+            $mensaje = "Se vincularon {$vinculadas} asignaturas exitosamente.";
                 if (!empty($errores)) {
-                    $mensaje .= " Errores: " . implode(', ', $errores);
-                }
-                echo json_encode(['success' => true, 'message' => $mensaje]);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'No se pudo vincular ninguna asignatura. Errores: ' . implode(', ', $errores)]);
+                $mensaje .= " Errores: " . implode(", ", $errores);
             }
-        } catch (\Exception $e) {
-            error_log('Error en vincularMultiple: ' . $e->getMessage());
-            error_log('Stack trace: ' . $e->getTraceAsString());
-            echo json_encode(['success' => false, 'message' => 'Error al procesar la solicitud: ' . $e->getMessage()]);
+            
+            echo json_encode([
+                'success' => true,
+                'message' => $mensaje
+            ]);
+            
+        } catch (Exception $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al vincular las asignaturas: ' . $e->getMessage()
+            ]);
         }
-        exit;
     }
 
     /**
@@ -1362,37 +1349,57 @@ class BibliografiaDeclaradaController
      */
     public function desvincularMultiple($id = null, Request $request = null, Response $response = null): Response
     {
-        if (!$id) {
-            return $this->jsonResponse(['success' => false, 'message' => 'ID de bibliografía no proporcionado']);
+        // Verificar autenticación
+        if (!$this->session->get('user_id')) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Por favor inicie sesión para continuar',
+                'redirect' => Config::get('app_url') . 'login'
+            ]);
+            exit;
         }
 
         try {
             $data = json_decode(file_get_contents('php://input'), true);
-            if (!isset($data['vinculaciones'])) {
-                throw new \Exception('Datos incompletos');
+            
+            if (!isset($data['vinculaciones']) || !is_array($data['vinculaciones'])) {
+                throw new \Exception('Faltan datos requeridos');
             }
 
             $this->pdo->beginTransaction();
 
+            // Eliminar las vinculaciones
             $stmt = $this->pdo->prepare("
                 DELETE FROM asignaturas_bibliografias 
-                WHERE id = :vinculacion_id 
-                AND bibliografia_id = :bibliografia_id
+                WHERE id IN (" . implode(',', array_fill(0, count($data['vinculaciones']), '?')) . ")
+                AND bibliografia_id = ?
             ");
 
-            foreach ($data['vinculaciones'] as $vinculacionId) {
-                $stmt->execute([
-                    ':vinculacion_id' => $vinculacionId,
-                    ':bibliografia_id' => $id
-                ]);
-            }
+            $params = $data['vinculaciones'];
+            $params[] = $id;
+            $stmt->execute($params);
 
             $this->pdo->commit();
-            return $this->jsonResponse(['success' => true, 'message' => 'Asignaturas desvinculadas exitosamente']);
+
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'message' => 'Asignaturas desvinculadas exitosamente'
+            ]);
+            exit;
 
         } catch (\Exception $e) {
+            if ($this->pdo->inTransaction()) {
             $this->pdo->rollBack();
-            return $this->jsonResponse(['success' => false, 'message' => $e->getMessage()]);
+            }
+
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al desvincular las asignaturas: ' . $e->getMessage()
+            ]);
+            exit;
         }
     }
 
@@ -1401,25 +1408,9 @@ class BibliografiaDeclaradaController
      */
     private function obtenerBibliografiaCompleta($id)
     {
-        // Obtener la bibliografía con sus relaciones
+        // Obtener la bibliografía base
         $stmt = $this->pdo->prepare("
-            SELECT b.*, 
-                   l.isbn,
-                   t.carrera_id,
-                   a.issn, a.titulo_revista, a.cronologia,
-                   g.descripcion,
-                   sw.fecha_consulta,
-                   s.version,
-                   c.nombre as carrera_nombre
-            FROM bibliografias_declaradas b
-            LEFT JOIN libros l ON b.id = l.bibliografia_id
-            LEFT JOIN tesis t ON b.id = t.bibliografia_id
-            LEFT JOIN articulos a ON b.id = a.bibliografia_id
-            LEFT JOIN genericos g ON b.id = g.bibliografia_id
-            LEFT JOIN sitios_web sw ON b.id = sw.bibliografia_id
-            LEFT JOIN software s ON b.id = s.bibliografia_id
-            LEFT JOIN carreras c ON t.carrera_id = c.id
-            WHERE b.id = :id
+            SELECT * FROM bibliografias_declaradas WHERE id = :id
         ");
         $stmt->execute([':id' => $id]);
         $bibliografia = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -1428,9 +1419,95 @@ class BibliografiaDeclaradaController
             return null;
         }
 
+        // Obtener datos específicos según el tipo
+        switch ($bibliografia['tipo']) {
+            case 'libro':
+                $stmt = $this->pdo->prepare("
+                    SELECT isbn 
+                    FROM libros 
+                    WHERE bibliografia_id = :id
+                ");
+                $stmt->execute([':id' => $id]);
+                $datosEspecificos = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($datosEspecificos) {
+                    $bibliografia = array_merge($bibliografia, $datosEspecificos);
+                }
+                break;
+
+            case 'articulo':
+                $stmt = $this->pdo->prepare("
+                    SELECT issn, titulo_revista, cronologia 
+                    FROM articulos 
+                    WHERE bibliografia_id = :id
+                ");
+                $stmt->execute([':id' => $id]);
+                $datosEspecificos = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($datosEspecificos) {
+                    $bibliografia = array_merge($bibliografia, $datosEspecificos);
+                }
+                break;
+
+            case 'tesis':
+                $stmt = $this->pdo->prepare("
+                    SELECT t.carrera_id, c.nombre as carrera_nombre
+                    FROM tesis t
+                    LEFT JOIN carreras c ON t.carrera_id = c.id
+                    WHERE t.bibliografia_id = :id
+                ");
+                $stmt->execute([':id' => $id]);
+                $datosEspecificos = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($datosEspecificos) {
+                    $bibliografia = array_merge($bibliografia, $datosEspecificos);
+                }
+                break;
+
+            case 'sitio_web':
+                $stmt = $this->pdo->prepare("
+                    SELECT fecha_consulta 
+                    FROM sitios_web 
+                    WHERE bibliografia_id = :id
+                ");
+                $stmt->execute([':id' => $id]);
+                $datosEspecificos = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($datosEspecificos) {
+                    $bibliografia = array_merge($bibliografia, $datosEspecificos);
+                }
+                break;
+
+            case 'software':
+                $stmt = $this->pdo->prepare("
+                    SELECT version 
+                    FROM software 
+                    WHERE bibliografia_id = :id
+                ");
+                $stmt->execute([':id' => $id]);
+                $datosEspecificos = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($datosEspecificos) {
+                    $bibliografia = array_merge($bibliografia, $datosEspecificos);
+                }
+                break;
+
+            case 'generico':
+                $stmt = $this->pdo->prepare("
+                    SELECT descripcion 
+                    FROM genericos 
+                    WHERE bibliografia_id = :id
+                ");
+                $stmt->execute([':id' => $id]);
+                $datosEspecificos = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($datosEspecificos) {
+                    $bibliografia = array_merge($bibliografia, $datosEspecificos);
+                }
+                break;
+        }
+
         // Obtener los autores de la bibliografía
         $stmt = $this->pdo->prepare("
-            SELECT a.* 
+            SELECT 
+                a.id,
+                a.apellidos,
+                a.nombres,
+                a.genero
             FROM autores a
             JOIN bibliografias_autores ba ON a.id = ba.autor_id
             WHERE ba.bibliografia_id = :bibliografia_id
@@ -1442,11 +1519,16 @@ class BibliografiaDeclaradaController
         return $bibliografia;
     }
 
-    protected function render(Response $response, string $template, array $data = []): Response
+    protected function render(Response $response = null, string $template, array $data = []): Response
     {
         try {
             error_log('Renderizando plantilla: ' . $template);
             error_log('Datos pasados a la plantilla: ' . print_r($data, true));
+            
+            // Crear una nueva respuesta si no se proporciona una
+            if (!$response) {
+                $response = new Response();
+            }
             
         // Agregar variables globales a la plantilla
         $data['app_url'] = Config::get('app_url');
@@ -1512,9 +1594,65 @@ class BibliografiaDeclaradaController
         
         error_log("JSON a enviar: " . $json);
         
-        // Enviar la respuesta usando print
-        print($json);
+        // Enviar la respuesta
+        echo $json;
         error_log("=== FIN JSON RESPONSE ===");
         exit;
+    }
+
+    /**
+     * Obtiene la lista de editoriales disponibles.
+     */
+    private function getEditoriales(): array
+    {
+        try {
+            $stmt = $this->pdo->query("
+                SELECT DISTINCT editorial 
+                FROM bibliografias_declaradas 
+                WHERE editorial IS NOT NULL AND editorial != ''
+                ORDER BY editorial
+            ");
+            return $stmt->fetchAll(PDO::FETCH_COLUMN);
+        } catch (\Exception $e) {
+            error_log('Error al obtener editoriales: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Obtiene la lista de revistas disponibles.
+     */
+    private function getRevistas(): array
+    {
+        try {
+            $stmt = $this->pdo->query("
+                SELECT DISTINCT titulo_revista 
+                FROM articulos 
+                WHERE titulo_revista IS NOT NULL AND titulo_revista != ''
+                ORDER BY titulo_revista
+            ");
+            return $stmt->fetchAll(PDO::FETCH_COLUMN);
+        } catch (\Exception $e) {
+            error_log('Error al obtener revistas: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Obtiene la lista de autores disponibles.
+     */
+    private function getAutores(): array
+    {
+        try {
+            $stmt = $this->pdo->query("
+                SELECT id, apellidos, nombres, genero
+                FROM autores
+                ORDER BY apellidos, nombres
+            ");
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\Exception $e) {
+            error_log('Error al obtener autores: ' . $e->getMessage());
+            return [];
+        }
     }
 } 

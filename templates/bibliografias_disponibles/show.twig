@@ -1,90 +1,188 @@
-{% extends 'base.twig' %}
+{% extends "base.twig" %}
 
 {% block title %}Detalles de Bibliografía Disponible{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Detalles de Bibliografía Disponible</h1>
-        <div>
-            <a href="{{ url_for('bibliografias-disponibles.edit', {id: bibliografia.id}) }}" class="btn btn-warning">
-                <i class="fas fa-edit"></i> Editar
-            </a>
-            <a href="{{ url_for('bibliografias-disponibles.index') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Volver
-            </a>
-        </div>
-    </div>
-
     <div class="card">
-        <div class="card-body">
-            <h5 class="card-title">Información de la Bibliografía</h5>
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong>Título:</strong> {{ bibliografia.bibliografiaDeclarada.titulo }}</p>
-                    <p><strong>Tipo:</strong> {{ bibliografia.bibliografiaDeclarada.tipo }}</p>
-                    <p><strong>Disponibilidad:</strong>
-                        {% if bibliografia.tipo_disponibilidad == 'fisico' %}
-                            <span class="badge bg-primary">Físico</span>
-                        {% elseif bibliografia.tipo_disponibilidad == 'digital' %}
-                            <span class="badge bg-info">Digital</span>
-                        {% else %}
-                            <span class="badge bg-success">Mixto</span>
-                        {% endif %}
-                    </p>
-                    <p><strong>Sede:</strong> {{ bibliografia.sede ? bibliografia.sede.nombre : 'N/A' }}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong>Ejemplares Físicos:</strong>
-                        {% if bibliografia.tipo_disponibilidad != 'digital' %}
-                            {{ bibliografia.ejemplares }}
-                        {% else %}
-                            N/A
-                        {% endif %}
-                    </p>
-                    <p><strong>Ejemplares Digitales:</strong>
-                        {% if bibliografia.tipo_disponibilidad != 'fisico' %}
-                            {{ bibliografia.ejemplares_digitales }}
-                        {% else %}
-                            N/A
-                        {% endif %}
-                    </p>
-                    <p><strong>Estado:</strong>
-                        {% if bibliografia.estado %}
-                            <span class="badge bg-success">Activo</span>
-                        {% else %}
-                            <span class="badge bg-danger">Inactivo</span>
-                        {% endif %}
-                    </p>
-                    <p><strong>Fecha de Creación:</strong> {{ bibliografia.fecha_creacion|date('d/m/Y H:i') }}</p>
-                    <p><strong>Última Actualización:</strong> {{ bibliografia.fecha_actualizacion|date('d/m/Y H:i') }}</p>
-                </div>
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">Detalles de Bibliografía Disponible</h2>
+            <div>
+                <a href="{{ app_url }}bibliografias-disponibles" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
+                <a href="{{ app_url }}bibliografias-disponibles/{{ bibliografia.id }}/edit" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Editar
+                </a>
             </div>
-
-            <h5 class="mt-4">Información de la Bibliografía Declarada</h5>
+        </div>
+        <div class="card-body">
             <div class="row">
-                <div class="col-md-6">
-                    <p><strong>Autores:</strong></p>
-                    <ul>
-                        {% for autor in bibliografia.bibliografiaDeclarada.autores %}
-                            <li>{{ autor.nombre }}</li>
-                        {% endfor %}
-                    </ul>
-                    <p><strong>Año de Publicación:</strong> {{ bibliografia.bibliografiaDeclarada.anio_publicacion }}</p>
-                    <p><strong>Editorial:</strong> {{ bibliografia.bibliografiaDeclarada.editorial }}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong>ISBN:</strong> {{ bibliografia.bibliografiaDeclarada.isbn }}</p>
-                    <p><strong>DOI:</strong> {{ bibliografia.bibliografiaDeclarada.doi }}</p>
-                    <p><strong>URL:</strong>
-                        {% if bibliografia.bibliografiaDeclarada.url %}
-                            <a href="{{ bibliografia.bibliografiaDeclarada.url }}" target="_blank">
-                                {{ bibliografia.bibliografiaDeclarada.url }}
-                            </a>
-                        {% else %}
-                            N/A
+                <div class="col-md-12">
+                    <table class="table table-bordered">
+                        <tr>
+                            <th class="bg-light" style="width: 200px;">Título</th>
+                            <td>{{ bibliografia.titulo }}</td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Autor(es)</th>
+                            <td>
+                                {% for autor in bibliografia.autores %}
+                                    {{ autor.apellidos }}, {{ autor.nombres }}{% if not loop.last %}; {% endif %}
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Año de edición</th>
+                            <td>{{ bibliografia.anio_edicion }}</td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Editorial</th>
+                            <td>{{ bibliografia.editorial }}</td>
+                        </tr>
+                        {% if bibliografia.bibliografia_declarada_id is defined and bibliografia.bibliografia_declarada_id is not empty %}
+                        <tr>
+                            <th class="bg-light">Bibliografía Declarada Vinculada</th>
+                            <td>
+                                <table class="table table-sm table-bordered mb-0">
+                                    <tr>
+                                        <th class="bg-light" style="width: 150px;">Título</th>
+                                        <td>{{ bibliografia.bibliografia_declarada['titulo'] }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Autor(es)</th>
+                                        <td>
+                                            {% if bibliografia.bibliografia_declarada['autores'] is defined and bibliografia.bibliografia_declarada['autores'] is not empty %}
+                                                {% for autor in bibliografia.bibliografia_declarada['autores'] %}
+                                                    {{ autor['apellidos'] }}, {{ autor['nombres'] }}{% if not loop.last %}; {% endif %}
+                                                {% endfor %}
+                                            {% else %}
+                                                No hay autores registrados
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Año de publicación</th>
+                                        <td>{{ bibliografia.bibliografia_declarada['anio_publicacion'] }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Editorial</th>
+                                        <td>{{ bibliografia.bibliografia_declarada['editorial'] }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Edición</th>
+                                        <td>{{ bibliografia.bibliografia_declarada['edicion'] }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Tipo</th>
+                                        <td>{{ bibliografia.bibliografia_declarada['tipo'] }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Formato</th>
+                                        <td>{{ bibliografia.bibliografia_declarada['formato'] }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Estado</th>
+                                        <td>
+                                            {% if bibliografia.bibliografia_declarada['estado'] %}
+                                                <span class="badge bg-success">Activo</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Inactivo</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
                         {% endif %}
-                    </p>
+                        <tr>
+                            <th class="bg-light">URL de acceso Internet</th>
+                            <td>
+                                {% if bibliografia.url_acceso %}
+                                {{ bibliografia.url_acceso }}
+                                    <a href="{{ bibliografia.url_acceso }}" target="_blank" class="btn btn-link">
+                                        <i class="fas fa-external-link-alt"></i> Abrir enlace
+                                    </a>
+                                {% else %}
+                                    No disponible
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">URL de Catálogo</th>
+                            <td>
+                                {% if bibliografia.url_catalogo %}
+                                {{ bibliografia.url_catalogo }}
+                                    <a href="{{ bibliografia.url_catalogo }}" target="_blank" class="btn btn-link">
+                                        <i class="fas fa-external-link-alt"></i> Abrir enlace
+                                    </a>
+                                {% else %}
+                                    No disponible
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Disponibilidad</th>
+                            <td>
+                                {% if bibliografia.disponibilidad == 'impreso' %}
+                                    <span class="badge bg-primary">Impreso</span>
+                                {% elseif bibliografia.disponibilidad == 'electronico' %}
+                                    <span class="badge bg-success">Electrónico</span>
+                                {% else %}
+                                    <span class="badge bg-info">Ambos</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Estado</th>
+                            <td>
+                                {% if bibliografia.estado %}
+                                    <span class="badge bg-success">Activo</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactivo</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Ejemplares digitales</th>
+                            <td>
+                                {% if bibliografia.url_acceso %}
+                                    {% if bibliografia.ejemplares_digitales == 0 %}
+                                        Ilimitados
+                                    {% else %}
+                                        {{ bibliografia.ejemplares_digitales }} ejemplares
+                                    {% endif %}
+                                {% else %}
+                                    No aplica
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% if bibliografia.sedes|length > 0 %}
+                        <tr>
+                            <th class="bg-light">Copias por Sede</th>
+                            <td>
+                                <table class="table table-sm table-bordered mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Sede</th>
+                                            <th>Cantidad</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for sede in bibliografia.sedes %}
+                                            {% if sede.ejemplares > 0 %}
+                                            <tr>
+                                                <td>{{ sede.nombre }}</td>
+                                                <td>{{ sede.ejemplares }}</td>
+                                            </tr>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </table>
                 </div>
             </div>
         </div>

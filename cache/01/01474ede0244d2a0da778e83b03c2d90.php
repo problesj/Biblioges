@@ -63,6 +63,9 @@ class __TwigTemplate_2dff20b2630b1b21e16746ae4e577b89 extends Template
     <link href=\"https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css\" rel=\"stylesheet\">
     <link href=\"https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css\" rel=\"stylesheet\">
     
+    <!-- SweetAlert2 -->
+    <link href=\"https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css\" rel=\"stylesheet\">
+    
     <!-- Custom CSS -->
     <style>
         body {
@@ -222,9 +225,9 @@ class __TwigTemplate_2dff20b2630b1b21e16746ae4e577b89 extends Template
 </head>
 <body>
     ";
-        // line 176
-        if (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_id", [], "any", false, false, false, 176)) {
-            // line 177
+        // line 179
+        if (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_id", [], "any", false, false, false, 179)) {
+            // line 180
             yield "    <div class=\"d-flex\">
         <!-- Sidebar -->
         <div class=\"sidebar\" id=\"sidebar\">
@@ -238,7 +241,7 @@ class __TwigTemplate_2dff20b2630b1b21e16746ae4e577b89 extends Template
                     <li class=\"menu-group\">PRINCIPAL</li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-            // line 189
+            // line 192
             if (((($context["current_page"] ?? null) == "dashboard") ||  !($context["current_page"] ?? null))) {
                 yield "active";
             }
@@ -250,7 +253,7 @@ class __TwigTemplate_2dff20b2630b1b21e16746ae4e577b89 extends Template
                     </li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-            // line 194
+            // line 197
             if ((($context["current_page"] ?? null) == "carreras")) {
                 yield "active";
             }
@@ -262,7 +265,7 @@ class __TwigTemplate_2dff20b2630b1b21e16746ae4e577b89 extends Template
                     </li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-            // line 199
+            // line 202
             if ((($context["current_page"] ?? null) == "asignaturas")) {
                 yield "active";
             }
@@ -274,7 +277,7 @@ class __TwigTemplate_2dff20b2630b1b21e16746ae4e577b89 extends Template
                     </li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-            // line 204
+            // line 207
             if ((($context["current_page"] ?? null) == "mallas")) {
                 yield "active";
             }
@@ -286,7 +289,7 @@ class __TwigTemplate_2dff20b2630b1b21e16746ae4e577b89 extends Template
                     </li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-            // line 209
+            // line 212
             if ((($context["current_page"] ?? null) == "bibliografias-declaradas")) {
                 yield "active";
             }
@@ -298,7 +301,7 @@ class __TwigTemplate_2dff20b2630b1b21e16746ae4e577b89 extends Template
                     </li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-            // line 214
+            // line 217
             if ((($context["current_page"] ?? null) == "bibliografias-disponibles")) {
                 yield "active";
             }
@@ -314,7 +317,7 @@ class __TwigTemplate_2dff20b2630b1b21e16746ae4e577b89 extends Template
                     <li class=\"menu-group\">REPORTES</li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-            // line 223
+            // line 226
             if ((($context["current_page"] ?? null) == "cobertura")) {
                 yield "active";
             }
@@ -326,7 +329,7 @@ class __TwigTemplate_2dff20b2630b1b21e16746ae4e577b89 extends Template
                     </li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-            // line 228
+            // line 231
             if ((($context["current_page"] ?? null) == "listado-bibliografias")) {
                 yield "active";
             }
@@ -338,7 +341,7 @@ class __TwigTemplate_2dff20b2630b1b21e16746ae4e577b89 extends Template
                     </li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-            // line 233
+            // line 236
             if ((($context["current_page"] ?? null) == "reportes-personalizados")) {
                 yield "active";
             }
@@ -351,14 +354,14 @@ class __TwigTemplate_2dff20b2630b1b21e16746ae4e577b89 extends Template
 
                     <!-- ADMINISTRACIÓN -->
                     ";
-            // line 239
-            if ((CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_rol", [], "any", false, false, false, 239) == "admin")) {
-                // line 240
+            // line 242
+            if ((CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_rol", [], "any", false, false, false, 242) == "admin")) {
+                // line 243
                 yield "                    <li class=\"menu-divider\"></li>
                     <li class=\"menu-group\">ADMINISTRACIÓN</li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-                // line 243
+                // line 246
                 if ((($context["current_page"] ?? null) == "sedes")) {
                     yield "active";
                 }
@@ -370,7 +373,7 @@ class __TwigTemplate_2dff20b2630b1b21e16746ae4e577b89 extends Template
                     </li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-                // line 248
+                // line 251
                 if ((($context["current_page"] ?? null) == "facultades")) {
                     yield "active";
                 }
@@ -382,7 +385,7 @@ class __TwigTemplate_2dff20b2630b1b21e16746ae4e577b89 extends Template
                     </li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-                // line 253
+                // line 256
                 if ((($context["current_page"] ?? null) == "departamentos")) {
                     yield "active";
                 }
@@ -394,7 +397,7 @@ class __TwigTemplate_2dff20b2630b1b21e16746ae4e577b89 extends Template
                     </li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-                // line 258
+                // line 261
                 if ((($context["current_page"] ?? null) == "usuarios")) {
                     yield "active";
                 }
@@ -406,13 +409,13 @@ class __TwigTemplate_2dff20b2630b1b21e16746ae4e577b89 extends Template
                     </li>
                     ";
             }
-            // line 263
+            // line 266
             yield "
                     <!-- Perfil y Cerrar Sesión -->
                     <li class=\"menu-divider\"></li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-            // line 267
+            // line 270
             if ((($context["current_page"] ?? null) == "perfil")) {
                 yield "active";
             }
@@ -424,7 +427,7 @@ class __TwigTemplate_2dff20b2630b1b21e16746ae4e577b89 extends Template
                     </li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link\" href=\"";
-            // line 272
+            // line 275
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
             yield "logout\">
                             <i class=\"fas fa-sign-out-alt\"></i> Cerrar Sesión
@@ -443,53 +446,22 @@ class __TwigTemplate_2dff20b2630b1b21e16746ae4e577b89 extends Template
 
             <!-- Main Content -->
             <main class=\"container-fluid py-4\">
-                <!-- Mensajes de alerta -->
                 ";
-            // line 290
-            if ( !Twig\Extension\CoreExtension::testEmpty(CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "error", [], "any", false, false, false, 290))) {
-                // line 291
-                yield "                <div class=\"alert alert-danger alert-dismissible fade show\" role=\"alert\">
-                    ";
-                // line 292
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "error", [], "any", false, false, false, 292), "html", null, true);
-                yield "
-                    <button type=\"button\" class=\"btn-close\" data-bs-dismiss=\"alert\" aria-label=\"Close\"></button>
-                </div>
-                ";
-            }
-            // line 296
-            yield "
-                ";
-            // line 297
-            if ( !Twig\Extension\CoreExtension::testEmpty(CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "success", [], "any", false, false, false, 297))) {
-                // line 298
-                yield "                <div class=\"alert alert-success alert-dismissible fade show\" role=\"alert\">
-                    ";
-                // line 299
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "success", [], "any", false, false, false, 299), "html", null, true);
-                yield "
-                    <button type=\"button\" class=\"btn-close\" data-bs-dismiss=\"alert\" aria-label=\"Close\"></button>
-                </div>
-                ";
-            }
-            // line 303
-            yield "
-                ";
-            // line 304
+            // line 292
             yield from $this->unwrap()->yieldBlock('content', $context, $blocks);
-            // line 305
+            // line 293
             yield "            </main>
         </div>
     </div>
     ";
         } else {
-            // line 309
+            // line 297
             yield "        ";
             yield from $this->unwrap()->yieldBlock('unauthenticated_content', $context, $blocks);
-            // line 310
+            // line 298
             yield "    ";
         }
-        // line 311
+        // line 299
         yield "
     <!-- jQuery -->
     <script src=\"https://code.jquery.com/jquery-3.7.0.min.js\"></script>
@@ -502,6 +474,9 @@ class __TwigTemplate_2dff20b2630b1b21e16746ae4e577b89 extends Template
     <script src=\"https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js\"></script>
     <script src=\"https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js\"></script>
     <script src=\"https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js\"></script>
+
+    <!-- SweetAlert2 -->
+    <script src=\"https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js\"></script>
 
     <!-- Custom JavaScript -->
     <script>
@@ -527,7 +502,7 @@ class __TwigTemplate_2dff20b2630b1b21e16746ae4e577b89 extends Template
                     
                     // Limpiar las variables de sesión después de cerrar la alerta
                     fetch('";
-        // line 347
+        // line 338
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "clear-session-messages', {
                         method: 'POST',
@@ -538,14 +513,83 @@ class __TwigTemplate_2dff20b2630b1b21e16746ae4e577b89 extends Template
                     });
                 }, 5000);
             });
-        });
+
+            // Mostrar alertas de SweetAlert2 si existen
+            ";
+        // line 349
+        if ((array_key_exists("swal", $context) && ($context["swal"] ?? null))) {
+            // line 350
+            yield "                Swal.fire({
+                    icon: '";
+            // line 351
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "icon", [], "any", false, false, false, 351), "html", null, true);
+            yield "',
+                    title: '";
+            // line 352
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "title", [], "any", false, false, false, 352), "html", null, true);
+            yield "',
+                    text: '";
+            // line 353
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "text", [], "any", false, false, false, 353), "html", null, true);
+            yield "',
+                    confirmButtonText: 'Aceptar'
+                });
+            ";
+        }
+        // line 357
+        yield "        });
     </script>
 
     ";
-        // line 359
-        yield from $this->unwrap()->yieldBlock('scripts', $context, $blocks);
         // line 360
-        yield "</body>
+        yield from $this->unwrap()->yieldBlock('scripts', $context, $blocks);
+        // line 393
+        yield "
+    <!-- SweetAlert2 Notifications -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            ";
+        // line 397
+        if (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "swal", [], "any", false, false, false, 397)) {
+            // line 398
+            yield "                Swal.fire({
+                    icon: '";
+            // line 399
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "swal", [], "any", false, false, false, 399), "icon", [], "any", false, false, false, 399), "html", null, true);
+            yield "',
+                    title: '";
+            // line 400
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "swal", [], "any", false, false, false, 400), "title", [], "any", false, false, false, 400), "html", null, true);
+            yield "',
+                    text: '";
+            // line 401
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "swal", [], "any", false, false, false, 401), "text", [], "any", false, false, false, 401), "html", null, true);
+            yield "',
+                    confirmButtonText: 'Aceptar',
+                    confirmButtonColor: '#4e73df',
+                    timer: null,
+                    timerProgressBar: false,
+                    allowOutsideClick: false
+                });
+            ";
+        }
+        // line 409
+        yield "        });
+
+        function mostrarNotificacion(mensaje, tipo = 'success') {
+            Swal.fire({
+                icon: tipo,
+                title: tipo === 'success' ? 'Éxito' : 'Error',
+                text: mensaje,
+                confirmButtonText: 'Aceptar',
+                confirmButtonColor: '#4e73df',
+                timer: null,
+                timerProgressBar: false,
+                allowOutsideClick: false
+            });
+        }
+    </script>
+</body>
 </html> ";
         yield from [];
     }
@@ -561,7 +605,7 @@ class __TwigTemplate_2dff20b2630b1b21e16746ae4e577b89 extends Template
         yield from [];
     }
 
-    // line 304
+    // line 292
     /**
      * @return iterable<null|scalar|\Stringable>
      */
@@ -571,7 +615,7 @@ class __TwigTemplate_2dff20b2630b1b21e16746ae4e577b89 extends Template
         yield from [];
     }
 
-    // line 309
+    // line 297
     /**
      * @return iterable<null|scalar|\Stringable>
      */
@@ -581,13 +625,46 @@ class __TwigTemplate_2dff20b2630b1b21e16746ae4e577b89 extends Template
         yield from [];
     }
 
-    // line 359
+    // line 360
     /**
      * @return iterable<null|scalar|\Stringable>
      */
     public function block_scripts(array $context, array $blocks = []): iterable
     {
         $macros = $this->macros;
+        // line 361
+        yield "    <!-- jQuery -->
+    <script src=\"https://code.jquery.com/jquery-3.7.1.min.js\"></script>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js\"></script>
+
+    <!-- DataTables -->
+    <script src=\"https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js\"></script>
+    <script src=\"https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js\"></script>
+    <script src=\"https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js\"></script>
+    <script src=\"https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js\"></script>
+
+    <!-- SweetAlert2 -->
+    <script src=\"https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js\"></script>
+
+    <!-- Custom Scripts -->
+    <script>
+        // Toggle sidebar
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const content = document.querySelector('.content');
+            const toggleBtn = document.querySelector('.sidebar-toggle');
+            
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function() {
+                    sidebar.classList.toggle('collapsed');
+                    content.classList.toggle('expanded');
+                });
+            }
+        });
+    </script>
+    ";
         yield from [];
     }
 
@@ -612,7 +689,7 @@ class __TwigTemplate_2dff20b2630b1b21e16746ae4e577b89 extends Template
      */
     public function getDebugInfo(): array
     {
-        return array (  585 => 359,  575 => 309,  565 => 304,  554 => 6,  548 => 360,  546 => 359,  531 => 347,  493 => 311,  490 => 310,  487 => 309,  481 => 305,  479 => 304,  476 => 303,  469 => 299,  466 => 298,  464 => 297,  461 => 296,  454 => 292,  451 => 291,  449 => 290,  428 => 272,  416 => 267,  410 => 263,  398 => 258,  386 => 253,  374 => 248,  362 => 243,  357 => 240,  355 => 239,  342 => 233,  330 => 228,  318 => 223,  302 => 214,  290 => 209,  278 => 204,  266 => 199,  254 => 194,  242 => 189,  228 => 177,  226 => 176,  53 => 6,  46 => 1,);
+        return array (  636 => 361,  629 => 360,  619 => 297,  609 => 292,  598 => 6,  577 => 409,  566 => 401,  562 => 400,  558 => 399,  555 => 398,  553 => 397,  547 => 393,  545 => 360,  540 => 357,  533 => 353,  529 => 352,  525 => 351,  522 => 350,  520 => 349,  506 => 338,  465 => 299,  462 => 298,  459 => 297,  453 => 293,  451 => 292,  431 => 275,  419 => 270,  413 => 266,  401 => 261,  389 => 256,  377 => 251,  365 => 246,  360 => 243,  358 => 242,  345 => 236,  333 => 231,  321 => 226,  305 => 217,  293 => 212,  281 => 207,  269 => 202,  257 => 197,  245 => 192,  231 => 180,  229 => 179,  53 => 6,  46 => 1,);
     }
 
     public function getSourceContext(): Source

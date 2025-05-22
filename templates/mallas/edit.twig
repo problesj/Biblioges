@@ -4,6 +4,38 @@
 
 {% block content %}
 <div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Editar Malla - {{ carrera.nombre }}</h1>
+        <a href="{{ app_url }}mallas/{{ carrera.id }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    {% if swal %}
+    <script>
+        Swal.fire({
+            icon: '{{ swal.icon }}',
+            title: '{{ swal.title }}',
+            text: '{{ swal.text }}',
+            confirmButtonText: 'Aceptar'
+        });
+    </script>
+    {% endif %}
+
+    {% if success %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ success }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    {% if error %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ error }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
     <!-- Información de la Carrera -->
     <div class="card shadow mb-4">
         <div class="card-header py-3">
@@ -74,115 +106,135 @@
     </div>
 
     <!-- Panel de Edición de Malla -->
-    <div class="row">
-        <!-- Panel Izquierdo: Asignaturas Disponibles -->
-        <div class="col-md-5">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Asignaturas Disponibles</h6>
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Edición de Malla</h6>
+        </div>
+        <div class="card-body">
+            <!-- Filtros de búsqueda -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <label for="sede" class="form-label">Seleccionar Sede</label>
+                    <select class="form-select" id="sede">
+                        <option value="">Seleccione una sede</option>
+                        {% for sede in sedes %}
+                            <option value="{{ sede.id }}">{{ sede.nombre }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
-                <div class="card-body">
-                    <!-- Selector de Sede -->
-                    <div class="mb-3">
-                        <label for="sede" class="form-label">Seleccionar Sede</label>
-                        <select class="form-select" id="sede">
-                            <option value="">Seleccione una sede</option>
-                            {% for sede in sedes %}
-                                <option value="{{ sede.id }}">{{ sede.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+                <div class="col-md-4">
+                    <label for="facultad" class="form-label">Seleccionar Facultad</label>
+                    <select class="form-select" id="facultad" disabled>
+                        <option value="">Primero seleccione una sede</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="departamento" class="form-label">Seleccionar Departamento</label>
+                    <select class="form-select" id="departamento" disabled>
+                        <option value="">Primero seleccione una facultad</option>
+                    </select>
+                </div>
+            </div>
 
-                    <!-- Selector de Facultad -->
-                    <div class="mb-3">
-                        <label for="facultad" class="form-label">Seleccionar Facultad</label>
-                        <select class="form-select" id="facultad" disabled>
-                            <option value="">Primero seleccione una sede</option>
-                        </select>
-                    </div>
-
-                    <!-- Selector de Departamento -->
-                    <div class="mb-3">
-                        <label for="departamento" class="form-label">Seleccionar Departamento</label>
-                        <select class="form-select" id="departamento" disabled>
-                            <option value="">Primero seleccione una facultad</option>
-                        </select>
-                    </div>
-
-                    <!-- Lista de Asignaturas Disponibles -->
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead class="table-primary">
-                                <tr>
-                                    <th>Nombre</th>
-                                    <th>Tipo</th>
-                                    <th>Periodicidad</th>
-                                    <th>Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody id="asignaturas-disponibles">
-                                <tr>
-                                    <td colspan="4" class="text-center">Seleccione una sede y facultad</td>
-                                </tr>
-                            </tbody>
-                        </table>
+            <!-- Paneles de asignaturas -->
+            <div class="row">
+                <!-- Panel Izquierdo: Asignaturas Disponibles -->
+                <div class="col-12">
+                    <div class="card h-100 border-info">
+                        <div class="card-header py-3 bg-info text-white">
+                            <h6 class="m-0 font-weight-bold">Asignaturas Disponibles</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm">
+                                    <thead class="table-info">
+                                        <tr>
+                                            <th>Códigos</th>
+                                            <th>Nombre</th>
+                                            <th class="text-center">Tipo</th>
+                                            <th class="text-center">Periodicidad</th>
+                                            <th class="text-center">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="asignaturas-disponibles">
+                                        <tr>
+                                            <td colspan="5" class="text-center">Seleccione una sede y facultad</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Panel Central: Botones de Acción -->
-        <div class="col-md-2 d-flex align-items-center justify-content-center">
-            <div class="d-flex flex-column gap-2">
-                <button class="btn btn-primary" id="btn-agregar" disabled>
-                    <i class="fas fa-arrow-right"></i>
-                </button>
-                <button class="btn btn-danger" id="btn-quitar" disabled>
-                    <i class="fas fa-arrow-left"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- Panel Derecho: Asignaturas Vinculadas -->
-        <div class="col-md-5">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Asignaturas Vinculadas</h6>
+            <!-- Panel Central: Botones de Acción -->
+            <div class="row mt-2 mb-2">
+                <div class="col-12 d-flex align-items-center justify-content-center">
+                    <div class="d-flex flex-row gap-2">
+                        <button class="btn btn-primary btn-sm" id="btn-agregar" disabled>
+                            <i class="fas fa-arrow-down"></i>
+                        </button>
+                        <button class="btn btn-danger btn-sm" id="btn-quitar" disabled>
+                            <i class="fas fa-arrow-up"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead class="table-primary">
-                                <tr>
-                                    <th>Nombre</th>
-                                    <th>Tipo</th>
-                                    <th>Periodicidad</th>
-                                    <th>Semestre</th>
-                                    <th>Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody id="asignaturas-vinculadas">
-                                {% if carrera.asignaturas is defined and carrera.asignaturas|length > 0 %}
-                                    {% for asignatura in carrera.asignaturas %}
-                                    <tr data-id="{{ asignatura.id }}">
-                                        <td>{{ asignatura.nombre }}</td>
-                                        <td>{{ asignatura.tipo }}</td>
-                                        <td>{{ asignatura.periodicidad }}</td>
-                                        <td>{{ asignatura.semestre }}</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-danger btn-seleccionar">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                {% else %}
-                                    <tr>
-                                        <td colspan="5" class="text-center">No hay asignaturas vinculadas</td>
-                                    </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
+            </div>
+
+            <!-- Panel Derecho: Asignaturas Vinculadas -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card h-100 border-primary">
+                        <div class="card-header py-3 bg-primary text-white">
+                            <h6 class="m-0 font-weight-bold">Asignaturas Vinculadas</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm">
+                                    <thead class="table-primary">
+                                        <tr>
+                                            <th>Códigos</th>
+                                            <th>Nombre</th>
+                                            <th class="text-center">Tipo</th>
+                                            <th class="text-center">Periodicidad</th>
+                                            <th class="text-center" style="width: 100px;">Semestre</th>
+                                            <th class="text-center" style="width: 80px;">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="asignaturas-vinculadas">
+                                        {% if carrera.asignaturas is defined and carrera.asignaturas|length > 0 %}
+                                            {% for asignatura in carrera.asignaturas %}
+                                            <tr data-id="{{ asignatura.id }}">
+                                                <td>
+                                                    {% for codigo in asignatura.codigos %}
+                                                        {{ codigo }}{% if not loop.last %}<br>{% endif %}
+                                                    {% endfor %}
+                                                </td>
+                                                <td>{{ asignatura.nombre }}</td>
+                                                <td class="text-center">{{ asignatura.tipo }}</td>
+                                                <td class="text-center">{{ asignatura.periodicidad }}</td>
+                                                <td class="text-center">
+                                                    <select class="form-select form-select-sm" style="width: 80px;">
+                                                        {% for i in 1..10 %}
+                                                            <option value="{{ i }}" {% if asignatura.semestre == i %}selected{% endif %}>{{ i }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </td>
+                                                <td class="text-center">
+                                                    <input type="checkbox" class="form-check-input btn-seleccionar">
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr id="no-asignaturas-message">
+                                                <td colspan="6" class="text-center">No hay asignaturas vinculadas</td>
+                                            </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -224,7 +276,7 @@ document.addEventListener('DOMContentLoaded', function() {
         facultadSelect.innerHTML = '<option value="">Primero seleccione una sede</option>';
         departamentoSelect.disabled = true;
         departamentoSelect.innerHTML = '<option value="">Primero seleccione una facultad</option>';
-        asignaturasDisponibles.innerHTML = '<tr><td colspan="4" class="text-center">Seleccione una sede y facultad</td></tr>';
+        asignaturasDisponibles.innerHTML = '<tr><td colspan="5" class="text-center">Seleccione una sede y facultad</td></tr>';
     }
 
     // Manejar cambio de sede
@@ -289,10 +341,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Función para cargar asignaturas de un departamento
     function cargarAsignaturasDepartamento(deptoId) {
-            fetch(`${app_url}api/asignaturas/departamento/${deptoId}`)
-                .then(response => response.json())
-                .then(data => {
-                    asignaturasDisponibles.innerHTML = '';
+        fetch(`${app_url}api/asignaturas/departamento/${deptoId}`)
+            .then(response => response.json())
+            .then(data => {
+                asignaturasDisponibles.innerHTML = '';
                 if (Array.isArray(data) && data.length > 0) {
                     data.forEach(asignatura => {
                         // Verificar si la asignatura ya está vinculada
@@ -300,27 +352,36 @@ document.addEventListener('DOMContentLoaded', function() {
                             .some(row => row.dataset.id === asignatura.id.toString());
                         
                         if (!yaVinculada) {
+                            // Formatear los códigos con saltos de línea
+                            let codigos = '';
+                            if (asignatura.codigos) {
+                                if (Array.isArray(asignatura.codigos)) {
+                                    codigos = asignatura.codigos.join('<br>');
+                                } else if (typeof asignatura.codigos === 'string') {
+                                    codigos = asignatura.codigos.split(',').join('<br>');
+                                }
+                            }
+                            
                             asignaturasDisponibles.innerHTML += `
                                 <tr data-id="${asignatura.id}">
+                                    <td>${codigos}</td>
                                     <td>${asignatura.nombre}</td>
-                                    <td>${asignatura.tipo}</td>
-                                    <td>${asignatura.periodicidad}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-primary btn-seleccionar">
-                                            <i class="fas fa-plus"></i>
-                                        </button>
+                                    <td class="text-center">${asignatura.tipo}</td>
+                                    <td class="text-center">${asignatura.periodicidad}</td>
+                                    <td class="text-center">
+                                        <input type="checkbox" class="form-check-input btn-seleccionar">
                                     </td>
                                 </tr>
                             `;
                         }
                     });
                 } else {
-                    asignaturasDisponibles.innerHTML = '<tr><td colspan="4" class="text-center">No hay asignaturas disponibles</td></tr>';
+                    asignaturasDisponibles.innerHTML = '<tr><td colspan="5" class="text-center">No hay asignaturas disponibles</td></tr>';
                 }
-                })
+            })
             .catch(error => {
                 console.error('Error al cargar asignaturas:', error);
-                asignaturasDisponibles.innerHTML = '<tr><td colspan="4" class="text-center">Error al cargar asignaturas</td></tr>';
+                asignaturasDisponibles.innerHTML = '<tr><td colspan="5" class="text-center">Error al cargar asignaturas</td></tr>';
             });
     }
 
@@ -360,7 +421,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             departamentoSelect.disabled = true;
             departamentoSelect.innerHTML = '<option value="">Primero seleccione una facultad</option>';
-            asignaturasDisponibles.innerHTML = '<tr><td colspan="4" class="text-center">Seleccione una facultad</td></tr>';
+            asignaturasDisponibles.innerHTML = '<tr><td colspan="5" class="text-center">Seleccione una facultad</td></tr>';
         }
     });
 
@@ -370,13 +431,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (deptoId) {
             cargarAsignaturasDepartamento(deptoId);
         } else {
-            asignaturasDisponibles.innerHTML = '<tr><td colspan="4" class="text-center">Seleccione un departamento</td></tr>';
+            asignaturasDisponibles.innerHTML = '<tr><td colspan="5" class="text-center">Seleccione un departamento</td></tr>';
         }
     });
 
     // Manejar selección de asignaturas disponibles
     asignaturasDisponibles.addEventListener('click', function(e) {
-        if (e.target.closest('.btn-seleccionar')) {
+        if (e.target.classList.contains('btn-seleccionar')) {
             const row = e.target.closest('tr');
             const id = row.dataset.id;
             
@@ -443,18 +504,25 @@ document.addEventListener('DOMContentLoaded', function() {
     // Manejar agregar asignaturas
     btnAgregar.addEventListener('click', function() {
         const rows = asignaturasDisponibles.querySelectorAll('tr[data-id]');
+        const noAsignaturasMessage = document.getElementById('no-asignaturas-message');
+        
+        if (noAsignaturasMessage) {
+            noAsignaturasMessage.remove();
+        }
+        
         rows.forEach(row => {
             if (asignaturasSeleccionadas.has(row.dataset.id)) {
                 const asignatura = {
                     id: row.dataset.id,
-                    nombre: row.cells[0].textContent,
-                    tipo: row.cells[1].textContent,
-                    periodicidad: row.cells[2].textContent
+                    codigos: row.cells[0].textContent,
+                    nombre: row.cells[1].textContent,
+                    tipo: row.cells[2].textContent,
+                    periodicidad: row.cells[3].textContent
                 };
                 
                 // Crear el selector de semestre
                 const selectSemestre = document.createElement('select');
-                selectSemestre.className = 'form-select form-select-sm';
+                selectSemestre.className = 'form-select form-select-sm w-100';
                 for (let i = 1; i <= 10; i++) {
                     const option = document.createElement('option');
                     option.value = i;
@@ -466,19 +534,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 const nuevaFila = document.createElement('tr');
                 nuevaFila.dataset.id = asignatura.id;
                 nuevaFila.innerHTML = `
-                        <td>${asignatura.nombre}</td>
-                        <td>${asignatura.tipo}</td>
-                        <td>${asignatura.periodicidad}</td>
-                    <td></td>
-                        <td>
-                            <button class="btn btn-sm btn-danger btn-seleccionar">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </td>
+                    <td>${asignatura.codigos}</td>
+                    <td>${asignatura.nombre}</td>
+                    <td class="text-center">${asignatura.tipo}</td>
+                    <td class="text-center">${asignatura.periodicidad}</td>
+                    <td class="text-center"></td>
+                    <td class="text-center">
+                        <input type="checkbox" class="form-check-input btn-seleccionar">
+                    </td>
                 `;
                 
                 // Agregar el selector de semestre a la celda
-                const semestreCell = nuevaFila.cells[3];
+                const semestreCell = nuevaFila.cells[4];
                 semestreCell.appendChild(selectSemestre);
                 
                 // Agregar la nueva fila a la tabla
@@ -502,14 +569,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const nuevaFila = document.createElement('tr');
                 nuevaFila.dataset.id = row.dataset.id;
                 nuevaFila.innerHTML = `
-                        <td>${row.cells[0].textContent}</td>
-                        <td>${row.cells[1].textContent}</td>
-                        <td>${row.cells[2].textContent}</td>
-                        <td>
-                            <button class="btn btn-sm btn-primary btn-seleccionar">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                        </td>
+                    <td>${row.cells[0].textContent}</td>
+                    <td>${row.cells[1].textContent}</td>
+                    <td class="text-center">${row.cells[2].textContent}</td>
+                    <td class="text-center">${row.cells[3].textContent}</td>
+                    <td class="text-center">
+                        <input type="checkbox" class="form-check-input btn-seleccionar">
+                    </td>
                 `;
                 
                 // Agregar la nueva fila a la tabla de disponibles
@@ -519,6 +585,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 row.remove();
             }
         });
+        
+        // Si no quedan asignaturas vinculadas, mostrar el mensaje
+        if (asignaturasVinculadas.querySelectorAll('tr[data-id]').length === 0) {
+            asignaturasVinculadas.innerHTML = `
+                <tr id="no-asignaturas-message">
+                    <td colspan="6" class="text-center">No hay asignaturas vinculadas</td>
+                </tr>
+            `;
+        }
         
         asignaturasVinculadasSeleccionadas.clear();
         btnQuitar.disabled = true;
@@ -531,7 +606,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Verificar si hay asignaturas vinculadas
         if (rows.length === 0) {
-            alert('No hay asignaturas vinculadas para guardar');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No hay asignaturas vinculadas para guardar',
+                confirmButtonText: 'Aceptar'
+            });
             return;
         }
 
@@ -539,51 +619,74 @@ document.addEventListener('DOMContentLoaded', function() {
         rows.forEach(row => {
             const selectSemestre = row.querySelector('select');
             if (selectSemestre) {
-            asignaturas.push({
-                id: row.dataset.id,
+                asignaturas.push({
+                    id: row.dataset.id,
                     semestre: selectSemestre.value,
-                    nombre: row.cells[0].textContent,
-                    tipo: row.cells[1].textContent,
-                    periodicidad: row.cells[2].textContent
-            });
+                    nombre: row.cells[1].textContent,
+                    tipo: row.cells[2].textContent,
+                    periodicidad: row.cells[3].textContent
+                });
             }
         });
 
         // Mostrar confirmación antes de guardar
-        if (!confirm(`¿Está seguro de guardar ${asignaturas.length} asignaturas en la malla?`)) {
-            return;
-        }
-
-        // Enviar datos al servidor
-        fetch(`${app_url}api/mallas/{{ carrera.id }}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({ 
-                asignaturas: asignaturas,
-                carrera_id: {{ carrera.id }}
-            })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`Error en la respuesta del servidor: ${response.status}`);
+        Swal.fire({
+            title: '¿Está seguro?',
+            text: `¿Está seguro de guardar ${asignaturas.length} asignaturas en la malla?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, guardar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Enviar datos al servidor
+                fetch(`${app_url}api/mallas/{{ carrera.id }}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ 
+                        asignaturas: asignaturas,
+                        carrera_id: {{ carrera.id }}
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Error en la respuesta del servidor: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Éxito!',
+                            text: 'Malla actualizada correctamente',
+                            confirmButtonText: 'Aceptar'
+                        }).then(() => {
+                            window.location.href = `${app_url}mallas/{{ carrera.id }}`;
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error al actualizar la malla: ' + (data.error || 'Error desconocido'),
+                            confirmButtonText: 'Aceptar'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al actualizar la malla: ' + error.message,
+                        confirmButtonText: 'Aceptar'
+                    });
+                });
             }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                alert('Malla actualizada correctamente');
-                window.location.href = `${app_url}mallas/{{ carrera.id }}`;
-            } else {
-                alert('Error al actualizar la malla: ' + (data.error || 'Error desconocido'));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error al actualizar la malla: ' + error.message);
         });
     });
 

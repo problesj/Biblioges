@@ -124,14 +124,14 @@
     <!-- Paneles de Asignaturas -->
     <div class="row">
         <!-- Asignaturas Disponibles -->
-        <div class="col-md-5">
+        <div class="col-12">
             <div class="card h-100">
                 <div class="card-header">
                     <h3 class="card-title mb-0">Asignaturas Disponibles</h3>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive" style="max-height: calc(100vh - 400px); overflow-y: auto;">
-                        <table class="table table-striped table-hover mb-0">
+                        <table id="tablaAsignaturas" class="table table-striped table-hover mb-0">
                             <thead class="sticky-top bg-white">
                                 <tr>
                                     <th style="width: 5%">
@@ -179,28 +179,30 @@
                 </div>
             </div>
         </div>
-
+    </div>
+    <div class="row">
         <!-- Botones de Acción -->
-        <div class="col-md-2 d-flex align-items-center justify-content-center">
-            <div class="btn-group-vertical">
+        <div class="col-12 d-flex align-items-center justify-content-center">
+            <div class="btn-group gap-2 mb-4">
                 <button type="button" class="btn btn-success mb-2" onclick="agregarSeleccionadas()">
-                    <i class="fas fa-arrow-right"></i>
+                    <i class="fas fa-arrow-down"></i>
                 </button>
-                <button type="button" class="btn btn-danger" onclick="quitarSeleccionadas()">
-                    <i class="fas fa-arrow-left"></i>
+                <button type="button" class="btn btn-danger mb-2" onclick="quitarSeleccionadas()">
+                    <i class="fas fa-arrow-up"></i>
                 </button>
             </div>
         </div>
-
+    </div>
+    <div class="row">
         <!-- Asignaturas Vinculadas -->
-        <div class="col-md-5">
+        <div class="col-12">
             <div class="card h-100">
                 <div class="card-header">
                     <h3 class="card-title mb-0">Asignaturas Vinculadas</h3>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive" style="max-height: calc(100vh - 400px); overflow-y: auto;">
-                        <table class="table table-striped table-hover mb-0">
+                        <table id="tablaVinculadas" class="table table-striped table-hover mb-0">
                             <thead class="sticky-top bg-white">
                                 <tr>
                                     <th style="width: 5%">
@@ -208,22 +210,30 @@
                                     </th>
                                     <th style="width: 25%">Código</th>
                                     <th style="width: 50%">Nombre</th>
-                                    <th style="width: 20%" class="text-center">Tipo Bibliografía</th>
+                                    <th style="width: 20%">Tipo Bibliografía</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for asignatura in asignaturas_vinculadas %}
                                 <tr>
-                                    <td class="align-top">
-                                        <input type="checkbox" class="form-check-input" name="vinculaciones[]" value="{{ asignatura.id }}">
+                                    <td>
+                                        <input type="checkbox" class="form-check-input" name="vinculaciones[]" value="{{ asignatura.vinculacion_id }}">
                                     </td>
-                                    <td class="align-top">
-                                        <div style="font-size: 0.9em; word-break: break-all;">
-                                            {{ asignatura.codigo_asignatura|trim|nl2br }}
+                                    <td>
+                                        <div style="font-size: 0.9em;">
+                                            {% if asignatura.codigos %}
+                                                {{ asignatura.codigos|trim|nl2br }}
+                                            {% else %}
+                                                Sin código
+                                            {% endif %}
                                         </div>
                                     </td>
-                                    <td class="align-top">{{ asignatura.nombre }}</td>
-                                    <td class="align-top text-center">{{ asignatura.tipo_bibliografia }}</td>
+                                    <td>{{ asignatura.nombre }}</td>
+                                    <td>{{ asignatura.tipo_bibliografia }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No hay asignaturas vinculadas</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -256,7 +266,7 @@ document.getElementById('filtroForm').addEventListener('change', function() {
     }
     
     // Realizar la petición AJAX
-    fetch(`{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/vincular?${params.toString()}`)
+    fetch(`{{ app_url ~ 'bibliografias-declaradas/' ~ bibliografia.id ~ '/vincular?' ~ params.toString() }}`)
         .then(response => response.text())
         .then(html => {
             const parser = new DOMParser();
@@ -278,7 +288,11 @@ document.getElementById('filtroForm').addEventListener('change', function() {
 function agregarSeleccionadas() {
     const checkboxes = document.querySelectorAll('#tablaAsignaturas input[type="checkbox"]:checked');
     if (checkboxes.length === 0) {
-        alert('Por favor, seleccione al menos una asignatura');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Atención',
+            text: 'Por favor, seleccione al menos una asignatura'
+        });
         return;
     }
 
@@ -290,14 +304,22 @@ function agregarSeleccionadas() {
         const radio = document.querySelector(`.tipo-bibliografia[data-asignatura-id="${asignaturaId}"]:checked`);
         
         if (!radio) {
-            alert('Por favor, seleccione el tipo de bibliografía para todas las asignaturas seleccionadas');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atención',
+                text: 'Por favor, seleccione el tipo de bibliografía para todas las asignaturas seleccionadas'
+            });
             error = true;
             return;
         }
 
         const tipo = radio.value;
         if (!tipo) {
-            alert('Por favor, seleccione el tipo de bibliografía para todas las asignaturas seleccionadas');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atención',
+                text: 'Por favor, seleccione el tipo de bibliografía para todas las asignaturas seleccionadas'
+            });
             error = true;
             return;
         }
@@ -320,11 +342,9 @@ function agregarSeleccionadas() {
     const dataToSend = {
         asignaturas: asignaturas
     };
-    console.log('Datos a enviar:', dataToSend);
 
     // Realizar la petición AJAX
-    const url = `{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/vincularMultiple`;
-    console.log('URL de la petición:', url);
+    const url = `{{ app_url ~ 'bibliografias-declaradas/' ~ bibliografia.id ~ '/vincular' }}`;
 
     fetch(url, {
         method: 'POST',
@@ -337,17 +357,11 @@ function agregarSeleccionadas() {
         body: JSON.stringify(dataToSend)
     })
     .then(async response => {
-        console.log('Respuesta recibida:', response);
-        console.log('Status:', response.status);
-        console.log('Headers:', Object.fromEntries(response.headers.entries()));
-        
         if (!response.ok) {
             throw new Error(`Error HTTP: ${response.status}`);
         }
 
         const text = await response.text();
-        console.log('Texto de respuesta:', text);
-        
         if (!text.trim()) {
             throw new Error('La respuesta del servidor está vacía');
         }
@@ -355,29 +369,31 @@ function agregarSeleccionadas() {
         try {
             return JSON.parse(text);
         } catch (e) {
-            console.error('Error al parsear JSON:', text);
             throw new Error('Error al procesar la respuesta del servidor: ' + e.message);
         }
     })
     .then(data => {
-        console.log('Datos procesados:', data);
         if (data.success) {
-            // Mostrar mensaje de éxito
-            alert(data.message);
-            // Recargar la página para actualizar la lista
-            location.reload();
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: data.message,
+                showConfirmButton: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    location.reload();
+                }
+            });
         } else {
             throw new Error(data.message || 'Error al vincular las asignaturas');
         }
     })
     .catch(error => {
-        console.error('Error completo:', error);
-        alert('Error al vincular las asignaturas: ' + error.message);
-    })
-    .finally(() => {
-        // Restaurar el botón
-        boton.disabled = false;
-        boton.innerHTML = textoOriginal;
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error al desvincular las asignaturas. Por favor, intente nuevamente.'
+        });
     });
 }
 
@@ -385,35 +401,107 @@ function agregarSeleccionadas() {
 function quitarSeleccionadas() {
     const checkboxes = document.querySelectorAll('#tablaVinculadas input[type="checkbox"]:checked');
     if (checkboxes.length === 0) {
-        alert('Por favor, seleccione al menos una asignatura');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Atención',
+            text: 'Por favor, seleccione al menos una asignatura para desvincular'
+        });
         return;
     }
 
-    if (confirm('¿Está seguro de quitar las asignaturas seleccionadas?')) {
-        const vinculaciones = Array.from(checkboxes).map(cb => cb.value);
-        fetch(`{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/desvincularMultiple`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                vinculaciones: vinculaciones
+    Swal.fire({
+        icon: 'question',
+        title: 'Confirmar',
+        text: '¿Está seguro de desvincular las asignaturas seleccionadas?',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, desvincular',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const vinculaciones = Array.from(checkboxes).map(cb => cb.value);
+            
+            // Mostrar indicador de carga
+            const boton = document.querySelector('button[onclick="quitarSeleccionadas()"]');
+            const textoOriginal = boton.innerHTML;
+            boton.disabled = true;
+            boton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+
+            // Asegurar que la URL sea correcta
+            const url = `{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/desvincularMultiple`;
+            console.log('Enviando petición a:', url);
+            console.log('Datos a enviar:', { vinculaciones });
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    vinculaciones: vinculaciones
+                })
             })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert(data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error al desvincular asignaturas:', error);
-            alert('Error al desvincular las asignaturas. Por favor, intente nuevamente.');
-        });
-    }
+            .then(async response => {
+                console.log('Respuesta recibida:', response);
+                console.log('Status:', response.status);
+                
+                const text = await response.text();
+                console.log('Respuesta texto:', text);
+                
+                if (!text) {
+                    throw new Error('La respuesta del servidor está vacía');
+                }
+                
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    console.error('Error al parsear JSON:', e);
+                    throw new Error('La respuesta del servidor no es un JSON válido: ' + text);
+                }
+            })
+            .then(data => {
+                console.log('Datos procesados:', data);
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Éxito',
+                        text: data.message,
+                        showConfirmButton: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Forzar una recarga completa de la página
+                            window.location.href = `{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/vincular`;
+                        }
+                    });
+                } else {
+                    throw new Error(data.message || 'Error al desvincular las asignaturas');
+                }
+            })
+            .catch(error => {
+                console.error('Error completo:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'Error al desvincular las asignaturas. Por favor, intente nuevamente.'
+                });
+            })
+            .finally(() => {
+                // Restaurar el botón
+                boton.disabled = false;
+                boton.innerHTML = textoOriginal;
+            });
+        }
+    });
 }
+
+// Agregar evento para el checkbox "Seleccionar todas"
+document.getElementById('seleccionarTodasVinculadas').addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('#tablaVinculadas tbody input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = this.checked;
+    });
+});
 
 // Función para agregar una asignatura
 function agregarAsignatura(asignaturaId) {
@@ -435,7 +523,7 @@ function agregarAsignatura(asignaturaId) {
     boton.disabled = true;
     boton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
-    const url = `{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/vincularSingle`;
+    const url = `{{ app_url ~ 'bibliografias-declaradas/' ~ bibliografia.id ~ '/vincularSingle' }}`;
     console.log('Enviando petición a:', url);
     
     const data = {

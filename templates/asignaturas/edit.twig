@@ -403,7 +403,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await response.json();
             
             if (response.ok) {
-                alert('Asignatura actualizada exitosamente');
                 window.location.href = '{{ app_url }}asignaturas';
             } else {
                 if (result.errors) {

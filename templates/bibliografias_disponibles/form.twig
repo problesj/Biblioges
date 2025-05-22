@@ -18,7 +18,7 @@
                 Nueva Bibliografía Disponible
             {% endif %}
         </h1>
-        <a href="{{ url_for('bibliografias-disponibles.index') }}" class="btn btn-secondary">
+        <a href="{{ app_url }}bibliografias-disponibles" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Volver
         </a>
     </div>
@@ -29,129 +29,647 @@
 
     <div class="card">
         <div class="card-body">
-            <form method="POST" action="{% if bibliografia.id %}{{ url_for('bibliografias-disponibles.update', {id: bibliografia.id}) }}{% else %}{{ url_for('bibliografias-disponibles.store') }}{% endif %}">
-                {% if bibliografia.id %}
-                    <input type="hidden" name="_METHOD" value="PUT">
+            <form method="POST" action="{{ isEdit ? app_url ~ 'bibliografias-disponibles/' ~ bibliografia.id : app_url ~ 'bibliografias-disponibles' }}" id="bibliografiaForm">
+                {% if isEdit %}
+                    <input type="hidden" name="_method" value="PUT">
                 {% endif %}
+                
+                <!-- Campo oculto para autores temporales -->
+                <input type="hidden" id="autores_temporales" name="autores_temporales" value="[]">
+                <!-- Campo oculto para autores seleccionados -->
+                <input type="hidden" name="autores[]" value="">
 
                 <div class="row">
+                    <!-- Primera columna -->
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label for="bibliografia_declarada_id" class="form-label">Bibliografía Declarada</label>
-                            <select class="form-select" id="bibliografia_declarada_id" name="bibliografia_declarada_id" required>
-                                <option value="">Seleccione una bibliografía</option>
-                                {% for biblio in bibliografias %}
-                                    <option value="{{ biblio.id }}" {% if bibliografia.bibliografia_declarada_id == biblio.id %}selected{% endif %}>
-                                        {{ biblio.titulo }}
-                                    </option>
-                                {% endfor %}
+                            <label for="titulo" class="form-label">Título <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="titulo" name="titulo" 
+                                   value="{{ bibliografia.titulo }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="anio_edicion" class="form-label">Año de Edición <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="anio_edicion" name="anio_edicion" 
+                                   value="{{ bibliografia.anio_edicion }}" min="1900" max="{{ 'now'|date('Y') }}" 
+                                   maxlength="4" pattern="\d{4}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="disponibilidad" class="form-label">Disponibilidad <span class="text-danger">*</span></label>
+                            <select class="form-select" id="disponibilidad" name="disponibilidad" required>
+                                <option value="">Seleccione una disponibilidad</option>
+                                <option value="impreso" {% if bibliografia.disponibilidad == 'impreso' %}selected{% endif %}>Impreso</option>
+                                <option value="electronico" {% if bibliografia.disponibilidad == 'electronico' %}selected{% endif %}>Electrónico</option>
+                                <option value="ambos" {% if bibliografia.disponibilidad == 'ambos' %}selected{% endif %}>Ambos</option>
                             </select>
                         </div>
 
                         <div class="mb-3">
-                            <label for="tipo_disponibilidad" class="form-label">Tipo de Disponibilidad</label>
-                            <select class="form-select" id="tipo_disponibilidad" name="tipo_disponibilidad" required>
-                                <option value="">Seleccione un tipo</option>
-                                <option value="fisico" {% if bibliografia.tipo_disponibilidad == 'fisico' %}selected{% endif %}>Físico</option>
-                                <option value="digital" {% if bibliografia.tipo_disponibilidad == 'digital' %}selected{% endif %}>Digital</option>
-                                <option value="mixto" {% if bibliografia.tipo_disponibilidad == 'mixto' %}selected{% endif %}>Mixto</option>
-                            </select>
+                            <label for="url_acceso" class="form-label">URL de Acceso</label>
+                            <input type="url" class="form-control" id="url_acceso" name="url_acceso" 
+                                   value="{{ bibliografia.url_acceso }}">
+                            <small class="form-text text-muted">URL para acceder al recurso electrónico</small>
                         </div>
 
                         <div class="mb-3">
-                            <label for="sede_id" class="form-label">Sede</label>
-                            <select class="form-select" id="sede_id" name="sede_id">
-                                <option value="">Seleccione una sede</option>
-                                {% for sede in sedes %}
-                                    <option value="{{ sede.id }}" {% if bibliografia.sede_id == sede.id %}selected{% endif %}>
-                                        {{ sede.nombre }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                            <div class="form-text">Obligatorio para bibliografías físicas o mixtas</div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="mb-3" id="ejemplares-container">
-                            <label for="ejemplares" class="form-label">Ejemplares Físicos</label>
-                            <input type="number" class="form-control" id="ejemplares" name="ejemplares" 
-                                   min="0" value="{{ bibliografia.ejemplares }}">
-                            <div class="form-text">Obligatorio para bibliografías físicas o mixtas</div>
+                            <label for="url_catalogo" class="form-label">URL del Catálogo</label>
+                            <input type="url" class="form-control" id="url_catalogo" name="url_catalogo" 
+                                   value="{{ bibliografia.url_catalogo }}">
+                            <small class="form-text text-muted">URL en el catálogo de la biblioteca</small>
                         </div>
 
-                        <div class="mb-3" id="ejemplares-digitales-container">
+                        <div class="mb-3">
+                            <label for="id_mms" class="form-label">ID MMS</label>
+                            <input type="text" class="form-control" id="id_mms" name="id_mms" 
+                                   value="{{ bibliografia.id_mms }}">
+                            <small class="form-text text-muted">Identificador único en el sistema de gestión bibliotecaria</small>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="ejemplares_digitales" class="form-label">Ejemplares Digitales</label>
                             <input type="number" class="form-control" id="ejemplares_digitales" name="ejemplares_digitales" 
-                                   min="0" value="{{ bibliografia.ejemplares_digitales }}">
-                            <div class="form-text">Obligatorio para bibliografías digitales o mixtas</div>
+                                   value="{{ bibliografia.ejemplares_digitales }}" min="0">
+                            <small class="form-text text-muted">0 para acceso ilimitado</small>
                         </div>
 
-                        {% if bibliografia.id %}
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="estado" name="estado" 
-                                           {% if bibliografia.estado %}checked{% endif %}>
-                                    <label class="form-check-label" for="estado">
-                                        Activo
-                                    </label>
+                        <div class="mb-3">
+                            <label for="bibliografia_declarada_id" class="form-label">Bibliografía Declarada</label>
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control" id="buscarBibliografiaDeclarada" 
+                                       placeholder="Buscar bibliografía declarada...">
+                                <button class="btn btn-outline-secondary" type="button" id="btnBuscarBibliografiaDeclarada">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                            <select class="form-select" id="bibliografia_declarada_id" name="bibliografia_declarada_id">
+                                <option value="">Seleccione una bibliografía declarada</option>
+                                {% for bd in bibliografiasDeclaradas %}
+                                    <option value="{{ bd.id }}" {% if bibliografia.bibliografia_declarada_id == bd.id %}selected{% endif %}>
+                                        {{ bd.titulo }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Segunda columna -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="editorial" class="form-label">Editorial</label>
+                            <select class="form-select" id="editorial-select" onchange="toggleEditorialInput()">
+                                <option value="">Seleccione una editorial</option>
+                                {% for editorial in editoriales %}
+                                    <option value="{{ editorial }}" {% if bibliografia.editorial == editorial %}selected{% endif %}>
+                                        {{ editorial }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <div id="nueva-editorial-container" class="mt-2" style="display: none;">
+                                <input type="text" class="form-control" id="nueva-editorial" name="editorial" 
+                                       placeholder="Ingrese el nombre de la nueva editorial">
+                            </div>
+                        </div>
+                    </div>
+                        </div>
+
+                <!-- Sedes y Ejemplares -->
+                <div id="seccionSedes" class="mt-4" style="display: none;">
+                    <h3 class="mb-3">Sedes y Ejemplares</h3>
+                    <div class="row">
+                        {% for sede in sedes %}
+                            <div class="col-md-4 mb-3">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ sede.nombre }}</h5>
+                                        <div class="mb-3">
+                                            <label for="ejemplares_{{ sede.id }}" class="form-label">Ejemplares</label>
+                                            <input type="number" class="form-control" 
+                                                   id="ejemplares_{{ sede.id }}" 
+                                                   name="sedes[{{ sede.id }}][ejemplares]" 
+                                                   min="0" 
+                                                   value="{{ bibliografia.sedes[sede.id].ejemplares|default(0) }}">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        {% endif %}
+                        {% endfor %}
+                    </div>
+                        </div>
+
+                <!-- Autores -->
+                <div class="mt-4">
+                    <h3 class="mb-3">Autores</h3>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label">Autores Disponibles</label>
+                                </div>
+                                <select class="form-select" id="autoresDisponibles" multiple size="10" style="height: auto;">
+                                    {% for autor in autores %}
+                                        <option value="{{ autor.id }}" data-apellidos="{{ autor.apellidos }}" data-nombres="{{ autor.nombres }}" data-genero="{{ autor.genero }}">
+                                            {{ autor.apellidos }}, {{ autor.nombres }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="mt-2">
+                                    <button type="button" class="btn btn-sm btn-success" id="agregarAutorSeleccionado">
+                                        <i class="fas fa-arrow-right"></i> Agregar Seleccionados
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="card-title mb-0">Autores Seleccionados</h5>
+                                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#nuevoAutorModal">
+                                        <i class="fas fa-plus"></i> Nuevo Autor
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div id="autoresSeleccionados" class="list-group">
+                                        {% for autor in bibliografia.autores %}
+                                            <div class="list-group-item d-flex justify-content-between align-items-center" data-autor-id="{{ autor.id }}">
+                                                <div>
+                                                    <strong>{{ autor.apellidos }}, {{ autor.nombres }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">{{ autor.genero }}</small>
+                                                </div>
+                                                <button type="button" class="btn btn-sm btn-danger" onclick="eliminarAutor('{{ autor.id }}')">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                            <input type="hidden" name="autores[]" value="{{ autor.id }}">
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <div class="mt-4">
                     <button type="submit" class="btn btn-primary">
-                        {% if bibliografia.id %}
-                            <i class="fas fa-save"></i> Guardar Cambios
-                        {% else %}
-                            <i class="fas fa-plus"></i> Crear
-                        {% endif %}
+                        <i class="fas fa-save"></i> Guardar
                     </button>
+                    <a href="{{ app_url }}bibliografias-disponibles" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para nuevo autor -->
+<div class="modal fade" id="nuevoAutorModal" tabindex="-1" aria-labelledby="nuevoAutorModalLabel">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="nuevoAutorModalLabel">Agregar Nuevo Autor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formNuevoAutor">
+                    <div class="mb-3">
+                        <label for="nombres" class="form-label">Nombres</label>
+                        <input type="text" class="form-control" id="nombres" name="nombres" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="apellidos" class="form-label">Apellidos</label>
+                        <input type="text" class="form-control" id="apellidos" name="apellidos" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="genero" class="form-label">Género</label>
+                        <select class="form-select" id="genero" name="genero" required>
+                            <option value="">Seleccione...</option>
+                            <option value="Masculino">Masculino</option>
+                            <option value="Femenino">Femenino</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="guardarNuevoAutor">Guardar</button>
+            </div>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const tipoDisponibilidad = document.getElementById('tipo_disponibilidad');
-    const sedeContainer = document.getElementById('sede_id');
-    const ejemplaresContainer = document.getElementById('ejemplares-container');
-    const ejemplaresDigitalesContainer = document.getElementById('ejemplares-digitales-container');
+    // Mostrar/ocultar sección de sedes según disponibilidad
+    const disponibilidadSelect = document.getElementById('disponibilidad');
+    const seccionSedes = document.getElementById('seccionSedes');
+    const urlAcceso = document.getElementById('url_acceso');
+    const urlCatalogo = document.getElementById('url_catalogo');
+    const idMms = document.getElementById('id_mms');
+    const ejemplaresDigitales = document.getElementById('ejemplares_digitales');
 
-    function actualizarCampos() {
-        const tipo = tipoDisponibilidad.value;
+    function actualizarValidaciones() {
+        const valor = disponibilidadSelect.value;
         
-        // Actualizar visibilidad de campos según el tipo
-        if (tipo === 'fisico') {
-            sedeContainer.required = true;
-            ejemplaresContainer.style.display = 'block';
-            ejemplaresDigitalesContainer.style.display = 'none';
-        } else if (tipo === 'digital') {
-            sedeContainer.required = false;
-            ejemplaresContainer.style.display = 'none';
-            ejemplaresDigitalesContainer.style.display = 'block';
-        } else if (tipo === 'mixto') {
-            sedeContainer.required = true;
-            ejemplaresContainer.style.display = 'block';
-            ejemplaresDigitalesContainer.style.display = 'block';
+        // Resetear todas las validaciones
+        urlAcceso.required = false;
+        urlCatalogo.required = false;
+        idMms.required = false;
+        ejemplaresDigitales.required = false;
+        
+        // Aplicar validaciones según disponibilidad
+        switch(valor) {
+            case 'impreso':
+                urlCatalogo.required = true;
+                idMms.required = true;
+                break;
+            case 'electronico':
+                urlAcceso.required = true;
+                ejemplaresDigitales.required = true;
+                break;
+            case 'ambos':
+                urlAcceso.required = true;
+                urlCatalogo.required = true;
+                idMms.required = true;
+                ejemplaresDigitales.required = true;
+                break;
+        }
+        
+        // Actualizar visualización de campos requeridos
+        actualizarIndicadoresRequeridos();
+    }
+
+    function actualizarIndicadoresRequeridos() {
+        const campos = [urlAcceso, urlCatalogo, idMms, ejemplaresDigitales];
+        campos.forEach(campo => {
+            const label = campo.previousElementSibling;
+            if (campo.required) {
+                if (!label.querySelector('.text-danger')) {
+                    label.innerHTML += ' <span class="text-danger">*</span>';
+                }
+            } else {
+                const asterisco = label.querySelector('.text-danger');
+                if (asterisco) {
+                    asterisco.remove();
+                }
+            }
+        });
+    }
+
+    disponibilidadSelect.addEventListener('change', actualizarValidaciones);
+    actualizarValidaciones();
+
+    // Inicializar el estado del campo de nueva editorial
+    toggleEditorialInput();
+
+    // Manejo de autores
+    const autoresDisponibles = document.getElementById('autoresDisponibles');
+    const autoresSeleccionados = document.getElementById('autoresSeleccionados');
+    const agregarAutorBtn = document.getElementById('agregarAutorSeleccionado');
+    const autoresTemporales = [];
+    const autoresSeleccionadosIds = new Set();
+
+    // Cargar autores existentes al inicializar
+    document.querySelectorAll('#autoresSeleccionados .list-group-item').forEach(item => {
+        const autorId = item.dataset.autorId;
+        if (autorId) {
+            autoresSeleccionadosIds.add(autorId);
+        }
+    });
+
+    // Función para agregar autor a la lista
+    function agregarAutorALista(autor) {
+        // Verificar si el autor ya está en la lista
+        if (autoresSeleccionadosIds.has(autor.id)) {
+            return;
+        }
+
+        const autorElement = document.createElement('div');
+        autorElement.className = 'list-group-item d-flex justify-content-between align-items-center';
+        autorElement.dataset.autorId = autor.id;
+        autorElement.innerHTML = `
+            <div>
+                <strong>${autor.apellidos}, ${autor.nombres}</strong>
+                <br>
+                <small class="text-muted">${autor.genero}</small>
+            </div>
+            <button type="button" class="btn btn-sm btn-danger" onclick="eliminarAutor('${autor.id}')">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        autoresSeleccionados.appendChild(autorElement);
+        autoresSeleccionadosIds.add(autor.id);
+        
+        // Actualizar el campo oculto con los IDs de autores seleccionados
+        actualizarAutoresSeleccionados();
+    }
+
+    // Función para actualizar el campo oculto de autores seleccionados
+    function actualizarAutoresSeleccionados() {
+        // Eliminar todos los campos de autores existentes
+        const autoresInputs = document.querySelectorAll('input[name="autores[]"]');
+        autoresInputs.forEach(input => input.remove());
+        
+        // Crear un nuevo campo para cada autor seleccionado
+        Array.from(autoresSeleccionadosIds).forEach(autorId => {
+            if (autorId && autorId !== '') {  // Solo agregar si el ID no está vacío
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'autores[]';
+                input.value = autorId;
+                document.getElementById('bibliografiaForm').appendChild(input);
+            }
+        });
+    }
+
+    // Función para agregar autor temporal
+    function agregarAutorTemporal(autor) {
+        const autorTemp = {
+            id: 'temp_' + Date.now(),
+            nombres: autor.nombres,
+            apellidos: autor.apellidos,
+            genero: autor.genero
+        };
+        autoresTemporales.push(autorTemp);
+        agregarAutorALista(autorTemp);
+        actualizarAutoresTemporales();
+    }
+
+    // Función para actualizar la lista de autores temporales
+    function actualizarAutoresTemporales() {
+        const autoresTemporalesInput = document.getElementById('autores_temporales');
+        autoresTemporalesInput.value = JSON.stringify(autoresTemporales);
+    }
+
+    // Función para eliminar autor temporal
+    window.eliminarAutorTemporal = function(index) {
+        const autorTemp = autoresTemporales[index];
+        if (autorTemp) {
+            autoresSeleccionadosIds.delete(autorTemp.id);
+            autoresTemporales.splice(index, 1);
+            actualizarAutoresTemporales();
+            const autorElement = document.querySelector(`#autoresSeleccionados [data-autor-id="${autorTemp.id}"]`);
+            if (autorElement) {
+                autorElement.remove();
+            }
+        }
+    };
+
+    // Agregar autores seleccionados
+    agregarAutorBtn.addEventListener('click', function() {
+        const seleccionados = Array.from(autoresDisponibles.selectedOptions);
+        if (seleccionados.length === 0) return;
+
+        seleccionados.forEach(option => {
+            if (!option.value) return;
+            
+            const autor = {
+                id: option.value,
+                apellidos: option.dataset.apellidos || '',
+                nombres: option.dataset.nombres || '',
+                genero: option.dataset.genero || ''
+            };
+            
+            if (autor.apellidos && autor.nombres) {
+                agregarAutorALista(autor);
+            }
+        });
+        
+        // Limpiar la selección después de agregar
+        autoresDisponibles.selectedIndex = -1;
+    });
+
+    // Manejar el guardado de nuevo autor
+    const guardarNuevoAutorBtn = document.getElementById('guardarNuevoAutor');
+    guardarNuevoAutorBtn.addEventListener('click', function() {
+        const formNuevoAutor = document.getElementById('formNuevoAutor');
+        if (formNuevoAutor.checkValidity()) {
+            const autor = {
+                nombres: document.getElementById('nombres').value.trim(),
+                apellidos: document.getElementById('apellidos').value.trim(),
+                genero: document.getElementById('genero').value
+            };
+            
+            if (autor.nombres && autor.apellidos && autor.genero) {
+                agregarAutorTemporal(autor);
+                
+                // Limpiar y cerrar el modal
+                formNuevoAutor.reset();
+                const modal = bootstrap.Modal.getInstance(document.getElementById('nuevoAutorModal'));
+                if (modal) {
+                    modal.hide();
+                }
+            }
         } else {
-            sedeContainer.required = false;
-            ejemplaresContainer.style.display = 'none';
-            ejemplaresDigitalesContainer.style.display = 'none';
+            formNuevoAutor.reportValidity();
+        }
+    });
+
+    // Limpiar el formulario cuando se cierra el modal
+    const nuevoAutorModal = document.getElementById('nuevoAutorModal');
+    nuevoAutorModal.addEventListener('hidden.bs.modal', function() {
+        document.getElementById('formNuevoAutor').reset();
+    });
+
+    // Función para eliminar autor
+    window.eliminarAutor = function(autorId) {
+        const elemento = document.querySelector(`#autoresSeleccionados [data-autor-id="${autorId}"]`);
+        if (elemento) {
+            elemento.remove();
+            autoresSeleccionadosIds.delete(autorId);
+            
+            // Si es un autor temporal, eliminarlo de la lista
+            const index = autoresTemporales.findIndex(a => a.id === autorId);
+            if (index !== -1) {
+                autoresTemporales.splice(index, 1);
+                actualizarAutoresTemporales();
+            }
+            
+            // Actualizar el campo oculto de autores seleccionados
+            actualizarAutoresSeleccionados();
+        }
+    };
+
+    // Manejar el envío del formulario principal
+    const bibliografiaForm = document.getElementById('bibliografiaForm');
+    bibliografiaForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Validar campos requeridos según disponibilidad
+        const valor = disponibilidadSelect.value;
+        let camposFaltantes = [];
+        
+        if (valor === 'impreso' || valor === 'ambos') {
+            if (!urlCatalogo.value) camposFaltantes.push('URL del Catálogo');
+            if (!idMms.value) camposFaltantes.push('ID MMS');
+        }
+        
+        if (valor === 'electronico' || valor === 'ambos') {
+            if (!urlAcceso.value) camposFaltantes.push('URL de Acceso');
+            if (!ejemplaresDigitales.value) camposFaltantes.push('Ejemplares Digitales');
+        }
+        
+        if (camposFaltantes.length > 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Campos requeridos',
+                html: `Por favor complete los siguientes campos:<br><br>${camposFaltantes.join('<br>')}`,
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+        
+        const formData = new FormData(this);
+        
+        fetch(this.action, {
+            method: this.method,
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: data.message,
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    window.location.href = data.redirect;
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message,
+                    confirmButtonText: 'Aceptar'
+                });
+                
+                if (data.formData) {
+                    Object.keys(data.formData).forEach(key => {
+                        const input = document.querySelector(`[name="${key}"]`);
+                        if (input) {
+                            if (input.type === 'checkbox' || input.type === 'radio') {
+                                input.checked = data.formData[key] === 'on' || data.formData[key] === '1';
+                            } else {
+                                input.value = data.formData[key];
+                            }
+                        }
+                    });
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Ocurrió un error al procesar la solicitud',
+                confirmButtonText: 'Aceptar'
+            });
+        });
+    });
+
+    // Función para buscar bibliografías declaradas
+    const buscarBibliografiaDeclarada = document.getElementById('buscarBibliografiaDeclarada');
+    const btnBuscarBibliografiaDeclarada = document.getElementById('btnBuscarBibliografiaDeclarada');
+    const selectBibliografiaDeclarada = document.getElementById('bibliografia_declarada_id');
+
+    function buscarBibliografiasDeclaradas(termino) {
+        const opciones = selectBibliografiaDeclarada.options;
+        let encontrado = false;
+
+        // Convertir el término de búsqueda a minúsculas para búsqueda insensible a mayúsculas
+        termino = termino.toLowerCase();
+
+        // Primero, ocultar todas las opciones
+        for (let i = 0; i < opciones.length; i++) {
+            opciones[i].style.display = 'none';
+        }
+
+        // Mostrar la opción por defecto
+        opciones[0].style.display = '';
+
+        // Buscar coincidencias
+        for (let i = 1; i < opciones.length; i++) {
+            const texto = opciones[i].text.toLowerCase();
+            if (texto.includes(termino)) {
+                opciones[i].style.display = '';
+                encontrado = true;
+                // Seleccionar la primera coincidencia
+                if (!selectBibliografiaDeclarada.value) {
+                    selectBibliografiaDeclarada.value = opciones[i].value;
+                }
+            }
+        }
+
+        // Si no se encontraron coincidencias, mostrar mensaje
+        if (!encontrado && termino !== '') {
+            Swal.fire({
+                icon: 'info',
+                title: 'Sin resultados',
+                text: 'No se encontraron bibliografías declaradas que coincidan con la búsqueda',
+                confirmButtonText: 'Aceptar'
+            });
         }
     }
 
-    // Actualizar campos al cargar la página
-    actualizarCampos();
+    // Evento para buscar al escribir
+    buscarBibliografiaDeclarada.addEventListener('input', function() {
+        buscarBibliografiasDeclaradas(this.value);
+    });
 
-    // Actualizar campos cuando cambia el tipo de disponibilidad
-    tipoDisponibilidad.addEventListener('change', actualizarCampos);
+    // Evento para buscar al hacer clic en el botón
+    btnBuscarBibliografiaDeclarada.addEventListener('click', function() {
+        buscarBibliografiasDeclaradas(buscarBibliografiaDeclarada.value);
+    });
+
+    // Evento para buscar al presionar Enter
+    buscarBibliografiaDeclarada.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            buscarBibliografiasDeclaradas(this.value);
+        }
+    });
+
+    // Limpiar búsqueda cuando se cambia la selección
+    selectBibliografiaDeclarada.addEventListener('change', function() {
+        buscarBibliografiaDeclarada.value = '';
+        // Mostrar todas las opciones
+        const opciones = this.options;
+        for (let i = 0; i < opciones.length; i++) {
+            opciones[i].style.display = '';
+        }
+    });
 });
+
+function toggleEditorialInput() {
+    const editorialSelect = document.getElementById('editorial-select');
+    const nuevaEditorialContainer = document.getElementById('nueva-editorial-container');
+    const nuevaEditorialInput = document.getElementById('nueva-editorial');
+    
+    if (editorialSelect.value === 'Otra') {
+        nuevaEditorialContainer.style.display = 'block';
+        nuevaEditorialInput.required = true;
+        nuevaEditorialInput.focus();
+    } else {
+        nuevaEditorialContainer.style.display = 'none';
+        nuevaEditorialInput.required = false;
+        if (editorialSelect.value) {
+            nuevaEditorialInput.value = editorialSelect.value;
+        }
+    }
+}
 </script>
 {% endblock %} 

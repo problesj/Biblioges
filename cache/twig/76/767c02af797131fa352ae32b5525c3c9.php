@@ -32,6 +32,7 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
         $this->blocks = [
             'title' => [$this, 'block_title'],
             'content' => [$this, 'block_content'],
+            'scripts' => [$this, 'block_scripts'],
         ];
     }
 
@@ -97,60 +98,67 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "asignaturas\" class=\"row g-3\">
                 <div class=\"col-md-4\">
+                    <label for=\"nombre\" class=\"form-label\">Nombre</label>
+                    <input type=\"text\" class=\"form-control\" id=\"nombre\" name=\"nombre\" value=\"";
+        // line 28
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "nombre", [], "any", true, true, false, 28)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "nombre", [], "any", false, false, false, 28), "")) : ("")), "html", null, true);
+        yield "\" placeholder=\"Buscar por nombre...\">
+                </div>
+                <div class=\"col-md-4\">
                     <label for=\"tipo\" class=\"form-label\">Tipo</label>
                     <select class=\"form-select\" id=\"tipo\" name=\"tipo\">
                         <option value=\"\">Todos los tipos</option>
                         <option value=\"REGULAR\" ";
-        // line 30
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 30) == "REGULAR")) {
+        // line 34
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 34) == "REGULAR")) {
             yield "selected";
         }
         yield ">Regular</option>
                         <option value=\"FORMACION_BASICA\" ";
-        // line 31
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 31) == "FORMACION_BASICA")) {
+        // line 35
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 35) == "FORMACION_BASICA")) {
             yield "selected";
         }
         yield ">Formación Básica</option>
                         <option value=\"FORMACION_GENERAL\" ";
-        // line 32
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 32) == "FORMACION_GENERAL")) {
+        // line 36
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 36) == "FORMACION_GENERAL")) {
             yield "selected";
         }
         yield ">Formación General</option>
                         <option value=\"FORMACION_IDIOMAS\" ";
-        // line 33
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 33) == "FORMACION_IDIOMAS")) {
+        // line 37
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 37) == "FORMACION_IDIOMAS")) {
             yield "selected";
         }
         yield ">Formación Idiomas</option>
                         <option value=\"FORMACION_PROFESIONAL\" ";
-        // line 34
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 34) == "FORMACION_PROFESIONAL")) {
+        // line 38
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 38) == "FORMACION_PROFESIONAL")) {
             yield "selected";
         }
         yield ">Formación Profesional</option>
                         <option value=\"FORMACION_VALORES\" ";
-        // line 35
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 35) == "FORMACION_VALORES")) {
+        // line 39
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 39) == "FORMACION_VALORES")) {
             yield "selected";
         }
         yield ">Formación Valores</option>
                         <option value=\"FORMACION_ESPECIALIDAD\" ";
-        // line 36
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 36) == "FORMACION_ESPECIALIDAD")) {
+        // line 40
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 40) == "FORMACION_ESPECIALIDAD")) {
             yield "selected";
         }
         yield ">Formación Especialidad</option>
                         <option value=\"FORMACION_ELECTIVA\" ";
-        // line 37
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 37) == "FORMACION_ELECTIVA")) {
+        // line 41
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 41) == "FORMACION_ELECTIVA")) {
             yield "selected";
         }
         yield ">Formación Electiva</option>
                         <option value=\"FORMACION_ESPECIAL\" ";
-        // line 38
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 38) == "FORMACION_ESPECIAL")) {
+        // line 42
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 42) == "FORMACION_ESPECIAL")) {
             yield "selected";
         }
         yield ">Formación Especial</option>
@@ -161,21 +169,21 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
                     <select class=\"form-select\" id=\"departamento\" name=\"departamento\">
                         <option value=\"\">Todos los departamentos</option>
                         ";
-        // line 45
+        // line 49
         $context['_parent'] = $context;
         $context['_seq'] = CoreExtension::ensureTraversable(($context["departamentos"] ?? null));
         foreach ($context['_seq'] as $context["_key"] => $context["departamento"]) {
-            // line 46
+            // line 50
             yield "                            <option value=\"";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "id", [], "any", false, false, false, 46), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "id", [], "any", false, false, false, 50), "html", null, true);
             yield "\" ";
-            if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "departamento", [], "any", false, false, false, 46) == CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "id", [], "any", false, false, false, 46))) {
+            if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "departamento", [], "any", false, false, false, 50) == CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "id", [], "any", false, false, false, 50))) {
                 yield "selected";
             }
             yield ">
                                 ";
-            // line 47
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "nombre", [], "any", false, false, false, 47), "html", null, true);
+            // line 51
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "nombre", [], "any", false, false, false, 51), "html", null, true);
             yield "
                             </option>
                         ";
@@ -183,7 +191,7 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_key'], $context['departamento'], $context['_parent']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 50
+        // line 54
         yield "                    </select>
                 </div>
                 <div class=\"col-md-4\">
@@ -191,14 +199,14 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
                     <select class=\"form-select\" id=\"estado\" name=\"estado\">
                         <option value=\"\">Todos</option>
                         <option value=\"1\" ";
-        // line 56
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "estado", [], "any", false, false, false, 56) == "1")) {
+        // line 60
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "estado", [], "any", false, false, false, 60) == "1")) {
             yield "selected";
         }
         yield ">Activo</option>
                         <option value=\"0\" ";
-        // line 57
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "estado", [], "any", false, false, false, 57) == "0")) {
+        // line 61
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "estado", [], "any", false, false, false, 61) == "0")) {
             yield "selected";
         }
         yield ">Inactivo</option>
@@ -209,7 +217,7 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
                         <i class=\"fas fa-filter\"></i> Filtrar
                     </button>
                     <a href=\"";
-        // line 64
+        // line 68
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "asignaturas\" class=\"btn btn-secondary\">
                         <i class=\"fas fa-broom\"></i> Limpiar
@@ -237,72 +245,72 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
                     </thead>
                     <tbody>
                         ";
-        // line 89
+        // line 93
         $context['_parent'] = $context;
         $context['_seq'] = CoreExtension::ensureTraversable(($context["asignaturas"] ?? null));
         $context['_iterated'] = false;
         foreach ($context['_seq'] as $context["_key"] => $context["asignatura"]) {
-            // line 90
+            // line 94
             yield "                        <tr>
                             <td>";
-            // line 91
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "nombre", [], "any", false, false, false, 91), "html", null, true);
+            // line 95
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "nombre", [], "any", false, false, false, 95), "html", null, true);
             yield "</td>
                             <td>";
-            // line 92
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "tipo", [], "any", false, false, false, 92), "html", null, true);
+            // line 96
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "tipo", [], "any", false, false, false, 96), "html", null, true);
             yield "</td>
                             <td>";
-            // line 93
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "vigencia_desde", [], "any", false, false, false, 93), "html", null, true);
+            // line 97
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "vigencia_desde", [], "any", false, false, false, 97), "html", null, true);
             yield " - ";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "vigencia_hasta", [], "any", false, false, false, 93), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "vigencia_hasta", [], "any", false, false, false, 97), "html", null, true);
             yield "</td>
                             <td>";
-            // line 94
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "periodicidad", [], "any", false, false, false, 94), "html", null, true);
+            // line 98
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "periodicidad", [], "any", false, false, false, 98), "html", null, true);
             yield "</td>
                             <td>
                                 <span class=\"badge bg-";
-            // line 96
-            yield (((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "estado", [], "any", false, false, false, 96) == "1")) ? ("success") : ("danger"));
+            // line 100
+            yield (((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "estado", [], "any", false, false, false, 100) == "1")) ? ("success") : ("danger"));
             yield "\">
                                     ";
-            // line 97
-            yield (((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "estado", [], "any", false, false, false, 97) == "1")) ? ("Activo") : ("Inactivo"));
+            // line 101
+            yield (((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "estado", [], "any", false, false, false, 101) == "1")) ? ("Activo") : ("Inactivo"));
             yield "
                                 </span>
                             </td>
                             <td style=\"white-space: pre-line\">";
-            // line 100
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "departamentos", [], "any", true, true, false, 100)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "departamentos", [], "any", false, false, false, 100), "Sin departamento")) : ("Sin departamento")), "html", null, true);
+            // line 104
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "departamentos", [], "any", true, true, false, 104)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "departamentos", [], "any", false, false, false, 104), "Sin departamento")) : ("Sin departamento")), "html", null, true);
             yield "</td>
                             <td>
                                 <div class=\"btn-group\">
                                     <a href=\"";
-            // line 103
+            // line 107
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
             yield "asignaturas/";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 103), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 107), "html", null, true);
             yield "\" class=\"btn btn-sm btn-primary\" title=\"Ver\">
                                         <i class=\"fas fa-eye\"></i>
                                     </a>
                                     <a href=\"";
-            // line 106
+            // line 110
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
             yield "asignaturas/";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 106), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 110), "html", null, true);
             yield "/editar\" class=\"btn btn-sm btn-warning\" title=\"Editar\">
                                         <i class=\"fas fa-edit\"></i>
                                     </a>
                                     <form action=\"";
-            // line 109
+            // line 113
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
             yield "asignaturas/";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 109), "html", null, true);
-            yield "\" method=\"POST\" class=\"d-inline\">
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 113), "html", null, true);
+            yield "\" method=\"POST\" class=\"d-inline delete-form\">
                                         <input type=\"hidden\" name=\"_method\" value=\"DELETE\">
-                                        <button type=\"submit\" class=\"btn btn-sm btn-danger\" title=\"Eliminar\" onclick=\"return confirm('¿Está seguro de eliminar esta asignatura?')\">
+                                        <button type=\"submit\" class=\"btn btn-sm btn-danger\" title=\"Eliminar\">
                                             <i class=\"fas fa-trash\"></i>
                                         </button>
                                     </form>
@@ -312,9 +320,9 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
                         ";
             $context['_iterated'] = true;
         }
-        // line 118
+        // line 122
         if (!$context['_iterated']) {
-            // line 119
+            // line 123
             yield "                        <tr>
                             <td colspan=\"7\" class=\"text-center\">No se encontraron asignaturas</td>
                         </tr>
@@ -323,13 +331,147 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_key'], $context['asignatura'], $context['_parent'], $context['_iterated']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 123
+        // line 127
         yield "                    </tbody>
                 </table>
             </div>
         </div>
     </div>
 </div>
+";
+        yield from [];
+    }
+
+    // line 135
+    /**
+     * @return iterable<null|scalar|\Stringable>
+     */
+    public function block_scripts(array $context, array $blocks = []): iterable
+    {
+        $macros = $this->macros;
+        // line 136
+        yield "<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Manejar el envío del formulario de eliminación
+    const deleteForms = document.querySelectorAll('.delete-form');
+    deleteForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            Swal.fire({
+                title: '¿Está seguro?',
+                text: \"Esta acción no se puede deshacer\",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Crear un FormData con el método DELETE
+                    const formData = new FormData(form);
+                    formData.append('_method', 'DELETE');
+
+                    // Enviar la solicitud AJAX
+                    fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: formData
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Error en la respuesta del servidor');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            // Recargar la página para actualizar la lista
+                            window.location.reload();
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.message || 'Error al eliminar la asignatura',
+                                icon: 'error',
+                                confirmButtonColor: '#d33'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Ocurrió un error al procesar la solicitud',
+                            icon: 'error',
+                            confirmButtonColor: '#d33'
+                        });
+                    });
+                }
+            });
+        });
+    });
+
+    // Mostrar mensajes de éxito o error si existen y limpiarlos
+    ";
+        // line 201
+        if (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "success", [], "any", false, false, false, 201)) {
+            // line 202
+            yield "        Swal.fire({
+            title: '¡Éxito!',
+            text: '";
+            // line 204
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "success", [], "any", false, false, false, 204), "html", null, true);
+            yield "',
+            icon: 'success',
+            confirmButtonColor: '#3085d6'
+        }).then(() => {
+            // Limpiar el mensaje de sesión
+            fetch('";
+            // line 209
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
+            yield "clear-session-messages', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+        });
+    ";
+        }
+        // line 217
+        yield "
+    ";
+        // line 218
+        if (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "error", [], "any", false, false, false, 218)) {
+            // line 219
+            yield "        Swal.fire({
+            title: 'Error',
+            text: '";
+            // line 221
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "error", [], "any", false, false, false, 221), "html", null, true);
+            yield "',
+            icon: 'error',
+            confirmButtonColor: '#d33'
+        }).then(() => {
+            // Limpiar el mensaje de sesión
+            fetch('";
+            // line 226
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
+            yield "clear-session-messages', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+        });
+    ";
+        }
+        // line 234
+        yield "});
+</script>
 ";
         yield from [];
     }
@@ -355,7 +497,7 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
      */
     public function getDebugInfo(): array
     {
-        return array (  327 => 123,  318 => 119,  316 => 118,  300 => 109,  292 => 106,  284 => 103,  278 => 100,  272 => 97,  268 => 96,  263 => 94,  257 => 93,  253 => 92,  249 => 91,  246 => 90,  241 => 89,  213 => 64,  201 => 57,  195 => 56,  187 => 50,  178 => 47,  169 => 46,  165 => 45,  153 => 38,  147 => 37,  141 => 36,  135 => 35,  129 => 34,  123 => 33,  117 => 32,  111 => 31,  105 => 30,  97 => 25,  82 => 13,  76 => 10,  70 => 6,  63 => 5,  52 => 3,  41 => 1,);
+        return array (  473 => 234,  462 => 226,  454 => 221,  450 => 219,  448 => 218,  445 => 217,  434 => 209,  426 => 204,  422 => 202,  420 => 201,  353 => 136,  346 => 135,  335 => 127,  326 => 123,  324 => 122,  308 => 113,  300 => 110,  292 => 107,  286 => 104,  280 => 101,  276 => 100,  271 => 98,  265 => 97,  261 => 96,  257 => 95,  254 => 94,  249 => 93,  221 => 68,  209 => 61,  203 => 60,  195 => 54,  186 => 51,  177 => 50,  173 => 49,  161 => 42,  155 => 41,  149 => 40,  143 => 39,  137 => 38,  131 => 37,  125 => 36,  119 => 35,  113 => 34,  104 => 28,  98 => 25,  83 => 13,  77 => 10,  71 => 6,  64 => 5,  53 => 3,  42 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -385,6 +527,10 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
         </div>
         <div class=\"card-body\">
             <form method=\"GET\" action=\"{{ app_url }}asignaturas\" class=\"row g-3\">
+                <div class=\"col-md-4\">
+                    <label for=\"nombre\" class=\"form-label\">Nombre</label>
+                    <input type=\"text\" class=\"form-control\" id=\"nombre\" name=\"nombre\" value=\"{{ filtros.nombre|default('') }}\" placeholder=\"Buscar por nombre...\">
+                </div>
                 <div class=\"col-md-4\">
                     <label for=\"tipo\" class=\"form-label\">Tipo</label>
                     <select class=\"form-select\" id=\"tipo\" name=\"tipo\">
@@ -468,9 +614,9 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
                                     <a href=\"{{ app_url }}asignaturas/{{ asignatura.id }}/editar\" class=\"btn btn-sm btn-warning\" title=\"Editar\">
                                         <i class=\"fas fa-edit\"></i>
                                     </a>
-                                    <form action=\"{{ app_url }}asignaturas/{{ asignatura.id }}\" method=\"POST\" class=\"d-inline\">
+                                    <form action=\"{{ app_url }}asignaturas/{{ asignatura.id }}\" method=\"POST\" class=\"d-inline delete-form\">
                                         <input type=\"hidden\" name=\"_method\" value=\"DELETE\">
-                                        <button type=\"submit\" class=\"btn btn-sm btn-danger\" title=\"Eliminar\" onclick=\"return confirm('¿Está seguro de eliminar esta asignatura?')\">
+                                        <button type=\"submit\" class=\"btn btn-sm btn-danger\" title=\"Eliminar\">
                                             <i class=\"fas fa-trash\"></i>
                                         </button>
                                     </form>
@@ -488,6 +634,109 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Manejar el envío del formulario de eliminación
+    const deleteForms = document.querySelectorAll('.delete-form');
+    deleteForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            Swal.fire({
+                title: '¿Está seguro?',
+                text: \"Esta acción no se puede deshacer\",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Crear un FormData con el método DELETE
+                    const formData = new FormData(form);
+                    formData.append('_method', 'DELETE');
+
+                    // Enviar la solicitud AJAX
+                    fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: formData
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Error en la respuesta del servidor');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            // Recargar la página para actualizar la lista
+                            window.location.reload();
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.message || 'Error al eliminar la asignatura',
+                                icon: 'error',
+                                confirmButtonColor: '#d33'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Ocurrió un error al procesar la solicitud',
+                            icon: 'error',
+                            confirmButtonColor: '#d33'
+                        });
+                    });
+                }
+            });
+        });
+    });
+
+    // Mostrar mensajes de éxito o error si existen y limpiarlos
+    {% if session.success %}
+        Swal.fire({
+            title: '¡Éxito!',
+            text: '{{ session.success }}',
+            icon: 'success',
+            confirmButtonColor: '#3085d6'
+        }).then(() => {
+            // Limpiar el mensaje de sesión
+            fetch('{{ app_url }}clear-session-messages', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+        });
+    {% endif %}
+
+    {% if session.error %}
+        Swal.fire({
+            title: 'Error',
+            text: '{{ session.error }}',
+            icon: 'error',
+            confirmButtonColor: '#d33'
+        }).then(() => {
+            // Limpiar el mensaje de sesión
+            fetch('{{ app_url }}clear-session-messages', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+        });
+    {% endif %}
+});
+</script>
 {% endblock %} ", "asignaturas/index.twig", "/var/www/html/biblioges/templates/asignaturas/index.twig");
     }
 }

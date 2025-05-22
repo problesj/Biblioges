@@ -152,6 +152,162 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    function editarBibliografia(id) {
+        mostrarCargando('Cargando datos de la bibliografía...');
+
+        fetch(`/api/bibliografias/obtener/${id}`)
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                const bibliografia = result.data;
+                bibliografiaForm.reset();
+                
+                // Llenar el formulario con los datos de la bibliografía
+                Object.keys(bibliografia).forEach(key => {
+                    const input = bibliografiaForm.querySelector(`[name="${key}"]`);
+                    if (input) {
+                        input.value = bibliografia[key];
+                    }
+                });
+
+                $('#modalBibliografia').modal('show');
+            } else {
+                mostrarNotificacion(result.message || 'Error al cargar los datos de la bibliografía', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            mostrarNotificacion('Error al cargar los datos de la bibliografía', 'error');
+        })
+        .finally(() => {
+            ocultarCargando();
+        });
+    }
+
+    // Funciones para vinculación y desvinculación
+    function vincularAsignatura(bibliografiaId, asignaturaId, tipoBibliografia) {
+        mostrarCargando('Vinculando asignatura...');
+
+        fetch(`/api/bibliografias/${bibliografiaId}/vincular`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                asignatura_id: asignaturaId,
+                tipo_bibliografia: tipoBibliografia
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                mostrarNotificacion('Asignatura vinculada correctamente', 'success');
+                actualizarTablaBibliografias();
+            } else {
+                mostrarNotificacion(result.message || 'Error al vincular la asignatura', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            mostrarNotificacion('Error al vincular la asignatura', 'error');
+        })
+        .finally(() => {
+            ocultarCargando();
+        });
+    }
+
+    function desvincularAsignatura(bibliografiaId, vinculacionId) {
+        if (!confirm('¿Está seguro que desea desvincular esta asignatura?')) {
+            return;
+        }
+
+        mostrarCargando('Desvinculando asignatura...');
+
+        fetch(`/api/bibliografias/${bibliografiaId}/desvincular/${vinculacionId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                mostrarNotificacion('Asignatura desvinculada correctamente', 'success');
+                actualizarTablaBibliografias();
+            } else {
+                mostrarNotificacion(result.message || 'Error al desvincular la asignatura', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            mostrarNotificacion('Error al desvincular la asignatura', 'error');
+        })
+        .finally(() => {
+            ocultarCargando();
+        });
+    }
+
+    function vincularMultipleAsignaturas(bibliografiaId, asignaturas) {
+        mostrarCargando('Vinculando asignaturas...');
+
+        fetch(`/api/bibliografias/${bibliografiaId}/vincular-multiple`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                asignaturas: asignaturas
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                mostrarNotificacion(result.message, 'success');
+                actualizarTablaBibliografias();
+            } else {
+                mostrarNotificacion(result.message || 'Error al vincular las asignaturas', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            mostrarNotificacion('Error al vincular las asignaturas', 'error');
+        })
+        .finally(() => {
+            ocultarCargando();
+        });
+    }
+
+    function desvincularMultipleAsignaturas(bibliografiaId, vinculaciones) {
+        if (!confirm('¿Está seguro que desea desvincular las asignaturas seleccionadas?')) {
+            return;
+        }
+
+        mostrarCargando('Desvinculando asignaturas...');
+
+        fetch(`/api/bibliografias/${bibliografiaId}/desvincular-multiple`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                vinculaciones: vinculaciones
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                mostrarNotificacion('Asignaturas desvinculadas correctamente', 'success');
+                actualizarTablaBibliografias();
+            } else {
+                mostrarNotificacion(result.message || 'Error al desvincular las asignaturas', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            mostrarNotificacion('Error al desvincular las asignaturas', 'error');
+        })
+        .finally(() => {
+            ocultarCargando();
+        });
+    }
+
     // Funciones auxiliares
     function validarBibliografia(data) {
         const errores = [];
@@ -224,38 +380,6 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
 
         tablaBibliografias.innerHTML = html;
-    }
-
-    function editarBibliografia(id) {
-        mostrarCargando('Cargando datos de la bibliografía...');
-
-        fetch(`/api/bibliografias/obtener/${id}`)
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                const bibliografia = result.data;
-                bibliografiaForm.reset();
-                
-                // Llenar el formulario con los datos de la bibliografía
-                Object.keys(bibliografia).forEach(key => {
-                    const input = bibliografiaForm.querySelector(`[name="${key}"]`);
-                    if (input) {
-                        input.value = bibliografia[key];
-                    }
-                });
-
-                $('#modalBibliografia').modal('show');
-            } else {
-                mostrarNotificacion(result.message || 'Error al cargar los datos de la bibliografía', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            mostrarNotificacion('Error al cargar los datos de la bibliografía', 'error');
-        })
-        .finally(() => {
-            ocultarCargando();
-        });
     }
 
     function mostrarCargando(mensaje) {

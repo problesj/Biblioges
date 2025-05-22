@@ -64,14 +64,16 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->put('/bibliografias/{id}', [BibliografiaController::class, 'update']);
     $group->delete('/bibliografias/{id}', [BibliografiaController::class, 'delete']);
 
-    // Bibliografías Disponibles
-    $group->get('/bibliografias-disponibles', [BibliografiaDisponibleController::class, 'index'])->setName('bibliografias_disponibles.index');
-    $group->get('/bibliografias-disponibles/create', [BibliografiaDisponibleController::class, 'create'])->setName('bibliografias_disponibles.create');
-    $group->post('/bibliografias-disponibles', [BibliografiaDisponibleController::class, 'store'])->setName('bibliografias_disponibles.store');
-    $group->get('/bibliografias-disponibles/{id}', [BibliografiaDisponibleController::class, 'show'])->setName('bibliografias_disponibles.show');
-    $group->get('/bibliografias-disponibles/{id}/edit', [BibliografiaDisponibleController::class, 'edit'])->setName('bibliografias_disponibles.edit');
-    $group->put('/bibliografias-disponibles/{id}', [BibliografiaDisponibleController::class, 'update'])->setName('bibliografias_disponibles.update');
-    $group->delete('/bibliografias-disponibles/{id}', [BibliografiaDisponibleController::class, 'destroy'])->setName('bibliografias_disponibles.destroy');
+    // Rutas para Bibliografías Disponibles
+    $group->group('/bibliografias-disponibles', function (RouteCollectorProxy $group) {
+        $group->get('', [BibliografiaDisponibleController::class, 'index']);
+        $group->get('/create', [BibliografiaDisponibleController::class, 'create']);
+        $group->post('', [BibliografiaDisponibleController::class, 'store']);
+        $group->get('/{id}/edit', [BibliografiaDisponibleController::class, 'edit']);
+        $group->put('/{id}', [BibliografiaDisponibleController::class, 'update']);
+        $group->delete('/{id}', [BibliografiaDisponibleController::class, 'destroy']);
+        $group->post('/{id}/vincular', [BibliografiaDisponibleController::class, 'vincularBibliografiaDisponible']);
+    });
 
     // Bibliografías Declaradas
     $group->get('/bibliografias-declaradas', [BibliografiaDeclaradaController::class, 'index'])->setName('bibliografias-declaradas.index');

@@ -29,10 +29,12 @@
 
     <div class="card">
         <div class="card-body">
-            <form method="POST" action="{{ isEdit ? app_url ~ 'bibliografias-declaradas/' ~ bibliografia.id : app_url ~ 'bibliografias-declaradas' }}" id="bibliografiaForm">
-                {% if isEdit %}
-                    <input type="hidden" name="_METHOD" value="PUT">
+            <form id="bibliografiaForm" method="POST" 
+                  action="{% if bibliografia.id %}{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}{% else %}{{ app_url }}bibliografias-declaradas{% endif %}">
+                {% if bibliografia.id %}
+                    <input type="hidden" name="_method" value="PUT">
                 {% endif %}
+                <input type="hidden" name="_token" id="formToken" value="{{ session.form_token|default('') }}">
 
                 <div class="row">
                     <!-- Primera columna -->
@@ -68,6 +70,14 @@
                                 <option value="impreso" {% if bibliografia.formato == 'impreso' %}selected{% endif %}>Impreso</option>
                                 <option value="electronico" {% if bibliografia.formato == 'electronico' %}selected{% endif %}>Electrónico</option>
                                 <option value="ambos" {% if bibliografia.formato == 'ambos' %}selected{% endif %}>Ambos</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="estado" class="form-label">Estado <span class="text-danger">*</span></label>
+                            <select class="form-select" id="estado" name="estado" required>
+                                <option value="1" {% if not bibliografia.id or bibliografia.estado == 1 %}selected{% endif %}>Activo</option>
+                                <option value="0" {% if bibliografia.id and bibliografia.estado == 0 %}selected{% endif %}>Inactivo</option>
                             </select>
                         </div>
 
@@ -208,8 +218,11 @@
                                     <label class="form-label">Autores Disponibles</label>
                                 </div>
                                 <select class="form-select" id="autoresDisponibles" multiple size="10" style="height: auto;">
-                        {% for autor in autores %}
-                                        <option value="{{ autor.id }}" data-apellidos="{{ autor.apellidos }}" data-nombres="{{ autor.nombres }}" data-genero="{{ autor.genero }}">
+                                    {% for autor in autores %}
+                                        <option value="{{ autor.id }}" 
+                                                data-apellidos="{{ autor.apellidos }}" 
+                                                data-nombres="{{ autor.nombres }}" 
+                                                data-genero="{{ autor.genero }}">
                                             {{ autor.apellidos }}, {{ autor.nombres }}
                                         </option>
                                     {% endfor %}
@@ -234,18 +247,21 @@
                                 </div>
                                 <div class="card-body">
                                     <div id="autoresSeleccionados" class="list-group">
-                                        {% for autor in autoresSeleccionados %}
-                                            <div class="list-group-item d-flex justify-content-between align-items-center" data-autor-id="{{ autor.id }}">
-                                                <div>
-                                                    <strong>{{ autor.apellidos }}, {{ autor.nombres }}</strong>
-                                                    <br>
-                                                    <small class="text-muted">{{ autor.genero }}</small>
+                                        {% if bibliografia.autores is defined %}
+                                            {% for autor in bibliografia.autores %}
+                                                <div class="list-group-item d-flex justify-content-between align-items-center" data-autor-id="{{ autor.id }}">
+                                                    <div>
+                                                        <span class="autor-apellidos">{{ autor.apellidos }}</span>, 
+                                                        <span class="autor-nombres">{{ autor.nombres }}</span>
+                                                        <br>
+                                                        <small class="text-muted autor-genero">{{ autor.genero }}</small>
+                                                    </div>
+                                                    <button type="button" class="btn btn-sm btn-danger" onclick="eliminarAutor('{{ autor.id }}')">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
                                                 </div>
-                                                <button type="button" class="btn btn-sm btn-danger" onclick="eliminarAutor('{{ autor.id }}')">
-                                                    <i class="fas fa-times"></i>
-                                                </button>
-                            </div>
-                        {% endfor %}
+                                            {% endfor %}
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
@@ -272,21 +288,22 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
-                <form id="nuevoAutorForm" onsubmit="return false;">
+                <form id="nuevoAutorForm" class="needs-validation" novalidate>
                     <div class="mb-3">
-                        <label for="apellidos" class="form-label">Apellidos</label>
+                        <label for="apellidos" class="form-label">Apellidos <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="apellidos" name="apellidos" required>
                     </div>
                     <div class="mb-3">
-                        <label for="nombres" class="form-label">Nombres</label>
+                        <label for="nombres" class="form-label">Nombres <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="nombres" name="nombres" required>
                     </div>
                     <div class="mb-3">
-                        <label for="genero" class="form-label">Género</label>
+                        <label for="genero" class="form-label">Género <span class="text-danger">*</span></label>
                         <select class="form-select" id="genero" name="genero" required>
                             <option value="">Seleccione un género</option>
                             <option value="masculino">Masculino</option>
                             <option value="femenino">Femenino</option>
+                            <option value="otro">Otro</option>
                         </select>
                     </div>
                 </form>
@@ -300,12 +317,41 @@
 </div>
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+// Variables globales
+let isFormSubmitting = false;
+let tempAutorId = 1;
+
 document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('bibliografiaForm');
+    const autoresDisponibles = document.getElementById('autoresDisponibles');
+    const autoresSeleccionados = document.getElementById('autoresSeleccionados');
+    const agregarAutorSeleccionado = document.getElementById('agregarAutorSeleccionado');
     const tipoSelect = document.getElementById('tipo');
     const camposEspecificos = document.getElementById('camposEspecificos');
     const tipoCampos = document.querySelectorAll('.tipo-campo');
-    
+    const editorialSelect = document.getElementById('editorial');
+    const nuevaEditorialContainer = document.getElementById('nuevaEditorialContainer');
+    const tituloRevistaSelect = document.getElementById('titulo_revista');
+    const nuevaRevistaContainer = document.getElementById('nuevaRevistaContainer');
+    let autoresSeleccionadosList = new Set();
+    let submitButton = form.querySelector('button[type="submit"]');
+
+    // Inicializar autores existentes
+    document.querySelectorAll('#autoresSeleccionados .list-group-item').forEach(item => {
+        const autorId = item.getAttribute('data-autor-id');
+        if (autorId) {
+            autoresSeleccionadosList.add(autorId);
+            // Desmarcar el autor en el select de disponibles
+            const option = autoresDisponibles.querySelector(`option[value="${autorId}"]`);
+            if (option) {
+                option.selected = false;
+            }
+        }
+    });
+
+    // Función para mostrar campos específicos según el tipo
     function mostrarCamposEspecificos() {
         // Ocultar todos los campos específicos
         tipoCampos.forEach(campo => {
@@ -314,8 +360,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Mostrar los campos correspondientes al tipo seleccionado
         const tipoSeleccionado = tipoSelect.value;
-        console.log('Tipo seleccionado:', tipoSeleccionado);
-        
         if (tipoSeleccionado) {
             // Convertir el tipo a formato camelCase para el ID
             const tipoFormateado = tipoSeleccionado.split('_').map((word, index) => {
@@ -323,77 +367,78 @@ document.addEventListener('DOMContentLoaded', function() {
             }).join('');
             
             const camposTipo = document.getElementById('campos' + tipoFormateado.charAt(0).toUpperCase() + tipoFormateado.slice(1));
-            console.log('ID buscado:', 'campos' + tipoFormateado.charAt(0).toUpperCase() + tipoFormateado.slice(1));
-            console.log('Elemento campos:', camposTipo);
-            
             if (camposTipo) {
                 camposTipo.style.display = 'block';
-                console.log('Mostrando campos para:', tipoSeleccionado);
                 
                 // Si es sitio web, asegurarse de que el campo de fecha sea requerido
                 if (tipoSeleccionado === 'sitio_web') {
                     const fechaConsulta = document.getElementById('fecha_consulta');
-                    console.log('Campo fecha_consulta:', fechaConsulta);
                     if (fechaConsulta) {
                         fechaConsulta.required = true;
-                        console.log('Campo fecha_consulta marcado como requerido');
                     }
                 }
             }
         }
     }
-    
+
     // Mostrar campos específicos al cargar la página
     mostrarCamposEspecificos();
     
     // Mostrar campos específicos cuando cambie el tipo
     tipoSelect.addEventListener('change', mostrarCamposEspecificos);
-    
+
     // Manejar la visibilidad de la nueva editorial
-    const editorialSelect = document.getElementById('editorial');
-    const nuevaEditorialContainer = document.getElementById('nuevaEditorialContainer');
-    
     editorialSelect.addEventListener('change', function() {
         nuevaEditorialContainer.style.display = this.value === 'otra' ? 'block' : 'none';
     });
-    
+
     // Manejar la visibilidad de la nueva revista
-    const tituloRevistaSelect = document.getElementById('titulo_revista');
-    const nuevaRevistaContainer = document.getElementById('nuevaRevistaContainer');
-    
     if (tituloRevistaSelect) {
         tituloRevistaSelect.addEventListener('change', function() {
             nuevaRevistaContainer.style.display = this.value === 'otra' ? 'block' : 'none';
         });
     }
 
-    // Manejo de autores
-    const autoresDisponibles = document.getElementById('autoresDisponibles');
-    const autoresSeleccionados = document.getElementById('autoresSeleccionados');
-    const agregarAutorBtn = document.getElementById('agregarAutorSeleccionado');
-    let autoresSeleccionadosList = new Set();
-
     // Función para agregar autor a la lista de seleccionados
     function agregarAutorALista(autor) {
-        // Verificar si el autor ya está en la lista visual
+        // Verificar si el autor ya está en la lista
         const autorExistente = document.querySelector(`#autoresSeleccionados [data-autor-id="${autor.id}"]`);
-        if (autorExistente) return;
+        if (autorExistente) {
+            return; // Si el autor ya existe, no lo agregamos
+        }
 
         const autorElement = document.createElement('div');
         autorElement.className = 'list-group-item d-flex justify-content-between align-items-center';
-        autorElement.dataset.autorId = autor.id;
-        autorElement.innerHTML = `
-            <div>
-                <strong>${autor.apellidos}, ${autor.nombres}</strong>
-                <br>
-                <small class="text-muted">${autor.genero}</small>
-            </div>
-            <button type="button" class="btn btn-sm btn-danger" onclick="eliminarAutor('${autor.id}')">
-                <i class="fas fa-times"></i>
-            </button>
+        autorElement.setAttribute('data-autor-id', autor.id);
+        
+        const autorInfo = document.createElement('div');
+        autorInfo.innerHTML = `
+            <span class="autor-apellidos">${autor.apellidos}</span>, 
+            <span class="autor-nombres">${autor.nombres}</span>
+            <br>
+            <small class="text-muted autor-genero">${autor.genero}</small>
         `;
+        
+        const eliminarBtn = document.createElement('button');
+        eliminarBtn.type = 'button';
+        eliminarBtn.className = 'btn btn-sm btn-danger';
+        eliminarBtn.setAttribute('aria-label', `Eliminar autor ${autor.apellidos}, ${autor.nombres}`);
+        eliminarBtn.innerHTML = '<i class="fas fa-times"></i>';
+        eliminarBtn.onclick = function() {
+            eliminarAutor(autor.id);
+        };
+        
+        autorElement.appendChild(autorInfo);
+        autorElement.appendChild(eliminarBtn);
+        
         autoresSeleccionados.appendChild(autorElement);
         autoresSeleccionadosList.add(autor.id);
+
+        // Desmarcar el autor en el select de disponibles
+        const option = autoresDisponibles.querySelector(`option[value="${autor.id}"]`);
+        if (option) {
+            option.selected = false;
+        }
     }
 
     // Función para eliminar autor de la lista
@@ -405,160 +450,173 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // Agregar autores seleccionados
-    agregarAutorBtn.addEventListener('click', function() {
-        const seleccionados = Array.from(autoresDisponibles.selectedOptions);
-        if (seleccionados.length === 0) return;
-
-        const fragment = document.createDocumentFragment();
-        seleccionados.forEach(option => {
-            if (!option.value) return;
-            
-            const autor = {
-                id: option.value,
-                apellidos: option.dataset.apellidos || '',
-                nombres: option.dataset.nombres || '',
-                genero: option.dataset.genero || ''
-            };
-            
-            if (autor.apellidos && autor.nombres) {
-                agregarAutorALista(autor);
-            }
-        });
-        
-        // Limpiar la selección después de agregar
-        autoresDisponibles.selectedIndex = -1;
-    });
-
-    // Manejo de nuevo autor
+    // Manejar el modal de nuevo autor
+    const nuevoAutorModal = document.getElementById('nuevoAutorModal');
     const nuevoAutorForm = document.getElementById('nuevoAutorForm');
     const guardarAutorBtn = document.getElementById('guardarAutor');
-    const apellidosInput = document.getElementById('apellidos');
-    const nombresInput = document.getElementById('nombres');
-    const generoSelect = document.getElementById('genero');
-    const nuevoAutorModal = document.getElementById('nuevoAutorModal');
-    
+
     guardarAutorBtn.addEventListener('click', function() {
-        // Validar el formulario
         if (!nuevoAutorForm.checkValidity()) {
             nuevoAutorForm.reportValidity();
             return;
         }
 
-        const apellidos = apellidosInput.value.trim();
-        const nombres = nombresInput.value.trim();
-        const genero = generoSelect.value;
+        const apellidos = document.getElementById('apellidos').value;
+        const nombres = document.getElementById('nombres').value;
+        const genero = document.getElementById('genero').value;
 
-        if (!apellidos || !nombres || !genero) {
-            return;
-        }
+        // Crear un ID temporal para el nuevo autor
+        const id = `temp_${tempAutorId++}`;
 
-        const autorId = 'temp_' + Date.now();
-        
-        // Verificar si el autor ya existe
-        const autorExistente = document.querySelector(`#autoresSeleccionados [data-autor-id="${autorId}"]`);
-        if (autorExistente) {
-            return;
-        }
-
+        // Agregar el autor a la lista de seleccionados
         const autor = {
-            id: autorId,
+            id: id,
             apellidos: apellidos,
             nombres: nombres,
             genero: genero
         };
-        
+
         agregarAutorALista(autor);
-        
-        // Limpiar el formulario antes de cerrar el modal
+
+        // Limpiar y cerrar el modal
         nuevoAutorForm.reset();
-        
-        // Cerrar el modal usando el API de Bootstrap
         const modal = bootstrap.Modal.getInstance(nuevoAutorModal);
         if (modal) {
             modal.hide();
         }
     });
 
-    // Modificar el envío del formulario
-    document.getElementById('bibliografiaForm').addEventListener('submit', function(e) {
-        e.preventDefault();
+    // Función para manejar el envío del formulario
+    async function handleSubmit(event) {
+        event.preventDefault();
         
-        const formData = new FormData(this);
-        
-        // Obtener los autores seleccionados
-        const autores = Array.from(autoresSeleccionados.children)
-            .filter(element => element.dataset.autorId)
-            .map(element => {
-                const id = element.dataset.autorId;
-                const [apellidos, nombres] = element.querySelector('strong').textContent.split(', ');
-                const genero = element.querySelector('small').textContent;
-                return { id, apellidos, nombres, genero };
+        if (isFormSubmitting) {
+            console.log('Formulario ya está siendo enviado');
+            return;
+        }
+
+        if (!form.checkValidity()) {
+            event.stopPropagation();
+            form.classList.add('was-validated');
+            return;
+        }
+
+        isFormSubmitting = true;
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+        try {
+            const formData = new FormData(form);
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = value;
             });
-        
-        // Agregar los autores al formData
-        formData.append('autores', JSON.stringify(autores));
-        
-        // Enviar el formulario
-        fetch(this.action, {
-            method: this.method,
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            credentials: 'same-origin'
-        })
-        .then(async response => {
-            const contentType = response.headers.get('content-type');
-            console.log('Content-Type:', contentType);
-            
-            // Obtener el texto de la respuesta para debug
-            const text = await response.text();
-            console.log('Respuesta del servidor:', text);
-            
-            if (contentType && contentType.includes('application/json')) {
+
+            // Obtener todos los autores seleccionados
+            const autores = Array.from(document.querySelectorAll('#autoresSeleccionados .list-group-item')).map(item => {
                 try {
-                    return JSON.parse(text);
-                } catch (e) {
-                    console.error('Error al parsear JSON:', e);
-                    throw new Error('La respuesta no es JSON válido');
+                    const autorId = item.dataset.autorId;
+                    const apellidosElement = item.querySelector('.autor-apellidos');
+                    const nombresElement = item.querySelector('.autor-nombres');
+                    const generoElement = item.querySelector('.autor-genero');
+
+                    if (!apellidosElement || !nombresElement || !generoElement) {
+                        console.error('Elementos de autor no encontrados:', item);
+                        return null;
+                    }
+
+                    const apellidos = apellidosElement.textContent.trim();
+                    const nombres = nombresElement.textContent.trim();
+                    const genero = generoElement.textContent.trim();
+
+                    if (!apellidos || !nombres || !genero) {
+                        console.error('Datos del autor incompletos:', { apellidos, nombres, genero });
+                        return null;
+                    }
+
+                    const isNewAuthor = autorId.startsWith('temp_');
+                    return {
+                        id: isNewAuthor ? null : autorId,
+                        temp_id: isNewAuthor ? autorId : null,
+                        apellidos: apellidos,
+                        nombres: nombres,
+                        genero: genero,
+                        es_nuevo: isNewAuthor
+                    };
+                } catch (error) {
+                    console.error('Error al procesar autor:', error);
+                    return null;
                 }
+            }).filter(autor => autor !== null);
+
+            data.autores = JSON.stringify(autores);
+
+            // Determinar si es una actualización o creación
+            const isUpdate = form.action.includes('/edit') || form.querySelector('input[name="_method"]')?.value === 'PUT';
+            const url = isUpdate ? form.action.replace('/edit', '') : form.action;
+
+            const response = await fetch(url, {
+                method: isUpdate ? 'PUT' : 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-            throw new Error('La respuesta no es JSON válido');
-        })
-        .then(data => {
-            if (data.success) {
-                window.location.href = data.redirect;
+
+            const result = await response.json();
+
+            if (result.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: result.message,
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    window.location.href = result.redirect;
+                });
             } else {
-                if (data.redirect) {
-                    window.location.href = data.redirect;
-                } else {
-                    mostrarError(data.message || 'Error al guardar la bibliografía');
-                }
+                throw new Error(result.message || 'Error al procesar la solicitud');
             }
-        })
-        .catch(error => {
+        } catch (error) {
             console.error('Error:', error);
-            mostrarError('Error al guardar la bibliografía. Por favor, intente nuevamente.');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Ha ocurrido un error al procesar la solicitud. Por favor, intente nuevamente.'
+            });
+        } finally {
+            isFormSubmitting = false;
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fas fa-save"></i> Guardar';
+        }
+    }
+
+    // Remover todos los manejadores de eventos anteriores
+    const oldSubmitHandler = form.onsubmit;
+    form.onsubmit = null;
+    
+    // Agregar el manejador de eventos al formulario
+    form.addEventListener('submit', handleSubmit);
+
+    // Agregar autores seleccionados
+    agregarAutorSeleccionado.addEventListener('click', function() {
+        const opcionesSeleccionadas = Array.from(autoresDisponibles.selectedOptions);
+        opcionesSeleccionadas.forEach(option => {
+            const autor = {
+                id: option.value,
+                apellidos: option.dataset.apellidos,
+                nombres: option.dataset.nombres,
+                genero: option.dataset.genero
+            };
+            agregarAutorALista(autor);
         });
     });
-
-    // Función para mostrar errores
-    function mostrarError(mensaje) {
-        // Eliminar mensajes de error anteriores
-        const erroresAnteriores = document.querySelectorAll('.alert-danger');
-        erroresAnteriores.forEach(error => error.remove());
-
-        // Crear nuevo mensaje de error
-        const alertDiv = document.createElement('div');
-        alertDiv.className = 'alert alert-danger mt-3';
-        alertDiv.textContent = mensaje;
-
-        // Insertar el mensaje al principio del formulario
-        const form = document.getElementById('bibliografiaForm');
-        form.insertBefore(alertDiv, form.firstChild);
-    }
 });
 </script>
 {% endblock %}

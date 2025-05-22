@@ -1,4 +1,3 @@
-
 DROP DATABASE IF EXISTS bibliografia;
 -- Crear la base de datos si no existe
 CREATE DATABASE IF NOT EXISTS bibliografia CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -162,7 +161,7 @@ CREATE TABLE IF NOT EXISTS autores (
 CREATE TABLE IF NOT EXISTS bibliografias_declaradas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     titulo VARCHAR(250) NOT NULL,
-    tipo ENUM('libro', 'articulo', 'tesis', 'software', 'sitio_web', 'otro') NOT NULL,
+    tipo ENUM('libro', 'articulo', 'tesis', 'software', 'sitio_web', 'generico') NOT NULL,
     anio_publicacion INT,
     editorial VARCHAR(250),
     edicion VARCHAR(50),
@@ -273,27 +272,53 @@ CREATE TABLE IF NOT EXISTS asignaturas_bibliografias (
     UNIQUE KEY unique_asignatura_bibliografia (asignatura_id, bibliografia_id)
 ) ENGINE=InnoDB;
 
--- Tabla de bibliografías disponibles
-CREATE TABLE IF NOT EXISTS bibliografias_disponibles (
+-- Eliminar tablas existentes si existen
+DROP TABLE IF EXISTS bibliografias_disponibles_sedes;
+DROP TABLE IF EXISTS bibliografias_disponibles;
+
+-- Crear tabla bibliografias_disponibles
+CREATE TABLE bibliografias_disponibles (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    bibliografia_declarada_id INT NOT NULL,
-    sede_id INT NULL,
+    bibliografia_declarada_id INT,
     titulo VARCHAR(250) NOT NULL,
     anio_edicion INT NOT NULL,
+    editorial VARCHAR(250),
     url_acceso VARCHAR(500),
+    url_catalogo VARCHAR(500),
     disponibilidad ENUM('impreso', 'electronico', 'ambos') NOT NULL,
     id_mms VARCHAR(50) UNIQUE,
-    ejemplares INT NULL COMMENT 'Cantidad de ejemplares físicos por sede',
-    ejemplares_digitales INT NULL COMMENT 'Cantidad de copias digitales (NULL para ilimitadas)',
-    estado TINYINT(1) DEFAULT 1,
+    ejemplares_digitales INT,
+    estado BOOLEAN DEFAULT TRUE,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (bibliografia_declarada_id) REFERENCES bibliografias_declaradas(id) ON DELETE CASCADE,
-    CONSTRAINT chk_disponibilidad_sede CHECK (
-        (disponibilidad = 'electronico' AND sede_id IS NULL) OR
-        (disponibilidad IN ('impreso', 'ambos') AND sede_id IS NOT NULL)
-    )
-) ENGINE=InnoDB;
+    FOREIGN KEY (bibliografia_declarada_id) REFERENCES bibliografias_declaradas(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Crear tabla bibliografias_disponibles_sedes
+CREATE TABLE bibliografias_disponibles_sedes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    bibliografia_disponible_id INT NOT NULL,
+    sede_id INT NOT NULL,
+    ejemplares INT NOT NULL,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (bibliografia_disponible_id) REFERENCES bibliografias_disponibles(id) ON DELETE CASCADE,
+    FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_bibliografia_sede (bibliografia_disponible_id, sede_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabla de relación entre bibliografías disponibles y autores
+CREATE TABLE IF NOT EXISTS `bibliografias_disponibles_autores` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `bibliografia_disponible_id` INT NOT NULL,
+    `autor_id` INT NOT NULL,
+    `fecha_creacion` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `fecha_actualizacion` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY `unique_bibliografia_autor` (`bibliografia_disponible_id`, `autor_id`),
+    KEY `fk_bda_autor` (`autor_id`),
+    CONSTRAINT `fk_bda_bibliografia` FOREIGN KEY (`bibliografia_disponible_id`) REFERENCES `bibliografias_disponibles` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_bda_autor` FOREIGN KEY (`autor_id`) REFERENCES `autores` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Triggers para validación de tipos de asignaturas
 DELIMITER //
@@ -491,30 +516,49 @@ INSERT INTO asignaturas_bibliografias (asignatura_id, bibliografia_id, tipo_bibl
 -- Ejemplo de bibliografías disponibles
 INSERT INTO bibliografias_disponibles (
     bibliografia_declarada_id,
-    sede_id,
     titulo,
     anio_edicion,
+    editorial,
     url_acceso,
+    url_catalogo,
     disponibilidad,
     id_mms,
-    ejemplares,
     ejemplares_digitales
 ) VALUES 
 -- Para "Introducción a la Programación"
-(1, 1, 'Introducción a la Programación - Edición 2020', 2020, NULL, 'impreso', 'MMS001', 5, NULL),
-(1, null, 'Introducción a la Programación - Edición Digital', 2020, 'https://ejemplo.com/libro1', 'electronico', 'MMS002', 1, 1),
+(1, 'Introducción a la Programación - Edición 2020', 2020,'Editorial ABC', NULL, 'https://ucn.primo.exlibrisgroup.com/permalink/56UCN_INST/ia6i7p/alma990000172070107936', 'impreso', 'MMS001', null),
+(1, 'Introducción a la Programación - Edición Digital', 2020, 'Editorial ABC', 'https://ejemplo.com/libro1', NULL, 'electronico', null, 0),
 
 -- Para "Base de Datos Relacionales"
-(2, 1, 'Base de Datos Relacionales - Edición 2019', 2019, NULL, 'impreso', 'MMS003', 3, NULL),
-(2, null, 'Base de Datos Relacionales - Edición Digital', 2019, 'https://ejemplo.com/libro2', 'electronico', 'MMS004', 1, 1),
+(2, 'Base de Datos Relacionales - Edición 2019', 2019, 'Editorial XYZ', null, 'https://ucn.primo.exlibrisgroup.com/permalink/56UCN_INST/ia6i7p/alma990000172070107936', 'impreso', 'MMS003', NULL),
+(2, 'Base de Datos Relacionales - Edición Digital', 2019, 'Editorial XYZ', 'https://ejemplo.com/libro2', NULL, 'electronico', null, 0),
 
 -- Para "Investigación en IA"
-(3, null, 'Investigación en IA - Revista Vol. 5', 2021, 'https://ejemplo.com/articulo1', 'electronico', 'MMS005', 1, NULL),
+(3, 'Investigación en IA - Revista Vol. 5', 2021, 'Revista Científica', null, 'https://ucn.primo.exlibrisgroup.com/permalink/56UCN_INST/ia6i7p/alma990000172070107936', 'impreso', 'MMS004', NULL),
+(3, 'Investigación en IA - Revista Vol. 5', 2021, 'Revista Científica', 'https://ejemplo.com/articulo1', NULL, 'electronico', null, 0),
 
 -- Ejemplares físicos en Sede Norte
-(1, 2, 'Introducción a la Programación - Edición 2020', 2020, NULL, 'impreso', 'MMS006', 3, NULL),
-(2, 2, 'Base de Datos Relacionales - Edición 2019', 2019, NULL, 'impreso', 'MMS007', 2, NULL),
+(1, 'Introducción a la Programación - Edición 2020', 2020, 'Editorial ABC', null, 'https://ucn.primo.exlibrisgroup.com/permalink/56UCN_INST/ia6i7p/alma990000172070107936', 'impreso', 'MMS006', NULL),
+(2, 'Base de Datos Relacionales - Edición 2019', 2019, 'Editorial XYZ', null, 'https://ucn.primo.exlibrisgroup.com/permalink/56UCN_INST/ia6i7p/alma990000172070107936', 'impreso', 'MMS007', NULL),
 
 -- Ejemplares físicos en Sede Sur
-(1, 3, 'Introducción a la Programación - Edición 2020', 2020, NULL, 'impreso', 'MMS008', 4, NULL),
-(2, 3, 'Base de Datos Relacionales - Edición 2019', 2019, NULL, 'impreso', 'MMS009', 3, NULL); 
+(1, 'Introducción a la Programación - Edición 2020', 2020, 'Editorial ABC', null, 'https://ucn.primo.exlibrisgroup.com/permalink/56UCN_INST/ia6i7p/alma990000172070107936', 'impreso', 'MMS008', NULL),
+(2, 'Base de Datos Relacionales - Edición 2019', 2019, 'Editorial XYZ', null, 'https://ucn.primo.exlibrisgroup.com/permalink/56UCN_INST/ia6i7p/alma990000172070107936', 'impreso', 'MMS009', NULL);
+
+-- Insertar datos de ejemplo en bibliografias_disponibles_sedes
+INSERT INTO bibliografias_disponibles_sedes (
+    bibliografia_disponible_id,
+    sede_id,
+    ejemplares
+) VALUES 
+-- Ejemplares en Sede Norte (id: 1)
+(1, 1, 5), -- Introducción a la Programación
+(3, 1, 3), -- Base de Datos Relacionales
+
+-- Ejemplares en Sede Sur (id: 2)
+(1, 2, 3), -- Introducción a la Programación
+(3, 2, 2), -- Base de Datos Relacionales
+
+-- Ejemplares en Sede Este (id: 3)
+(1, 3, 4), -- Introducción a la Programación
+(3, 3, 3); -- Base de Datos Relacionales 

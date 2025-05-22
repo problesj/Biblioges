@@ -3,10 +3,38 @@
 {% block title %}Mallas - Sistema de Bibliografía{% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800">Mallas de Carreras</h1>
+        <a href="{{ app_url }}dashboard" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
     </div>
+
+    {% if swal %}
+    <script>
+        Swal.fire({
+            icon: '{{ swal.icon }}',
+            title: '{{ swal.title }}',
+            text: '{{ swal.text }}',
+            confirmButtonText: 'Aceptar'
+        });
+    </script>
+    {% endif %}
+
+    {% if success %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ success }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    {% if error %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ error }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
 
     <!-- Filtros -->
     <div class="card shadow mb-4">

@@ -506,9 +506,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await response.json();
             
             if (response.ok) {
-                alert('Asignatura creada exitosamente');
                 window.location.href = '";
-        // line 389
+        // line 388
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "asignaturas';
             } else {
@@ -559,7 +558,7 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     public function getDebugInfo(): array
     {
-        return array (  512 => 389,  496 => 376,  335 => 217,  322 => 214,  317 => 213,  313 => 212,  241 => 142,  234 => 141,  188 => 98,  175 => 95,  170 => 94,  166 => 93,  86 => 16,  76 => 9,  71 => 6,  64 => 5,  53 => 3,  42 => 1,);
+        return array (  511 => 388,  496 => 376,  335 => 217,  322 => 214,  317 => 213,  313 => 212,  241 => 142,  234 => 141,  188 => 98,  175 => 95,  170 => 94,  166 => 93,  86 => 16,  76 => 9,  71 => 6,  64 => 5,  53 => 3,  42 => 1,);
     }
 
     public function getSourceContext(): Source

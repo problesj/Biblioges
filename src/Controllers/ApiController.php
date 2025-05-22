@@ -108,57 +108,31 @@ class ApiController
 
     public function getAsignaturasDepartamento($departamentoId)
     {
-        // Verificar autenticación
-        if (!$this->session->get('user_id')) {
-            http_response_code(401);
-            echo json_encode(['error' => 'No autorizado']);
-            exit;
-        }
-
         try {
-            // Log para depuración
-            error_log('Obteniendo asignaturas para departamento ID: ' . $departamentoId);
-
-            // Consulta SQL modificada para obtener asignaturas a través de asignaturas_departamentos
-            $sql = "SELECT DISTINCT a.id, a.nombre, a.tipo, a.periodicidad, a.estado 
+            $sql = "SELECT 
+                        a.*,
+                        GROUP_CONCAT(DISTINCT ad.codigo_asignatura) as codigos
                     FROM asignaturas a
-                    INNER JOIN asignaturas_departamentos ad ON a.id = ad.asignatura_id
-                    WHERE ad.departamento_id = :departamento_id
+                    LEFT JOIN asignaturas_departamentos ad ON a.id = ad.asignatura_id
+                    WHERE a.departamento_id = ?
+                    AND a.tipo IN ('REGULAR', 'FORMACION_ELECTIVA')
+                    GROUP BY a.id, a.nombre, a.tipo, a.periodicidad, a.estado
                     ORDER BY a.nombre";
-            
-            error_log('Preparando consulta SQL: ' . $sql);
-            
+
             $stmt = $this->pdo->prepare($sql);
-            if (!$stmt) {
-                throw new \Exception('Error al preparar la consulta: ' . implode(' ', $this->pdo->errorInfo()));
-            }
-            
-            error_log('Vinculando parámetro departamento_id: ' . $departamentoId);
-            $stmt->bindParam(':departamento_id', $departamentoId, PDO::PARAM_INT);
-            
-            error_log('Ejecutando consulta...');
-            $result = $stmt->execute();
-            if (!$result) {
-                throw new \Exception('Error al ejecutar la consulta: ' . implode(' ', $stmt->errorInfo()));
-            }
-            
+            $stmt->execute([$departamentoId]);
             $asignaturas = $stmt->fetchAll();
-            error_log('Asignaturas encontradas: ' . count($asignaturas));
+
+            // Procesar los códigos de asignaturas
+            foreach ($asignaturas as &$asignatura) {
+                $asignatura['codigos'] = $asignatura['codigos'] ? explode(',', $asignatura['codigos']) : [];
+            }
 
             header('Content-Type: application/json');
             echo json_encode($asignaturas);
         } catch (\Exception $e) {
-            error_log('Error al obtener asignaturas: ' . $e->getMessage());
-            error_log('Stack trace: ' . $e->getTraceAsString());
             http_response_code(500);
-            echo json_encode([
-                'error' => 'Error al obtener las asignaturas: ' . $e->getMessage(),
-                'details' => [
-                    'sql' => $sql ?? null,
-                    'departamento_id' => $departamentoId,
-                    'trace' => $e->getTraceAsString()
-                ]
-            ]);
+            echo json_encode(['error' => $e->getMessage()]);
         }
     }
 

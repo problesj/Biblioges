@@ -385,7 +385,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await response.json();
             
             if (response.ok) {
-                alert('Asignatura creada exitosamente');
                 window.location.href = '{{ app_url }}asignaturas';
             } else {
                 if (result.errors) {

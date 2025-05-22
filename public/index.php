@@ -106,6 +106,9 @@ $twig = new \Twig\Environment($loader, [
     'debug' => true
 ]);
 
+// Inicializar el router
+$router = new \App\Core\Router();
+
 // Añadir la extensión de debug
 $twig->addExtension(new \Twig\Extension\DebugExtension());
 
@@ -613,83 +616,140 @@ if (preg_match('/^api\/asignaturas\/(\d+)\/vinculadas$/', $path, $matches) && $_
     exit;
 }
 
-// Rutas para bibliografías declaradas
-if (strpos($path, 'bibliografias-declaradas') === 0) {
+// Rutas para Bibliografías Declaradas
+if ($path === 'bibliografias-declaradas' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $controller = new \App\Controllers\BibliografiaDeclaradaController();
-    
-    // Ruta base: /bibliografias-declaradas
-    if ($path === 'bibliografias-declaradas') {
-        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $controller->index();
-        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $controller->store();
-        }
         exit;
     }
 
-    // Ruta para crear: /bibliografias-declaradas/create
-    if ($path === 'bibliografias-declaradas/create') {
+if ($path === 'bibliografias-declaradas/create' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    $controller = new \App\Controllers\BibliografiaDeclaradaController();
         $controller->create();
         exit;
     }
 
-    // Ruta para vincular: /bibliografias-declaradas/{id}/vincular
-    if (preg_match('/^bibliografias-declaradas\/(\d+)\/vincular$/', $path, $matches)) {
-        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-            $controller->vincular($matches[1]);
-        }
+// Ruta para store (crear nueva bibliografía)
+if ($path === 'bibliografias-declaradas' && $_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['_method'])) {
+    $controller = new \App\Controllers\BibliografiaDeclaradaController();
+    $controller->store();
         exit;
     }
 
-    // Ruta para vincular múltiples: /bibliografias-declaradas/{id}/vincularMultiple
-    if (preg_match('/^bibliografias-declaradas\/(\d+)\/vincularMultiple$/', $path, $matches)) {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $controller->vincularMultiple($matches[1]);
-        }
-        exit;
-    }
-
-    // Ruta para desvincular múltiples: /bibliografias-declaradas/{id}/desvincularMultiple
-    if (preg_match('/^bibliografias-declaradas\/(\d+)\/desvincularMultiple$/', $path, $matches)) {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $controller->desvincularMultiple($matches[1]);
-        }
-        exit;
-    }
-
-    // Ruta para editar: /bibliografias-declaradas/{id}/edit
-    if (preg_match('/^bibliografias-declaradas\/(\d+)\/edit$/', $path, $matches)) {
-        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-            $controller->edit($matches[1]);
-        }
-        exit;
-    }
-
-    // Ruta para actualizar: /bibliografias-declaradas/{id}/update
-    if (preg_match('/^bibliografias-declaradas\/(\d+)\/update$/', $path, $matches)) {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $controller->update($matches[1]);
-        }
-        exit;
-    }
-
-    // Ruta para eliminar: /bibliografias-declaradas/{id}/delete
-    if (preg_match('/^bibliografias-declaradas\/(\d+)\/delete$/', $path, $matches)) {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $controller->destroy($matches[1]);
-        }
-        exit;
-    }
-
-    // Ruta para ver detalles: /bibliografias-declaradas/{id}
+// Ruta para update (actualizar bibliografía existente)
     if (preg_match('/^bibliografias-declaradas\/(\d+)$/', $path, $matches)) {
-        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $controller = new \App\Controllers\BibliografiaDeclaradaController();
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'PUT' || 
+        ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['_method']) && strtoupper($_POST['_method']) === 'PUT')) {
+            $controller->update($matches[1]);
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $controller->show($matches[1]);
+    } elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE' || 
+              ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['_method']) && strtoupper($_POST['_method']) === 'DELETE')) {
+        $controller->destroy($matches[1]);
         }
+        exit;
+    }
+
+if (preg_match('/^bibliografias-declaradas\/(\d+)\/edit$/', $path, $matches) && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    $controller = new \App\Controllers\BibliografiaDeclaradaController();
+    $controller->edit($matches[1]);
+    exit;
+}
+
+// Ruta para vincular asignaturas
+if (preg_match('/^bibliografias-declaradas\/(\d+)\/vincular$/', $path, $matches)) {
+    $controller = new \App\Controllers\BibliografiaDeclaradaController();
+    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+        $controller->vincular($matches[1]);
+    } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->vincularMultiple($matches[1]);
+    }
+    exit;
+}
+
+// Ruta para vincular una asignatura individual
+if (preg_match('/^bibliografias-declaradas\/(\d+)\/vincularSingle$/', $path, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $controller = new \App\Controllers\BibliografiaDeclaradaController();
+    $controller->vincularSingle($matches[1]);
+    exit;
+}
+
+// Ruta para desvincular múltiples asignaturas
+if (preg_match('/^bibliografias-declaradas\/(\d+)\/desvincularMultiple$/', $path, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $controller = new \App\Controllers\BibliografiaDeclaradaController();
+    $controller->desvincularMultiple($matches[1]);
+    exit;
+}
+
+// Verificar si la ruta es para bibliografías disponibles
+if (strpos($path, 'bibliografias-disponibles') === 0) {
+    $request = ServerRequestFactory::createFromGlobals();
+    $response = new Response();
+    $controller = new \src\Controllers\BibliografiaDisponibleController($twig, $response);
+    
+    // Listar bibliografías disponibles
+    if ($path === 'bibliografias-disponibles' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+        $controller->index($request, $response);
+        exit;
+    }
+    
+    // Mostrar formulario de creación
+    if ($path === 'bibliografias-disponibles/create' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+        $controller->create($request, $response);
+        exit;
+    }
+    
+    // Almacenar nueva bibliografía disponible
+    if ($path === 'bibliografias-disponibles' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->store($request, $response);
+        exit;
+    }
+    
+    // Mostrar formulario de edición
+    if (preg_match('/^bibliografias-disponibles\/(\d+)\/edit$/', $path, $matches)) {
+        $controller->edit($request, $response, ['id' => $matches[1]]);
+        exit;
+    }
+    
+    // Mostrar detalles de una bibliografía disponible
+    if (preg_match('/^bibliografias-disponibles\/(\d+)$/', $path, $matches) && $_SERVER['REQUEST_METHOD'] === 'GET') {
+        $controller->show($request, $response, ['id' => $matches[1]]);
+        exit;
+    }
+    
+    // Actualizar bibliografía disponible
+    if (preg_match('/^bibliografias-disponibles\/(\d+)$/', $path, $matches) && 
+        ($_SERVER['REQUEST_METHOD'] === 'PUT' || 
+         ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['_method']) && strtoupper($_POST['_method']) === 'PUT'))) {
+        $controller->update($request, $response, ['id' => $matches[1]]);
+        exit;
+    }
+    
+    // Eliminar bibliografía disponible
+    if (preg_match('/^bibliografias-disponibles\/(\d+)$/', $path, $matches) && 
+        ($_SERVER['REQUEST_METHOD'] === 'DELETE' || 
+         ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['_method']) && $_POST['_method'] === 'DELETE'))) {
+        $controller->destroy($request, $response, ['id' => $matches[1]]);
+        exit;
+    }
+    
+    // Vincular bibliografía disponible
+    if (preg_match('/^bibliografias-disponibles\/(\d+)\/vincular$/', $path, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->vincularBibliografiaDisponible($request, $response, ['id' => $matches[1]]);
         exit;
     }
 }
 
+// Configurar rutas
+$router->post('clear-session-messages', 'SessionController@clearMessages');
+
+// Intentar despachar la ruta
+$result = $router->dispatch($_SERVER['REQUEST_METHOD'], $path);
+
+// Si no se encontró la ruta, continuar con el enrutamiento manual
+if ($result === false) {
 // Dividir la ruta en segmentos para el enrutamiento
 $pathSegments = explode('/', $path);
 
@@ -718,26 +778,6 @@ switch ($pathSegments[0]) {
     case 'admin':
         $controller = new \App\Controllers\AdminController();
         $controller->index();
-        break;
-    case 'bibliografias-declaradas':
-        $controller = new \App\Controllers\BibliografiaDeclaradaController();
-        if (isset($pathSegments[1])) {
-            if ($pathSegments[1] === 'create') {
-                $controller->create();
-            } else if ($pathSegments[1] === 'store') {
-                $controller->store();
-            } else if (is_numeric($pathSegments[1])) {
-                if (isset($pathSegments[2]) && $pathSegments[2] === 'edit') {
-                    $controller->edit($pathSegments[1]);
-                } else if (isset($pathSegments[2]) && $pathSegments[2] === 'update') {
-                    $controller->update($pathSegments[1]);
-                } else if (isset($pathSegments[2]) && $pathSegments[2] === 'delete') {
-                    $controller->destroy($pathSegments[1]);
-                }
-            }
-        } else {
-            $controller->index();
-        }
         break;
     case 'carreras':
         $controller = new \App\Controllers\CarreraController();
@@ -809,6 +849,7 @@ switch ($pathSegments[0]) {
         http_response_code(404);
         echo $twig->render('404.twig', ['app_url' => $baseUrl]);
         break;
+    }
 }
 
 // Configuración de la base de datos

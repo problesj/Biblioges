@@ -3,6 +3,8 @@
 namespace src\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class BibliografiaDisponible extends Model
 {
@@ -20,9 +22,13 @@ class BibliografiaDisponible extends Model
      */
     protected $fillable = [
         'bibliografia_declarada_id',
-        'tipo_disponibilidad',
-        'sede_id',
-        'ejemplares',
+        'titulo',
+        'editorial',
+        'anio_edicion',
+        'url_acceso',
+        'url_catalogo',
+        'disponibilidad',
+        'id_mms',
         'ejemplares_digitales',
         'estado'
     ];
@@ -34,67 +40,81 @@ class BibliografiaDisponible extends Model
      */
     protected $casts = [
         'estado' => 'boolean',
-        'ejemplares' => 'integer',
-        'ejemplares_digitales' => 'integer'
+        'ejemplares_digitales' => 'integer',
+        'anio_edicion' => 'integer'
     ];
 
     /**
-     * Obtener la bibliografía declarada asociada.
+     * Relación con la bibliografía declarada
      */
-    public function bibliografiaDeclarada()
+    public function bibliografiaDeclarada(): BelongsTo
     {
-        return $this->belongsTo(BibliografiaDeclarada::class);
+        return $this->belongsTo(BibliografiaDeclarada::class, 'bibliografia_declarada_id');
     }
 
     /**
-     * Obtener la sede donde está disponible.
+     * Relación con las sedes y sus ejemplares
      */
-    public function sede()
+    public function sedes(): BelongsToMany
     {
-        return $this->belongsTo(Sede::class);
+        return $this->belongsToMany(Sede::class, 'bibliografias_disponibles_sedes')
+            ->withPivot('ejemplares')
+            ->withTimestamps('fecha_creacion', 'fecha_actualizacion');
     }
 
     /**
-     * Valida si la sede es requerida según el tipo de disponibilidad
+     * Obtiene los autores de la bibliografía.
      */
-    public static function validarSedeRequerida($data)
+    public function autores(): BelongsToMany
     {
-        if (in_array($data['tipo_disponibilidad'], ['impreso', 'ambos'])) {
-            return !empty($data['sede_id']);
+        return $this->belongsToMany(Autor::class, 'bibliografias_disponibles_autores')
+            ->withTimestamps('fecha_creacion', 'fecha_actualizacion');
+    }
+
+    /**
+     * Validar que los campos requeridos estén presentes según el tipo de disponibilidad
+     */
+    public function validateDisponibilidad(): bool
+    {
+        switch ($this->disponibilidad) {
+            case 'electronico':
+                return !empty($this->titulo) && 
+                       !empty($this->anio_edicion) && 
+                       !empty($this->url_acceso);
+
+            case 'impreso':
+                return !empty($this->titulo) && 
+                       !empty($this->anio_edicion) && 
+                       !empty($this->url_catalogo) && 
+                       !empty($this->id_mms) &&
+                       $this->sedes()->count() > 0;
+
+            case 'ambos':
+                return !empty($this->titulo) && 
+                       !empty($this->anio_edicion) && 
+                       !empty($this->url_acceso) && 
+                       !empty($this->url_catalogo) && 
+                       !empty($this->id_mms) &&
+                       $this->sedes()->count() > 0;
+
+            default:
+                return false;
         }
-        return true;
     }
 
     /**
-     * Valida si la sede debe ser nula para bibliografías electrónicas
+     * Obtener el total de ejemplares impresos
      */
-    public static function validarSedeNula($data)
+    public function getTotalEjemplaresImpresos(): int
     {
-        if ($data['tipo_disponibilidad'] === 'electronico') {
-            return empty($data['sede_id']);
-        }
-        return true;
+        return $this->sedes()->sum('ejemplares');
     }
 
     /**
-     * Valida si los ejemplares físicos son requeridos
+     * Verificar si tiene ejemplares digitales ilimitados
      */
-    public static function validarEjemplaresRequeridos($data)
+    public function tieneEjemplaresDigitalesIlimitados(): bool
     {
-        if (in_array($data['tipo_disponibilidad'], ['impreso', 'ambos'])) {
-            return isset($data['ejemplares']) && $data['ejemplares'] >= 0;
-        }
-        return true;
-    }
-
-    /**
-     * Valida si los ejemplares digitales son requeridos
-     */
-    public static function validarEjemplaresDigitalesRequeridos($data)
-    {
-        if (in_array($data['tipo_disponibilidad'], ['electronico', 'ambos'])) {
-            return isset($data['ejemplares_digitales']) && $data['ejemplares_digitales'] >= 0;
-        }
-        return true;
+        return $this->ejemplares_digitales === 0;
     }
 } 
