@@ -13,5 +13,8 @@ return [
         'secure' => false,
         'httponly' => true,
         'samesite' => 'Lax'
-    ]
+    ],
+    'primo_api_key' => 'l8xx97a02ce2328f496bb59a58bee79148dd',
+    'primo_inst' => '56UCN_INST',
+    'primo_vid' => '56UCN_INST:UCN'
 ]; 

@@ -10,8 +10,8 @@ use App\Core\Config;
 use src\Models\BibliografiaDeclarada;
 use src\Models\Autor;
 use src\Models\Asignatura;
-use App\Core\Request;
-use App\Core\Response;
+use App\Core\Request as AppRequest;
+use App\Core\Response as AppResponse;
 use Illuminate\Support\Facades\DB;
 use src\Models\Libro;
 use src\Models\Tesis;
@@ -20,6 +20,9 @@ use src\Models\Generico;
 use src\Models\SitioWeb;
 use src\Models\Software;
 use src\Models\Carrera;
+use Slim\Psr7\Request;
+use Slim\Psr7\Response;
+use Slim\Psr7\Request as SlimRequest;
 
 class BibliografiaDeclaradaController
 {
@@ -46,8 +49,14 @@ class BibliografiaDeclaradaController
             $this->pdo = new PDO($dsn, $dbConfig['user'], $dbConfig['password'], [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
+                PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci",
+                PDO::ATTR_EMULATE_PREPARES => false
             ]);
+            
+            // Establecer la codificación de la conexión
+            $this->pdo->exec("SET CHARACTER SET utf8mb4");
+            $this->pdo->exec("SET NAMES utf8mb4");
+            $this->pdo->exec("SET collation_connection = 'utf8mb4_unicode_ci'");
         } catch (PDOException $e) {
             die("Error de conexión: " . $e->getMessage());
         }
@@ -1522,8 +1531,8 @@ class BibliografiaDeclaradaController
     protected function render(Response $response = null, string $template, array $data = []): Response
     {
         try {
-            error_log('Renderizando plantilla: ' . $template);
-            error_log('Datos pasados a la plantilla: ' . print_r($data, true));
+            custom_error_log('Renderizando plantilla: ' . $template);
+            custom_error_log('Datos pasados a la plantilla: ' . print_r(sanitize_for_log($data), true));
             
             // Crear una nueva respuesta si no se proporciona una
             if (!$response) {
@@ -1534,10 +1543,13 @@ class BibliografiaDeclaradaController
         $data['app_url'] = Config::get('app_url');
         $data['session'] = $_SESSION;
         $data['current_page'] = 'bibliografias-declaradas';
+            
+            // Asegurar que todos los datos estén en UTF-8
+            $data = sanitize_for_log($data);
         
         // Renderizar la plantilla
         $content = $this->twig->render($template, $data);
-            error_log('Plantilla renderizada correctamente');
+            custom_error_log('Plantilla renderizada correctamente');
         
         // Establecer el contenido en la respuesta
         header('Content-Type: text/html; charset=utf-8');
@@ -1545,16 +1557,17 @@ class BibliografiaDeclaradaController
         
         return $response;
         } catch (\Exception $e) {
-            error_log('Error al renderizar la plantilla: ' . $e->getMessage());
-            error_log('Stack trace: ' . $e->getTraceAsString());
+            custom_error_log('Error al renderizar la plantilla: ' . $e->getMessage());
+            custom_error_log('Stack trace: ' . $e->getTraceAsString());
             throw $e;
         }
     }
 
-    protected function jsonResponse($data)
+    private function jsonResponse($data): Response
     {
-        error_log("=== INICIO JSON RESPONSE ===");
-        error_log("Datos a enviar: " . print_r($data, true));
+        try {
+            error_log('=== INICIO JSON RESPONSE ===');
+            error_log('Datos a enviar: ' . print_r($data, true));
         
         // Limpiar cualquier salida anterior
         while (ob_get_level()) {
@@ -1564,7 +1577,7 @@ class BibliografiaDeclaradaController
         // Asegurar que no haya salida antes de los headers
         if (headers_sent($file, $line)) {
             error_log("Headers ya enviados en $file:$line");
-            return;
+                throw new \Exception("Headers ya enviados en $file:$line");
         }
         
         // Establecer headers
@@ -1585,19 +1598,30 @@ class BibliografiaDeclaradaController
         $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         
         if ($json === false) {
-            error_log("Error al codificar JSON: " . json_last_error_msg());
-            $json = json_encode([
+                error_log('Error al codificar JSON: ' . json_last_error_msg());
+                throw new \Exception('Error al codificar JSON: ' . json_last_error_msg());
+            }
+            
+            error_log('JSON a enviar: ' . $json);
+            error_log('=== FIN JSON RESPONSE ===');
+            
+            // Enviar la respuesta
+            echo $json;
+            exit;
+            
+        } catch (\Exception $e) {
+            error_log('Error en jsonResponse: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            
+            $errorResponse = [
                 'success' => false,
-                'message' => 'Error al procesar la respuesta: ' . json_last_error_msg()
-            ]);
+                'message' => 'Error interno del servidor: ' . $e->getMessage()
+            ];
+            
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode($errorResponse);
+            exit;
         }
-        
-        error_log("JSON a enviar: " . $json);
-        
-        // Enviar la respuesta
-        echo $json;
-        error_log("=== FIN JSON RESPONSE ===");
-        exit;
     }
 
     /**
@@ -1653,6 +1677,802 @@ class BibliografiaDeclaradaController
         } catch (\Exception $e) {
             error_log('Error al obtener autores: ' . $e->getMessage());
             return [];
+        }
+    }
+
+    public function vincularStore(Request $request, Response $response, array $args): Response
+    {
+        // ... existing code ...
+    }
+
+    public function buscarCatalogo(Request $request, Response $response, array $args): Response
+    {
+        try {
+            // Verificar autenticación
+            if (!$this->session->get('user_id')) {
+                $_SESSION['error'] = 'Por favor inicie sesión para acceder a las bibliografías';
+                header('Location: ' . Config::get('app_url') . 'login');
+        exit;
+            }
+
+            // Obtener la bibliografía base con sus autores
+            $stmt = $this->pdo->prepare("
+                SELECT b.*, 
+                       GROUP_CONCAT(DISTINCT CONCAT(a.apellidos, ', ', a.nombres) SEPARATOR '; ') as autores
+                FROM bibliografias_declaradas b
+                LEFT JOIN bibliografias_autores ba ON b.id = ba.bibliografia_id
+                LEFT JOIN autores a ON ba.autor_id = a.id
+                WHERE b.id = ?
+                GROUP BY b.id
+            ");
+            $stmt->execute([$args['id']]);
+            $bibliografia = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$bibliografia) {
+                throw new \Exception('Bibliografía no encontrada');
+            }
+
+            // Obtener datos específicos según el tipo
+            switch ($bibliografia['tipo']) {
+                case 'libro':
+                    $stmt = $this->pdo->prepare("SELECT isbn FROM libros WHERE bibliografia_id = ?");
+                    $stmt->execute([$args['id']]);
+                    $datosEspecificos = $stmt->fetch(PDO::FETCH_ASSOC);
+                    if ($datosEspecificos) {
+                        $bibliografia = array_merge($bibliografia, $datosEspecificos);
+                    }
+                    break;
+
+                case 'articulo':
+                    $stmt = $this->pdo->prepare("SELECT issn, titulo_revista, cronologia FROM articulos WHERE bibliografia_id = ?");
+                    $stmt->execute([$args['id']]);
+                    $datosEspecificos = $stmt->fetch(PDO::FETCH_ASSOC);
+                    if ($datosEspecificos) {
+                        $bibliografia = array_merge($bibliografia, $datosEspecificos);
+                    }
+                    break;
+
+                case 'tesis':
+                    $stmt = $this->pdo->prepare("
+                        SELECT t.carrera_id, c.nombre as carrera_nombre 
+                        FROM tesis t 
+                        LEFT JOIN carreras c ON t.carrera_id = c.id 
+                        WHERE t.bibliografia_id = ?
+                    ");
+                    $stmt->execute([$args['id']]);
+                    $datosEspecificos = $stmt->fetch(PDO::FETCH_ASSOC);
+                    if ($datosEspecificos) {
+                        $bibliografia = array_merge($bibliografia, $datosEspecificos);
+                    }
+                    break;
+
+                case 'sitio_web':
+                    $stmt = $this->pdo->prepare("SELECT fecha_consulta FROM sitios_web WHERE bibliografia_id = ?");
+                    $stmt->execute([$args['id']]);
+                    $datosEspecificos = $stmt->fetch(PDO::FETCH_ASSOC);
+                    if ($datosEspecificos) {
+                        $bibliografia = array_merge($bibliografia, $datosEspecificos);
+                    }
+                    break;
+
+                case 'software':
+                    $stmt = $this->pdo->prepare("SELECT version FROM software WHERE bibliografia_id = ?");
+                    $stmt->execute([$args['id']]);
+                    $datosEspecificos = $stmt->fetch(PDO::FETCH_ASSOC);
+                    if ($datosEspecificos) {
+                        $bibliografia = array_merge($bibliografia, $datosEspecificos);
+                    }
+                    break;
+
+                case 'generico':
+                    $stmt = $this->pdo->prepare("SELECT descripcion FROM genericos WHERE bibliografia_id = ?");
+                    $stmt->execute([$args['id']]);
+                    $datosEspecificos = $stmt->fetch(PDO::FETCH_ASSOC);
+                    if ($datosEspecificos) {
+                        $bibliografia = array_merge($bibliografia, $datosEspecificos);
+                    }
+                    break;
+            }
+
+            error_log('Datos de la bibliografía: ' . print_r($bibliografia, true));
+
+            // Renderizar la vista
+            return $this->render($response, 'bibliografias_declaradas/buscar_catalogo.twig', [
+                'bibliografia' => $bibliografia,
+                'app_url' => Config::get('app_url'),
+                'session' => $_SESSION,
+                'current_page' => 'bibliografias-declaradas'
+            ]);
+
+        } catch (\Exception $e) {
+            error_log('Error en buscarCatalogo: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            
+            $_SESSION['error'] = 'Error al cargar la página: ' . $e->getMessage();
+            header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas');
+            exit;
+        }
+    }
+
+    public function vincularCatalogo(Request $request, Response $response, array $args): Response
+    {
+        try {
+            $data = json_decode($request->getBody()->getContents(), true);
+            $bibliografiaDisponibleId = $data['bibliografia_id'] ?? null;
+
+            if (!$bibliografiaDisponibleId) {
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json')
+                    ->write(json_encode(['success' => false, 'message' => 'ID de bibliografía no proporcionado']));
+            }
+
+            // Obtener la bibliografía declarada
+            $stmt = $this->pdo->prepare("SELECT * FROM bibliografias_declaradas WHERE id = ?");
+            $stmt->execute([$args['id']]);
+            $bibliografiaDeclarada = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$bibliografiaDeclarada) {
+                return $response->withStatus(404)->withHeader('Content-Type', 'application/json')
+                    ->write(json_encode(['success' => false, 'message' => 'Bibliografía declarada no encontrada']));
+            }
+
+            // Obtener la bibliografía disponible
+            $stmt = $this->pdo->prepare("SELECT * FROM bibliografias_disponibles WHERE id = ?");
+            $stmt->execute([$bibliografiaDisponibleId]);
+            $bibliografiaDisponible = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$bibliografiaDisponible) {
+                return $response->withStatus(404)->withHeader('Content-Type', 'application/json')
+                    ->write(json_encode(['success' => false, 'message' => 'Bibliografía disponible no encontrada']));
+            }
+
+            // Iniciar transacción
+            $this->pdo->beginTransaction();
+
+            try {
+                // Actualizar la bibliografía declarada con la URL del catálogo
+                $stmt = $this->pdo->prepare("
+                    UPDATE bibliografias_declaradas 
+                    SET url_catalogo = ? 
+                    WHERE id = ?
+                ");
+                $stmt->execute([$bibliografiaDisponible['url_catalogo'], $args['id']]);
+
+                // Crear la vinculación
+                $stmt = $this->pdo->prepare("
+                    INSERT INTO bibliografias_declaradas_disponibles 
+                    (bibliografia_declarada_id, bibliografia_disponible_id) 
+                    VALUES (?, ?)
+                ");
+                $stmt->execute([$args['id'], $bibliografiaDisponibleId]);
+
+                $this->pdo->commit();
+
+                return $response->withHeader('Content-Type', 'application/json')
+                    ->write(json_encode([
+                        'success' => true, 
+                        'message' => 'Bibliografía vinculada exitosamente'
+                    ]));
+            } catch (\Exception $e) {
+                $this->pdo->rollBack();
+                throw $e;
+            }
+        } catch (\Exception $e) {
+            error_log('Error en vincularCatalogo: ' . $e->getMessage());
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json')
+                ->write(json_encode(['success' => false, 'message' => 'Error al vincular la bibliografía']));
+        }
+    }
+
+    // Método para la API de búsqueda en el catálogo
+    public function apiBuscarCatalogo(Request $request, Response $response, array $args): Response
+    {
+        try {
+            // Obtener los datos del cuerpo de la petición
+            $rawData = $request->getBody()->getContents();
+            error_log('Datos raw recibidos: ' . $rawData);
+            
+            $data = json_decode($rawData, true);
+            error_log('Datos decodificados: ' . json_encode($data, JSON_UNESCAPED_UNICODE));
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new \Exception('Error al decodificar los datos JSON: ' . json_last_error_msg());
+            }
+
+            // Procesar y limpiar los campos de búsqueda
+            $titulo = trim($data['titulo'] ?? '');
+            $autor = trim($data['autor'] ?? '');
+            $busquedaAdicional = trim($data['busqueda_adicional'] ?? '');
+            $tipoRecurso = $data['tipo_recurso'] ?? '';
+
+            // Reemplazar espacios por + manteniendo caracteres originales
+            $titulo = str_replace(' ', '+', $titulo);
+            $autor = str_replace(' ', '+', $autor);
+            $busquedaAdicional = str_replace(' ', '+', $busquedaAdicional);
+
+            // Validar que al menos uno de los campos tenga contenido
+            if (empty($titulo) && empty($autor)) {
+                throw new \Exception('Debe ingresar al menos un título o un autor para realizar la búsqueda');
+            }
+
+            // Construir la consulta
+            $query = '';
+
+            if (!empty($titulo)) {
+                $query .= "title,exact," . $titulo;
+            }
+
+            if (!empty($autor)) {
+                if (!empty($query)) {
+                    $query .= ",AND;";
+                }
+                $query .= "creator,contains," . $autor;
+            }
+
+            if (!empty($busquedaAdicional)) {
+                if (!empty($query)) {
+                    $query .= ",AND;";
+                }
+                $query .= "any,contains," . $busquedaAdicional;
+            }
+
+            if (!empty($tipoRecurso)) {
+                $query .= "&qInclude=facet_rtype,exact," . $tipoRecurso;
+            }
+
+            error_log('Query construida: ' . $query);
+            
+            // Construir la URL manualmente para evitar la codificación
+            $url = "https://api-na.hosted.exlibrisgroup.com/primo/v1/search?" .
+                   'vid=56UCN_INST:UCN' .
+                   '&tab=ALL' .
+                   '&inst=56UCN_INST' .
+                   '&scope=MyInst_and_CI' .
+                   '&q=' . $query .
+                   '&mode=advanced' .
+                   '&offset=0' .
+                   '&limit=50' .
+                   '&sort=rank' .
+                   '&pcAvailability=false' .
+                   '&skipDelivery=true' .
+                   '&disableSplitFacets=false' .
+                   '&lang=es' .
+                   '&apikey=l8xx97a02ce2328f496bb59a58bee79148dd';
+
+            error_log('URL de búsqueda: ' . $url);
+
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Accept: application/json',
+                'Content-Type: application/json'
+            ]);
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            
+            if (curl_errno($ch)) {
+                throw new \Exception('Error en la petición cURL: ' . curl_error($ch));
+            }
+            
+            curl_close($ch);
+
+            error_log('Código de respuesta HTTP: ' . $httpCode);
+            error_log('Respuesta del catálogo (primeros 1000 caracteres): ' . substr($response, 0, 1000));
+
+            if ($httpCode !== 200) {
+                throw new \Exception('Error al consultar el catálogo: ' . $httpCode);
+            }
+
+            $data = json_decode($response, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new \Exception('Error al decodificar la respuesta del catálogo: ' . json_last_error_msg());
+            }
+            
+            if (!isset($data['docs']) || !is_array($data['docs'])) {
+                throw new \Exception('La respuesta del catálogo no contiene documentos válidos');
+            }
+            
+            $results = [];
+                foreach ($data['docs'] as $doc) {
+                try {
+                    // Procesar autores
+                    $autores = [];
+                    
+                    // Determinar el origen del registro
+                    $context = $doc['context'] ?? 'L';
+                    $adaptor = $doc['adaptor'] ?? 'Local Search Engine';
+                    
+                    if ($context === 'L' && $adaptor === 'Local Search Engine') {
+                        // Registro local - procesar creatorfull y contributorfull
+                        if (isset($doc['pnx']['addata']['creatorfull']) && is_array($doc['pnx']['addata']['creatorfull'])) {
+                            foreach ($doc['pnx']['addata']['creatorfull'] as $creator) {
+                                $autor = $this->procesarAutorPrimo($creator);
+                                if ($autor) {
+                            $autores[] = $autor;
+                        }
+                    }
+                        }
+                        
+                        if (isset($doc['pnx']['addata']['contributorfull']) && is_array($doc['pnx']['addata']['contributorfull'])) {
+                            foreach ($doc['pnx']['addata']['contributorfull'] as $contributor) {
+                                $autor = $this->procesarAutorPrimo($contributor);
+                                if ($autor) {
+                            $autores[] = $autor;
+                        }
+                    }
+                        }
+                    } else if ($context === 'PC' && $adaptor === 'Primo Central') {
+                        // Registro de Primo Central - procesar addau o au
+                        if (isset($doc['pnx']['addata']['addau']) && is_array($doc['pnx']['addata']['addau'])) {
+                            foreach ($doc['pnx']['addata']['addau'] as $autor) {
+                                if (!empty($autor)) {
+                                    $autores[] = trim($autor);
+                                }
+                            }
+                        }
+                        
+                        if (isset($doc['pnx']['addata']['au']) && is_array($doc['pnx']['addata']['au'])) {
+                            foreach ($doc['pnx']['addata']['au'] as $autor) {
+                                if (!empty($autor)) {
+                                    $autores[] = trim($autor);
+                                }
+                            }
+                        }
+                    }
+
+                    // Construir la URL según el origen del registro
+                    $recordId = $doc['pnx']['control']['recordid'][0] ?? '';
+                    $sourceRecordId = $doc['pnx']['control']['sourcerecordid'][0] ?? '';
+                    $catalogoUrl = '';
+                    
+                    if ($context === 'L' && $adaptor === 'Local Search Engine') {
+                        $catalogoUrl = "https://ucn.primo.exlibrisgroup.com/discovery/fulldisplay?vid=56UCN_INST:UCN&tab=ALL&search_scope=MyInst_and_CI&lang=es&context=L&adaptor=Local+Search+Engine&docid=" . $recordId;
+                    } else if ($context === 'PC' && $adaptor === 'Primo Central') {
+                        $catalogoUrl = "https://ucn.primo.exlibrisgroup.com/discovery/fulldisplay?&context=PC&vid=56UCN_INST:UCN&search_scope=MyInst_and_CI&tab=ALL&lang=es&adaptor=Primo+Central&docid=" . $recordId;
+                    }
+                    
+                    $result = [
+                        'catalogo_id' => $recordId,
+                        'sourcerecordid' => $sourceRecordId,
+                        'titulo' => $doc['pnx']['display']['title'][0] ?? '',
+                        'autores' => implode('; ', array_unique($autores)),
+                        'anio' => $doc['pnx']['display']['creationdate'][0] ?? '',
+                        'editorial' => $doc['pnx']['display']['publisher'][0] ?? '',
+                        'url' => $catalogoUrl,
+                        'context' => $context,
+                        'adaptor' => $adaptor,
+                        'formato' => $doc['pnx']['display']['type'][0] ?? ''
+                    ];
+
+                    $results[] = $result;
+                } catch (\Exception $e) {
+                    error_log('Error procesando documento: ' . $e->getMessage());
+                    continue;
+                }
+            }
+
+            return $this->jsonResponse([
+                'success' => true, 
+                'results' => $results
+            ]);
+
+        } catch (\Exception $e) {
+            error_log('Error en apiBuscarCatalogo: ' . $e->getMessage());
+            return $this->jsonResponse([
+                'success' => false, 
+                'message' => 'Error al buscar en el catálogo: ' . $e->getMessage()
+            ])->withStatus(500);
+        }
+    }
+
+    private function procesarAutorPrimo($autorString) {
+        // Extraer apellidos y nombres usando expresiones regulares
+        if (preg_match('/\$\$L([^\$]+)\$\$F([^\$]+)/', $autorString, $matches)) {
+            $apellidos = trim($matches[1]);
+            $nombres = trim($matches[2]);
+            return $apellidos . ', ' . $nombres;
+        }
+        return null;
+    }
+
+    private function obtenerEjemplares($recordId) {
+        try {
+            // API key específica para holdings y ejemplares
+            $apiKey = 'l8xxf1c969797c9b4dbf9b30f5f36302d8fa';
+            $url = "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/{$recordId}/holdings?apikey={$apiKey}";
+            
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Accept: application/json',
+                'Content-Type: application/json; charset=UTF-8'
+            ]);
+            
+            $result = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($httpCode !== 200) {
+                error_log("Error al obtener holdings. Código HTTP: " . $httpCode);
+                return [];
+            }
+
+            $data = json_decode($result, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                error_log("Error al decodificar respuesta de holdings: " . json_last_error_msg());
+                return [];
+            }
+
+            $ejemplares = [];
+            if (isset($data['holding']) && is_array($data['holding'])) {
+                foreach ($data['holding'] as $holding) {
+                    if (isset($holding['library'])) {
+                        // Obtener la cantidad de ejemplares para este holding
+                        $holdingId = $holding['holding_id'];
+                        $itemsUrl = "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/{$recordId}/holdings/{$holdingId}/items?offset=0&order_by=none&direction=desc&view=brief&apikey={$apiKey}";
+                        
+                        $ch = curl_init();
+                        curl_setopt($ch, CURLOPT_URL, $itemsUrl);
+                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                            'Accept: application/json',
+                            'Content-Type: application/json; charset=UTF-8'
+                        ]);
+
+                        $itemsResult = curl_exec($ch);
+                        $itemsHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                        curl_close($ch);
+
+                        $cantidadEjemplares = 0;
+                        if ($itemsHttpCode === 200) {
+                            $itemsData = json_decode($itemsResult, true);
+                            if (isset($itemsData['item']) && is_array($itemsData['item'])) {
+                                $cantidadEjemplares = count($itemsData['item']);
+                            }
+                        }
+
+                        $ejemplares[] = [
+                            'biblioteca' => $holding['library']['desc'],
+                            'codigo_biblioteca' => $holding['library']['value'],
+                            'ubicacion' => $holding['location']['desc'] ?? '',
+                            'codigo_ubicacion' => $holding['location']['value'] ?? '',
+                            'signatura' => $holding['call_number'] ?? '',
+                            'cantidad_ejemplares' => $cantidadEjemplares
+                        ];
+                    }
+                }
+            }
+
+            return $ejemplares;
+        } catch (\Exception $e) {
+            error_log("Error al obtener ejemplares: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    private function procesarAutor($autor, $context, $adaptor) {
+        error_log('Procesando autor: ' . $autor . ' (Context: ' . $context . ', Adaptor: ' . $adaptor . ')');
+        
+        // Limpiar el nombre del autor
+        $autor = trim($autor);
+        if (empty($autor)) {
+            error_log('Autor vacío, saltando...');
+            return null;
+        }
+        
+        // Extraer apellido y nombre
+        $apellidos = '';
+        $nombres = '';
+        
+        if ($context === 'L' && $adaptor === 'Local Search Engine') {
+            // Para registros locales, extraer del formato $$N
+            if (preg_match('/\$\$N([^$]+)\$\$L([^$]+)\$\$F([^$]+)/', $autor, $matches)) {
+                $apellidos = trim($matches[2]);
+                $nombres = trim($matches[3]);
+            } else {
+                // Si no coincide el formato, intentar separar por coma
+                $partes = explode(',', $autor);
+                if (count($partes) >= 2) {
+                    $apellidos = trim($partes[0]);
+                    $nombres = trim($partes[1]);
+                } else {
+                    $nombres = $autor;
+                }
+            }
+        } else if ($context === 'PC' && $adaptor === 'Primo Central') {
+            // Para registros Primo Central, intentar separar por coma
+            $partes = explode(',', $autor);
+            if (count($partes) >= 2) {
+                $apellidos = trim($partes[0]);
+                $nombres = trim($partes[1]);
+            } else {
+                $nombres = $autor;
+            }
+        } else {
+            // Para otros casos, intentar separar por coma
+            $partes = explode(',', $autor);
+            if (count($partes) >= 2) {
+                $apellidos = trim($partes[0]);
+                $nombres = trim($partes[1]);
+            } else {
+                $nombres = $autor;
+            }
+        }
+        
+        error_log('Autor procesado - Apellidos: ' . $apellidos . ', Nombres: ' . $nombres);
+        
+        // Buscar si el autor ya existe
+        $stmt = $this->pdo->prepare("SELECT id FROM autores WHERE apellidos = ? AND nombres = ?");
+        $stmt->execute([$apellidos, $nombres]);
+        $autorExistente = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($autorExistente) {
+            error_log('Autor encontrado en la base de datos con ID: ' . $autorExistente['id']);
+            return [
+                'id' => $autorExistente['id'],
+                'apellidos' => $apellidos,
+                'nombres' => $nombres
+            ];
+        }
+        
+        // Si no existe, insertar nuevo autor
+        $stmt = $this->pdo->prepare("INSERT INTO autores (apellidos, nombres, genero) VALUES (?, ?, ?)");
+        $stmt->execute([$apellidos, $nombres, 'Otro']);
+        $nuevoId = $this->pdo->lastInsertId();
+        
+        error_log('Nuevo autor insertado con ID: ' . $nuevoId);
+        return [
+            'id' => $nuevoId,
+            'apellidos' => $apellidos,
+            'nombres' => $nombres
+        ];
+    }
+
+    public function guardarBibliografiasSeleccionadas() {
+        try {
+            error_log('Iniciando guardarBibliografiasSeleccionadas');
+            
+            // Obtener datos del POST
+            $json = file_get_contents('php://input');
+            error_log('Datos recibidos: ' . $json);
+            
+            $data = json_decode($json, true);
+            if (!$data || !isset($data['bibliografias'])) {
+                throw new \Exception('Datos inválidos');
+            }
+            
+            $bibliografias = $data['bibliografias'];
+            error_log('Número de bibliografías a procesar: ' . count($bibliografias));
+            
+            // Obtener ID de la bibliografía declarada de la URL
+            $url = $_SERVER['REQUEST_URI'];
+            preg_match('/\/bibliografias-declaradas\/(\d+)\/guardar-seleccionadas/', $url, $matches);
+            $bibliografiaDeclaradaId = $matches[1] ?? null;
+            
+            error_log('URL: ' . $url);
+            error_log('Valor de $bibliografiaDeclaradaId: ' . var_export($bibliografiaDeclaradaId, true));
+            
+            if (!$bibliografiaDeclaradaId) {
+                throw new \Exception('ID de bibliografía declarada no encontrado en la URL');
+            }
+            
+            error_log('Tipo de $this->pdo: ' . (is_object($this->pdo) ? get_class($this->pdo) : gettype($this->pdo)));
+            
+            error_log('Estructura de bibliografías: ' . json_encode($bibliografias, JSON_PRETTY_PRINT));
+            
+            // Verificar conexión a la base de datos
+            if (!$this->pdo) {
+                error_log('Error: No hay conexión a la base de datos');
+                throw new \Exception('Error de conexión a la base de datos');
+            }
+            
+            // Iniciar transacción
+            error_log('Iniciando transacción...');
+            $this->pdo->beginTransaction();
+            error_log('Transacción iniciada correctamente');
+            
+            error_log('Entrando al foreach de bibliografías...');
+            foreach ($bibliografias as $bibliografia) {
+                error_log('Iniciando procesamiento de bibliografía: ' . json_encode($bibliografia));
+                
+                // Obtener ID MMS para registro local
+                $idMms = $bibliografia['catalogo_id'];
+                error_log('ID MMS para registro local: ' . $idMms);
+                
+                // Obtener ejemplares
+                error_log('Llamando a obtenerEjemplares...');
+                $ejemplares = $this->obtenerEjemplares($idMms);
+                error_log('Ejemplares obtenidos: ' . json_encode($ejemplares));
+                
+                // Verificar portafolios
+                $tienePortafolios = false;
+                $portfoliosUrl = "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/{$idMms}/portfolios?limit=10&offset=0&apikey=l8xxf1c969797c9b4dbf9b30f5f36302d8fa";
+                error_log('Consultando portafolios: ' . $portfoliosUrl);
+                $portfoliosResponse = file_get_contents($portfoliosUrl);
+                if ($portfoliosResponse !== false) {
+                    // Convertir XML a array
+                    $xml = simplexml_load_string($portfoliosResponse);
+                    if ($xml !== false) {
+                        $tienePortafolios = isset($xml['total_record_count']) && (int)$xml['total_record_count'] > 0;
+                        error_log('Respuesta portafolios (XML): ' . $portfoliosResponse);
+                        error_log('Tiene portafolios: ' . ($tienePortafolios ? 'Sí' : 'No'));
+                    } else {
+                        error_log('Error al parsear XML de portafolios: ' . libxml_get_last_error()->message);
+                    }
+                }
+                
+                // Verificar representaciones digitales
+                $tieneRepresentaciones = false;
+                $representationsUrl = "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/{$idMms}/representations?limit=10&offset=0&use_updated_terminology=false&apikey=l8xxf1c969797c9b4dbf9b30f5f36302d8fa";
+                error_log('Consultando representaciones: ' . $representationsUrl);
+                $representationsResponse = file_get_contents($representationsUrl);
+                if ($representationsResponse !== false) {
+                    // Convertir XML a array
+                    $xml = simplexml_load_string($representationsResponse);
+                    if ($xml !== false) {
+                        $tieneRepresentaciones = isset($xml['total_record_count']) && (int)$xml['total_record_count'] > 0;
+                        error_log('Respuesta representaciones (XML): ' . $representationsResponse);
+                        error_log('Tiene representaciones: ' . ($tieneRepresentaciones ? 'Sí' : 'No'));
+                    } else {
+                        error_log('Error al parsear XML de representaciones: ' . libxml_get_last_error()->message);
+                    }
+                }
+                
+                // Determinar disponibilidad
+                $disponibilidad = 'impreso';
+                $url_catalogo = $bibliografia['url'];
+                $url_acceso = '';
+                if ($tienePortafolios && $tieneRepresentaciones) {
+                    $disponibilidad = 'ambos';
+                    $url_acceso = $bibliografia['url'];
+                } else if ($tienePortafolios) {
+                    $disponibilidad = 'electronico';
+                    $url_acceso = $bibliografia['url'];
+                }
+                error_log('Disponibilidad determinada: ' . $disponibilidad);
+                
+                // Insertar bibliografía
+                error_log('Preparando inserción de bibliografía...');
+                $stmt = $this->pdo->prepare("
+                    INSERT INTO bibliografias_disponibles (
+                        bibliografia_declarada_id, titulo, anio_edicion, editorial, 
+                        url_catalogo, url_acceso, disponibilidad, id_mms, 
+                        estado
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+                
+                $params = [
+                    $bibliografiaDeclaradaId,
+                    $bibliografia['titulo'],
+                    $bibliografia['anio'],
+                    $bibliografia['editorial'],
+                    $url_catalogo,
+                    $url_acceso,
+                    $disponibilidad,
+                    $idMms,
+                    1
+                ];
+                
+                error_log('Parámetros para insertar bibliografía: ' . json_encode($params));
+                $stmt->execute($params);
+                $bibliografiaId = $this->pdo->lastInsertId();
+                error_log('ID de bibliografía guardada: ' . $bibliografiaId);
+                
+                // Procesar autores
+                if (!empty($bibliografia['autores'])) {
+                    error_log('Procesando autores: ' . $bibliografia['autores']);
+                    $autores = explode(';', $bibliografia['autores']);
+                    foreach ($autores as $autor) {
+                        error_log('Procesando autor individual: ' . $autor);
+                        $autorData = $this->procesarAutor($autor, $bibliografia['context'], $bibliografia['adaptor']);
+                        if ($autorData) {
+                            error_log('Datos del autor procesados: ' . json_encode($autorData));
+                            // Insertar relación en bibliografias_disponibles_autores
+                            $stmt = $this->pdo->prepare("
+                                INSERT INTO bibliografias_disponibles_autores 
+                                (bibliografia_disponible_id, autor_id) 
+                                VALUES (?, ?)
+                            ");
+                            $stmt->execute([$bibliografiaId, $autorData['id']]);
+                            error_log('Relación autor-bibliografía guardada: ' . $autorData['id'] . ' -> ' . $bibliografiaId);
+                        } else {
+                            error_log('No se pudo procesar el autor: ' . $autor);
+                        }
+                    }
+                }
+                
+                // Procesar ejemplares
+                error_log('Procesando ejemplares...');
+                $ejemplaresPorSede = [];
+                
+                // Mapeo de bibliotecas a sedes
+                $mapeoBibliotecasSedes = [
+                    'Biblioteca Antofagasta' => 'Antofagasta',
+                    'Biblioteca Coquimbo' => 'Coquimbo',
+                    'Biblioteca San Pedro de Atacama' => 'San Pedro de Atacama'
+                ];
+                
+                foreach ($ejemplares as $ejemplar) {
+                    error_log('Procesando ejemplar: ' . json_encode($ejemplar));
+                    
+                     
+                    // Obtener ID de la sede correspondiente
+                    $sedeNombre = $mapeoBibliotecasSedes[$ejemplar['biblioteca']] ?? null;
+                    if ($sedeNombre) {
+                        $stmt = $this->pdo->prepare("SELECT id FROM sedes WHERE nombre = ?");
+                        $stmt->execute([$sedeNombre]);
+                        $sede = $stmt->fetch(PDO::FETCH_ASSOC);
+                        
+                        if ($sede) {
+                            // Verificar si ya existe un registro para esta sede
+                            $stmt = $this->pdo->prepare("
+                                SELECT id, ejemplares 
+                                FROM bibliografias_disponibles_sedes 
+                                WHERE bibliografia_disponible_id = ? AND sede_id = ?
+                            ");
+                            $stmt->execute([$bibliografiaId, $sede['id']]);
+                            $registroExistente = $stmt->fetch(PDO::FETCH_ASSOC);
+                            
+                            if ($registroExistente) {
+                                // Actualizar ejemplares existentes
+                                $stmt = $this->pdo->prepare("
+                                    UPDATE bibliografias_disponibles_sedes 
+                                    SET ejemplares = ejemplares + ? 
+                                    WHERE id = ?
+                                ");
+                                $stmt->execute([$ejemplar['cantidad_ejemplares'], $registroExistente['id']]);
+                            } else {
+                                // Insertar nuevo registro
+                                $stmt = $this->pdo->prepare("
+                                    INSERT INTO bibliografias_disponibles_sedes 
+                                    (bibliografia_disponible_id, sede_id, ejemplares) 
+                                    VALUES (?, ?, ?)
+                                ");
+                                $stmt->execute([
+                                    $bibliografiaId, 
+                                    $sede['id'], 
+                                    $ejemplar['cantidad_ejemplares']
+                                ]);
+                            }
+                            
+                            // Actualizar el contador para la respuesta
+                            if (!isset($ejemplaresPorSede[$sede['id']])) {
+                                $ejemplaresPorSede[$sede['id']] = 0;
+                            }
+                            $ejemplaresPorSede[$sede['id']] += $ejemplar['cantidad_ejemplares'];
+                        }
+                    }
+                }
+            }
+            
+            // Commit de la transacción
+            error_log('Commit de la transacción...');
+            $this->pdo->commit();
+            error_log('Transacción completada exitosamente');
+            
+            $this->jsonResponse([
+                'success' => true,
+                'message' => 'Bibliografías guardadas correctamente',
+                'ejemplares_por_sede' => $ejemplaresPorSede
+            ]);
+            
+        } catch (\Exception $e) {
+            error_log('Error en guardarBibliografiasSeleccionadas: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            
+            if ($this->pdo && $this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+                error_log('Transacción revertida debido al error');
+            }
+            
+            $this->jsonResponse([
+                'success' => false,
+                'message' => 'Error al guardar las bibliografías: ' . $e->getMessage()
+            ]);
         }
     }
 } 

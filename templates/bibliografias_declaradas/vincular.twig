@@ -381,7 +381,7 @@ function agregarSeleccionadas() {
                 showConfirmButton: true
             }).then((result) => {
                 if (result.isConfirmed) {
-                    location.reload();
+            location.reload();
                 }
             });
         } else {
@@ -418,7 +418,7 @@ function quitarSeleccionadas() {
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) {
-            const vinculaciones = Array.from(checkboxes).map(cb => cb.value);
+        const vinculaciones = Array.from(checkboxes).map(cb => cb.value);
             
             // Mostrar indicador de carga
             const boton = document.querySelector('button[onclick="quitarSeleccionadas()"]');
@@ -432,16 +432,16 @@ function quitarSeleccionadas() {
             console.log('Datos a enviar:', { vinculaciones });
 
             fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    vinculaciones: vinculaciones
-                })
+            },
+            body: JSON.stringify({
+                vinculaciones: vinculaciones
             })
+        })
             .then(async response => {
                 console.log('Respuesta recibida:', response);
                 console.log('Status:', response.status);
@@ -460,9 +460,9 @@ function quitarSeleccionadas() {
                     throw new Error('La respuesta del servidor no es un JSON válido: ' + text);
                 }
             })
-            .then(data => {
+        .then(data => {
                 console.log('Datos procesados:', data);
-                if (data.success) {
+            if (data.success) {
                     Swal.fire({
                         icon: 'success',
                         title: 'Éxito',
@@ -474,11 +474,11 @@ function quitarSeleccionadas() {
                             window.location.href = `{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/vincular`;
                         }
                     });
-                } else {
+            } else {
                     throw new Error(data.message || 'Error al desvincular las asignaturas');
-                }
-            })
-            .catch(error => {
+            }
+        })
+        .catch(error => {
                 console.error('Error completo:', error);
                 Swal.fire({
                     icon: 'error',
@@ -491,7 +491,7 @@ function quitarSeleccionadas() {
                 boton.disabled = false;
                 boton.innerHTML = textoOriginal;
             });
-        }
+}
     });
 }
 

@@ -1,7 +1,89 @@
 <?php
-// Establecer el manejo de errores
-ini_set('display_errors', 0);
+// Configuración de codificación
+mb_internal_encoding('UTF-8');
+mb_http_output('UTF-8');
+mb_http_input('G');
+mb_http_input('P');
+mb_http_input('C');
+mb_regex_encoding('UTF-8');
+
+// Asegurar que los errores se muestren en UTF-8
 error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('default_charset', 'UTF-8');
+
+// Configuración adicional de codificación
+ini_set('mbstring.encoding_translation', 'On');
+ini_set('mbstring.func_overload', '7');
+ini_set('mbstring.language', 'Spanish');
+ini_set('mbstring.detect_order', 'UTF-8,ISO-8859-1');
+
+// Establecer el locale
+setlocale(LC_ALL, 'es_ES.UTF-8');
+
+// Configurar el manejo de errores para usar UTF-8
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/../storage/logs/php-error.log');
+ini_set('error_log_charset', 'UTF-8');
+
+// Función personalizada para logging
+function custom_error_log($message) {
+    if (is_array($message) || is_object($message)) {
+        $message = print_r($message, true);
+    }
+    
+    // Convertir a UTF-8 si no lo es
+    if (!mb_check_encoding($message, 'UTF-8')) {
+        $message = mb_convert_encoding($message, 'UTF-8', mb_detect_encoding($message, 'UTF-8, ISO-8859-1, ISO-8859-15', true));
+    }
+    
+    // Sanitizar caracteres especiales
+    $message = preg_replace('/[\x00-\x1F\x7F]/u', '', $message);
+    $message = preg_replace('/[\x{10000}-\x{10FFFF}]/u', '', $message);
+    
+    // Escapar caracteres especiales para el log
+    $message = str_replace(
+        ["\n", "\r", "\t"],
+        [' ', ' ', ' '],
+        $message
+    );
+    
+    // Asegurar que el mensaje no exceda la longitud máxima del log
+    if (mb_strlen($message) > 1000) {
+        $message = mb_substr($message, 0, 997) . '...';
+    }
+    
+    // Asegurar que el mensaje esté en UTF-8 antes de escribirlo
+    $message = mb_convert_encoding($message, 'UTF-8', 'UTF-8');
+    
+    error_log($message);
+}
+
+// Función para sanitizar datos antes de logging
+function sanitize_for_log($data) {
+    if (is_array($data)) {
+        array_walk_recursive($data, function(&$value) {
+            if (is_string($value)) {
+                // Convertir a UTF-8 si no lo es
+                if (!mb_check_encoding($value, 'UTF-8')) {
+                    $value = mb_convert_encoding($value, 'UTF-8', mb_detect_encoding($value, 'UTF-8, ISO-8859-1, ISO-8859-15', true));
+                }
+                // Sanitizar caracteres especiales
+                $value = preg_replace('/[\x00-\x1F\x7F]/u', '', $value);
+                $value = preg_replace('/[\x{10000}-\x{10FFFF}]/u', '', $value);
+            }
+        });
+    } elseif (is_string($data)) {
+        // Convertir a UTF-8 si no lo es
+        if (!mb_check_encoding($data, 'UTF-8')) {
+            $data = mb_convert_encoding($data, 'UTF-8', mb_detect_encoding($data, 'UTF-8, ISO-8859-1, ISO-8859-15', true));
+        }
+        // Sanitizar caracteres especiales
+        $data = preg_replace('/[\x00-\x1F\x7F]/u', '', $data);
+        $data = preg_replace('/[\x{10000}-\x{10FFFF}]/u', '', $data);
+    }
+    return $data;
+}
 
 // Configurar la cookie de sesión antes de iniciar la sesión
 ini_set('session.cookie_httponly', 1);
@@ -632,7 +714,7 @@ if ($path === 'bibliografias-declaradas/create' && $_SERVER['REQUEST_METHOD'] ==
 // Ruta para store (crear nueva bibliografía)
 if ($path === 'bibliografias-declaradas' && $_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['_method'])) {
     $controller = new \App\Controllers\BibliografiaDeclaradaController();
-    $controller->store();
+            $controller->store();
         exit;
     }
 
@@ -655,32 +737,59 @@ if ($path === 'bibliografias-declaradas' && $_SERVER['REQUEST_METHOD'] === 'POST
 if (preg_match('/^bibliografias-declaradas\/(\d+)\/edit$/', $path, $matches) && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $controller = new \App\Controllers\BibliografiaDeclaradaController();
     $controller->edit($matches[1]);
-    exit;
-}
+        exit;
+    }
 
 // Ruta para vincular asignaturas
-if (preg_match('/^bibliografias-declaradas\/(\d+)\/vincular$/', $path, $matches)) {
+    if (preg_match('/^bibliografias-declaradas\/(\d+)\/vincular$/', $path, $matches)) {
     $controller = new \App\Controllers\BibliografiaDeclaradaController();
-    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-        $controller->vincular($matches[1]);
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $controller->vincular($matches[1]);
     } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $controller->vincularMultiple($matches[1]);
+        }
+        exit;
     }
-    exit;
-}
 
 // Ruta para vincular una asignatura individual
 if (preg_match('/^bibliografias-declaradas\/(\d+)\/vincularSingle$/', $path, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $controller = new \App\Controllers\BibliografiaDeclaradaController();
     $controller->vincularSingle($matches[1]);
-    exit;
-}
+        exit;
+    }
 
 // Ruta para desvincular múltiples asignaturas
 if (preg_match('/^bibliografias-declaradas\/(\d+)\/desvincularMultiple$/', $path, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $controller = new \App\Controllers\BibliografiaDeclaradaController();
-    $controller->desvincularMultiple($matches[1]);
+            $controller->desvincularMultiple($matches[1]);
+        exit;
+    }
+
+// Verificar si la ruta es para buscar en catálogo
+if (preg_match('/^bibliografias-declaradas\/(\d+)\/buscarCatalogo$/', $path, $matches) && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    $controller = new \App\Controllers\BibliografiaDeclaradaController();
+    $request = ServerRequestFactory::createFromGlobals();
+    $response = new Response();
+    $controller->buscarCatalogo($request, $response, ['id' => $matches[1]]);
+        exit;
+    }
+
+// Verificar si la ruta es para la API de búsqueda en catálogo
+if (preg_match('/^bibliografias-declaradas\/(\d+)\/buscarCatalogo\/api$/', $path, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $controller = new \App\Controllers\BibliografiaDeclaradaController();
+    $request = ServerRequestFactory::createFromGlobals();
+    $response = new Response();
+    $controller->apiBuscarCatalogo($request, $response, ['id' => $matches[1]]);
     exit;
+}
+
+// Verificar si la ruta es para guardar seleccionados
+if (preg_match('/^bibliografias-declaradas\/(\d+)\/guardar-seleccionadas$/', $path, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $controller = new \App\Controllers\BibliografiaDeclaradaController();
+    $request = ServerRequestFactory::createFromGlobals();
+    $response = new Response();
+    $controller->guardarBibliografiasSeleccionadas($request, $response, ['id' => $matches[1]]);
+        exit;
 }
 
 // Verificar si la ruta es para bibliografías disponibles

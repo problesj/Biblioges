@@ -91,6 +91,24 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->post('/bibliografias-declaradas/{id}/vincularSingle', [BibliografiaDeclaradaController::class, 'vincularSingle'])->setName('bibliografias-declaradas.vincularSingle');
     $group->post('/bibliografias-declaradas/{id}/desvincularSingle/{vinculacionId}', [BibliografiaDeclaradaController::class, 'desvincularSingle'])->setName('bibliografias-declaradas.desvincularSingle');
 
+    // Rutas para búsqueda en catálogo
+    $group->get('/bibliografias-declaradas/{id}/buscarCatalogo', [BibliografiaDeclaradaController::class, 'buscarCatalogo']);
+    $group->post('/bibliografias-declaradas/{id}/buscarCatalogo/api', [BibliografiaDeclaradaController::class, 'apiBuscarCatalogo']);
+    $group->post('/bibliografias-declaradas/{id}/guardar-seleccionadas', [BibliografiaDeclaradaController::class, 'guardarBibliografiasSeleccionadas']);
+
+    // Rutas para Bibliografías Declaradas
+    $group->get('/bibliografias-declaradas', [BibliografiaDeclaradaController::class, 'index']);
+    $group->get('/bibliografias-declaradas/create', [BibliografiaDeclaradaController::class, 'create']);
+    $group->post('/bibliografias-declaradas', [BibliografiaDeclaradaController::class, 'store']);
+    $group->get('/bibliografias-declaradas/{id}', [BibliografiaDeclaradaController::class, 'show']);
+    $group->get('/bibliografias-declaradas/{id}/edit', [BibliografiaDeclaradaController::class, 'edit']);
+    $group->post('/bibliografias-declaradas/{id}', [BibliografiaDeclaradaController::class, 'update']);
+    $group->post('/bibliografias-declaradas/{id}/delete', [BibliografiaDeclaradaController::class, 'destroy']);
+    $group->get('/bibliografias-declaradas/{id}/vincular', [BibliografiaDeclaradaController::class, 'vincular']);
+    $group->post('/bibliografias-declaradas/{id}/vincular', [BibliografiaDeclaradaController::class, 'vincularStore']);
+    $group->get('/bibliografias-declaradas/{id}/buscarCatalogo', [BibliografiaDeclaradaController::class, 'buscarCatalogo']);
+    $group->post('/bibliografias-declaradas/{id}/vincular-catalogo', [BibliografiaDeclaradaController::class, 'vincularCatalogo']);
+
     // Reportes
     $group->get('/reportes/cobertura-asignatura/{codigo}', [ReporteController::class, 'coberturaAsignatura']);
     $group->get('/reportes/cobertura-carrera/{id}', [ReporteController::class, 'coberturaCarrera']);

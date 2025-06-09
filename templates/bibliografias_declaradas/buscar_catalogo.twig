@@ -1,0 +1,315 @@
+{% extends 'base.twig' %}
+
+{% block title %}Buscar en Catálogo - {{ bibliografia.titulo }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Datos de la Bibliografía Declarada</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Tipo de Bibliografía:</strong> {{ bibliografia.tipo|title }}</p>
+                            <p><strong>Título:</strong> {{ bibliografia.titulo }}</p>
+                            <p><strong>Autor(es):</strong> {{ bibliografia.autores }}</p>
+                            <p><strong>Año de Edición:</strong> {{ bibliografia.anio_publicacion }}</p>
+                            <p><strong>Editorial:</strong> {{ bibliografia.editorial }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Edición:</strong> {{ bibliografia.edicion }}</p>
+                            <p><strong>Formato:</strong> {{ bibliografia.formato|title }}</p>
+                            <div class="mt-3">
+                                <h6>Datos Específicos:</h6>
+                                {% if bibliografia.tipo == 'libro' %}
+                                    <p><strong>ISBN:</strong> {{ bibliografia.isbn }}</p>
+                                {% elseif bibliografia.tipo == 'articulo' %}
+                                    <p><strong>ISSN:</strong> {{ bibliografia.issn }}</p>
+                                    <p><strong>Revista:</strong> {{ bibliografia.titulo_revista }}</p>
+                                    <p><strong>Cronología:</strong> {{ bibliografia.cronologia }}</p>
+                                {% elseif bibliografia.tipo == 'tesis' %}
+                                    <p><strong>Carrera:</strong> {{ bibliografia.carrera_nombre }}</p>
+                                {% elseif bibliografia.tipo == 'sitio_web' %}
+                                    <p><strong>Fecha de Consulta:</strong> {{ bibliografia.fecha_consulta }}</p>
+                                {% elseif bibliografia.tipo == 'software' %}
+                                    <p><strong>Versión:</strong> {{ bibliografia.version }}</p>
+                                {% elseif bibliografia.tipo == 'generico' %}
+                                    <p><strong>Descripción:</strong> {{ bibliografia.descripcion }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Buscar en Catálogo</h5>
+                </div>
+                <div class="card-body">
+                    <form id="searchForm" class="mb-4">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="titulo">Título</label>
+                                    <input type="text" class="form-control" id="titulo" name="titulo" value="{{ bibliografia.titulo }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="autor">Autor</label>
+                                    <input type="text" class="form-control" id="autor" name="autor" value="{{ bibliografia.autores|split(';')|first }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="busqueda_adicional">Búsqueda Adicional</label>
+                                    <input type="text" class="form-control" id="busqueda_adicional" name="busqueda_adicional" placeholder="Editorial u otra palabra clave">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="tipo_recurso">Tipo de Recurso</label>
+                                    <select class="form-control" id="tipo_recurso" name="tipo_recurso">
+                                        <option value="">Todos</option>
+                                        {% if bibliografia.tipo == 'libro' %}
+                                            <option value="books" selected>Libros</option>
+                                        {% elseif bibliografia.tipo == 'articulo' %}
+                                            <option value="articles" selected>Artículos</option>
+                                        {% elseif bibliografia.tipo == 'tesis' %}
+                                            <option value="dissertations" selected>Tesis</option>
+                                        {% else %}
+                                            <option value="books">Libros</option>
+                                            <option value="articles">Artículos</option>
+                                            <option value="dissertations">Tesis</option>
+                                        {% endif %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label>&nbsp;</label>
+                                    <button type="submit" class="btn btn-primary btn-block">
+                                        <i class="fas fa-search"></i> Buscar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="results" class="mt-4">
+                        <!-- Los resultados se mostrarán aquí -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('searchForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const titulo = document.getElementById('titulo').value.trim();
+    const autor = document.getElementById('autor').value.trim();
+    const busquedaAdicional = document.getElementById('busqueda_adicional').value.trim();
+    const tipoRecurso = document.getElementById('tipo_recurso').value;
+    const resultsDiv = document.getElementById('results');
+    
+    // Validar que al menos uno de los campos (título o autor) tenga contenido
+    if (!titulo && !autor) {
+        resultsDiv.innerHTML = '<div class="alert alert-warning">Debe ingresar al menos un título o un autor para realizar la búsqueda.</div>';
+        return;
+    }
+
+    // Validar que el campo que tiene contenido no esté vacío
+    if (titulo && titulo.length < 2) {
+        resultsDiv.innerHTML = '<div class="alert alert-warning">El título debe tener al menos 2 caracteres.</div>';
+        return;
+    }
+    
+    if (autor && autor.length < 2) {
+        resultsDiv.innerHTML = '<div class="alert alert-warning">El nombre del autor debe tener al menos 2 caracteres.</div>';
+        return;
+    }
+    
+    try {
+        resultsDiv.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"><span class="sr-only">Buscando...</span></div></div>';
+        
+        // Crear objeto con los datos sin codificar
+        const searchData = {
+            titulo: titulo,
+            autor: autor,
+            busqueda_adicional: busquedaAdicional,
+            tipo_recurso: tipoRecurso
+        };
+        
+        const response = await fetch('{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/buscarCatalogo/api', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(searchData, function(key, value) {
+                if (typeof value === 'string') {
+                    return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                }
+                return value;
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            if (data.results && data.results.length > 0) {
+                let html = '<div class="table-responsive"><table class="table table-hover">';
+                html += '<thead><tr><th>Seleccionar</th><th>Título</th><th>Autor(es)</th><th>Año</th><th>Editorial</th><th>Formato</th><th>Acciones</th></tr></thead>';
+                html += '<tbody>';
+                
+                data.results.forEach(result => {
+                    html += `<tr>
+                        <td><input type="checkbox" class="result-checkbox" 
+                            data-url="${result.url}" 
+                            data-catalogo-id="${result.catalogo_id}"
+                            data-sourcerecordid="${result.sourcerecordid || ''}"
+                            data-context="${result.context}"
+                            data-adaptor="${result.adaptor}"></td>
+                        <td>${result.titulo}</td>
+                        <td>${result.autores}</td>
+                        <td>${result.anio || ''}</td>
+                        <td>${result.editorial || ''}</td>
+                        <td>${result.formato || ''}</td>
+                        <td>
+                            <a href="${result.url}" target="_blank" class="btn btn-sm btn-info" title="Ver en catálogo">
+                                <i class="fas fa-external-link-alt"></i> Ver en catálogo
+                            </a>
+                        </td>
+                    </tr>`;
+                });
+                
+                html += '</tbody></table></div>';
+                html += '<div class="mt-3"><button id="saveSelected" class="btn btn-success"><i class="fas fa-save"></i> Guardar Seleccionados</button></div>';
+                
+                resultsDiv.innerHTML = html;
+                
+                // Agregar evento al botón de guardar
+                document.getElementById('saveSelected').addEventListener('click', saveSelectedResults);
+            } else {
+                resultsDiv.innerHTML = '<div class="alert alert-info">No se encontraron resultados en el catálogo.</div>';
+            }
+        } else {
+            resultsDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        resultsDiv.innerHTML = '<div class="alert alert-danger">Error al buscar en el catálogo</div>';
+    }
+});
+
+async function saveSelectedResults() {
+    const checkboxes = document.querySelectorAll('.result-checkbox:checked');
+    if (checkboxes.length === 0) {
+        alert('Por favor seleccione al menos una bibliografía');
+        return;
+    }
+
+    const bibliografias = Array.from(checkboxes).map(checkbox => {
+        const row = checkbox.closest('tr');
+        const context = checkbox.getAttribute('data-context');
+        const adaptor = checkbox.getAttribute('data-adaptor');
+        let catalogo_id = checkbox.getAttribute('data-catalogo-id');
+        // Si es registro local, usar sourcerecordid como id_mms
+        if (context === 'L' && adaptor === 'Local Search Engine') {
+            const sourcerecordid = checkbox.getAttribute('data-sourcerecordid');
+            if (sourcerecordid) {
+                catalogo_id = sourcerecordid;
+            }
+        }
+        return {
+            catalogo_id: catalogo_id,
+            url: checkbox.getAttribute('data-url'),
+            context: context || 'L',
+            adaptor: adaptor || 'Local Search Engine',
+            titulo: row.querySelector('td:nth-child(2)').textContent.trim(),
+            autores: row.querySelector('td:nth-child(3)').textContent.trim(),
+            anio: row.querySelector('td:nth-child(4)').textContent.trim(),
+            editorial: row.querySelector('td:nth-child(5)').textContent.trim()
+        };
+    });
+
+    const baseUrl = window.location.origin;
+    const bibliografiaId = window.location.pathname.split('/')[3];
+    const url = `${baseUrl}/biblioges/bibliografias-declaradas/${bibliografiaId}/guardar-seleccionadas`;
+
+    console.log('Enviando datos:', bibliografias);
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ bibliografias: bibliografias })
+        });
+
+        console.log('Status:', response.status);
+        console.log('Headers:', Object.fromEntries(response.headers.entries()));
+
+        // Verificar el tipo de contenido
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            console.error('Content-Type incorrecto:', contentType);
+            throw new Error('El servidor no devolvió una respuesta JSON válida');
+        }
+
+        const data = await response.json();
+        console.log('Datos recibidos:', data);
+        
+        if (data.success) {
+            // Mostrar mensaje de éxito en el div de resultados
+            const resultsDiv = document.getElementById('results');
+            const successMessage = document.createElement('div');
+            successMessage.className = 'alert alert-success alert-dismissible fade show';
+            successMessage.innerHTML = `
+                <strong>¡Éxito!</strong> ${data.message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            resultsDiv.innerHTML = ''; // Limpiar resultados anteriores
+            resultsDiv.appendChild(successMessage);
+
+            // Redirigir después de un breve retraso
+            setTimeout(() => {
+                window.location.href = `${baseUrl}/biblioges/bibliografias-declaradas`;
+            }, 1500);
+        } else {
+            throw new Error(data.message || 'Error desconocido');
+        }
+    } catch (error) {
+        console.error('Error completo:', error);
+        // Mostrar mensaje de error en el div de resultados
+        const resultsDiv = document.getElementById('results');
+        const errorMessage = document.createElement('div');
+        errorMessage.className = 'alert alert-danger alert-dismissible fade show';
+        errorMessage.innerHTML = `
+            <strong>Error:</strong> ${error.message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        resultsDiv.innerHTML = ''; // Limpiar resultados anteriores
+        resultsDiv.appendChild(errorMessage);
+    }
+}
+</script>
+{% endblock %} 

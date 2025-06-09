@@ -273,10 +273,10 @@ class BibliografiaDisponibleController extends BaseController
                     foreach ($autoresIds as $autorId) {
                         // Solo procesar IDs que no sean temporales
                         if (!str_starts_with($autorId, 'temp_')) {
-                            $stmt->execute([
-                                ':bibliografia_id' => $bibliografiaId,
-                                ':autor_id' => $autorId
-                            ]);
+                        $stmt->execute([
+                            ':bibliografia_id' => $bibliografiaId,
+                            ':autor_id' => $autorId
+                        ]);
                         }
                     }
                 }
@@ -598,10 +598,10 @@ class BibliografiaDisponibleController extends BaseController
                     foreach ($autoresIds as $autorId) {
                         // Solo procesar IDs que no sean temporales y no estén vacíos
                         if (!str_starts_with($autorId, 'temp_') && !empty($autorId) && is_numeric($autorId)) {
-                            $stmt->execute([
-                                ':bibliografia_id' => $args['id'],
+                        $stmt->execute([
+                            ':bibliografia_id' => $args['id'],
                                 ':autor_id' => (int)$autorId
-                            ]);
+                        ]);
                         }
                     }
                 }

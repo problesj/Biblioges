@@ -218,7 +218,7 @@
                                     <label class="form-label">Autores Disponibles</label>
                                 </div>
                                 <select class="form-select" id="autoresDisponibles" multiple size="10" style="height: auto;">
-                                    {% for autor in autores %}
+                        {% for autor in autores %}
                                         <option value="{{ autor.id }}" 
                                                 data-apellidos="{{ autor.apellidos }}" 
                                                 data-nombres="{{ autor.nombres }}" 
@@ -249,18 +249,18 @@
                                     <div id="autoresSeleccionados" class="list-group">
                                         {% if bibliografia.autores is defined %}
                                             {% for autor in bibliografia.autores %}
-                                                <div class="list-group-item d-flex justify-content-between align-items-center" data-autor-id="{{ autor.id }}">
-                                                    <div>
+                                            <div class="list-group-item d-flex justify-content-between align-items-center" data-autor-id="{{ autor.id }}">
+                                                <div>
                                                         <span class="autor-apellidos">{{ autor.apellidos }}</span>, 
                                                         <span class="autor-nombres">{{ autor.nombres }}</span>
-                                                        <br>
+                                                    <br>
                                                         <small class="text-muted autor-genero">{{ autor.genero }}</small>
-                                                    </div>
-                                                    <button type="button" class="btn btn-sm btn-danger" onclick="eliminarAutor('{{ autor.id }}')">
-                                                        <i class="fas fa-times"></i>
-                                                    </button>
                                                 </div>
-                                            {% endfor %}
+                                                <button type="button" class="btn btn-sm btn-danger" onclick="eliminarAutor('{{ autor.id }}')">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                            </div>
+                        {% endfor %}
                                         {% endif %}
                                     </div>
                                 </div>
@@ -380,18 +380,18 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-
+    
     // Mostrar campos específicos al cargar la página
     mostrarCamposEspecificos();
     
     // Mostrar campos específicos cuando cambie el tipo
     tipoSelect.addEventListener('change', mostrarCamposEspecificos);
-
+    
     // Manejar la visibilidad de la nueva editorial
     editorialSelect.addEventListener('change', function() {
         nuevaEditorialContainer.style.display = this.value === 'otra' ? 'block' : 'none';
     });
-
+    
     // Manejar la visibilidad de la nueva revista
     if (tituloRevistaSelect) {
         tituloRevistaSelect.addEventListener('change', function() {
@@ -415,7 +415,7 @@ document.addEventListener('DOMContentLoaded', function() {
         autorInfo.innerHTML = `
             <span class="autor-apellidos">${autor.apellidos}</span>, 
             <span class="autor-nombres">${autor.nombres}</span>
-            <br>
+                <br>
             <small class="text-muted autor-genero">${autor.genero}</small>
         `;
         
@@ -460,7 +460,7 @@ document.addEventListener('DOMContentLoaded', function() {
             nuevoAutorForm.reportValidity();
             return;
         }
-
+        
         const apellidos = document.getElementById('apellidos').value;
         const nombres = document.getElementById('nombres').value;
         const genero = document.getElementById('genero').value;
@@ -471,13 +471,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // Agregar el autor a la lista de seleccionados
         const autor = {
             id: id,
-            apellidos: apellidos,
-            nombres: nombres,
-            genero: genero
+                apellidos: apellidos,
+                nombres: nombres,
+                genero: genero
         };
 
         agregarAutorALista(autor);
-
+        
         // Limpiar y cerrar el modal
         nuevoAutorForm.reset();
         const modal = bootstrap.Modal.getInstance(nuevoAutorModal);
@@ -500,7 +500,7 @@ document.addEventListener('DOMContentLoaded', function() {
             form.classList.add('was-validated');
             return;
         }
-
+        
         isFormSubmitting = true;
         submitButton.disabled = true;
         submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
@@ -511,7 +511,7 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.forEach((value, key) => {
                 data[key] = value;
             });
-
+        
             // Obtener todos los autores seleccionados
             const autores = Array.from(document.querySelectorAll('#autoresSeleccionados .list-group-item')).map(item => {
                 try {
@@ -594,8 +594,8 @@ document.addEventListener('DOMContentLoaded', function() {
             isFormSubmitting = false;
             submitButton.disabled = false;
             submitButton.innerHTML = '<i class="fas fa-save"></i> Guardar';
-        }
-    }
+                }
+            }
 
     // Remover todos los manejadores de eventos anteriores
     const oldSubmitHandler = form.onsubmit;
@@ -615,8 +615,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 genero: option.dataset.genero
             };
             agregarAutorALista(autor);
+            });
         });
-    });
 });
 </script>
 {% endblock %}
