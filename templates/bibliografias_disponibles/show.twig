@@ -99,7 +99,6 @@
                             <th class="bg-light">URL de acceso Internet</th>
                             <td>
                                 {% if bibliografia.url_acceso %}
-                                {{ bibliografia.url_acceso }}
                                     <a href="{{ bibliografia.url_acceso }}" target="_blank" class="btn btn-link">
                                         <i class="fas fa-external-link-alt"></i> Abrir enlace
                                     </a>
@@ -112,7 +111,6 @@
                             <th class="bg-light">URL de Catálogo</th>
                             <td>
                                 {% if bibliografia.url_catalogo %}
-                                {{ bibliografia.url_catalogo }}
                                     <a href="{{ bibliografia.url_catalogo }}" target="_blank" class="btn btn-link">
                                         <i class="fas fa-external-link-alt"></i> Abrir enlace
                                     </a>
@@ -157,29 +155,34 @@
                                 {% endif %}
                             </td>
                         </tr>
-                        {% if bibliografia.sedes|length > 0 %}
+                        {% if bibliografia.sedes is defined and bibliografia.sedes|length > 0 %}
                         <tr>
                             <th class="bg-light">Copias por Sede</th>
                             <td>
                                 <table class="table table-sm table-bordered mb-0">
-                                    <thead>
+                                    <thead class="table-primary">
                                         <tr>
-                                            <th>Sede</th>
-                                            <th>Cantidad</th>
+                                            <th class="text-center">Sede</th>
+                                            <th class="text-center">Cantidad</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for sede in bibliografia.sedes %}
-                                            {% if sede.ejemplares > 0 %}
-                                            <tr>
+                                            {% if sede.pivot.ejemplares is defined and sede.pivot.ejemplares > 0 %}
+                                            <tr class="{% if loop.index is odd %}table-light{% else %}table-white{% endif %}">
                                                 <td>{{ sede.nombre }}</td>
-                                                <td>{{ sede.ejemplares }}</td>
+                                                <td class="text-center">{{ sede.pivot.ejemplares }}</td>
                                             </tr>
                                             {% endif %}
                                         {% endfor %}
                                     </tbody>
                                 </table>
                             </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <th class="bg-light">Copias por Sede</th>
+                            <td>No hay copias registradas</td>
                         </tr>
                         {% endif %}
                     </table>

@@ -138,10 +138,11 @@ CREATE TABLE IF NOT EXISTS asignaturas_departamentos (
 -- Tabla de usuarios
 CREATE TABLE IF NOT EXISTS usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    rut VARCHAR(10) NOT NULL UNIQUE,
     nombre VARCHAR(250) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    rol ENUM('admin', 'docente', 'estudiante') NOT NULL,
+    rol ENUM('admin', 'admin_bidoc', 'usuario') NOT NULL,
     estado TINYINT(1) DEFAULT 1,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -181,7 +182,7 @@ CREATE TABLE IF NOT EXISTS bibliografias_declaradas (
 CREATE TABLE IF NOT EXISTS libros (
     id INT AUTO_INCREMENT PRIMARY KEY,
     bibliografia_id INT NOT NULL,
-    isbn VARCHAR(13) NOT NULL,
+    isbn VARCHAR(20) NOT NULL,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (bibliografia_id) REFERENCES bibliografias_declaradas(id) ON DELETE CASCADE,
@@ -263,7 +264,7 @@ CREATE TABLE IF NOT EXISTS asignaturas_bibliografias (
     id INT AUTO_INCREMENT PRIMARY KEY,
     asignatura_id INT NOT NULL,
     bibliografia_id INT NOT NULL,
-    tipo_bibliografia ENUM('basica', 'complementaria') NOT NULL,
+    tipo_bibliografia ENUM('basica', 'complementaria', 'otro') NOT NULL,
     estado ENUM('activa', 'no_activa') NOT NULL DEFAULT 'activa',
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -286,7 +287,7 @@ CREATE TABLE bibliografias_disponibles (
     url_acceso VARCHAR(500),
     url_catalogo VARCHAR(500),
     disponibilidad ENUM('impreso', 'electronico', 'ambos') NOT NULL,
-    id_mms VARCHAR(50) UNIQUE,
+    id_mms VARCHAR(50),
     ejemplares_digitales INT,
     estado BOOLEAN DEFAULT TRUE,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -441,9 +442,10 @@ INSERT INTO asignaturas_departamentos (asignatura_id, departamento_id, cantidad_
 (2, 1, 45, 'BD-00123'),
 (3, 3, 60, 'MAT-00123');
 
-INSERT INTO usuarios (nombre, email, password, rol) VALUES 
-('Admin', 'admin@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin'),
-('Docente', 'docente@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'docente');
+INSERT INTO usuarios (rut, nombre, email, password, rol) VALUES 
+('12345678-9', 'Administrador del Sistema', 'admin@biblioges.cl', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin'),
+('23456789-0', 'Administrador Biblioteca', 'admin_bidoc@biblioges.cl', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin_bidoc'),
+('34567890-1', 'Usuario Ejemplo', 'usuario@biblioges.cl', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'usuario');
 
 -- Ejemplo de autores
 INSERT INTO autores (apellidos, nombres, genero) VALUES 
@@ -562,3 +564,299 @@ INSERT INTO bibliografias_disponibles_sedes (
 -- Ejemplares en Sede Este (id: 3)
 (1, 3, 4), -- Introducción a la Programación
 (3, 3, 3); -- Base de Datos Relacionales 
+
+-- =====================================================
+-- VISTAS Y TABLAS DE REPORTES
+-- =====================================================
+
+-- Tabla de reportes
+CREATE TABLE IF NOT EXISTS reportes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(250) NOT NULL,
+    descripcion TEXT,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabla de reporte de coberturas básicas por carrera
+CREATE TABLE IF NOT EXISTS reporte_coberturas_carreras_basicas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_reporte INT NOT NULL,
+    codigo_carrera VARCHAR(20) NOT NULL,
+    codigo_asignatura VARCHAR(20) NOT NULL,
+    id_bibliografia_declarada INT NOT NULL,
+    fecha_medicion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    no_ejem_imp INT DEFAULT 0,
+    no_ejem_dig INT DEFAULT 0,
+    no_bib_disponible_basica TINYINT(1) DEFAULT 0,
+    FOREIGN KEY (id_reporte) REFERENCES reportes(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_bibliografia_declarada) REFERENCES bibliografias_declaradas(id) ON DELETE CASCADE,
+    INDEX idx_carrera_asignatura (codigo_carrera, codigo_asignatura),
+    INDEX idx_fecha_medicion (fecha_medicion)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabla de reporte de coberturas complementarias por carrera
+CREATE TABLE IF NOT EXISTS reporte_coberturas_carreras_complementarias (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_reporte INT NOT NULL,
+    codigo_carrera VARCHAR(20) NOT NULL,
+    codigo_asignatura VARCHAR(20) NOT NULL,
+    id_bibliografia_declarada INT NOT NULL,
+    fecha_medicion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    no_ejem_imp INT DEFAULT 0,
+    no_ejem_dig INT DEFAULT 0,
+    no_bib_disponible_complementaria TINYINT(1) DEFAULT 0,
+    FOREIGN KEY (id_reporte) REFERENCES reportes(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_bibliografia_declarada) REFERENCES bibliografias_declaradas(id) ON DELETE CASCADE,
+    INDEX idx_carrera_asignatura (codigo_carrera, codigo_asignatura),
+    INDEX idx_fecha_medicion (fecha_medicion)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Vista de mallas curriculares
+CREATE OR REPLACE VIEW vw_mallas AS
+SELECT 
+    sedes.id AS id_sede,
+    sedes.nombre AS sede,
+    facultades.id AS id_facultad,
+    facultades.nombre AS facultad,
+    carreras_espejos.codigo_carrera AS codigo_carrera,
+    carreras.id AS id_carrera,
+    carreras.nombre AS carrera,
+    asignaturas_departamentos.codigo_asignatura AS codigo_asignatura,
+    asignaturas.id AS id_asignatura,
+    asignaturas.nombre AS asignatura,
+    asignaturas.tipo AS tipo_asignatura,
+    NULL AS codigo_asignatura_formacion,
+    NULL AS id_asignatura_formacion,
+    NULL AS asignatura_formacion
+FROM mallas 
+JOIN asignaturas ON mallas.asignatura_id = asignaturas.id
+JOIN carreras_espejos ON mallas.carrera_id = carreras_espejos.carrera_id
+JOIN carreras ON mallas.carrera_id = carreras.id AND carreras_espejos.carrera_id = carreras.id
+JOIN asignaturas_departamentos ON asignaturas_departamentos.asignatura_id = asignaturas.id
+JOIN sedes ON carreras_espejos.sede_id = sedes.id
+JOIN departamentos ON asignaturas_departamentos.departamento_id = departamentos.id
+JOIN facultades ON facultades.sede_id = sedes.id AND departamentos.facultad_id = facultades.id
+
+UNION
+
+SELECT DISTINCT 
+    sedes_1.id AS id_sede,
+    sedes_1.nombre AS sede,
+    facultades_1.id AS id_facultad,
+    facultades_1.nombre AS facultad,
+    carreras_espejos.codigo_carrera AS codigo_carrera,
+    mallas.carrera_id AS id_carrera,
+    carreras.nombre AS carrera,
+    asignaturas_departamentos.codigo_asignatura AS codigo_asignatura,
+    asignaturas_departamentos.asignatura_id AS id_asignatura,
+    asignaturas.nombre AS asignatura,
+    asignaturas_1.tipo AS tipo_asignatura,
+    asignaturas_departamentos_1.codigo_asignatura AS codigo_asignatura_formacion,
+    asignaturas_1.id AS id_asignatura_formacion,
+    asignaturas_1.nombre AS asignatura_formacion
+FROM asignaturas 
+JOIN asignaturas_formacion ON asignaturas_formacion.asignatura_formacion_id = asignaturas.id
+JOIN asignaturas asignaturas_1 ON asignaturas_1.id = asignaturas_formacion.asignatura_regular_id
+JOIN mallas ON asignaturas.id = mallas.asignatura_id
+JOIN asignaturas_departamentos ON mallas.asignatura_id = asignaturas_departamentos.asignatura_id AND asignaturas_departamentos.asignatura_id = asignaturas.id
+JOIN departamentos ON departamentos.id = asignaturas_departamentos.departamento_id
+JOIN facultades ON facultades.id = departamentos.facultad_id
+JOIN sedes ON sedes.id = facultades.sede_id
+JOIN asignaturas_departamentos asignaturas_departamentos_1 ON asignaturas_1.id = asignaturas_departamentos_1.asignatura_id
+JOIN departamentos departamentos_1 ON asignaturas_departamentos_1.departamento_id = departamentos_1.id
+JOIN facultades facultades_1 ON departamentos_1.facultad_id = facultades_1.id
+JOIN sedes sedes_1 ON facultades_1.sede_id = sedes_1.id
+JOIN carreras_espejos ON mallas.carrera_id = carreras_espejos.carrera_id
+JOIN carreras ON mallas.carrera_id = carreras.id AND carreras_espejos.carrera_id = carreras.id
+WHERE sedes.id = 4
+ORDER BY sede, codigo_carrera, asignatura;
+
+-- Vista de asignaturas con bibliografías declaradas
+CREATE OR REPLACE VIEW vw_asig_bib_declarada AS
+SELECT 
+    asignaturas.id AS id_asignatura,
+    asignaturas_bibliografias.bibliografia_id AS id_bib_declarada,
+    asignaturas_bibliografias.tipo_bibliografia AS tipo_bibliografia,
+    bibliografias_declaradas.titulo AS titulo,
+    bibliografias_declaradas.tipo AS tipo,
+    bibliografias_declaradas.anio_publicacion AS anio_publicacion,
+    bibliografias_declaradas.editorial AS editorial,
+    bibliografias_declaradas.formato AS formato
+FROM asignaturas_bibliografias 
+JOIN asignaturas ON asignaturas_bibliografias.asignatura_id = asignaturas.id
+JOIN bibliografias_declaradas ON asignaturas_bibliografias.bibliografia_id = bibliografias_declaradas.id
+ORDER BY asignaturas.id, asignaturas_bibliografias.tipo_bibliografia, bibliografias_declaradas.titulo;
+
+-- Vista de electivas en mallas
+CREATE OR REPLACE VIEW vw_electivas_mallas AS
+SELECT 
+    mallas.carrera_id AS id_carrera,
+    asignaturas_departamentos.asignatura_id AS id_asignatura_electiva,
+    asignaturas_departamentos.codigo_asignatura AS codigo_asignatura,
+    asignaturas.nombre AS asignatura_electiva,
+    asignaturas_1.id AS id_asignatura_formacion,
+    asignaturas_1.nombre AS asignatura_formacion
+FROM mallas 
+JOIN asignaturas_departamentos ON mallas.asignatura_id = asignaturas_departamentos.asignatura_id
+JOIN departamentos ON asignaturas_departamentos.departamento_id = departamentos.id
+JOIN facultades ON departamentos.facultad_id = facultades.id
+JOIN sedes ON facultades.sede_id = sedes.id
+JOIN asignaturas ON mallas.asignatura_id = asignaturas.id AND asignaturas_departamentos.asignatura_id = asignaturas.id
+LEFT JOIN asignaturas_formacion ON asignaturas_formacion.asignatura_formacion_id = asignaturas.id
+JOIN asignaturas asignaturas_1 ON asignaturas_1.id = asignaturas_formacion.asignatura_regular_id
+WHERE sedes.id = 4;
+
+-- Vista de número de bibliografías declaradas
+CREATE OR REPLACE VIEW vw_no_bib_declaradas AS
+SELECT 
+    sedes.id AS id_sede,
+    facultades.id AS id_facultad,
+    departamentos.id AS id_departamento,
+    asignaturas_departamentos.codigo_asignatura AS cod_asignatura,
+    asignaturas_bibliografias.tipo_bibliografia AS tipo_bibliografia,
+    COUNT(asignaturas_bibliografias.bibliografia_id) AS no_bib_declarada
+FROM asignaturas_departamentos 
+JOIN asignaturas ON asignaturas_departamentos.asignatura_id = asignaturas.id
+JOIN departamentos ON asignaturas_departamentos.departamento_id = departamentos.id
+JOIN facultades ON departamentos.facultad_id = facultades.id
+JOIN sedes ON facultades.sede_id = sedes.id
+JOIN asignaturas_bibliografias ON asignaturas_bibliografias.asignatura_id = asignaturas.id
+GROUP BY asignaturas_departamentos.codigo_asignatura, departamentos.id, facultades.id, sedes.id, asignaturas_bibliografias.tipo_bibliografia;
+
+-- Vista de bibliografías declaradas por sede y ejemplares
+CREATE OR REPLACE VIEW vw_bib_declarada_sede_noejem AS
+SELECT 
+    bibliografias_declaradas.id AS id_bib_declarada,
+    bibliografias_disponibles_sedes.sede_id AS id_sede,
+    SUM(bibliografias_disponibles_sedes.ejemplares) AS no_ejem_imp_sede
+FROM bibliografias_disponibles_sedes 
+JOIN bibliografias_disponibles ON bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id
+JOIN bibliografias_declaradas ON bibliografias_disponibles.bibliografia_declarada_id = bibliografias_declaradas.id
+GROUP BY bibliografias_disponibles_sedes.sede_id, bibliografias_declaradas.id
+ORDER BY id_bib_declarada, id_sede;
+
+-- Vista de carreras con bibliografías básicas declaradas
+CREATE OR REPLACE VIEW vw_car_basica_bib_declarada AS
+SELECT 
+    reporte_coberturas_carreras_basicas.codigo_carrera AS codigo_carrera,
+    YEAR(reporte_coberturas_carreras_basicas.fecha_medicion) AS anho,
+    COUNT(DISTINCT reporte_coberturas_carreras_basicas.id_bibliografia_declarada) AS no_bib_declarada
+FROM reporte_coberturas_carreras_basicas 
+GROUP BY reporte_coberturas_carreras_basicas.codigo_carrera, YEAR(reporte_coberturas_carreras_basicas.fecha_medicion);
+
+-- Vista de carreras con bibliografías básicas disponibles
+CREATE OR REPLACE VIEW vw_car_basica_bib_disponible AS
+SELECT 
+    reporte_coberturas_carreras_basicas.codigo_carrera AS codigo_carrera,
+    YEAR(reporte_coberturas_carreras_basicas.fecha_medicion) AS anho,
+    SUM(reporte_coberturas_carreras_basicas.no_bib_disponible_basica) AS no_bib_disp
+FROM reporte_coberturas_carreras_basicas 
+GROUP BY reporte_coberturas_carreras_basicas.codigo_carrera, YEAR(reporte_coberturas_carreras_basicas.fecha_medicion);
+
+-- Vista de carreras con bibliografías complementarias declaradas
+CREATE OR REPLACE VIEW vw_car_compl_bib_declarada AS
+SELECT 
+    reporte_coberturas_carreras_complementarias.codigo_carrera AS codigo_carrera,
+    YEAR(reporte_coberturas_carreras_complementarias.fecha_medicion) AS anho,
+    COUNT(DISTINCT reporte_coberturas_carreras_complementarias.id_bibliografia_declarada) AS no_bib_declaradas
+FROM reporte_coberturas_carreras_complementarias 
+GROUP BY reporte_coberturas_carreras_complementarias.codigo_carrera, YEAR(reporte_coberturas_carreras_complementarias.fecha_medicion);
+
+-- Vista de carreras con bibliografías complementarias disponibles
+CREATE OR REPLACE VIEW vw_car_compl_bib_disponible AS
+SELECT 
+    reporte_coberturas_carreras_complementarias.codigo_carrera AS codigo_carrera,
+    YEAR(reporte_coberturas_carreras_complementarias.fecha_medicion) AS anho,
+    SUM(reporte_coberturas_carreras_complementarias.no_bib_disponible_complementaria) AS no_bib_disponible
+FROM reporte_coberturas_carreras_complementarias 
+GROUP BY reporte_coberturas_carreras_complementarias.codigo_carrera, YEAR(reporte_coberturas_carreras_complementarias.fecha_medicion);
+
+-- Vista de cobertura básica por carrera
+CREATE OR REPLACE VIEW vw_car_cobertura_basica AS
+SELECT 
+    vw_car_basica_bib_declarada.codigo_carrera AS codigo_carrera,
+    vw_car_basica_bib_declarada.anho AS anho,
+    vw_car_basica_bib_declarada.no_bib_declarada AS no_bib_declarada,
+    vw_car_basica_bib_disponible.no_bib_disp AS no_bib_disp,
+    ((vw_car_basica_bib_disponible.no_bib_disp / vw_car_basica_bib_declarada.no_bib_declarada) * 100) AS cobertura_basica
+FROM vw_car_basica_bib_declarada 
+JOIN vw_car_basica_bib_disponible ON vw_car_basica_bib_declarada.codigo_carrera = vw_car_basica_bib_disponible.codigo_carrera AND vw_car_basica_bib_declarada.anho = vw_car_basica_bib_disponible.anho;
+
+-- Vista de cobertura complementaria por carrera
+CREATE OR REPLACE VIEW vw_car_cobertura_complementaria AS
+SELECT 
+    vw_car_compl_bib_declarada.codigo_carrera AS codigo_carrera,
+    vw_car_compl_bib_declarada.anho AS anho,
+    vw_car_compl_bib_declarada.no_bib_declaradas AS no_bib_declaradas,
+    vw_car_compl_bib_disponible.no_bib_disponible AS no_bib_disponible,
+    ((vw_car_compl_bib_disponible.no_bib_disponible / vw_car_compl_bib_declarada.no_bib_declaradas) * 100) AS cobertura_complementaria
+FROM vw_car_compl_bib_declarada 
+JOIN vw_car_compl_bib_disponible ON vw_car_compl_bib_declarada.codigo_carrera = vw_car_compl_bib_disponible.codigo_carrera AND vw_car_compl_bib_declarada.anho = vw_car_compl_bib_disponible.anho;
+
+-- Insertar datos de ejemplo para reportes
+INSERT INTO reportes (nombre, descripcion) VALUES 
+('Reporte de Coberturas Básicas', 'Reporte de cobertura de bibliografía básica por carrera y asignatura'),
+('Reporte de Coberturas Complementarias', 'Reporte de cobertura de bibliografía complementaria por carrera y asignatura');
+
+-- =====================================================
+-- TABLAS DE COMPATIBILIDAD (ESTRUCTURA ANTERIOR)
+-- =====================================================
+
+-- Tabla de tipos de asignaturas (para compatibilidad)
+CREATE TABLE IF NOT EXISTS tipos_asignaturas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL UNIQUE,
+    descripcion TEXT,
+    estado TINYINT(1) DEFAULT 1,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabla de relación carrera-asignatura (para compatibilidad)
+CREATE TABLE IF NOT EXISTS carrera_asignatura (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    carrera_id INT NOT NULL,
+    asignatura_codigo VARCHAR(20) NOT NULL,
+    estado TINYINT(1) DEFAULT 1,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (carrera_id) REFERENCES carreras(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_carrera_asignatura (carrera_id, asignatura_codigo)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Insertar tipos de asignaturas básicos
+INSERT INTO tipos_asignaturas (nombre, descripcion) VALUES 
+('REGULAR', 'Asignatura regular del plan de estudios'),
+('FORMACION_BASICA', 'Asignatura de formación básica'),
+('FORMACION_GENERAL', 'Asignatura de formación general'),
+('FORMACION_IDIOMAS', 'Asignatura de formación en idiomas'),
+('FORMACION_PROFESIONAL', 'Asignatura de formación profesional'),
+('FORMACION_VALORES', 'Asignatura de formación en valores'),
+('FORMACION_ESPECIALIDAD', 'Asignatura de formación en especialidad'),
+('FORMACION_ELECTIVA', 'Asignatura de formación electiva'),
+('FORMACION_ESPECIAL', 'Asignatura de formación especial');
+
+-- Insertar algunas relaciones carrera-asignatura de ejemplo
+INSERT INTO carrera_asignatura (carrera_id, asignatura_codigo) VALUES 
+(1, 'PROG-00123'),
+(1, 'PROG-00124'),
+(1, 'BD-00123'),
+(2, 'PROG-00123'),
+(2, 'BD-00123'); 
+
+-- Tabla para almacenar filtros de formación por carrera
+CREATE TABLE IF NOT EXISTS filtros_formaciones (
+    codigo_carrera VARCHAR(20) NOT NULL,
+    basica INT NOT NULL DEFAULT 0,
+    general INT NOT NULL DEFAULT 0,
+    idioma INT NOT NULL DEFAULT 0,
+    profesional INT NOT NULL DEFAULT 0,
+    valores INT NOT NULL DEFAULT 0,
+    especialidad INT NOT NULL DEFAULT 0,
+    especial INT NOT NULL DEFAULT 0,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (codigo_carrera),
+    FOREIGN KEY (codigo_carrera) REFERENCES carreras_espejos(codigo_carrera) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci; 

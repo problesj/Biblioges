@@ -1,0 +1,215 @@
+{% extends "base.twig" %}
+
+{% block title %}Reporte de Coberturas Complementarias{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Reporte de Coberturas Complementarias</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Filtros -->
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label for="filtroSede" class="form-label">Sede:</label>
+                            <select id="filtroSede" class="form-select">
+                                <option value="">Todas las sedes</option>
+                                {% set sedes = [] %}
+                                {% for carrera in carreras %}
+                                    {% if carrera.sede not in sedes %}
+                                        {% set sedes = sedes|merge([carrera.sede]) %}
+                                        <option value="{{ carrera.sede }}">{{ carrera.sede }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filtroTipoPrograma" class="form-label">Tipo de Programa:</label>
+                            <select id="filtroTipoPrograma" class="form-select">
+                                <option value="">Todos los tipos</option>
+                                <option value="P">Pregrado</option>
+                                <option value="G">Postgrado</option>
+                                <option value="O">Otro</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filtroEstado" class="form-label">Estado:</label>
+                            <select id="filtroEstado" class="form-select">
+                                <option value="">Todos los estados</option>
+                                <option value="1">Activo</option>
+                                <option value="0">No Activo</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="buscadorCarrera" class="form-label">Buscar Carrera:</label>
+                            <input type="text" id="buscadorCarrera" class="form-control" placeholder="Nombre de la carrera...">
+                        </div>
+                    </div>
+                    
+                    <!-- Botones de acción -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <button id="limpiarFiltros" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-times"></i> Limpiar Filtros
+                            </button>
+                            <button id="exportarExcel" class="btn btn-success btn-sm float-end">
+                                <i class="fas fa-file-excel"></i> Exportar a Excel
+                            </button>
+                        </div>
+                    </div>
+
+                    <table class="table table-bordered table-hover" id="tablaCarreras">
+                        <thead>
+                            <tr>
+                                <th>Sede</th>
+                                <th>Código Carrera</th>
+                                <th>Nombre Carrera</th>
+                                <th>Tipo Programa</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for carrera in carreras %}
+                            <tr data-sede="{{ carrera.sede }}" data-tipo-programa="{{ carrera.tipo_programa }}" data-estado="{{ carrera.estado }}" data-nombre="{{ carrera.nombre|lower }}">
+                                <td>{{ carrera.sede }}</td>
+                                <td>{{ carrera.codigo }}</td>
+                                <td>{{ carrera.nombre }}</td>
+                                <td>
+                                    {% if carrera.tipo_programa == 'P' %}
+                                        <span class="badge bg-primary">Pregrado</span>
+                                    {% elseif carrera.tipo_programa == 'G' %}
+                                        <span class="badge bg-success">Postgrado</span>
+                                    {% elseif carrera.tipo_programa == 'O' %}
+                                        <span class="badge bg-warning">Otro</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ carrera.tipo_programa }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if carrera.estado == 1 %}
+                                        <span class="badge bg-success">Activo</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">No Activo</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="/biblioges/reportes/coberturas/{{ carrera.sede_id }}/{{ carrera.carrera_id }}" class="btn btn-primary btn-sm">Coberturas Básicas</a>
+                                    <a href="/biblioges/reportes/coberturas-complementaria/{{ carrera.sede_id }}/{{ carrera.carrera_id }}" class="btn btn-secondary btn-sm">Coberturas Complementarias</a>
+                                    <a href="#" class="btn btn-info btn-sm">Fusión reportes</a>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="6">No hay carreras registradas.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tabla = document.getElementById('tablaCarreras');
+    const filtroSede = document.getElementById('filtroSede');
+    const filtroTipoPrograma = document.getElementById('filtroTipoPrograma');
+    const filtroEstado = document.getElementById('filtroEstado');
+    const buscadorCarrera = document.getElementById('buscadorCarrera');
+    const limpiarFiltros = document.getElementById('limpiarFiltros');
+    const exportarExcel = document.getElementById('exportarExcel');
+
+    function aplicarFiltros() {
+        const sede = filtroSede.value;
+        const tipoPrograma = filtroTipoPrograma.value;
+        const estado = filtroEstado.value;
+        const nombreCarrera = buscadorCarrera.value.toLowerCase();
+
+        const filas = tabla.querySelectorAll('tbody tr');
+        
+        filas.forEach(fila => {
+            const sedeFila = fila.getAttribute('data-sede');
+            const tipoProgramaFila = fila.getAttribute('data-tipo-programa');
+            const estadoFila = fila.getAttribute('data-estado');
+            const nombreFila = fila.getAttribute('data-nombre');
+
+            const coincideSede = !sede || sedeFila === sede;
+            const coincideTipoPrograma = !tipoPrograma || tipoProgramaFila === tipoPrograma;
+            const coincideEstado = !estado || estadoFila === estado;
+            const coincideNombre = !nombreCarrera || nombreFila.includes(nombreCarrera);
+
+            if (coincideSede && coincideTipoPrograma && coincideEstado && coincideNombre) {
+                fila.style.display = '';
+            } else {
+                fila.style.display = 'none';
+            }
+        });
+
+        // Mostrar mensaje si no hay resultados
+        const filasVisibles = tabla.querySelectorAll('tbody tr:not([style*="display: none"])');
+        const mensajeNoResultados = tabla.querySelector('tbody tr[data-no-resultados]');
+        
+        if (mensajeNoResultados) {
+            mensajeNoResultados.remove();
+        }
+
+        if (filasVisibles.length === 0) {
+            const nuevaFila = document.createElement('tr');
+            nuevaFila.setAttribute('data-no-resultados', 'true');
+            nuevaFila.innerHTML = '<td colspan="6" class="text-center text-muted">No se encontraron carreras con los filtros aplicados.</td>';
+            tabla.querySelector('tbody').appendChild(nuevaFila);
+        }
+    }
+
+    // Event listeners para filtros
+    filtroSede.addEventListener('change', aplicarFiltros);
+    filtroTipoPrograma.addEventListener('change', aplicarFiltros);
+    filtroEstado.addEventListener('change', aplicarFiltros);
+    buscadorCarrera.addEventListener('input', aplicarFiltros);
+
+    // Limpiar filtros
+    limpiarFiltros.addEventListener('click', function() {
+        filtroSede.value = '';
+        filtroTipoPrograma.value = '';
+        filtroEstado.value = '';
+        buscadorCarrera.value = '';
+        aplicarFiltros();
+    });
+
+    // Exportar a Excel
+    exportarExcel.addEventListener('click', function() {
+        // Crear tabla temporal con solo las filas visibles
+        const filasVisibles = tabla.querySelectorAll('tbody tr:not([style*="display: none"])');
+        let csvContent = "data:text/csv;charset=utf-8,";
+        
+        // Encabezados
+        csvContent += "Sede,Código Carrera,Nombre Carrera,Tipo Programa,Estado\n";
+        
+        // Datos
+        filasVisibles.forEach(fila => {
+            const celdas = fila.querySelectorAll('td');
+            const sede = celdas[0].textContent.trim();
+            const codigo = celdas[1].textContent.trim();
+            const nombre = celdas[2].textContent.trim();
+            const tipoPrograma = celdas[3].textContent.trim();
+            const estado = celdas[4].textContent.trim();
+            
+            csvContent += `"${sede}","${codigo}","${nombre}","${tipoPrograma}","${estado}"\n`;
+        });
+        
+        // Descargar archivo
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "carreras_cobertura_complementaria.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+});
+</script>
+{% endblock %} 

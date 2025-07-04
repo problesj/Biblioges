@@ -13,20 +13,9 @@ class BaseController
 
     public function __construct()
     {
-        // Configurar Twig
-        $loader = new FilesystemLoader(__DIR__ . '/../../templates');
-        $this->twig = new Environment($loader, [
-            'cache' => __DIR__ . '/../../cache',
-            'auto_reload' => true
-        ]);
-
-        // Agregar función url a Twig
-        $this->twig->addFunction(new TwigFunction('url', function ($path) {
-            return Config::get('app_url') . ltrim($path, '/');
-        }));
-
-        // Agregar variable global app_url
-        $this->twig->addGlobal('app_url', Config::get('app_url'));
+        // Usar la instancia global de Twig
+        global $twig;
+        $this->twig = $twig;
 
         // Inicializar la sesión
         if (session_status() === PHP_SESSION_NONE) {

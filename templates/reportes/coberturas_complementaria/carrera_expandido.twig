@@ -1,0 +1,499 @@
+{% extends "base.twig" %}
+
+{% block title %}Coberturas Complementarias Expandido{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Coberturas Complementarias Expandido</h3>
+                    <h5 class="card-subtitle">{{ carrera.sede }} - {{ carrera.codigo }} - {{ carrera.nombre }}</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Botones de acción -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-secondary" onclick="window.history.back()">
+                                    <i class="fas fa-arrow-left"></i> Volver
+                                </button>
+                                <button type="button" class="btn btn-success" onclick="guardarReporte()">
+                                    <i class="fas fa-save"></i> Guardar Reporte
+                                </button>
+                                <button type="button" class="btn btn-excel" onclick="exportarExcel()">
+                                    <i class="fas fa-file-excel"></i> Exportar Excel
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="exportarCSV()">
+                                    <i class="fas fa-file-csv"></i> Exportar CSV
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form id="filtroFormacionForm" method="get">
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <h6>Selección de Asignaturas de Formación</h6>
+                                <p class="text-muted small mb-2">
+                                    Tipos de formación disponibles para esta carrera: 
+                                    {% for tipo in tipos_formacion_disponibles %}
+                                        <span class="badge bg-info">{{ tipo }}</span>
+                                    {% endfor %}
+                                </p>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="formacion_basica" name="tipos_formacion[]" value="FORMACION_BASICA" 
+                                                   {% if not hay_filtros_aplicados or 'FORMACION_BASICA' in tipos_formacion_seleccionados %}checked{% endif %}>
+                                            <label class="form-check-label" for="formacion_basica">
+                                                Formación Básica 
+                                                <small class="text-muted">({{ 'FORMACION_BASICA' in tipos_formacion_disponibles ? 'Disponible' : 'No disponible' }})</small>
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="formacion_general" name="tipos_formacion[]" value="FORMACION_GENERAL"
+                                                   {% if not hay_filtros_aplicados or 'FORMACION_GENERAL' in tipos_formacion_seleccionados %}checked{% endif %}>
+                                            <label class="form-check-label" for="formacion_general">
+                                                Formación General
+                                                <small class="text-muted">({{ 'FORMACION_GENERAL' in tipos_formacion_disponibles ? 'Disponible' : 'No disponible' }})</small>
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="formacion_idiomas" name="tipos_formacion[]" value="FORMACION_IDIOMAS"
+                                                   {% if not hay_filtros_aplicados or 'FORMACION_IDIOMAS' in tipos_formacion_seleccionados %}checked{% endif %}>
+                                            <label class="form-check-label" for="formacion_idiomas">
+                                                Formación Idiomas
+                                                <small class="text-muted">({{ 'FORMACION_IDIOMAS' in tipos_formacion_disponibles ? 'Disponible' : 'No disponible' }})</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="formacion_profesional" name="tipos_formacion[]" value="FORMACION_PROFESIONAL"
+                                                   {% if not hay_filtros_aplicados or 'FORMACION_PROFESIONAL' in tipos_formacion_seleccionados %}checked{% endif %}>
+                                            <label class="form-check-label" for="formacion_profesional">
+                                                Formación Profesional
+                                                <small class="text-muted">({{ 'FORMACION_PROFESIONAL' in tipos_formacion_disponibles ? 'Disponible' : 'No disponible' }})</small>
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="formacion_valores" name="tipos_formacion[]" value="FORMACION_VALORES"
+                                                   {% if not hay_filtros_aplicados or 'FORMACION_VALORES' in tipos_formacion_seleccionados %}checked{% endif %}>
+                                            <label class="form-check-label" for="formacion_valores">
+                                                Formación Valores
+                                                <small class="text-muted">({{ 'FORMACION_VALORES' in tipos_formacion_disponibles ? 'Disponible' : 'No disponible' }})</small>
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="formacion_especialidad" name="tipos_formacion[]" value="FORMACION_ESPECIALIDAD"
+                                                   {% if not hay_filtros_aplicados or 'FORMACION_ESPECIALIDAD' in tipos_formacion_seleccionados %}checked{% endif %}>
+                                            <label class="form-check-label" for="formacion_especialidad">
+                                                Formación Especialidad
+                                                <small class="text-muted">({{ 'FORMACION_ESPECIALIDAD' in tipos_formacion_disponibles ? 'Disponible' : 'No disponible' }})</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="formacion_especial" name="tipos_formacion[]" value="FORMACION_ESPECIAL"
+                                                   {% if not hay_filtros_aplicados or 'FORMACION_ESPECIAL' in tipos_formacion_seleccionados %}checked{% endif %}>
+                                            <label class="form-check-label" for="formacion_especial">
+                                                Formación Especial
+                                                <small class="text-muted">({{ 'FORMACION_ESPECIAL' in tipos_formacion_disponibles ? 'Disponible' : 'No disponible' }})</small>
+                                            </label>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary btn-sm mt-2">
+                                            <i class="fas fa-filter"></i> Aplicar Filtros
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="table-responsive">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6>Bibliografía Complementaria Detallada</h6>
+                            <span class="badge bg-secondary" id="contador-filas">
+                                Mostrando {{ datos_bibliografia|length }} registros
+                            </span>
+                        </div>
+                        
+                        {% if datos_bibliografia|length > 0 %}
+                        <table class="table table-striped table-bordered table-hover" id="tablaBibliografia">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Código Asignatura</th>
+                                    <th>Nombre Asignatura</th>
+                                    <th>Tipo Asignatura</th>
+                                    <th>Título Declarado</th>
+                                    <th>Año de Edición</th>
+                                    <th># Ejemplares Impresos</th>
+                                    <th># Ejemplares Digitales</th>
+                                    <th>% Cobertura</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for fila in datos_bibliografia %}
+                                {% if fila.id_bibliografia_declarada %}
+                                <tr data-tipo-asignatura="{{ fila.tipo_asignatura }}" data-bibliografia-id="{{ fila.id_bibliografia_declarada }}">
+                                    <td><strong>{{ fila.codigo_asignatura }}</strong></td>
+                                    <td>{{ fila.nombre_asignatura }}</td>
+                                    <td>
+                                        {% if fila.tipo_asignatura == 'REGULAR' %}
+                                            <span class="badge bg-success">REGULAR</span>
+                                        {% elseif fila.tipo_asignatura == 'FORMACION_BASICA' %}
+                                            <span class="badge bg-primary">Formación Básica</span>
+                                        {% elseif fila.tipo_asignatura == 'FORMACION_GENERAL' %}
+                                            <span class="badge bg-info">Formación General</span>
+                                        {% elseif fila.tipo_asignatura == 'FORMACION_IDIOMAS' %}
+                                            <span class="badge bg-warning">Formación Idiomas</span>
+                                        {% elseif fila.tipo_asignatura == 'FORMACION_PROFESIONAL' %}
+                                            <span class="badge bg-secondary">Formación Profesional</span>
+                                        {% elseif fila.tipo_asignatura == 'FORMACION_VALORES' %}
+                                            <span class="badge bg-dark">Formación Valores</span>
+                                        {% elseif fila.tipo_asignatura == 'FORMACION_ESPECIALIDAD' %}
+                                            <span class="badge bg-danger">Formación Especialidad</span>
+                                        {% elseif fila.tipo_asignatura == 'FORMACION_ESPECIAL' %}
+                                            <span class="badge bg-purple">Formación Especial</span>
+                                        {% else %}
+                                            <span class="badge bg-light text-dark">{{ fila.tipo_asignatura }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="text-wrap" style="max-width: 300px;">
+                                            {{ fila.titulo_declarado }}
+                                        </div>
+                                    </td>
+                                    <td class="text-center">{{ fila.anio_edicion }}</td>
+                                    <td class="text-center">
+                                        {% if fila.ejemplares_impresos == 0 and fila.ejemplares_digitales == 0 and not fila.disponible %}
+                                            <span class="text-muted">Sin información</span>
+                                        {% else %}
+                                            {{ fila.ejemplares_impresos }}
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if fila.ejemplares_impresos == 0 and fila.ejemplares_digitales == 0 and not fila.disponible %}
+                                            <span class="text-muted">Sin información</span>
+                                        {% elseif fila.ejemplares_digitales == 0 %}
+                                            <span class="text-success">Ilimitado</span>
+                                        {% else %}
+                                            {{ fila.ejemplares_digitales }}
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if fila.cobertura == 100 %}
+                                            <span class="badge bg-success">{{ fila.cobertura }}%</span>
+                                        {% elseif fila.cobertura > 0 %}
+                                            <span class="badge bg-warning">{{ fila.cobertura }}%</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">{{ fila.cobertura }}%</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> No hay bibliografía complementaria declarada para las asignaturas seleccionadas.
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Tarjetas de totales -->
+                    {% if cobertura_complementaria_total %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="card-title mb-0">
+                                        <i class="fas fa-calculator"></i> Totales de la Carrera
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-2">
+                                            <div class="text-center">
+                                                <h4 class="text-primary">{{ cobertura_complementaria_total.total_titulos_declarados }}</h4>
+                                                <p class="text-muted mb-0">Total Títulos Declarados</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="text-center">
+                                                <h4 class="text-info">{{ cobertura_complementaria_total.total_titulos_disponibles }}</h4>
+                                                <p class="text-muted mb-0">Total Títulos Disponibles</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="text-center">
+                                                <h4 class="text-success">{{ cobertura_complementaria_total.total_ejemplares_impresos }}</h4>
+                                                <p class="text-muted mb-0">Total Ejemplares Impresos</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="text-center">
+                                                <h4 class="text-info">
+                                                    {% if cobertura_complementaria_total.total_titulos_disponibles > 0 and cobertura_complementaria_total.total_ejemplares_digitales == 0 %}
+                                                        Ilimitado
+                                                    {% elseif cobertura_complementaria_total.total_ejemplares_digitales == 0 %}
+                                                        Sin información
+                                                    {% else %}
+                                                        {{ cobertura_complementaria_total.total_ejemplares_digitales }}
+                                                    {% endif %}
+                                                </h4>
+                                                <p class="text-muted mb-0">Total Ejemplares Digitales</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="text-center">
+                                                <h4 class="{% if cobertura_complementaria_total.cobertura_complementaria_total >= 80 %}text-success{% elseif cobertura_complementaria_total.cobertura_complementaria_total >= 60 %}text-warning{% else %}text-danger{% endif %}">
+                                                    {{ cobertura_complementaria_total.cobertura_complementaria_total }}%
+                                                </h4>
+                                                <p class="text-muted mb-0">Cobertura Complementaria de la Carrera</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.btn-excel {
+    background-color: #217346;
+    border-color: #217346;
+    color: white;
+}
+
+.btn-excel:hover {
+    background-color: #1e6b3d;
+    border-color: #1e6b3d;
+    color: white;
+}
+
+.badge.bg-purple {
+    background-color: #6f42c1 !important;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Actualizar contador de filas
+    const filas = document.querySelectorAll('tbody tr');
+    const contador = document.getElementById('contador-filas');
+    if (contador) {
+        contador.textContent = `Mostrando ${filas.length} registros`;
+    }
+});
+
+function exportarCSV() {
+    const tabla = document.getElementById('tablaBibliografia');
+    const filas = tabla.querySelectorAll('tbody tr');
+    
+    let csvContent = '\uFEFF'; // BOM para UTF-8
+    csvContent += 'Código Asignatura,Nombre Asignatura,Tipo Asignatura,Título Declarado,Año de Edición,Ejemplares Impresos,Ejemplares Digitales,Cobertura\n';
+    
+    filas.forEach(fila => {
+        const celdas = fila.querySelectorAll('td');
+        const filaData = [];
+        
+        // Código Asignatura
+        filaData.push(`"${celdas[0].textContent.trim()}"`);
+        // Nombre Asignatura
+        filaData.push(`"${celdas[1].textContent.trim()}"`);
+        // Tipo Asignatura
+        filaData.push(`"${celdas[2].textContent.trim()}"`);
+        // Título Declarado
+        filaData.push(`"${celdas[3].textContent.trim()}"`);
+        // Año de Edición
+        filaData.push(celdas[4].textContent.trim());
+        // Ejemplares Impresos
+        filaData.push(celdas[5].textContent.trim());
+        // Ejemplares Digitales
+        filaData.push(celdas[6].textContent.trim());
+        // Cobertura
+        filaData.push(celdas[7].textContent.trim());
+        
+        csvContent += filaData.join(',') + '\n';
+    });
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'cobertura_complementaria_expandido_{{ carrera.codigo|replace({" ": "_"}) }}.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function exportarExcel() {
+    var url = '/biblioges/reportes/coberturas-complementaria-expandido-excel/{{ carrera.sede_id }}/{{ carrera.carrera_id }}';
+    var btn = $('.btn-excel');
+    btn.prop('disabled', true).text('Generando...');
+    
+    // Agregar parámetros de filtro si existen
+    var queryString = window.location.search;
+    if (queryString) {
+        url += queryString;
+    }
+    
+    $.get(url, function(data) {
+        if (data.url) {
+            window.open(data.url, '_blank');
+        } else {
+            console.error('No se pudo generar el archivo.');
+        }
+    }).always(function() {
+        btn.prop('disabled', false).html('<i class="fas fa-file-excel"></i> Exportar Excel');
+    });
+}
+
+// Función para guardar el reporte
+function guardarReporte() {
+    // Obtener los parámetros de la URL actual
+    const urlParams = new URLSearchParams(window.location.search);
+    const tiposFormacion = urlParams.getAll('tipos_formacion[]');
+    const tiposFormacionVacio = urlParams.get('tipos_formacion_vacio');
+    
+    // Construir la URL para guardar el reporte
+    let guardarUrl = '/biblioges/reportes/guardar-cobertura-complementaria/{{ carrera.sede_id }}/{{ carrera.carrera_id }}';
+    
+    // Recopilar datos de la tabla visible
+    const tabla = document.getElementById('tablaBibliografia');
+    const filas = tabla.querySelectorAll('tbody tr');
+    const detalles = [];
+    
+    filas.forEach(fila => {
+        const celdas = fila.querySelectorAll('td');
+        const idBibliografiaDeclarada = fila.getAttribute('data-bibliografia-id');
+        if (!idBibliografiaDeclarada) return; // Saltar filas sin bibliografía declarada
+        // Extraer valores de las celdas
+        const codigoAsignatura = celdas[0].textContent.trim();
+        const nombreAsignatura = celdas[1].textContent.trim();
+        const tipoAsignatura = celdas[2].textContent.trim();
+        const tituloDeclarado = celdas[3].textContent.trim();
+        const anioEdicion = celdas[4].textContent.trim();
+        // Ejemplares impresos
+        let ejemplaresImpresos = 0;
+        const textoImpresos = celdas[5].textContent.trim();
+        if (textoImpresos !== 'Sin información') {
+            ejemplaresImpresos = parseInt(textoImpresos) || 0;
+        }
+        // Ejemplares digitales
+        let ejemplaresDigitales = 0;
+        const textoDigitales = celdas[6].textContent.trim();
+        if (textoDigitales === 'Ilimitado') {
+            ejemplaresDigitales = 0; // 0 significa ilimitado
+        } else if (textoDigitales !== 'Sin información') {
+            ejemplaresDigitales = parseInt(textoDigitales) || 0;
+        }
+        // Cobertura
+        const coberturaTexto = celdas[7].textContent.trim();
+        const cobertura = parseInt(coberturaTexto.replace('%', '')) || 0;
+        const disponible = cobertura > 0 ? 1 : 0;
+        detalles.push({
+            codigo_asignatura: codigoAsignatura,
+            nombre_asignatura: nombreAsignatura,
+            tipo_asignatura: tipoAsignatura,
+            titulo_declarado: tituloDeclarado,
+            anio_edicion: anioEdicion,
+            ejemplares_impresos: ejemplaresImpresos,
+            ejemplares_digitales: ejemplaresDigitales,
+            cobertura: cobertura,
+            disponible: disponible,
+            id_bibliografia_declarada: idBibliografiaDeclarada
+        });
+    });
+    
+    // Preparar datos para enviar
+    const datos = {
+        detalles: detalles,
+        fecha_medicion: new Date().toISOString(),
+        filtros_aplicados: {
+            tipos_formacion: tiposFormacion,
+            tipos_formacion_vacio: tiposFormacionVacio
+        }
+    };
+    
+    // Mostrar confirmación
+    Swal.fire({
+        title: '¿Guardar Reporte?',
+        text: `Se guardarán ${detalles.length} registros de cobertura complementaria para el año actual. Si ya existe un reporte para este año, se actualizará.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, guardar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Mostrar indicador de carga
+            Swal.fire({
+                title: 'Guardando reporte...',
+                text: 'Por favor espere mientras se procesa la información',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // Realizar la petición al servidor
+            fetch(guardarUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(datos)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en el servidor');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Cerrar el indicador de carga
+                Swal.close();
+                
+                // Mostrar mensaje de éxito
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Reporte guardado!',
+                    text: data.message || 'El reporte se ha guardado correctamente',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo guardar el reporte: ' + error.message
+                });
+            });
+        }
+    });
+}
+</script>
+{% endblock %} 

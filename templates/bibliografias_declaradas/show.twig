@@ -3,184 +3,128 @@
 {% block title %}Detalles de Bibliografía Declarada{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Detalles de Bibliografía Declarada</h1>
-        <div>
-            <div class="btn-group">
-                <a href="{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/edit" class="btn btn-primary">
-                    <i class="fas fa-edit"></i> Editar
-                </a>
-                <a href="{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/vincular" class="btn btn-success">
-                    <i class="fas fa-link"></i> Vincular
-                </a>
-                <a href="{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/buscar-catalogo" class="btn btn-info">
-                    <i class="fas fa-search"></i> Buscar en Catálogo
-                </a>
-                <form action="{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/delete" method="POST" class="d-inline" onsubmit="return confirm('¿Está seguro de eliminar esta bibliografía?');">
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash"></i> Eliminar
-                    </button>
-                </form>
-            </div>
-            <a href="{{ app_url }}bibliografias-declaradas" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Volver
-            </a>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-12">
-                    <!-- Tipo de Bibliografía -->
-                    <div class="mb-4">
-                        <h3 class="text-primary">
-                            {% if bibliografia.tipo == 'libro' %}
-                                <i class="fas fa-book"></i>
-                            {% elseif bibliografia.tipo == 'articulo' %}
-                                <i class="fas fa-newspaper"></i>
-                            {% elseif bibliografia.tipo == 'tesis' %}
-                                <i class="fas fa-graduation-cap"></i>
-                            {% elseif bibliografia.tipo == 'sitio_web' %}
-                                <i class="fas fa-globe"></i>
-                            {% elseif bibliografia.tipo == 'software' %}
-                                <i class="fas fa-laptop-code"></i>
-                            {% elseif bibliografia.tipo == 'generico' %}
-                                <i class="fas fa-file-alt"></i>
-                            {% endif %}
-                            {{ bibliografia.tipo|title }}
-                        </h3>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Detalles de la Bibliografía Declarada</h3>
+                    <div class="card-tools" align="right">
+                        <a href="{{ app_url }}bibliografias-declaradas" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </a>
+                        <a href="{{ app_url }}bibliografias-declaradas/edit/{{ bibliografia.id }}" class="btn btn-primary">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
                     </div>
-
-                    <!-- Título -->
-                    <div class="mb-3">
-                        <h4 class="text-muted">Título:</h4>
-                        <h2>{{ bibliografia.titulo }}</h2>
-                    </div>
-
-                    <!-- Autores -->
-                    <div class="mb-3">
-                        <h4>Autor(es):</h4>
-                        <ul class="list-unstyled">
-                            {% for autor in bibliografia.autores %}
-                                <li>{{ autor.apellidos }}, {{ autor.nombres }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-
-                    <!-- Información General -->
-                    <div class="mb-3">
-                        <p><strong>Año de Edición:</strong> {{ bibliografia.anio_publicacion }}</p>
-                        <p><strong>Editorial:</strong> {{ bibliografia.editorial }}</p>
-                        {% if bibliografia.edicion %}
-                            <p><strong>Edición:</strong> {{ bibliografia.edicion }}</p>
-                        {% endif %}
-                        <p><strong>Formato:</strong> {{ bibliografia.formato|title }}</p>
-                        {% if bibliografia.url %}
-                            <div class="mb-3">
-                                <p><strong>URL:</strong></p>
-                                <div class="d-flex align-items-center">
-                                    <div class="me-3 text-break" style="max-width: 70%;">
-                                        <a href="{{ bibliografia.url }}" target="_blank" class="text-primary">
-                                            {{ bibliografia.url }}
-                                        </a>
-                                    </div>
-                                    <a href="{{ bibliografia.url }}" target="_blank" class="btn btn-sm btn-info">
-                                        <i class="fas fa-external-link-alt"></i> Abrir enlace
-                                    </a>
-                                </div>
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Datos Específicos según Tipo -->
-                    <div class="mb-3">
-                        <h4>Datos Específicos:</h4>
-                        {% if bibliografia.tipo == 'libro' %}
-                            <p><strong>ISBN:</strong> {{ bibliografia.isbn }}</p>
-                        {% elseif bibliografia.tipo == 'articulo' %}
-                            <p><strong>Título de Revista:</strong> {{ bibliografia.titulo_revista }}</p>
-                            <p><strong>ISSN:</strong> {{ bibliografia.issn }}</p>
-                            <p><strong>Cronología:</strong> {{ bibliografia.cronologia }}</p>
-                        {% elseif bibliografia.tipo == 'generico' %}
-                            <p><strong>Descripción:</strong> {{ bibliografia.descripcion }}</p>
-                        {% elseif bibliografia.tipo == 'tesis' %}
-                            <p><strong>Carrera:</strong> {{ bibliografia.carrera_nombre }}</p>
-                        {% elseif bibliografia.tipo == 'software' %}
-                            <p><strong>Versión:</strong> {{ bibliografia.version }}</p>
-                        {% elseif bibliografia.tipo == 'sitio_web' %}
-                            <p><strong>Fecha de Consulta:</strong> {{ bibliografia.fecha_consulta|date('d/m/Y') }}</p>
-                        {% endif %}
-                    </div>
-
-                    <div class="mb-3">
-                        <p><strong>Tipo:</strong> 
-                            {% if bibliografia.tipo == 'libro' %}
-                                <i class="fas fa-book text-primary"></i> Libro
-                            {% elseif bibliografia.tipo == 'articulo' %}
-                                <i class="fas fa-newspaper text-info"></i> Artículo
-                            {% elseif bibliografia.tipo == 'tesis' %}
-                                <i class="fas fa-graduation-cap text-success"></i> Tesis
-                            {% elseif bibliografia.tipo == 'sitio_web' %}
-                                <i class="fas fa-globe text-warning"></i> Sitio Web
-                            {% elseif bibliografia.tipo == 'software' %}
-                                <i class="fas fa-laptop-code text-danger"></i> Software
-                            {% elseif bibliografia.tipo == 'generico' %}
-                                <i class="fas fa-file-alt text-secondary"></i> Genérico
-                            {% endif %}
-                        </p>
-                    </div>
-
-                    {% if bibliografia.nota %}
-                        <div class="mb-3">
-                            <h4>Nota:</h4>
-                            <p>{{ bibliografia.nota }}</p>
-                        </div>
+                </div>
+                <div class="card-body">
+                    {# Mostrar detalles de la bibliografía según su tipo #}
+                    {% if bibliografia.tipo == 'libro' %}
+                        {% include 'bibliografias_declaradas/partials/libro_details.twig' %}
+                    {% elseif bibliografia.tipo == 'articulo' %}
+                        {% include 'bibliografias_declaradas/partials/articulo_details.twig' %}
+                    {% elseif bibliografia.tipo == 'tesis' %}
+                        {% include 'bibliografias_declaradas/partials/tesis_details.twig' %}
+                    {% elseif bibliografia.tipo == 'sitio_web' %}
+                        {% include 'bibliografias_declaradas/partials/sitio_web_details.twig' %}
+                    {% elseif bibliografia.tipo == 'software' %}
+                        {% include 'bibliografias_declaradas/partials/software_details.twig' %}
+                    {% else %}
+                        {% include 'bibliografias_declaradas/partials/generico_details.twig' %}
                     {% endif %}
+
+                    {# Mostrar asignaturas vinculadas #}
+                    <div class="mt-4">
+                        <h4>Asignaturas Vinculadas</h4>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th style="border-color: #2c3e50;background-color:rgb(1, 96, 192); color:white;">Asignatura</th>
+                                        <th style="border-color: #2c3e50;background-color:rgb(1, 96, 192); color:white;">Códigos</th>
+                                        <th style="border-color: #2c3e50;background-color:rgb(1, 96, 192); color:white; text-align:center">Tipo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for asignatura in asignaturas %}
+                                        <tr>
+                                            <td>{{ asignatura.nombre }}</td>
+                                            <td>{{ asignatura.codigos }}</td>
+                                            <td align="center">
+                                                {% if asignatura.tipo_bibliografia == 'basica' %}
+                                                    <span class="badge bg-primary" style="font-size: 0.9em; padding: 8px 12px;">Bibliografía Básica</span>
+                                                {% elseif asignatura.tipo_bibliografia == 'complementaria' %}
+                                                    <span class="badge bg-info" style="font-size: 0.9em; padding: 8px 12px;">Bibliografía Complementaria</span>
+                                                {% elseif asignatura.tipo_bibliografia == 'otro' %}
+                                                    <span class="badge bg-secondary" style="font-size: 0.9em; padding: 8px 12px;">Otro</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary" style="font-size: 0.9em; padding: 8px 12px;">{{ asignatura.tipo_bibliografia|title }}</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {# Mostrar bibliografías disponibles #}
+                    <div class="mt-4">
+                        <h4>Bibliografías Disponibles</h4>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>ID MMS</th>
+                                        <th>Título</th>
+                                        <th>Autor(es)</th>
+                                        <th>Año</th>
+                                        <th>Editorial</th>
+                                        <th style="text-align:center;">URL Acceso</th>
+                                        <th style="text-align:center;">URL Catálogo</th>
+                                        <th style="text-align:center;">Disponibilidad</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for bd in bibliografias_disponibles %}
+                                        <tr>
+                                            <td>{{ bd.id_mms }}</td>
+                                            <td>{{ bd.titulo }}</td>
+                                            <td>{{ bd.autores }}</td>
+                                            <td>{{ bd.anio_edicion }}</td>
+                                            <td>{{ bd.editorial }}</td>
+                                            <td  align="center">
+                                                {% if bd.url_acceso %}
+                                                    <a href="{{ bd.url_acceso }}" target="_blank" class="btn btn-sm btn-info">
+                                                        <i class="fas fa-external-link-alt"></i>
+                                                    </a>
+                                                {% endif %}
+                                            </td>
+                                            <td align="center">
+                                                {% if bd.url_catalogo %}
+                                                    <a href="{{ bd.url_catalogo }}" target="_blank" class="btn btn-sm btn-info">
+                                                        <i class="fas fa-external-link-alt"></i>
+                                                    </a>
+                                                {% endif %}
+                                            </td>
+                                            <td align="center">
+                                                {% if bd.disponibilidad == 'impreso' %}
+                                                    <span class="badge bg-info">Impreso</span>
+                                                {% elseif (bd.disponibilidad == 'electronico') %}
+                                                    <span class="badge bg-info">Electrónico</span>
+                                                {% else  %}
+                                                    <span class="badge bg-info">Ambos</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- Tabla de Asignaturas Vinculadas -->
-<div class="card mt-4">
-    <div class="card-header">
-        <h3 class="card-title mb-0">Asignaturas Vinculadas</h3>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th>Código(s) Asignatura</th>
-                        <th>Nombre de la Asignatura</th>
-                        <th>Tipo de Bibliografía</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for asignatura in asignaturas_vinculadas %}
-                    <tr>
-                        <td>
-                            <div style="font-size: 0.9em;">
-                                {% if asignatura.codigos %}
-                                    {{ asignatura.codigos|trim|nl2br }}
-                                {% else %}
-                                    Sin código
-                                {% endif %}
-                            </div>
-                        </td>
-                        <td>{{ asignatura.nombre }}</td>
-                        <td>{{ asignatura.tipo_bibliografia }}</td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="3" class="text-center">No hay asignaturas vinculadas</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
         </div>
     </div>
 </div>

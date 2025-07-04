@@ -2,7 +2,7 @@ RewriteEngine On
 RewriteBase /biblioges/
 
 # Excluir archivos estáticos de la reescritura
-RewriteCond %{REQUEST_URI} \.(css|js|jpg|jpeg|png|gif)$ [NC]
+RewriteCond %{REQUEST_URI} \.(css|js|jpg|jpeg|png|gif|ico|woff|woff2|ttf|eot)$ [NC]
 RewriteRule ^ - [L]
 
 # Redirigir todo lo demás a index.php

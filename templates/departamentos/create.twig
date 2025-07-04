@@ -12,14 +12,6 @@
             </a>
         </div>
         <div class="card-body">
-            {% if error %}
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-circle me-2"></i>
-                {{ error }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            {% endif %}
-
             <form method="POST" action="{{ app_url }}departamentos" id="departamentoForm" class="needs-validation" novalidate>
                 <div class="row">
                     <div class="col-md-6">
@@ -106,5 +98,19 @@
         }, false)
     })
 })()
+
+// Mostrar mensajes de error con SweetAlert2
+{% if error is not empty %}
+document.addEventListener('DOMContentLoaded', function() {
+    Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: '{{ error|escape('js') }}',
+        timer: 5000,
+        timerProgressBar: true,
+        showConfirmButton: true
+    });
+});
+{% endif %}
 </script>
 {% endblock %} 

@@ -10,21 +10,20 @@ use App\Core\Config;
 use PDO;
 use PDOException;
 use App\Core\Response;
+use Psr\Http\Message\ResponseInterface as ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Exception;
 
 class FacultadController
 {
     protected $session;
     protected $twig;
-    protected $db;
+    protected $pdo;
 
     public function __construct()
     {
         $this->session = new Session();
         
-        // Usar la instancia global de Twig
-        global $twig;
-        $this->twig = $twig;
-
         // Configuración de la base de datos
         $dbConfig = [
             'host' => $_ENV['DB_HOST'] ?? 'localhost',
@@ -36,7 +35,7 @@ class FacultadController
 
         try {
             $dsn = "mysql:host={$dbConfig['host']};port={$dbConfig['port']};dbname={$dbConfig['dbname']};charset=utf8mb4";
-            $this->db = new PDO($dsn, $dbConfig['user'], $dbConfig['password'], [
+            $this->pdo = new PDO($dsn, $dbConfig['user'], $dbConfig['password'], [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
@@ -44,335 +43,291 @@ class FacultadController
         } catch (PDOException $e) {
             die("Error de conexión: " . $e->getMessage());
         }
+        
+        // Usar la instancia global de Twig
+        global $twig;
+        $this->twig = $twig;
     }
 
-    public function index()
+    public function index(Request $request, ResponseInterface $response): ResponseInterface
     {
+        // Log para depuración
+        error_log('FacultadController@index ejecutándose');
+        
         try {
-            // Verificar autenticación
-            if (!$this->session->get('user_id')) {
-                $this->session->set('error', 'Por favor inicie sesión para acceder a las facultades');
-                header('Location: ' . Config::get('app_url') . 'login');
-                exit;
+            $params = $request->getQueryParams();
+            $where = [];
+            $values = [];
+
+            // Filtro por sede
+            if (!empty($params['sede_id'])) {
+                $where[] = 'f.sede_id = ?';
+                $values[] = $params['sede_id'];
+            }
+            // Filtro por estado
+            if (isset($params['estado']) && $params['estado'] !== '') {
+                $where[] = 'f.estado = ?';
+                $values[] = $params['estado'];
             }
 
-            // Obtener filtros
-            $estado = $_GET['estado'] ?? null;
-            $sede_id = $_GET['sede_id'] ?? null;
-
-            // Construir la consulta
-            $query = Facultad::with('sede')
-                ->join('sedes', 'facultades.sede_id', '=', 'sedes.id')
-                ->select('facultades.*')
-                ->orderBy('sedes.nombre', 'asc')
-                ->orderBy('facultades.nombre', 'asc');
-
-            if ($estado !== null && $estado !== '') {
-                $query->where('facultades.estado', $estado);
+            $sql = "SELECT f.id, f.codigo, f.nombre, f.estado, s.nombre as sede_nombre 
+                    FROM facultades f 
+                    LEFT JOIN sedes s ON f.sede_id = s.id";
+            if ($where) {
+                $sql .= ' WHERE ' . implode(' AND ', $where);
             }
+            $sql .= ' ORDER BY f.nombre ASC';
 
-            if ($sede_id !== null && $sede_id !== '') {
-                $query->where('facultades.sede_id', $sede_id);
-            }
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($values);
+            $facultades = $stmt->fetchAll();
 
-            $facultades = $query->get();
+            // Obtener todas las sedes para los filtros
+            $stmt = $this->pdo->prepare("SELECT id, nombre FROM sedes ORDER BY nombre ASC");
+            $stmt->execute();
+            $sedes = $stmt->fetchAll();
 
-            // Obtener todas las sedes para el filtro
-            $sedes = Sede::orderBy('nombre')->get();
-
-            // Obtener datos del usuario
-            $usuarioModel = new Usuario();
-            $user = $usuarioModel->find($this->session->get('user_id'));
-
-            // Obtener mensajes de sesión
-            $success = $this->session->get('success');
-            $error = $this->session->get('error');
+            // Log para depuración de mensajes de sesión
+            error_log('Mensajes de sesión en index: ' . print_r($_SESSION, true));
+            error_log('Mensaje flash de éxito: ' . ($this->session->getFlash('success') ?? 'No hay mensaje flash de éxito'));
+            error_log('Mensaje flash de error: ' . ($this->session->getFlash('error') ?? 'No hay mensaje flash de error'));
 
             // Renderizar la vista
-            echo $this->twig->render('facultades/index.twig', [
+            $html = $this->twig->render('facultades/index.twig', [
                 'facultades' => $facultades,
                 'sedes' => $sedes,
-                'filtros' => [
-                    'estado' => $estado,
-                    'sede_id' => $sede_id
-                ],
-                'user' => $user,
-                'app_url' => Config::get('app_url'),
-                'session' => $_SESSION,
-                'current_path' => 'facultades',
-                'success' => $success,
-                'error' => $error
+                'filtros' => $params,
+                'current_page' => 'facultades',
+                'app_url' => $_ENV['APP_URL'] ?? 'http://localhost'
             ]);
-        } catch (\Exception $e) {
-            error_log("Error en FacultadController@index: " . $e->getMessage());
-            $this->session->set('error', 'Error al cargar las facultades');
-            header('Location: ' . Config::get('app_url') . 'facultades');
-            exit;
+
+            $response->getBody()->write($html);
+            return $response->withHeader('Content-Type', 'text/html');
+        } catch (Exception $e) {
+            $this->session->setFlash('error', 'Error al cargar las facultades: ' . $e->getMessage());
+            return $response->withStatus(302)->withHeader('Location', '/biblioges/facultades');
         }
     }
 
-    public function create()
+    public function create(Request $request, ResponseInterface $response): ResponseInterface
     {
         try {
-            // Verificar autenticación
-            if (!$this->session->get('user_id')) {
-                $this->session->set('error', 'Por favor inicie sesión para acceder a las facultades');
-                header('Location: ' . Config::get('app_url') . 'login');
-                exit;
-            }
-
-            // Obtener todas las sedes
-            $sedes = Sede::orderBy('nombre')->get();
-
-            // Obtener datos del usuario
-            $usuarioModel = new Usuario();
-            $user = $usuarioModel->find($this->session->get('user_id'));
+            // Obtener todas las sedes para el formulario
+            $stmt = $this->pdo->prepare("SELECT id, nombre FROM sedes ORDER BY nombre ASC");
+            $stmt->execute();
+            $sedes = $stmt->fetchAll();
 
             // Renderizar la vista
-            echo $this->twig->render('facultades/create.twig', [
+            $html = $this->twig->render('facultades/form.twig', [
                 'sedes' => $sedes,
-                'user' => $user,
-                'app_url' => Config::get('app_url'),
-                'session' => $_SESSION,
-                'current_path' => 'facultades'
+                'current_page' => 'facultades',
+                'app_url' => $_ENV['APP_URL'] ?? 'http://localhost'
             ]);
-        } catch (\Exception $e) {
-            error_log("Error en FacultadController@create: " . $e->getMessage());
-            $this->session->set('error', 'Error al cargar el formulario de creación de facultad');
-            header('Location: ' . Config::get('app_url') . 'facultades');
-            exit;
+
+            $response->getBody()->write($html);
+            return $response->withHeader('Content-Type', 'text/html');
+        } catch (Exception $e) {
+            $this->session->setFlash('error', 'Error al cargar el formulario: ' . $e->getMessage());
+            return $response->withStatus(302)->withHeader('Location', '/biblioges/facultades/create');
         }
     }
 
-    public function store()
+    public function store(Request $request, ResponseInterface $response): ResponseInterface
     {
         try {
-            // Verificar autenticación
-            if (!$this->session->get('user_id')) {
-                $this->session->set('error', 'Por favor inicie sesión para acceder a las facultades');
-                header('Location: ' . Config::get('app_url') . 'login');
-                exit;
-            }
-
-            // Validar datos
-            $codigo = $_POST['codigo'] ?? '';
-            $nombre = $_POST['nombre'] ?? '';
-            $sede_id = $_POST['sede_id'] ?? '';
-            $estado = isset($_POST['estado']) ? (int)$_POST['estado'] : 0;
-
-            if (empty($codigo) || empty($nombre) || empty($sede_id)) {
-                $this->session->set('error', 'Todos los campos son obligatorios');
-                header('Location: ' . Config::get('app_url') . 'facultades/create');
-                exit;
-            }
-
-            // Crear nueva facultad
-            $facultad = new Facultad();
-            $facultad->codigo = $codigo;
-            $facultad->nombre = $nombre;
-            $facultad->sede_id = $sede_id;
-            $facultad->estado = $estado;
+            $data = $request->getParsedBody();
             
-            if (!$facultad->save()) {
-                throw new \Exception("Error al guardar la facultad");
+            // Validar datos requeridos
+            if (empty($data['codigo']) || empty($data['nombre']) || empty($data['sede_id'])) {
+                $this->session->setFlash('error', 'El código, nombre y la sede son obligatorios');
+                return $response->withStatus(302)->withHeader('Location', '/biblioges/facultades/create');
             }
 
-            $this->session->set('success', 'Facultad creada correctamente');
-            header('Location: ' . Config::get('app_url') . 'facultades');
-            exit;
-        } catch (\Exception $e) {
-            error_log("Error en FacultadController@store: " . $e->getMessage());
-            error_log("Stack trace: " . $e->getTraceAsString());
-            $this->session->set('error', 'Error al crear la facultad: ' . $e->getMessage());
-            header('Location: ' . Config::get('app_url') . 'facultades/create');
-            exit;
+            $codigo = trim($data['codigo']);
+            $nombre = trim($data['nombre']);
+            $sede_id = (int)$data['sede_id'];
+            $estado = isset($data['estado']) ? (int)$data['estado'] : 1;
+
+            // Verificar si ya existe una facultad con el mismo código
+            $stmt = $this->pdo->prepare("SELECT id FROM facultades WHERE codigo = ?");
+            $stmt->execute([$codigo]);
+            
+            if ($stmt->fetch()) {
+                $this->session->setFlash('error', 'Ya existe una facultad con el código "' . $codigo . '"');
+                return $response->withStatus(302)->withHeader('Location', '/biblioges/facultades/create');
+            }
+
+            // Verificar si ya existe una facultad con el mismo nombre en la misma sede
+            $stmt = $this->pdo->prepare("
+                SELECT id FROM facultades 
+                WHERE nombre = ? AND sede_id = ? AND id != ?
+            ");
+            $stmt->execute([$nombre, $sede_id, 0]);
+            
+            if ($stmt->fetch()) {
+                $this->session->setFlash('error', 'Ya existe una facultad con el nombre "' . $nombre . '" en esta sede');
+                return $response->withStatus(302)->withHeader('Location', '/biblioges/facultades/create');
+            }
+
+            // Insertar la nueva facultad
+            $stmt = $this->pdo->prepare("
+                INSERT INTO facultades (codigo, nombre, sede_id, estado) 
+                VALUES (?, ?, ?, ?)
+            ");
+            $stmt->execute([$codigo, $nombre, $sede_id, $estado]);
+
+            $this->session->setFlash('success', 'Facultad creada exitosamente');
+            
+            // Log para depuración
+            error_log('Mensaje flash de éxito guardado');
+            error_log('Datos de sesión completos: ' . print_r($_SESSION, true));
+            
+            return $response->withStatus(302)->withHeader('Location', '/biblioges/facultades');
+            
+        } catch (Exception $e) {
+            $this->session->setFlash('error', 'Error al crear la facultad: ' . $e->getMessage());
+            return $response->withStatus(302)->withHeader('Location', '/biblioges/facultades/create');
         }
     }
 
-    public function edit($id)
+    public function edit(Request $request, ResponseInterface $response, array $args): ResponseInterface
     {
         try {
-            // Verificar autenticación
-            if (!$this->session->get('user_id')) {
-                $this->session->set('error', 'Por favor inicie sesión para acceder a las facultades');
-                header('Location: ' . Config::get('app_url') . 'login');
-                exit;
-            }
-
+            $id = (int)$args['id'];
+            
             // Obtener la facultad
-            $facultad = Facultad::find($id);
-
+            $stmt = $this->pdo->prepare("SELECT * FROM facultades WHERE id = ?");
+            $stmt->execute([$id]);
+            $facultad = $stmt->fetch();
+            
             if (!$facultad) {
-                $this->session->set('error', 'Facultad no encontrada');
-                header('Location: ' . Config::get('app_url') . 'facultades');
-                exit;
+                $this->session->setFlash('error', 'Facultad no encontrada');
+                return $response->withStatus(302)->withHeader('Location', '/biblioges/facultades');
             }
 
-            // Obtener todas las sedes
-            $sedes = Sede::orderBy('nombre')->get();
+            // Obtener todas las sedes para el formulario
+            $stmt = $this->pdo->prepare("SELECT id, nombre FROM sedes ORDER BY nombre ASC");
+            $stmt->execute();
+            $sedes = $stmt->fetchAll();
 
-            // Obtener datos del usuario
-            $usuarioModel = new Usuario();
-            $user = $usuarioModel->find($this->session->get('user_id'));
+            // Log para depuración de mensajes flash
+            error_log('Mensajes flash en edit: ' . print_r($_SESSION, true));
+            error_log('Mensaje flash de error: ' . ($this->session->getFlash('error') ?? 'No hay mensaje flash de error'));
 
             // Renderizar la vista
-            echo $this->twig->render('facultades/edit.twig', [
+            $html = $this->twig->render('facultades/form.twig', [
                 'facultad' => $facultad,
                 'sedes' => $sedes,
-                'user' => $user,
-                'app_url' => Config::get('app_url'),
-                'session' => $_SESSION,
-                'current_path' => 'facultades'
+                'current_page' => 'facultades',
+                'app_url' => $_ENV['APP_URL'] ?? 'http://localhost'
             ]);
-        } catch (\Exception $e) {
-            error_log("Error en FacultadController@edit: " . $e->getMessage());
-            error_log("Stack trace: " . $e->getTraceAsString());
-            $this->session->set('error', 'Error al cargar la facultad');
-            header('Location: ' . Config::get('app_url') . 'facultades');
-            exit;
+
+            $response->getBody()->write($html);
+            return $response->withHeader('Content-Type', 'text/html');
+        } catch (Exception $e) {
+            $this->session->setFlash('error', 'Error al cargar el formulario: ' . $e->getMessage());
+            return $response->withStatus(302)->withHeader('Location', '/biblioges/facultades');
         }
     }
 
-    public function update($id)
+    public function update(Request $request, ResponseInterface $response, array $args): ResponseInterface
     {
         try {
-            // Verificar autenticación
-            if (!$this->session->get('user_id')) {
-                $this->session->set('error', 'Por favor inicie sesión para acceder a las facultades');
-                header('Location: ' . Config::get('app_url') . 'login');
-                exit;
+            $id = (int)$args['id'];
+            $data = $request->getParsedBody();
+            
+            // Validar datos requeridos
+            if (empty($data['codigo']) || empty($data['nombre']) || empty($data['sede_id'])) {
+                $this->session->setFlash('error', 'El código, nombre y la sede son obligatorios');
+                return $response->withStatus(302)->withHeader('Location', '/biblioges/facultades/' . $id . '/edit');
             }
 
-            // Obtener la facultad
-            $facultad = Facultad::find($id);
-            if (!$facultad) {
-                $this->session->set('error', 'Facultad no encontrada');
-                header('Location: ' . Config::get('app_url') . 'facultades');
-                exit;
+            $codigo = trim($data['codigo']);
+            $nombre = trim($data['nombre']);
+            $sede_id = (int)$data['sede_id'];
+            $estado = isset($data['estado']) ? (int)$data['estado'] : 1;
+
+            // Verificar si ya existe una facultad con el mismo código (excluyendo la actual)
+            $stmt = $this->pdo->prepare("SELECT id FROM facultades WHERE codigo = ? AND id != ?");
+            $stmt->execute([$codigo, $id]);
+            
+            if ($stmt->fetch()) {
+                $this->session->setFlash('error', 'Ya existe una facultad con el código "' . $codigo . '"');
+                return $response->withStatus(302)->withHeader('Location', '/biblioges/facultades/' . $id . '/edit');
             }
 
-            // Validar datos
-            $codigo = $_POST['codigo'] ?? '';
-            $nombre = $_POST['nombre'] ?? '';
-            $sede_id = $_POST['sede_id'] ?? '';
-            $estado = isset($_POST['estado']) ? (int)$_POST['estado'] : 0;
-
-            if (empty($codigo) || empty($nombre) || empty($sede_id)) {
-                $this->session->set('error', 'Todos los campos son obligatorios');
-                header('Location: ' . Config::get('app_url') . "facultades/{$id}/edit");
-                exit;
+            // Verificar si ya existe una facultad con el mismo nombre en la misma sede (excluyendo la actual)
+            $stmt = $this->pdo->prepare("
+                SELECT id FROM facultades 
+                WHERE nombre = ? AND sede_id = ? AND id != ?
+            ");
+            $stmt->execute([$nombre, $sede_id, $id]);
+            
+            if ($stmt->fetch()) {
+                $this->session->setFlash('error', 'Ya existe una facultad con el nombre "' . $nombre . '" en esta sede');
+                return $response->withStatus(302)->withHeader('Location', '/biblioges/facultades/' . $id . '/edit');
             }
 
             // Actualizar la facultad
-            $facultad->codigo = $codigo;
-            $facultad->nombre = $nombre;
-            $facultad->sede_id = $sede_id;
-            $facultad->estado = $estado;
+            $stmt = $this->pdo->prepare("
+                UPDATE facultades 
+                SET codigo = ?, nombre = ?, sede_id = ?, estado = ? 
+                WHERE id = ?
+            ");
+            $stmt->execute([$codigo, $nombre, $sede_id, $estado, $id]);
 
-            if (!$facultad->save()) {
-                throw new \Exception("Error al guardar los cambios");
-            }
-
-            $this->session->set('success', 'Facultad actualizada correctamente');
-            header('Location: ' . Config::get('app_url') . 'facultades');
-            exit;
-        } catch (\Exception $e) {
-            error_log("Error en FacultadController@update: " . $e->getMessage());
-            error_log("Stack trace: " . $e->getTraceAsString());
-            $this->session->set('error', 'Error al actualizar la facultad: ' . $e->getMessage());
-            header('Location: ' . Config::get('app_url') . "facultades/{$id}/edit");
-            exit;
+            $this->session->setFlash('success', 'Facultad actualizada exitosamente');
+            return $response->withStatus(302)->withHeader('Location', '/biblioges/facultades');
+            
+        } catch (Exception $e) {
+            $this->session->setFlash('error', 'Error al actualizar la facultad: ' . $e->getMessage());
+            return $response->withStatus(302)->withHeader('Location', '/biblioges/facultades/' . $id . '/edit');
         }
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, ResponseInterface $response, array $args): ResponseInterface
     {
+        // Log para depuración
+        error_log('FacultadController@destroy ejecutándose');
+        error_log('ID recibido: ' . print_r($args, true));
+        error_log('Método HTTP: ' . $request->getMethod());
+        error_log('URI: ' . $request->getUri()->getPath());
+        error_log('Query string: ' . $request->getUri()->getQuery());
+        error_log('Body: ' . $request->getBody()->getContents());
+        
         try {
-            // Verificar autenticación
-            if (!$this->session->get('user_id')) {
-                $this->session->set('error', 'Por favor inicie sesión para acceder a las facultades');
-                header('Location: ' . Config::get('app_url') . 'login');
-                exit;
-            }
-
-            // Obtener la facultad
-            $facultad = Facultad::find($id);
+            $id = (int)$args['id'];
+            
+            // Verificar si la facultad existe
+            $stmt = $this->pdo->prepare("SELECT id, nombre FROM facultades WHERE id = ?");
+            $stmt->execute([$id]);
+            $facultad = $stmt->fetch();
+            
             if (!$facultad) {
-                $this->session->set('error', 'Facultad no encontrada');
-                header('Location: ' . Config::get('app_url') . 'facultades');
-                exit;
+                $this->session->setFlash('error', 'Facultad no encontrada');
+                return $response->withStatus(302)->withHeader('Location', '/biblioges/facultades');
             }
 
-            // Verificar si la facultad tiene departamentos asociados
-            $departamentosCount = $facultad->departamentos()->count();
-
-            // Verificar si la facultad tiene carreras asociadas
-            $carrerasCount = 0;
-            try {
-            $carrerasCount = $facultad->carreras()->count();
-            } catch (\Exception $e) {
-                error_log("Error al verificar carreras: " . $e->getMessage());
-                // Si hay error al verificar carreras, asumimos que no hay carreras asociadas
-            }
-
-            if ($departamentosCount > 0 || $carrerasCount > 0) {
-                $mensaje = "No se permite borrar la facultad {$facultad->nombre}, ya que tiene ";
-                if ($departamentosCount > 0) {
-                    $mensaje .= "{$departamentosCount} departamento" . ($departamentosCount > 1 ? 's' : '');
-                }
-                if ($departamentosCount > 0 && $carrerasCount > 0) {
-                    $mensaje .= " y ";
-                }
-                if ($carrerasCount > 0) {
-                    $mensaje .= "{$carrerasCount} carrera" . ($carrerasCount > 1 ? 's' : '');
-                }
-                $mensaje .= " vinculada" . (($departamentosCount + $carrerasCount) > 1 ? 's' : '') . ".";
-
-                // Obtener datos necesarios para la vista
-                $facultades = Facultad::with('sede')
-                    ->join('sedes', 'facultades.sede_id', '=', 'sedes.id')
-                    ->select('facultades.*')
-                    ->orderBy('sedes.nombre', 'asc')
-                    ->orderBy('facultades.nombre', 'asc')
-                    ->get();
-
-                $sedes = Sede::orderBy('nombre')->get();
-                $usuarioModel = new Usuario();
-                $user = $usuarioModel->find($this->session->get('user_id'));
-
-                // Renderizar la vista directamente con el mensaje de error
-                echo $this->twig->render('facultades/index.twig', [
-                    'facultades' => $facultades,
-                    'sedes' => $sedes,
-                    'filtros' => [
-                        'estado' => null,
-                        'sede_id' => null
-                    ],
-                    'user' => $user,
-                    'app_url' => Config::get('app_url'),
-                    'session' => $_SESSION,
-                    'current_path' => 'facultades',
-                    'error' => $mensaje
-                ]);
-                exit;
+            // Verificar si hay carreras espejo asociadas
+            $stmt = $this->pdo->prepare("SELECT COUNT(*) as count FROM carreras_espejos WHERE facultad_id = ?");
+            $stmt->execute([$id]);
+            $result = $stmt->fetch();
+            
+            if ($result['count'] > 0) {
+                $this->session->setFlash('error', 'No se puede eliminar la facultad "' . $facultad['nombre'] . '" porque tiene carreras asociadas');
+                return $response->withStatus(302)->withHeader('Location', '/biblioges/facultades');
             }
 
             // Eliminar la facultad
-            $resultado = $facultad->delete();
+            $stmt = $this->pdo->prepare("DELETE FROM facultades WHERE id = ?");
+            $stmt->execute([$id]);
 
-            if (!$resultado) {
-                throw new \Exception("Error al eliminar la facultad");
-            }
-
-            $this->session->set('success', 'Facultad eliminada correctamente');
-            header('Location: ' . Config::get('app_url') . 'facultades');
-            exit;
-        } catch (\Exception $e) {
-            error_log("Error en FacultadController@destroy: " . $e->getMessage());
-            error_log("Stack trace: " . $e->getTraceAsString());
-            $this->session->set('error', 'Error al eliminar la facultad: ' . $e->getMessage());
-            header('Location: ' . Config::get('app_url') . 'facultades');
-            exit;
+            $this->session->setFlash('success', 'Facultad "' . $facultad['nombre'] . '" eliminada exitosamente');
+            return $response->withStatus(302)->withHeader('Location', '/biblioges/facultades');
+            
+        } catch (Exception $e) {
+            $this->session->setFlash('error', 'Error al eliminar la facultad: ' . $e->getMessage());
+            return $response->withStatus(302)->withHeader('Location', '/biblioges/facultades');
         }
     }
 
@@ -388,7 +343,7 @@ class FacultadController
             }
 
             // Consultar las facultades
-            $stmt = $this->db->prepare("
+            $stmt = $this->pdo->prepare("
                 SELECT id, nombre 
                 FROM facultades 
                 WHERE sede_id = ? AND estado = 1 
@@ -405,6 +360,41 @@ class FacultadController
                 'message' => 'Error al obtener las facultades',
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    public function show(Request $request, ResponseInterface $response, array $args): ResponseInterface
+    {
+        try {
+            $id = (int)$args['id'];
+            
+            // Obtener la facultad con información de la sede
+            $stmt = $this->pdo->prepare("
+                SELECT f.*, s.nombre as sede_nombre 
+                FROM facultades f 
+                LEFT JOIN sedes s ON f.sede_id = s.id 
+                WHERE f.id = ?
+            ");
+            $stmt->execute([$id]);
+            $facultad = $stmt->fetch();
+            
+            if (!$facultad) {
+                $this->session->setFlash('error', 'Facultad no encontrada');
+                return $response->withStatus(302)->withHeader('Location', '/biblioges/facultades');
+            }
+
+            // Renderizar la vista
+            $html = $this->twig->render('facultades/show.twig', [
+                'facultad' => $facultad,
+                'current_page' => 'facultades',
+                'app_url' => $_ENV['APP_URL'] ?? 'http://localhost'
+            ]);
+
+            $response->getBody()->write($html);
+            return $response->withHeader('Content-Type', 'text/html');
+        } catch (Exception $e) {
+            $this->session->setFlash('error', 'Error al cargar la facultad: ' . $e->getMessage());
+            return $response->withStatus(302)->withHeader('Location', '/biblioges/facultades');
         }
     }
 } 

@@ -6,6 +6,8 @@ use App\Core\Config;
 use App\Core\Session;
 use PDO;
 use PDOException;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 
 class MallaController
 {
@@ -46,7 +48,7 @@ class MallaController
         $this->app_url = Config::get('app_url');
     }
 
-    public function index()
+    public function index(Request $request, Response $response, array $args = [])
     {
         // Verificar autenticación
         if (!$this->session->get('user_id')) {
@@ -55,8 +57,9 @@ class MallaController
                 'title' => 'Error de acceso',
                 'text' => 'Por favor inicie sesión para acceder a las mallas'
             ]);
-            header('Location: ' . Config::get('app_url') . 'login');
-            exit;
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'login')
+                ->withStatus(302);
         }
 
         // Obtener mensajes de sesión y limpiarlos
@@ -131,7 +134,7 @@ class MallaController
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         // Renderizar la vista
-        echo $this->twig->render('mallas/index.twig', [
+        $html = $this->twig->render('mallas/index.twig', [
             'carreras' => $carreras,
             'sedes' => $sedes,
             'filtros' => $filtros,
@@ -141,10 +144,15 @@ class MallaController
             'session' => $_SESSION,
             'swal' => $swal
         ]);
+        
+        $response->getBody()->write($html);
+        return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
     }
 
-    public function show($id)
+    public function show(Request $request, Response $response, array $args = [])
     {
+        $id = $args['id'] ?? null;
+        
         // Verificar autenticación
         if (!$this->session->get('user_id')) {
             $this->session->set('swal', [
@@ -152,8 +160,9 @@ class MallaController
                 'title' => 'Error de acceso',
                 'text' => 'Por favor inicie sesión para acceder a las mallas'
             ]);
-            header('Location: ' . Config::get('app_url') . 'login');
-            exit;
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'login')
+                ->withStatus(302);
         }
 
         try {
@@ -182,8 +191,9 @@ class MallaController
                     'title' => 'Error',
                     'text' => 'Carrera no encontrada'
                 ]);
-                header('Location: ' . Config::get('app_url') . 'mallas');
-                exit;
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'mallas')
+                    ->withStatus(302);
             }
 
             // Procesar los resultados para asegurar el formato correcto
@@ -230,7 +240,7 @@ class MallaController
             $this->session->remove('swal');
 
             // Renderizar la vista
-            echo $this->twig->render('mallas/show.twig', [
+            $html = $this->twig->render('mallas/show.twig', [
                 'carrera' => $carrera,
                 'app_url' => Config::get('app_url'),
                 'user' => $user,
@@ -238,28 +248,32 @@ class MallaController
                 'current_page' => 'mallas',
                 'session' => $_SESSION
             ]);
+            
+            $response->getBody()->write($html);
+            return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
+            
         } catch (\Exception $e) {
             $this->session->set('swal', [
                 'icon' => 'error',
                 'title' => 'Error',
                 'text' => 'Error al obtener los datos de la malla: ' . $e->getMessage()
             ]);
-            header('Location: ' . Config::get('app_url') . 'mallas');
-            exit;
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'mallas')
+                ->withStatus(302);
         }
     }
 
-    public function edit($id)
+    public function edit(Request $request, Response $response, array $args = [])
     {
+        $id = $args['id'] ?? null;
+        
         // Verificar autenticación
         if (!$this->session->get('user_id')) {
-            $this->session->set('swal', [
-                'icon' => 'error',
-                'title' => 'Error de acceso',
-                'text' => 'Por favor inicie sesión para acceder a las mallas'
-            ]);
-            header('Location: ' . Config::get('app_url') . 'login');
-            exit;
+            $this->session->set('error', 'Por favor inicie sesión para acceder a las mallas');
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'login')
+                ->withStatus(302);
         }
 
         try {
@@ -283,13 +297,10 @@ class MallaController
             $carrera = $stmt->fetch();
 
             if (!$carrera) {
-                $this->session->set('swal', [
-                    'icon' => 'error',
-                    'title' => 'Error',
-                    'text' => 'Carrera no encontrada'
-                ]);
-                header('Location: ' . Config::get('app_url') . 'mallas');
-                exit;
+                $this->session->set('error', 'Carrera no encontrada');
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'mallas')
+                    ->withStatus(302);
             }
 
             // Procesar los resultados para asegurar el formato correcto
@@ -343,7 +354,7 @@ class MallaController
             $this->session->remove('swal');
 
             // Renderizar la vista
-            echo $this->twig->render('mallas/edit.twig', [
+            $html = $this->twig->render('mallas/edit.twig', [
                 'carrera' => $carrera,
                 'sedes' => $sedes,
                 'app_url' => Config::get('app_url'),
@@ -352,78 +363,127 @@ class MallaController
                 'current_page' => 'mallas',
                 'session' => $_SESSION
             ]);
+            
+            $response->getBody()->write($html);
+            return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
+            
         } catch (\Exception $e) {
-            $this->session->set('swal', [
-                'icon' => 'error',
-                'title' => 'Error',
-                'text' => 'Error al obtener los datos de la malla: ' . $e->getMessage()
-            ]);
-            header('Location: ' . Config::get('app_url') . 'mallas');
-            exit;
+            $this->session->set('error', 'Error al obtener los datos de la malla: ' . $e->getMessage());
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'mallas')
+                ->withStatus(302);
         }
     }
 
-    public function update($id)
+    public function update(Request $request, Response $response, array $args = [])
     {
+        $id = $args['id'] ?? null;
+        
+        // Verificar si es una petición AJAX
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+                  strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+        
         try {
-            // Obtener datos del formulario
-            $semestres = $_POST['semestres'] ?? [];
-            $asignaturas = $_POST['asignaturas'] ?? [];
+            // Verificar autenticación
+            if (!$this->session->get('user_id')) {
+                if ($isAjax) {
+                    $response->getBody()->write(json_encode(['success' => false, 'message' => 'No autorizado']));
+                    return $response->withHeader('Content-Type', 'application/json');
+                }
+                $this->session->set('error', 'Por favor inicie sesión para actualizar mallas');
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'login')
+                    ->withStatus(302);
+            }
+
+            // Obtener datos según el tipo de petición
+            if ($isAjax) {
+                $inputData = $request->getBody()->getContents();
+                $data = json_decode($inputData, true);
+                $asignaturas = $data['asignaturas'] ?? [];
+                $carrera_id = $data['carrera_id'] ?? $id;
+            } else {
+                $parsedBody = $request->getParsedBody();
+                $asignaturas = $parsedBody['asignaturas'] ?? [];
+                $carrera_id = $id;
+            }
 
             // Validar que haya asignaturas seleccionadas
             if (empty($asignaturas)) {
-                $this->session->set('swal', [
-                    'icon' => 'error',
-                    'title' => 'Error',
-                    'text' => 'Debe seleccionar al menos una asignatura'
-                ]);
-                header("Location: " . $this->app_url . "mallas/" . $id . "/edit");
-                exit;
+                $mensaje = 'Debe seleccionar al menos una asignatura';
+                if ($isAjax) {
+                    $response->getBody()->write(json_encode(['success' => false, 'message' => $mensaje]));
+                    return $response->withHeader('Content-Type', 'application/json');
+                }
+                $this->session->set('error', $mensaje);
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'mallas/' . $id . '/edit')
+                    ->withStatus(302);
             }
 
             // Iniciar transacción
             $this->pdo->beginTransaction();
 
-            // Eliminar asignaturas existentes
-            $sql_delete = "DELETE FROM mallas WHERE carrera_id = ?";
-            $stmt = $this->pdo->prepare($sql_delete);
-            $stmt->execute([$id]);
+            try {
+                // Eliminar asignaturas existentes
+                $sql_delete = "DELETE FROM mallas WHERE carrera_id = ?";
+                $stmt = $this->pdo->prepare($sql_delete);
+                $stmt->execute([$carrera_id]);
 
-            // Insertar nuevas asignaturas
-            $sql_insert = "INSERT INTO mallas (carrera_id, asignatura_id, semestre) VALUES (?, ?, ?)";
-            $stmt = $this->pdo->prepare($sql_insert);
+                // Insertar nuevas asignaturas
+                $sql_insert = "INSERT INTO mallas (carrera_id, asignatura_id, semestre) VALUES (?, ?, ?)";
+                $stmt = $this->pdo->prepare($sql_insert);
 
-            foreach ($asignaturas as $index => $asignatura_id) {
-                $semestre = $semestres[$index] ?? 1;
-                $stmt->execute([$id, $asignatura_id, $semestre]);
+                foreach ($asignaturas as $asignatura) {
+                    $asignatura_id = $asignatura['id'];
+                    $semestre = $asignatura['semestre'] ?? 1;
+                    $stmt->execute([$carrera_id, $asignatura_id, $semestre]);
+                }
+
+                // Confirmar transacción
+                $this->pdo->commit();
+
+                $mensaje = 'Malla actualizada correctamente';
+                
+                if ($isAjax) {
+                    $response->getBody()->write(json_encode(['success' => true, 'message' => $mensaje]));
+                    return $response->withHeader('Content-Type', 'application/json');
+                }
+
+                $this->session->set('success', $mensaje);
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'mallas')
+                    ->withStatus(302);
+
+            } catch (\Exception $e) {
+                $this->pdo->rollBack();
+                throw $e;
             }
-
-            // Confirmar transacción
-            $this->pdo->commit();
-
-            $this->session->set('swal', [
-                'icon' => 'success',
-                'title' => '¡Éxito!',
-                'text' => 'Malla actualizada correctamente'
-            ]);
-            header("Location: " . $this->app_url . "mallas");
-            exit;
 
         } catch (\Exception $e) {
             // Revertir transacción en caso de error
-            $this->pdo->rollBack();
-            $this->session->set('swal', [
-                'icon' => 'error',
-                'title' => 'Error',
-                'text' => 'Error al actualizar la malla: ' . $e->getMessage()
-            ]);
-            header("Location: " . $this->app_url . "mallas/" . $id . "/edit");
-            exit;
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            
+            $mensaje = 'Error al actualizar la malla: ' . $e->getMessage();
+            
+            if ($isAjax) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => $mensaje]));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+            
+            $this->session->set('error', $mensaje);
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'mallas/' . $id . '/edit')
+                ->withStatus(302);
         }
     }
 
-    public function delete($id)
+    public function delete(Request $request, Response $response, array $args = [])
     {
+        $id = $args['id'] ?? null;
+        
         try {
             // Iniciar transacción
             $this->pdo->beginTransaction();
@@ -436,24 +496,21 @@ class MallaController
             // Confirmar transacción
             $this->pdo->commit();
 
-            $this->session->set('swal', [
-                'icon' => 'success',
-                'title' => '¡Éxito!',
-                'text' => 'Malla eliminada correctamente'
-            ]);
-            header("Location: " . $this->app_url . "mallas");
-            exit;
+            $this->session->set('success', 'Malla eliminada correctamente');
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'mallas')
+                ->withStatus(302);
 
         } catch (\Exception $e) {
             // Revertir transacción en caso de error
-            $this->pdo->rollBack();
-            $this->session->set('swal', [
-                'icon' => 'error',
-                'title' => 'Error',
-                'text' => 'Error al eliminar la malla: ' . $e->getMessage()
-            ]);
-            header("Location: " . $this->app_url . "mallas");
-            exit;
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            
+            $this->session->set('error', 'Error al eliminar la malla: ' . $e->getMessage());
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'mallas')
+                ->withStatus(302);
         }
     }
 } 

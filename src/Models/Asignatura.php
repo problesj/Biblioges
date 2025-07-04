@@ -14,6 +14,21 @@ class Asignatura extends Model
     protected $table = 'asignaturas';
 
     /**
+     * Indica si el modelo debe ser timestamped.
+     *
+     * @var bool
+     */
+    public $timestamps = true;
+
+    /**
+     * Los nombres de las columnas de timestamps.
+     *
+     * @var string
+     */
+    const CREATED_AT = 'fecha_creacion';
+    const UPDATED_AT = 'fecha_actualizacion';
+
+    /**
      * Los atributos que deberían ser asignados en masa.
      *
      * @var array
@@ -103,9 +118,7 @@ class Asignatura extends Model
      */
     public function bibliografias()
     {
-        return $this->belongsToMany(BibliografiaDeclarada::class, 'asignaturas_bibliografias')
-            ->withPivot('tipo_bibliografia', 'estado')
-            ->withTimestamps();
+        return $this->hasMany(Bibliografia::class);
     }
 
     /**
@@ -138,5 +151,10 @@ class Asignatura extends Model
             ->with('departamentos')
             ->orderBy('nombre')
             ->get();
+    }
+
+    public function carrera()
+    {
+        return $this->belongsTo(Carrera::class);
     }
 } 

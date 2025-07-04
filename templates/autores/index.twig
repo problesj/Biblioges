@@ -1,0 +1,255 @@
+{% extends "base.twig" %}
+
+{% block title %}Autores{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Autores</h1>
+        <a href="{{ app_url }}autores/create" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nuevo Autor
+        </a>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3 class="card-title mb-0">Filtros</h3>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ app_url }}autores" class="row g-3">
+                <!-- Fila de búsqueda -->
+                <div class="col-12 mb-3">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="busqueda" name="busqueda" placeholder="Buscar..." value="{{ filtros.busqueda|default('') }}">
+                        <select class="form-select" id="tipo_busqueda" name="tipo_busqueda" style="max-width: 150px;">
+                            <option value="todos" {% if filtros.tipo_busqueda|default('todos') == 'todos' %}selected{% endif %}>Todos</option>
+                            <option value="apellidos" {% if filtros.tipo_busqueda|default('') == 'apellidos' %}selected{% endif %}>Apellidos</option>
+                            <option value="nombres" {% if filtros.tipo_busqueda|default('') == 'nombres' %}selected{% endif %}>Nombres</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Buscar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Fila de filtros -->
+                <div class="col-md-4">
+                    <select class="form-select" id="genero" name="genero">
+                        <option value="">Todos los géneros</option>
+                        <option value="M" {% if filtros.genero|default('') == 'M' %}selected{% endif %}>Masculino</option>
+                        <option value="F" {% if filtros.genero|default('') == 'F' %}selected{% endif %}>Femenino</option>
+                        <option value="O" {% if filtros.genero|default('') == 'O' %}selected{% endif %}>Otro</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> Aplicar Filtros
+                    </button>
+                </div>
+                <div class="col-md-1">
+                    <a href="{{ app_url }}autores" class="btn btn-secondary w-100">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if autores|length > 0 %}
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Listado de Autores</h3>
+                <div class="card-tools">
+                    <a href="{{ app_url }}autores/duplicados-globales" class="btn btn-warning">
+                        <i class="fas fa-search"></i> Buscar Duplicados Globales
+                    </a>
+                    <a href="{{ app_url }}autores/create" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Nuevo Autor
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered table-hover w-100">
+                        <thead class="table-light">
+                            <tr>
+                                <th>
+                                    <a href="{{ app_url }}autores?orden=apellidos&direccion={{ filtros.orden == 'apellidos' and filtros.direccion == 'asc' ? 'desc' : 'asc' }}{{ filtros.busqueda ? '&busqueda=' ~ filtros.busqueda : '' }}{{ filtros.tipo_busqueda ? '&tipo_busqueda=' ~ filtros.tipo_busqueda : '' }}{{ filtros.genero ? '&genero=' ~ filtros.genero : '' }}" class="text-dark text-decoration-none">
+                                        Apellidos
+                                        {% if filtros.orden == 'apellidos' %}
+                                            <i class="fas fa-sort-{{ filtros.direccion == 'asc' ? 'up' : 'down' }}"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="{{ app_url }}autores?orden=nombres&direccion={{ filtros.orden == 'nombres' and filtros.direccion == 'asc' ? 'desc' : 'asc' }}{{ filtros.busqueda ? '&busqueda=' ~ filtros.busqueda : '' }}{{ filtros.tipo_busqueda ? '&tipo_busqueda=' ~ filtros.tipo_busqueda : '' }}{{ filtros.genero ? '&genero=' ~ filtros.genero : '' }}" class="text-dark text-decoration-none">
+                                        Nombres
+                                        {% if filtros.orden == 'nombres' %}
+                                            <i class="fas fa-sort-{{ filtros.direccion == 'asc' ? 'up' : 'down' }}"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="{{ app_url }}autores?orden=genero&direccion={{ filtros.orden == 'genero' and filtros.direccion == 'asc' ? 'desc' : 'asc' }}{{ filtros.busqueda ? '&busqueda=' ~ filtros.busqueda : '' }}{{ filtros.tipo_busqueda ? '&tipo_busqueda=' ~ filtros.tipo_busqueda : '' }}{{ filtros.genero ? '&genero=' ~ filtros.genero : '' }}" class="text-dark text-decoration-none">
+                                        Género
+                                        {% if filtros.orden == 'genero' %}
+                                            <i class="fas fa-sort-{{ filtros.direccion == 'asc' ? 'up' : 'down' }}"></i>
+                                        {% else %}
+                                            <i class="fas fa-sort"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for autor in autores %}
+                                <tr>
+                                    <td>{{ autor.apellidos }}</td>
+                                    <td>{{ autor.nombres }}</td>
+                                    <td>{{ autor.genero }}</td>
+                                    <td>
+                                        <div class="btn-group d-flex justify-content-center" role="group">
+                                            <a href="{{ app_url }}autores/{{ autor.id }}/edit" class="btn btn-sm btn-info">
+                                                <i class="fas fa-edit"></i> Editar
+                                            </a>
+                                            <a href="{{ app_url }}autores/{{ autor.id }}/duplicados" class="btn btn-sm btn-warning">
+                                                <i class="fas fa-search"></i> Buscar Duplicados
+                                            </a>
+                                            <form method="POST" action="{{ app_url }}autores/{{ autor.id }}/delete" class="d-inline delete-form">
+                                                <button type="submit" class="btn btn-sm btn-danger">
+                                                    <i class="fas fa-trash"></i> Eliminar
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {# Paginación #}
+                {% if filtros.total_paginas > 1 %}
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <p class="text-muted">
+                            Mostrando {{ ((filtros.pagina - 1) * 20) + 1 }} - {{ min(filtros.pagina * 20, filtros.total_registros) }} de {{ filtros.total_registros }} registros
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <nav aria-label="Navegación de páginas" class="float-end">
+                            <ul class="pagination mb-0">
+                                {# Botón Primera Página #}
+                                <li class="page-item {% if filtros.pagina == 1 %}disabled{% endif %}">
+                                    <a class="page-link" href="{{ app_url }}autores?pagina=1{% if filtros.busqueda %}&busqueda={{ filtros.busqueda }}{% endif %}{% if filtros.tipo_busqueda %}&tipo_busqueda={{ filtros.tipo_busqueda }}{% endif %}{% if filtros.genero %}&genero={{ filtros.genero }}{% endif %}{% if filtros.orden %}&orden={{ filtros.orden }}{% endif %}{% if filtros.direccion %}&direccion={{ filtros.direccion }}{% endif %}" aria-label="Primera">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                </li>
+
+                                {# Botón Página Anterior #}
+                                <li class="page-item {% if filtros.pagina == 1 %}disabled{% endif %}">
+                                    <a class="page-link" href="{{ app_url }}autores?pagina={{ filtros.pagina - 1 }}{% if filtros.busqueda %}&busqueda={{ filtros.busqueda }}{% endif %}{% if filtros.tipo_busqueda %}&tipo_busqueda={{ filtros.tipo_busqueda }}{% endif %}{% if filtros.genero %}&genero={{ filtros.genero }}{% endif %}{% if filtros.orden %}&orden={{ filtros.orden }}{% endif %}{% if filtros.direccion %}&direccion={{ filtros.direccion }}{% endif %}" aria-label="Anterior">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                </li>
+
+                                {# Números de Página #}
+                                {% set inicio = max(1, filtros.pagina - 2) %}
+                                {% set fin = min(filtros.total_paginas, inicio + 4) %}
+                                {% if fin - inicio < 4 %}
+                                    {% set inicio = max(1, fin - 4) %}
+                                {% endif %}
+
+                                {% for i in inicio..fin %}
+                                    <li class="page-item {% if i == filtros.pagina %}active{% endif %}">
+                                        <a class="page-link" href="{{ app_url }}autores?pagina={{ i }}{% if filtros.busqueda %}&busqueda={{ filtros.busqueda }}{% endif %}{% if filtros.tipo_busqueda %}&tipo_busqueda={{ filtros.tipo_busqueda }}{% endif %}{% if filtros.genero %}&genero={{ filtros.genero }}{% endif %}{% if filtros.orden %}&orden={{ filtros.orden }}{% endif %}{% if filtros.direccion %}&direccion={{ filtros.direccion }}{% endif %}">
+                                            {{ i }}
+                                        </a>
+                                    </li>
+                                {% endfor %}
+
+                                {# Botón Página Siguiente #}
+                                <li class="page-item {% if filtros.pagina == filtros.total_paginas %}disabled{% endif %}">
+                                    <a class="page-link" href="{{ app_url }}autores?pagina={{ filtros.pagina + 1 }}{% if filtros.busqueda %}&busqueda={{ filtros.busqueda }}{% endif %}{% if filtros.tipo_busqueda %}&tipo_busqueda={{ filtros.tipo_busqueda }}{% endif %}{% if filtros.genero %}&genero={{ filtros.genero }}{% endif %}{% if filtros.orden %}&orden={{ filtros.orden }}{% endif %}{% if filtros.direccion %}&direccion={{ filtros.direccion }}{% endif %}" aria-label="Siguiente">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+
+                                {# Botón Última Página #}
+                                <li class="page-item {% if filtros.pagina == filtros.total_paginas %}disabled{% endif %}">
+                                    <a class="page-link" href="{{ app_url }}autores?pagina={{ filtros.total_paginas }}{% if filtros.busqueda %}&busqueda={{ filtros.busqueda }}{% endif %}{% if filtros.tipo_busqueda %}&tipo_busqueda={{ filtros.tipo_busqueda }}{% endif %}{% if filtros.genero %}&genero={{ filtros.genero }}{% endif %}{% if filtros.orden %}&orden={{ filtros.orden }}{% endif %}{% if filtros.direccion %}&direccion={{ filtros.direccion }}{% endif %}" aria-label="Última">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            No se encontraron autores que coincidan con los criterios de búsqueda.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            {% if success %}
+                Swal.fire({
+                    title: '{{ success.title }}',
+                    text: '{{ success.text }}',
+                    icon: '{{ success.icon }}'
+                });
+            {% endif %}
+
+            {% if error %}
+                Swal.fire({
+                    title: '{{ error.title }}',
+                    text: '{{ error.text }}',
+                    icon: '{{ error.icon }}'
+                });
+            {% endif %}
+
+            // Manejar la eliminación de autores
+            document.querySelectorAll('.delete-form').forEach(function(form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const form = this;
+                    
+                    Swal.fire({
+                        title: '¿Estás seguro?',
+                        text: "Esta acción no se puede deshacer",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Sí, eliminar',
+                        cancelButtonText: 'Cancelar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+{% endblock %} 

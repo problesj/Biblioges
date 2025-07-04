@@ -1,0 +1,105 @@
+{% extends "base.twig" %}
+
+{% block title %}Ver Usuario{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="card-title">
+                            <i class="fas fa-user"></i> Información del Usuario
+                        </h3>
+                        <div>
+                            <a href="{{ app_url }}usuarios" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Volver
+                            </a>
+                            <a href="{{ app_url }}usuarios/{{ usuario.id }}/edit" class="btn btn-warning">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th width="30%">RUT:</th>
+                                    <td>{{ usuario.rut }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Nombre:</th>
+                                    <td>{{ usuario.nombre }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Email:</th>
+                                    <td>{{ usuario.email }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th width="30%">Rol:</th>
+                                    <td>
+                                        <span class="badge bg-info">{{ roles[usuario.rol] }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Estado:</th>
+                                    <td>
+                                        {% if usuario.estado %}
+                                            <span class="badge bg-success">Activo</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactivo</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Fecha Creación:</th>
+                                    <td>{{ usuario.fecha_creacion|date('d/m/Y H:i:s') }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Última Actualización:</th>
+                                    <td>{{ usuario.fecha_actualizacion|date('d/m/Y H:i:s') }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5>Permisos del Rol</h5>
+                            <div class="alert alert-info">
+                                {% if usuario.rol == 'admin' %}
+                                    <strong>Administrador:</strong> Puede realizar todas las funciones del sistema.
+                                {% elseif usuario.rol == 'admin_bidoc' %}
+                                    <strong>Administrador Biblioteca:</strong> Puede ver los módulos de:
+                                    <ul class="mb-0 mt-2">
+                                        <li>Principal</li>
+                                        <li>Bibliografía Declarada</li>
+                                        <li>Bibliografía Disponible</li>
+                                        <li>Reportes (Cobertura, Listado de bibliografías)</li>
+                                        <li>Admin</li>
+                                        <li>Autores</li>
+                                    </ul>
+                                {% elseif usuario.rol == 'usuario' %}
+                                    <strong>Usuario:</strong> Solo puede ver:
+                                    <ul class="mb-0 mt-2">
+                                        <li>Reportes</li>
+                                        <li>Cobertura</li>
+                                        <li>Listado de bibliografías</li>
+                                    </ul>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

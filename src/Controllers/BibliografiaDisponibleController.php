@@ -1,6 +1,6 @@
 <?php
 
-namespace src\Controllers;
+namespace App\Controllers;
 
 use App\Core\BaseController;
 use App\Core\Session;
@@ -93,7 +93,47 @@ class BibliografiaDisponibleController extends BaseController
                 $query->where('anio_edicion', $anioEdicion);
             }
 
-            $bibliografias = $query->get();
+            // Ordenamiento
+            $orden = $request->getQueryParams()['orden'] ?? 'titulo';
+            $direccion = $request->getQueryParams()['direccion'] ?? 'asc';
+
+            // Validar campo de ordenamiento
+            $camposOrdenamiento = ['titulo', 'editorial', 'autores'];
+            $orden = in_array($orden, $camposOrdenamiento) ? $orden : 'titulo';
+            $direccion = in_array($direccion, ['asc', 'desc']) ? $direccion : 'asc';
+
+            // Aplicar ordenamiento
+            switch ($orden) {
+                case 'titulo':
+                    $query->orderBy('titulo', $direccion);
+                    break;
+                case 'editorial':
+                    $query->orderBy('editorial', $direccion);
+                    break;
+                case 'autores':
+                    $query->join('bibliografias_disponibles_autores', 'bibliografias_disponibles.id', '=', 'bibliografias_disponibles_autores.bibliografia_disponible_id')
+                          ->join('autores', 'bibliografias_disponibles_autores.autor_id', '=', 'autores.id')
+                          ->select([
+                              'bibliografias_disponibles.*',
+                              'autores.apellidos',
+                              'autores.nombres'
+                          ])
+                          ->orderBy('autores.apellidos', $direccion)
+                          ->orderBy('autores.nombres', $direccion)
+                          ->distinct();
+                    break;
+            }
+
+            // Paginación
+            $pagina = (int)($request->getQueryParams()['pagina'] ?? 1);
+            $porPagina = 20;
+            $total = $query->count();
+            $totalPaginas = ceil($total / $porPagina);
+            $pagina = max(1, min($pagina, $totalPaginas)); // Asegurar que la página esté entre 1 y totalPaginas
+
+            $bibliografias = $query->skip(($pagina - 1) * $porPagina)
+                                 ->take($porPagina)
+                                 ->get();
 
             error_log('Renderizando plantilla: bibliografias_disponibles/index.twig');
             error_log('Datos pasados a la plantilla: ' . print_r([
@@ -102,7 +142,12 @@ class BibliografiaDisponibleController extends BaseController
                     'busqueda' => $busqueda,
                     'disponibilidad' => $disponibilidad,
                     'estado' => $estado,
-                    'anio_edicion' => $anioEdicion
+                    'anio_edicion' => $anioEdicion,
+                    'orden' => $orden,
+                    'direccion' => $direccion,
+                    'pagina' => $pagina,
+                    'total_paginas' => $totalPaginas,
+                    'total_registros' => $total
                 ]
             ], true));
             
@@ -113,12 +158,25 @@ class BibliografiaDisponibleController extends BaseController
                     'busqueda' => $busqueda,
                     'disponibilidad' => $disponibilidad,
                     'estado' => $estado,
-                    'anio_edicion' => $anioEdicion
+                    'anio_edicion' => $anioEdicion,
+                    'orden' => $orden,
+                    'direccion' => $direccion,
+                    'pagina' => $pagina,
+                    'total_paginas' => $totalPaginas,
+                    'total_registros' => $total
                 ],
                 'app_url' => Config::get('app_url'),
                 'session' => $_SESSION,
                 'current_page' => 'bibliografias-disponibles'
             ];
+            
+            // Limpiar mensajes de sesión después de pasarlos a la plantilla
+            if (isset($_SESSION['success'])) {
+                unset($_SESSION['success']);
+            }
+            if (isset($_SESSION['error'])) {
+                unset($_SESSION['error']);
+            }
             
             // Renderizar la plantilla
             $content = $this->twig->render('bibliografias_disponibles/index.twig', $data);
@@ -802,16 +860,38 @@ class BibliografiaDisponibleController extends BaseController
                 }
             ])->findOrFail($args['id']);
             
+            error_log('Bibliografía encontrada: ' . print_r($bibliografia->toArray(), true));
+            
+            // Obtener los ejemplares por sede
+            $stmt = $this->pdo->prepare("
+                SELECT sede_id, ejemplares 
+                FROM bibliografias_disponibles_sedes 
+                WHERE bibliografia_disponible_id = :id
+            ");
+            $stmt->execute([':id' => $args['id']]);
+            $ejemplaresPorSede = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+            
+            error_log('Ejemplares por sede: ' . print_r($ejemplaresPorSede, true));
+            
+            // Crear un array asociativo de sedes con sus ejemplares
+            $sedesConEjemplares = [];
+            foreach ($bibliografia->sedes as $sede) {
+                $sedesConEjemplares[$sede->id] = [
+                    'id' => $sede->id,
+                    'nombre' => $sede->nombre,
+                    'ejemplares' => $ejemplaresPorSede[$sede->id] ?? 0
+                ];
+            }
+            
+            error_log('Sedes con ejemplares: ' . print_r($sedesConEjemplares, true));
+            
+            // Asignar el array de sedes con ejemplares a la bibliografía
+            $bibliografia->sedes = $sedesConEjemplares;
+            
             // Convertir a array para asegurar que los datos se pasen correctamente
             $bibliografiaArray = $bibliografia->toArray();
             
-            // Debug para verificar la estructura completa
-            error_log('Estructura completa de la bibliografía: ' . print_r($bibliografiaArray, true));
-            error_log('Bibliografía Declarada: ' . print_r($bibliografia->bibliografiaDeclarada, true));
-            error_log('¿Existe bibliografia_declarada?: ' . (isset($bibliografia->bibliografiaDeclarada) ? 'Sí' : 'No'));
-            error_log('¿Es null bibliografia_declarada?: ' . (is_null($bibliografia->bibliografiaDeclarada) ? 'Sí' : 'No'));
-            error_log('¿Está vacío bibliografia_declarada?: ' . (empty($bibliografia->bibliografiaDeclarada) ? 'Sí' : 'No'));
-            error_log('ID de bibliografía declarada: ' . $bibliografia->bibliografia_declarada_id);
+            error_log('Bibliografía array final: ' . print_r($bibliografiaArray, true));
             
             $data = [
                 'bibliografia' => $bibliografiaArray,

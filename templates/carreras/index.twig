@@ -30,8 +30,9 @@
                             <label for="tipo_programa">Tipo de Programa</label>
                             <select class="form-control" id="tipo_programa" name="tipo_programa">
                                 <option value="">Todos</option>
-                                <option value="Pregrado" {% if filtros.tipo_programa == 'Pregrado' %}selected{% endif %}>Pregrado</option>
-                                <option value="Postgrado" {% if filtros.tipo_programa == 'Postgrado' %}selected{% endif %}>Postgrado</option>
+                                <option value="P" {% if filtros.tipo_programa == 'P' %}selected{% endif %}>Pregrado</option>
+                                <option value="G" {% if filtros.tipo_programa == 'G' %}selected{% endif %}>Postgrado</option>
+                                <option value="O" {% if filtros.tipo_programa == 'O' %}selected{% endif %}>Otro</option>
                             </select>
                         </div>
                     </div>
@@ -83,7 +84,7 @@
                             <th>Nombre</th>
                             <th>Tipo de Programa</th>
                             <th>Sede-Facultad</th>
-                            <th>Estado</th>
+                            <th class="text-center">Estado</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -110,7 +111,7 @@
                                     {{ sedes[i] }} - {{ facultades[i] }}{% if not loop.last %}<br>{% endif %}
                                 {% endfor %}
                             </td>
-                            <td>
+                            <td class="text-center">
                                 {% if carrera.estado == 1 %}
                                     <span class="badge bg-success">Activo</span>
                                 {% else %}
@@ -125,9 +126,8 @@
                                     <a href="{{ app_url }}carreras/{{ carrera.id }}/edit" class="btn btn-sm btn-warning">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <form action="{{ app_url }}carreras/{{ carrera.id }}" method="POST" class="d-inline delete-form">
-                                        <input type="hidden" name="_method" value="DELETE">
-                                        <button type="submit" class="btn btn-sm btn-danger">
+                                    <form action="{{ app_url }}carreras/{{ carrera.id }}/delete" method="POST" class="d-inline delete-form">
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Eliminar">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </form>

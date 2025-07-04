@@ -12,6 +12,8 @@ use App\Core\Config;
 use PDO;
 use PDOException;
 use src\Models\Usuario;
+use Psr\Http\Message\ResponseInterface as ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface as Request;
 
 class AsignaturaController extends BaseController
 {
@@ -19,6 +21,7 @@ class AsignaturaController extends BaseController
     protected $carreraModel;
     protected $session;
     protected $db;
+    protected $twig;
 
     public function __construct()
     {
@@ -46,23 +49,29 @@ class AsignaturaController extends BaseController
         } catch (PDOException $e) {
             die("Error de conexión: " . $e->getMessage());
         }
+
+        // Usar la instancia global de Twig
+        global $twig;
+        $this->twig = $twig;
     }
 
-    public function index()
+    public function index(Request $request, ResponseInterface $response, array $args = [])
     {
         try {
             // Verificar autenticación
             if (!$this->session->get('user_id')) {
                 $this->session->set('error', 'Por favor inicie sesión para acceder a las asignaturas');
-                header('Location: '. Config::get('app_url') . 'login');
-                exit;
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'login')
+                    ->withStatus(302);
             }
 
-            // Obtener filtros directamente de $_GET
-            $nombre = $_GET['nombre'] ?? null;
-            $tipo = $_GET['tipo'] ?? null;
-            $departamento = $_GET['departamento'] ?? null;
-            $estado = $_GET['estado'] ?? null;
+            // Obtener filtros de los query parameters
+            $queryParams = $request->getQueryParams();
+            $nombre = $queryParams['nombre'] ?? null;
+            $tipo = $queryParams['tipo'] ?? null;
+            $departamento = $queryParams['departamento'] ?? null;
+            $estado = $queryParams['estado'] ?? null;
 
             // Construir la consulta base
             $query = "SELECT 
@@ -82,23 +91,23 @@ class AsignaturaController extends BaseController
             $where = [];
 
             if ($nombre) {
-                $where[] = "a.nombre LIKE :nombre";
-                $params[':nombre'] = "%{$nombre}%";
+                $where[] = "a.nombre LIKE ?";
+                $params[] = "%{$nombre}%";
             }
 
             if ($tipo) {
-                $where[] = "a.tipo = :tipo";
-                $params[':tipo'] = $tipo;
+                $where[] = "a.tipo = ?";
+                $params[] = $tipo;
             }
 
             if ($departamento) {
-                $where[] = "ad.departamento_id = :departamento";
-                $params[':departamento'] = $departamento;
+                $where[] = "ad.departamento_id = ?";
+                $params[] = $departamento;
             }
 
             if ($estado !== null && $estado !== '') {
-                $where[] = "a.estado = :estado";
-                $params[':estado'] = $estado;
+                $where[] = "a.estado = ?";
+                $params[] = $estado;
             }
 
             if (!empty($where)) {
@@ -122,9 +131,8 @@ class AsignaturaController extends BaseController
             $stmt->execute([$user_id]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            // Usar la instancia global de Twig
-            global $twig;
-            echo $twig->render('asignaturas/index.twig', [
+            // Renderizar la vista
+            $html = $this->twig->render('asignaturas/index.twig', [
                 'asignaturas' => $asignaturas,
                 'departamentos' => $departamentos,
                 'filtros' => [
@@ -134,26 +142,34 @@ class AsignaturaController extends BaseController
                     'estado' => $estado
                 ],
                 'user' => $user,
-                'app_url' => '/biblioges/',
+                'app_url' => Config::get('app_url'),
                 'session' => $_SESSION,
                 'current_page' => 'asignaturas'
             ]);
+            
+            $response->getBody()->write($html);
+            return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
+            
         } catch (\Exception $e) {
             error_log("Error en AsignaturaController@index: " . $e->getMessage());
             $this->session->set('error', 'Error al cargar las asignaturas: ' . $e->getMessage());
-            header('Location: /biblioges/');
-            exit;
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'dashboard')
+                ->withStatus(302);
         }
     }
 
-    public function show($id)
+    public function show(Request $request, ResponseInterface $response, array $args = [])
     {
+        $id = $args['id'] ?? null;
+        
         try {
             // Verificar autenticación
             if (!$this->session->get('user_id')) {
                 $this->session->set('error', 'Por favor inicie sesión para ver los detalles de la asignatura');
-                header('Location: ' . Config::get('app_url') . 'login');
-                exit;
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'login')
+                    ->withStatus(302);
             }
 
             // Obtener datos básicos de la asignatura
@@ -166,10 +182,11 @@ class AsignaturaController extends BaseController
             $stmt->execute([$id]);
             $asignatura = $stmt->fetch();
         
-        if (!$asignatura) {
+            if (!$asignatura) {
                 $this->session->set('error', 'Asignatura no encontrada');
-                header('Location: ' . Config::get('app_url') . 'asignaturas');
-                exit;
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'asignaturas')
+                    ->withStatus(302);
             }
 
             // Si es una asignatura regular, obtener información de departamentos
@@ -196,7 +213,7 @@ class AsignaturaController extends BaseController
                 // Si es una asignatura de formación, obtener información de departamentos
                 $stmt = $this->db->prepare("
                     SELECT 
-                        ad.codigo_asignatura as codigo_asignatura,
+                        ad.codigo_asignatura,
                         ad.departamento_id,
                         ad.cantidad_alumnos,
                         d.id as departamento_id,
@@ -242,156 +259,117 @@ class AsignaturaController extends BaseController
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
             // Renderizar la vista
-            echo $this->twig->render('asignaturas/show.twig', [
+            $html = $this->twig->render('asignaturas/show.twig', [
                 'asignatura' => $asignatura,
                 'user' => $user,
                 'app_url' => Config::get('app_url'),
                 'session' => $_SESSION,
                 'current_page' => 'asignaturas'
             ]);
+            
+            $response->getBody()->write($html);
+            return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
+            
         } catch (\Exception $e) {
             error_log("Error en AsignaturaController@show: " . $e->getMessage());
             $this->session->set('error', 'Error al cargar los detalles de la asignatura');
-            header('Location: ' . Config::get('app_url') . 'asignaturas');
-            exit;
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'asignaturas')
+                ->withStatus(302);
         }
     }
 
-    public function store()
+    public function store(Request $request, ResponseInterface $response, array $args = [])
     {
         try {
-            // Verificar si es una solicitud AJAX
+            error_log("=== AsignaturaController@store: INICIANDO ===");
+            error_log("REQUEST_URI: " . $_SERVER['REQUEST_URI']);
+            error_log("REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD']);
+            error_log("URI de Slim: " . $request->getUri()->getPath());
             $isAjax = $this->isAjaxRequest();
-            
-            // Verificar autenticación
-            if (!$this->session->get('user_id')) {
-                if ($isAjax) {
-                    header('Content-Type: application/json; charset=utf-8');
-                    echo json_encode(['success' => false, 'message' => 'Por favor inicie sesión para crear asignaturas']);
-                    exit;
-                }
-                $this->session->set('error', 'Por favor inicie sesión para crear asignaturas');
-                header('Location: ' . Config::get('app_url') . 'login');
-                exit;
-            }
+            error_log("Es AJAX: " . ($isAjax ? 'Sí' : 'No'));
 
-            // Obtener los datos según el tipo de solicitud
-            $isJson = $isAjax || strpos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== false;
-            
-            if ($isJson) {
-                $inputData = file_get_contents('php://input');
-                error_log("Datos recibidos: " . $inputData); // Log para depuración
-                
+            // Obtener los datos SOLO UNA VEZ
+            $contentType = $request->getHeaderLine('Content-Type');
+            if (strpos($contentType, 'application/json') !== false) {
+                $inputData = $request->getBody()->getContents();
+                error_log("[LOG] Datos JSON recibidos: " . $inputData);
                 $data = json_decode($inputData, true);
                 if (json_last_error() !== JSON_ERROR_NONE) {
+                    error_log("[LOG] Error al decodificar JSON: " . json_last_error_msg());
                     if ($isAjax) {
-                        header('Content-Type: application/json; charset=utf-8');
-                        echo json_encode(['success' => false, 'message' => 'Error al decodificar JSON: ' . json_last_error_msg()]);
-                        exit;
+                        $response->getBody()->write(json_encode(['success' => false, 'message' => 'Error al decodificar JSON: ' . json_last_error_msg()]));
+                        return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
                     }
                 }
-                
-                $nombre = trim($data['nombre'] ?? '');
-                $tipo = $data['tipo'] ?? '';
-                $vigencia_desde = $data['vigencia_desde'] ?? '';
-                $vigencia_hasta = $data['vigencia_hasta'] ?? '';
-                $periodicidad = $data['periodicidad'] ?? '';
-                $estado = $data['estado'] ?? '1';
-                $codigos = $data['codigos'] ?? [];
             } else {
-                $nombre = trim($_POST['nombre'] ?? '');
-                $tipo = $_POST['tipo'] ?? '';
-                $vigencia_desde = $_POST['vigencia_desde'] ?? '';
-                $vigencia_hasta = $_POST['vigencia_hasta'] ?? '';
-                $periodicidad = $_POST['periodicidad'] ?? '';
-                $estado = $_POST['estado'] ?? '1';
-                $codigos = $_POST['codigos'] ?? [];
+                $data = $request->getParsedBody();
+                error_log("[LOG] Datos de formulario recibidos: " . print_r($data, true));
             }
 
-            // Validaciones
-            $errores = [];
+            $nombre = trim($data['nombre'] ?? '');
+            $tipo = $data['tipo'] ?? '';
+            $vigencia_desde = $data['vigencia_desde'] ?? '';
+            $vigencia_hasta = $data['vigencia_hasta'] ?? '';
+            $periodicidad = $data['periodicidad'] ?? '';
+            $estado = $data['estado'] ?? '1';
+            $codigos = $data['codigos'] ?? [];
 
-            if (empty($nombre)) {
-                $errores[] = 'El nombre de la asignatura es requerido';
-            }
+            error_log("[LOG] Antes de validación");
+            $validationData = [
+                'nombre' => $nombre,
+                'tipo' => $tipo,
+                'vigencia_desde' => $vigencia_desde,
+                'vigencia_hasta' => $vigencia_hasta,
+                'periodicidad' => $periodicidad,
+                'estado' => $estado,
+                'codigos' => $codigos
+            ];
+            $errors = $this->validateAsignaturaData($validationData, null);
+            error_log("[LOG] Errores de validación: " . print_r($errors, true));
 
-            if (empty($tipo)) {
-                $errores[] = 'El tipo de asignatura es requerido';
-            }
-
-            if (empty($vigencia_desde)) {
-                $errores[] = 'La fecha de inicio de vigencia es requerida';
-            }
-
-            if (empty($periodicidad)) {
-                $errores[] = 'La periodicidad es requerida';
-            }
-
-            // Validar códigos para todos los tipos de asignatura
-            if (empty($codigos) || !is_array($codigos)) {
-                $errores[] = 'Debe ingresar al menos un código de asignatura';
-            } else {
-                foreach ($codigos as $index => $codigo) {
-                    if (empty($codigo['codigo'])) {
-                        $errores[] = 'El código de asignatura es requerido';
-                        break;
-                    }
-                    if ($tipo !== 'FORMACION_ELECTIVA') {
-                        if (empty($codigo['departamento_id'])) {
-                            $errores[] = 'El departamento es requerido';
-                            break;
-                        }
-                        if (empty($codigo['cantidad_alumnos'])) {
-                            $errores[] = 'La cantidad de alumnos es requerida';
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // Si hay errores, devolver respuesta según el tipo de solicitud
-            if (!empty($errores)) {
+            if (!empty($errors)) {
+                error_log("[LOG] Validación fallida");
                 if ($isAjax) {
-                    header('Content-Type: application/json; charset=utf-8');
-                    echo json_encode(['success' => false, 'errors' => $errores]);
-                    exit;
-                } else {
-                    $this->session->set('error', implode('. ', $errores));
-                    header('Location: ' . Config::get('app_url') . 'asignaturas/create');
-                    exit;
+                    // Obtener el primer error específico para el mensaje
+                    $firstError = reset($errors);
+                    $response->getBody()->write(json_encode(['success' => false, 'message' => $firstError, 'errors' => $errors]));
+                    return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
                 }
+                $this->session->set('error', 'Por favor corrija los errores en el formulario');
+                $this->session->set('form_data', $validationData);
+                $this->session->set('form_errors', $errors);
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'asignaturas/create')
+                    ->withStatus(302);
             }
 
-            // Iniciar transacción
+            error_log("[LOG] Antes de iniciar transacción");
             $this->db->beginTransaction();
-
             try {
-            // Crear la asignatura principal
-            $stmt = $this->db->prepare("
-                INSERT INTO asignaturas (
-                    nombre, tipo, vigencia_desde, vigencia_hasta, 
-                    periodicidad, estado, fecha_creacion
-                ) VALUES (?, ?, ?, ?, ?, ?, NOW())
-            ");
-            
-            $stmt->execute([
-                    $nombre,
-                    $tipo,
-                    $vigencia_desde,
-                    $vigencia_hasta,
-                    $periodicidad,
-                    $estado
-            ]);
+                error_log("[LOG] Insertando asignatura");
+                
+                // Usar el modelo Eloquent para crear la asignatura
+                $asignatura = new \src\Models\Asignatura();
+                $asignatura->nombre = $nombre;
+                $asignatura->tipo = $tipo;
+                $asignatura->vigencia_desde = $vigencia_desde;
+                $asignatura->vigencia_hasta = $vigencia_hasta;
+                $asignatura->periodicidad = $periodicidad;
+                $asignatura->estado = $estado;
+                $asignatura->save();
+                
+                $asignatura_id = $asignatura->id;
+                error_log("[LOG] Asignatura insertada con ID: $asignatura_id");
 
-            $asignaturaId = $this->db->lastInsertId();
-
-            // Procesar los códigos de asignatura
+                // Insertar códigos de departamento
                 $stmt = $this->db->prepare("
                     INSERT INTO asignaturas_departamentos (
-                        asignatura_id, departamento_id, codigo_asignatura, cantidad_alumnos
-                    ) VALUES (?, ?, ?, ?)
+                        asignatura_id, departamento_id, codigo_asignatura, 
+                        cantidad_alumnos, fecha_creacion, fecha_actualizacion
+                    ) VALUES (?, ?, ?, ?, NOW(), NOW())
                 ");
-
+                
                 // Si es Formación Electiva, usar valores por defecto
                 if ($tipo === 'FORMACION_ELECTIVA') {
                     // Obtener el ID del departamento "Sin departamento"
@@ -414,78 +392,71 @@ class AsignaturaController extends BaseController
 
                     // Insertar con valores por defecto para Formación Electiva
                     foreach ($codigos as $codigo) {
-                        $stmt->execute([
-                            $asignaturaId,
-                            $sinDepartamentoId,
-                            $codigo['codigo'],
-                            0  // Cantidad de alumnos = 0
-                        ]);
+                        if (!empty($codigo['codigo'])) {
+                            error_log("[LOG] Insertando código Formación Electiva: " . print_r($codigo, true));
+                            $stmt->execute([
+                                $asignatura_id,
+                                $sinDepartamentoId,
+                                $codigo['codigo'],
+                                0  // Cantidad de alumnos = 0
+                            ]);
+                        }
                     }
                 } else {
                     // Para otros tipos de asignatura, procesar normalmente
                     foreach ($codigos as $codigo) {
-                    $stmt->execute([
-                        $asignaturaId,
-                        $codigo['departamento_id'],
-                        $codigo['codigo'],
-                        $codigo['cantidad_alumnos']
-                    ]);
+                        if (!empty($codigo['departamento_id']) && !empty($codigo['codigo'])) {
+                            error_log("[LOG] Insertando código: " . print_r($codigo, true));
+                            $stmt->execute([
+                                $asignatura_id,
+                                $codigo['departamento_id'],
+                                $codigo['codigo'],
+                                $codigo['cantidad_alumnos'] ?? 0
+                            ]);
+                        }
+                    }
                 }
-            }
+                error_log("[LOG] Antes de commit");
+                $this->db->commit();
+                error_log("[LOG] Commit realizado correctamente");
 
-                // Confirmar la transacción
-            $this->db->commit();
-
-                // Establecer mensaje de éxito
+                if ($isAjax) {
+                    $response->getBody()->write(json_encode(['success' => true, 'message' => 'Asignatura creada exitosamente']));
+                    return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
+                }
                 $this->session->set('success', 'Asignatura creada exitosamente');
-
-                if ($isAjax) {
-                    header('Content-Type: application/json; charset=utf-8');
-                    echo json_encode(['success' => true, 'message' => 'Asignatura creada exitosamente']);
-                    exit;
-                }
-
-                    header('Location: ' . Config::get('app_url') . 'asignaturas');
-                    exit;
-
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'asignaturas')
+                    ->withStatus(302);
             } catch (\Exception $e) {
-                // Revertir la transacción en caso de error
+                error_log("[LOG] Excepción en la transacción: " . $e->getMessage());
                 $this->db->rollBack();
-                error_log("Error en AsignaturaController@store: " . $e->getMessage());
-                
-                if ($isAjax) {
-                    header('Content-Type: application/json; charset=utf-8');
-                    echo json_encode(['success' => false, 'message' => 'Error al crear la asignatura: ' . $e->getMessage()]);
-                    exit;
-                } else {
-                    $this->session->set('error', 'Error al crear la asignatura: ' . $e->getMessage());
-                    header('Location: ' . Config::get('app_url') . 'asignaturas/create');
-                    exit;
-                }
+                throw $e;
             }
         } catch (\Exception $e) {
-            error_log("Error general en AsignaturaController@store: " . $e->getMessage());
-            
-            if ($isAjax) {
-                header('Content-Type: application/json; charset=utf-8');
-                echo json_encode(['success' => false, 'message' => 'Error al procesar la solicitud: ' . $e->getMessage()]);
-                exit;
-            } else {
-                $this->session->set('error', 'Error al procesar la solicitud: ' . $e->getMessage());
-                header('Location: ' . Config::get('app_url') . 'asignaturas/create');
-                exit;
+            error_log("[LOG] Excepción general: " . $e->getMessage());
+            if ($isAjax ?? false) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Error al crear la asignatura: ' . $e->getMessage()]));
+                return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
             }
+            $this->session->set('error', 'Error al crear la asignatura: ' . $e->getMessage());
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'asignaturas/create')
+                ->withStatus(302);
         }
     }
 
-    public function edit($id)
+    public function edit(Request $request, ResponseInterface $response, array $args = [])
     {
+        $id = $args['id'] ?? null;
+        
         try {
             // Verificar autenticación
             if (!$this->session->get('user_id')) {
                 $this->session->set('error', 'Por favor inicie sesión para editar asignaturas');
-                header('Location: ' . Config::get('app_url') . 'login');
-                exit;
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'login')
+                    ->withStatus(302);
             }
 
             // Obtener datos básicos de la asignatura
@@ -500,55 +471,32 @@ class AsignaturaController extends BaseController
 
             if (!$asignatura) {
                 $this->session->set('error', 'Asignatura no encontrada');
-                header('Location: ' . Config::get('app_url') . 'asignaturas');
-                exit;
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'asignaturas')
+                    ->withStatus(302);
             }
 
-            // Si es una asignatura regular, obtener información de departamentos
-            if ($asignatura['tipo'] == 'REGULAR') {
-                $stmt = $this->db->prepare("
-                    SELECT 
-                        ad.codigo_asignatura,
-                        ad.departamento_id,
-                        ad.cantidad_alumnos,
-                        d.id as departamento_id,
-                        d.nombre as departamento_nombre,
-                        f.nombre as facultad_nombre,
-                        s.nombre as sede_nombre
-                    FROM asignaturas_departamentos ad
-                    JOIN departamentos d ON ad.departamento_id = d.id
-                    JOIN facultades f ON d.facultad_id = f.id
-                    JOIN sedes s ON f.sede_id = s.id
-                    WHERE ad.asignatura_id = ?
-                    ORDER BY s.nombre, d.nombre
-                ");
-                $stmt->execute([$id]);
-                $asignatura['departamentos'] = $stmt->fetchAll();
-            } else {
-                // Si es una asignatura de formación, obtener información de departamentos
-                $stmt = $this->db->prepare("
-                    SELECT 
-                        ad.codigo_asignatura,
-                        ad.departamento_id,
-                        ad.cantidad_alumnos,
-                        d.id as departamento_id,
-                        d.nombre as departamento_nombre,
-                        f.nombre as facultad_nombre,
-                        s.nombre as sede_nombre
-                    FROM asignaturas_departamentos ad
-                    JOIN departamentos d ON ad.departamento_id = d.id
-                    JOIN facultades f ON d.facultad_id = f.id
-                    JOIN sedes s ON f.sede_id = s.id
-                    WHERE ad.asignatura_id = ?
-                    ORDER BY s.nombre, d.nombre
-                ");
-                $stmt->execute([$id]);
-                $asignatura['departamentos'] = $stmt->fetchAll();
+            // Obtener códigos de asignatura por departamento
+            $stmt = $this->db->prepare("
+                SELECT ad.codigo_asignatura, ad.departamento_id, ad.cantidad_alumnos,
+                       COALESCE(d.nombre, 'Sin departamento') as departamento_nombre
+                FROM asignaturas_departamentos ad
+                LEFT JOIN departamentos d ON ad.departamento_id = d.id
+                WHERE ad.asignatura_id = ?
+                ORDER BY COALESCE(d.nombre, 'Sin departamento')
+            ");
+            $stmt->execute([$id]);
+            $asignatura['departamentos'] = $stmt->fetchAll();
+            
+            // Log para depuración
+            error_log("Asignatura ID: " . $id);
+            error_log("Departamentos encontrados: " . count($asignatura['departamentos']));
+            error_log("Datos de departamentos: " . print_r($asignatura['departamentos'], true));
 
-                // Obtener asignaturas vinculadas
+            // Obtener asignaturas vinculadas si es formación electiva
+            if ($asignatura['tipo'] == 'FORMACION_ELECTIVA') {
                 $stmt = $this->db->prepare("
-                    SELECT a.nombre, a.vigencia_desde, a.vigencia_hasta,
-                           a.estado, a.periodicidad
+                    SELECT a.id, a.nombre, a.tipo, a.estado
                     FROM asignaturas a
                     JOIN asignaturas_formacion af ON a.id = af.asignatura_regular_id
                     WHERE af.asignatura_formacion_id = ?
@@ -558,16 +506,16 @@ class AsignaturaController extends BaseController
                 $asignatura['vinculadas'] = $stmt->fetchAll();
             }
 
-            // Obtener lista de departamentos para el selector
+            // Obtener departamentos con su jerarquía
             $stmt = $this->db->prepare("
                 SELECT d.id, d.nombre as departamento_nombre,
-                       f.nombre as facultad_nombre,
-                       s.nombre as sede_nombre
+                       COALESCE(f.nombre, 'Sin facultad') as facultad_nombre,
+                       COALESCE(s.nombre, 'Sin sede') as sede_nombre
                 FROM departamentos d
-                JOIN facultades f ON d.facultad_id = f.id
-                JOIN sedes s ON f.sede_id = s.id
+                LEFT JOIN facultades f ON d.facultad_id = f.id
+                LEFT JOIN sedes s ON f.sede_id = s.id
                 WHERE d.estado = 1
-                ORDER BY s.nombre ASC, f.nombre ASC, d.nombre ASC
+                ORDER BY COALESCE(s.nombre, 'Sin sede') ASC, COALESCE(f.nombre, 'Sin facultad') ASC, d.nombre ASC
             ");
             $stmt->execute();
             $departamentos = $stmt->fetchAll();
@@ -578,7 +526,7 @@ class AsignaturaController extends BaseController
             $user = $stmt->fetch();
 
             // Renderizar la vista
-            echo $this->twig->render('asignaturas/edit.twig', [
+            $html = $this->twig->render('asignaturas/edit.twig', [
                 'asignatura' => $asignatura,
                 'departamentos' => $departamentos,
                 'user' => $user,
@@ -586,40 +534,46 @@ class AsignaturaController extends BaseController
                 'session' => $_SESSION,
                 'current_page' => 'asignaturas'
             ]);
+            
+            $response->getBody()->write($html);
+            return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
+            
         } catch (\Exception $e) {
             error_log("Error en AsignaturaController@edit: " . $e->getMessage());
             $this->session->set('error', 'Error al cargar el formulario de edición');
-            header('Location: ' . Config::get('app_url') . 'asignaturas');
-            exit;
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'asignaturas')
+                ->withStatus(302);
         }
     }
 
-    public function update($id)
+    public function update(Request $request, ResponseInterface $response, array $args = [])
     {
+        $id = $args['id'] ?? null;
+        
         try {
-            // Verificar autenticación
-            if (!$this->session->get('user_id')) {
-                $this->session->set('error', 'Por favor inicie sesión para actualizar asignaturas');
-                header('Location: ' . Config::get('app_url') . 'login');
-                exit;
-            }
-
             // Verificar si es una solicitud AJAX
             $isAjax = $this->isAjaxRequest();
             
-            // Obtener datos según el tipo de solicitud
-            $isJson = $isAjax || strpos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== false;
+            // Verificar autenticación
+            if (!$this->session->get('user_id')) {
+                if ($isAjax) {
+                    $response->getBody()->write(json_encode(['success' => false, 'message' => 'Por favor inicie sesión para actualizar asignaturas']));
+                    return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
+                }
+                $this->session->set('error', 'Por favor inicie sesión para actualizar asignaturas');
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'login')
+                    ->withStatus(302);
+            }
+
+            // Obtener los datos según el tipo de solicitud
+            $parsedBody = $request->getParsedBody();
+            $isJson = $isAjax || strpos($request->getHeaderLine('Content-Type'), 'application/json') !== false;
             
             if ($isJson) {
-                $inputData = file_get_contents('php://input');
+                $inputData = $request->getBody()->getContents();
                 $data = json_decode($inputData, true);
-                if (json_last_error() !== JSON_ERROR_NONE) {
-                    if ($isAjax) {
-                        header('Content-Type: application/json');
-                        echo json_encode(['success' => false, 'message' => 'Error al decodificar JSON: ' . json_last_error_msg()]);
-                        exit;
-                    }
-                }
                 
                 $nombre = trim($data['nombre'] ?? '');
                 $tipo = $data['tipo'] ?? '';
@@ -629,66 +583,42 @@ class AsignaturaController extends BaseController
                 $estado = $data['estado'] ?? '1';
                 $codigos = $data['codigos'] ?? [];
             } else {
-                $nombre = trim($_POST['nombre'] ?? '');
-                $tipo = $_POST['tipo'] ?? '';
-                $vigencia_desde = $_POST['vigencia_desde'] ?? '';
-                $vigencia_hasta = $_POST['vigencia_hasta'] ?? '';
-                $periodicidad = $_POST['periodicidad'] ?? '';
-                $estado = $_POST['estado'] ?? '1';
-                $codigos = $_POST['codigos'] ?? [];
+                $nombre = trim($parsedBody['nombre'] ?? '');
+                $tipo = $parsedBody['tipo'] ?? '';
+                $vigencia_desde = $parsedBody['vigencia_desde'] ?? '';
+                $vigencia_hasta = $parsedBody['vigencia_hasta'] ?? '';
+                $periodicidad = $parsedBody['periodicidad'] ?? '';
+                $estado = $parsedBody['estado'] ?? '1';
+                $codigos = $parsedBody['codigos'] ?? [];
             }
 
-            // Validaciones
-            $errores = [];
+            // Validar datos
+            $validationData = [
+                'nombre' => $nombre,
+                'tipo' => $tipo,
+                'vigencia_desde' => $vigencia_desde,
+                'vigencia_hasta' => $vigencia_hasta,
+                'periodicidad' => $periodicidad,
+                'estado' => $estado,
+                'codigos' => $codigos
+            ];
 
-            if (empty($nombre)) {
-                $errores[] = 'El nombre de la asignatura es requerido';
-            }
+            $errors = $this->validateAsignaturaData($validationData, $id);
 
-            if (empty($tipo)) {
-                $errores[] = 'El tipo de asignatura es requerido';
-            }
-
-            if (empty($vigencia_desde)) {
-                $errores[] = 'La fecha de inicio de vigencia es requerida';
-            }
-
-            if (empty($periodicidad)) {
-                $errores[] = 'La periodicidad es requerida';
-            }
-
-            // Validar códigos para todos los tipos de asignatura
-            if (empty($codigos) || !is_array($codigos)) {
-                $errores[] = 'Debe ingresar al menos un código de asignatura';
-            } else {
-                foreach ($codigos as $index => $codigo) {
-                    if (empty($codigo['codigo'])) {
-                        $errores[] = 'El código de asignatura es requerido';
-                        break;
-                    }
-                    if ($tipo !== 'FORMACION_ELECTIVA') {
-                        if (empty($codigo['departamento_id'])) {
-                            $errores[] = 'El departamento es requerido';
-                            break;
-                        }
-                        if (empty($codigo['cantidad_alumnos']) || $codigo['cantidad_alumnos'] < 1) {
-                            $errores[] = 'La cantidad de alumnos debe ser mayor a 0';
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (!empty($errores)) {
+            if (!empty($errors)) {
                 if ($isAjax) {
-                    header('Content-Type: application/json; charset=utf-8');
-                    echo json_encode(['success' => false, 'errors' => $errores]);
-                    exit;
-                } else {
-                    $this->session->set('error', implode('. ', $errores));
-                    header('Location: ' . Config::get('app_url') . 'asignaturas/' . $id . '/editar');
-                    exit;
+                    // Obtener el primer error específico para el mensaje
+                    $firstError = reset($errors);
+                    $response->getBody()->write(json_encode(['success' => false, 'message' => $firstError, 'errors' => $errors]));
+                    return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
                 }
+                
+                $this->session->set('error', 'Por favor corrija los errores en el formulario');
+                $this->session->set('form_data', $validationData);
+                $this->session->set('form_errors', $errors);
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'asignaturas/' . $id . '/edit')
+                    ->withStatus(302);
             }
 
             // Iniciar transacción
@@ -770,17 +700,15 @@ class AsignaturaController extends BaseController
 
                 $this->db->commit();
 
-                // Establecer mensaje de éxito
-                $this->session->set('success', 'Asignatura actualizada exitosamente');
-
                 if ($isAjax) {
-                    header('Content-Type: application/json; charset=utf-8');
-                    echo json_encode(['success' => true, 'message' => 'Asignatura actualizada exitosamente']);
-                    exit;
+                    $response->getBody()->write(json_encode(['success' => true, 'message' => 'Asignatura actualizada exitosamente']));
+                    return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
                 }
 
-                    header('Location: ' . Config::get('app_url') . 'asignaturas');
-                    exit;
+                $this->session->set('success', 'Asignatura actualizada exitosamente');
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'asignaturas')
+                    ->withStatus(302);
 
             } catch (\Exception $e) {
                 $this->db->rollBack();
@@ -790,45 +718,106 @@ class AsignaturaController extends BaseController
             error_log("Error en AsignaturaController@update: " . $e->getMessage());
             
             if ($isAjax) {
-                header('Content-Type: application/json; charset=utf-8');
-                echo json_encode(['success' => false, 'message' => 'Error al actualizar la asignatura: ' . $e->getMessage()]);
-                exit;
-            } else {
-                $this->session->set('error', 'Error al actualizar la asignatura: ' . $e->getMessage());
-                header('Location: ' . Config::get('app_url') . 'asignaturas/' . $id . '/editar');
-                exit;
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Error al actualizar la asignatura: ' . $e->getMessage()]));
+                return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
             }
+
+            $this->session->set('error', 'Error al actualizar la asignatura: ' . $e->getMessage());
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'asignaturas/' . $id . '/edit')
+                ->withStatus(302);
         }
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, ResponseInterface $response, array $args = [])
     {
+        $id = $args['id'] ?? null;
+        
         try {
             // Verificar autenticación
             if (!$this->session->get('user_id')) {
                 if ($this->isAjaxRequest()) {
-                    header('Content-Type: application/json; charset=utf-8');
-                    echo json_encode(['success' => false, 'message' => 'No autorizado']);
-                    exit;
+                    $response->getBody()->write(json_encode(['success' => false, 'message' => 'No autorizado']));
+                    return $response->withHeader('Content-Type', 'application/json');
                 }
-                $this->session->set('error', 'No autorizado');
-                header('Location: ' . Config::get('app_url') . 'login');
-                exit;
+                $this->session->set('error', 'Por favor inicie sesión para eliminar asignaturas');
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'login')
+                    ->withStatus(302);
             }
 
-                // Verificar si la asignatura existe
-                $stmt = $this->db->prepare("SELECT id FROM asignaturas WHERE id = ?");
-                $stmt->execute([$id]);
-                if (!$stmt->fetch()) {
+            // Verificar si la asignatura existe
+            $stmt = $this->db->prepare("SELECT id, nombre, tipo FROM asignaturas WHERE id = ?");
+            $stmt->execute([$id]);
+            $asignatura = $stmt->fetch();
+
+            if (!$asignatura) {
+                $mensaje = 'La asignatura no existe o ya fue eliminada.';
                 if ($this->isAjaxRequest()) {
-                    header('Content-Type: application/json; charset=utf-8');
-                    echo json_encode(['success' => false, 'message' => 'Asignatura no encontrada']);
-                    exit;
+                    $response->getBody()->write(json_encode(['success' => false, 'message' => $mensaje]));
+                    return $response->withHeader('Content-Type', 'application/json');
                 }
-                $this->session->set('error', 'Asignatura no encontrada');
-                header('Location: ' . Config::get('app_url') . 'asignaturas');
-                exit;
+                $this->session->set('error', $mensaje);
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'asignaturas')
+                    ->withStatus(302);
+            }
+
+            // Verificar si la asignatura tiene bibliografías vinculadas
+            $stmt = $this->db->prepare("
+                SELECT COUNT(*) as total 
+                FROM asignaturas_bibliografias 
+                WHERE asignatura_id = ? AND estado = 'activa'
+            ");
+            $stmt->execute([$id]);
+            $resultado = $stmt->fetch();
+            
+            if ($resultado['total'] > 0) {
+                $mensaje = 'No se puede eliminar la asignatura "' . $asignatura['nombre'] . '" porque tiene bibliografías declaradas vinculadas. Debe desvincular las bibliografías antes de eliminar la asignatura.';
+                
+                if ($this->isAjaxRequest()) {
+                    $response->getBody()->write(json_encode([
+                        'success' => false, 
+                        'message' => $mensaje,
+                        'type' => 'warning'
+                    ]));
+                    return $response->withHeader('Content-Type', 'application/json');
                 }
+                
+                $this->session->set('error', $mensaje);
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'asignaturas')
+                    ->withStatus(302);
+            }
+
+            // Si es una asignatura de Formación Electiva, verificar que no tenga asignaturas vinculadas
+            if ($asignatura['tipo'] === 'FORMACION_ELECTIVA') {
+                $stmt = $this->db->prepare("
+                    SELECT COUNT(*) as total 
+                    FROM asignaturas_formacion 
+                    WHERE asignatura_formacion_id = ?
+                ");
+                $stmt->execute([$id]);
+                $resultadoVinculaciones = $stmt->fetch();
+                
+                if ($resultadoVinculaciones['total'] > 0) {
+                    $mensaje = 'No se puede eliminar la asignatura de Formación Electiva "' . $asignatura['nombre'] . '" porque tiene asignaturas vinculadas. Debe desvincular las asignaturas antes de eliminar la asignatura de Formación Electiva.';
+                    
+                    if ($this->isAjaxRequest()) {
+                        $response->getBody()->write(json_encode([
+                            'success' => false, 
+                            'message' => $mensaje,
+                            'type' => 'warning'
+                        ]));
+                        return $response->withHeader('Content-Type', 'application/json');
+                    }
+                    
+                    $this->session->set('error', $mensaje);
+                    return $response
+                        ->withHeader('Location', Config::get('app_url') . 'asignaturas')
+                        ->withStatus(302);
+                }
+            }
 
             // Iniciar transacción
             $this->db->beginTransaction();
@@ -842,91 +831,96 @@ class AsignaturaController extends BaseController
                 $stmt = $this->db->prepare("DELETE FROM asignaturas_formacion WHERE asignatura_formacion_id = ? OR asignatura_regular_id = ?");
                 $stmt->execute([$id, $id]);
 
-                // Eliminar relaciones en mallas
-                $stmt = $this->db->prepare("DELETE FROM mallas WHERE asignatura_id = ?");
-                $stmt->execute([$id]);
-
-                // Eliminar relaciones en asignaturas_bibliografias
+                // Eliminar relaciones en asignaturas_bibliografias (por si acaso hay registros inactivos)
                 $stmt = $this->db->prepare("DELETE FROM asignaturas_bibliografias WHERE asignatura_id = ?");
                 $stmt->execute([$id]);
 
-                // Finalmente, eliminar la asignatura
+                // Eliminar la asignatura
                 $stmt = $this->db->prepare("DELETE FROM asignaturas WHERE id = ?");
                 $stmt->execute([$id]);
 
-                // Confirmar transacción
                 $this->db->commit();
 
-                // Establecer mensaje de éxito
-                $this->session->set('success', 'Asignatura eliminada exitosamente');
+                $mensajeExito = 'Asignatura "' . $asignatura['nombre'] . '" eliminada exitosamente';
                 
                 if ($this->isAjaxRequest()) {
-                    header('Content-Type: application/json; charset=utf-8');
-                    echo json_encode(['success' => true, 'message' => 'Asignatura eliminada exitosamente']);
-                    exit;
+                    $response->getBody()->write(json_encode([
+                        'success' => true, 
+                        'message' => $mensajeExito,
+                        'type' => 'success'
+                    ]));
+                    return $response->withHeader('Content-Type', 'application/json');
                 }
 
-                header('Location: ' . Config::get('app_url') . 'asignaturas');
-                exit;
+                $this->session->set('success', $mensajeExito);
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'asignaturas')
+                    ->withStatus(302);
 
             } catch (\Exception $e) {
-                // Revertir transacción en caso de error
                 $this->db->rollBack();
                 throw $e;
             }
+
         } catch (\Exception $e) {
             error_log("Error en AsignaturaController@destroy: " . $e->getMessage());
             
-            if ($this->isAjaxRequest()) {
-                header('Content-Type: application/json; charset=utf-8');
-                echo json_encode([
-                    'success' => false, 
-                    'message' => 'Error al eliminar la asignatura: ' . $e->getMessage()
-                ]);
-                exit;
-            }
+            $mensajeError = 'Error al eliminar la asignatura: ' . $e->getMessage();
             
-            $this->session->set('error', 'Error al eliminar la asignatura: ' . $e->getMessage());
-            header('Location: ' . Config::get('app_url') . 'asignaturas');
-            exit;
+            if ($this->isAjaxRequest()) {
+                $response->getBody()->write(json_encode([
+                    'success' => false, 
+                    'message' => $mensajeError,
+                    'type' => 'error'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            $this->session->set('error', $mensajeError);
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'asignaturas')
+                ->withStatus(302);
         }
     }
 
-    public function getAsignaturas()
+    public function getAsignaturas(Request $request, ResponseInterface $response, array $args = [])
     {
-        $filters = $this->request->getQueryParams();
-        
         try {
+            $filters = $request->getQueryParams();
             $asignaturas = $this->asignaturaModel->getFiltered($filters);
-            return Response::json($asignaturas);
+            
+            $response->getBody()->write(json_encode($asignaturas));
+            return $response->withHeader('Content-Type', 'application/json');
         } catch (\Exception $e) {
-            return Response::json([
+            $response->getBody()->write(json_encode([
                 'message' => 'Error al obtener las asignaturas',
                 'error' => $e->getMessage()
-            ], 500);
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
         }
     }
 
-    public function create()
+    public function create(Request $request, ResponseInterface $response, array $args = [])
     {
         try {
             // Verificar autenticación
             if (!$this->session->get('user_id')) {
                 $this->session->set('error', 'Por favor inicie sesión para crear asignaturas');
-                header('Location: ' . Config::get('app_url') . 'login');
-                exit;
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'login')
+                    ->withStatus(302);
             }
 
             // Obtener departamentos con su jerarquía
             $stmt = $this->db->prepare("
                 SELECT d.id, d.nombre as departamento_nombre,
-                       f.nombre as facultad_nombre,
-                       s.nombre as sede_nombre
+                       COALESCE(f.nombre, 'Sin facultad') as facultad_nombre,
+                       COALESCE(s.nombre, 'Sin sede') as sede_nombre
                 FROM departamentos d
-                JOIN facultades f ON d.facultad_id = f.id
-                JOIN sedes s ON f.sede_id = s.id
+                LEFT JOIN facultades f ON d.facultad_id = f.id
+                LEFT JOIN sedes s ON f.sede_id = s.id
                 WHERE d.estado = 1
-                ORDER BY s.nombre ASC, f.nombre ASC, d.nombre ASC
+                ORDER BY COALESCE(s.nombre, 'Sin sede') ASC, COALESCE(f.nombre, 'Sin facultad') ASC, d.nombre ASC
             ");
             $stmt->execute();
             $departamentos = $stmt->fetchAll();
@@ -936,22 +930,27 @@ class AsignaturaController extends BaseController
             $user = $usuarioModel->find($this->session->get('user_id'));
 
             // Renderizar la vista
-            echo $this->twig->render('asignaturas/create.twig', [
+            $html = $this->twig->render('asignaturas/create.twig', [
                 'departamentos' => $departamentos,
                 'user' => $user,
                 'app_url' => Config::get('app_url'),
                 'session' => $_SESSION,
                 'current_page' => 'asignaturas'
             ]);
+            
+            $response->getBody()->write($html);
+            return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
+            
         } catch (\Exception $e) {
             error_log("Error en AsignaturaController@create: " . $e->getMessage());
             $this->session->set('error', 'Error al cargar el formulario de creación de asignatura');
-            header('Location: ' . Config::get('app_url') . 'asignaturas');
-            exit;
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'asignaturas')
+                ->withStatus(302);
         }
     }
 
-    private function validateAsignaturaData($data)
+    private function validateAsignaturaData($data, $asignaturaId = null)
     {
         $errors = [];
 
@@ -973,11 +972,17 @@ class AsignaturaController extends BaseController
             } else {
                 $anio = substr($data['vigencia_desde'], 0, 4);
                 $secuencia = substr($data['vigencia_desde'], 4, 2);
-                if ($anio < 1900 || $anio > date('Y')) {
-                    $errors['vigencia_desde'] = 'El año debe estar entre 1900 y el año actual';
-                }
-                if ($secuencia < 1 || $secuencia > 99) {
-                    $errors['vigencia_desde'] = 'La secuencia debe estar entre 01 y 99';
+                
+                // Permitir el valor especial 999999 para vigencia indefinida
+                if ($data['vigencia_desde'] === '999999') {
+                    // Valor especial permitido, no validar año ni secuencia
+                } else {
+                    if ($anio < 1900 || $anio > date('Y')) {
+                        $errors['vigencia_desde'] = 'El año debe estar entre 1900 y el año actual';
+                    }
+                    if ($secuencia < 1 || $secuencia > 99) {
+                        $errors['vigencia_desde'] = 'La secuencia debe estar entre 01 y 99';
+                    }
                 }
             }
         }
@@ -989,15 +994,24 @@ class AsignaturaController extends BaseController
             } else {
                 $anio = substr($data['vigencia_hasta'], 0, 4);
                 $secuencia = substr($data['vigencia_hasta'], 4, 2);
-                if ($anio < 1900 || $anio > date('Y')) {
-                    $errors['vigencia_hasta'] = 'El año debe estar entre 1900 y el año actual';
-                }
-                if ($secuencia < 1 || $secuencia > 99) {
-                    $errors['vigencia_hasta'] = 'La secuencia debe estar entre 01 y 99';
+                
+                // Permitir el valor especial 999999 para vigencia indefinida
+                if ($data['vigencia_hasta'] === '999999') {
+                    // Valor especial permitido, no validar año ni secuencia
+                } else {
+                    if ($anio < 1900 || $anio > date('Y')) {
+                        $errors['vigencia_hasta'] = 'El año debe estar entre 1900 y el año actual';
+                    }
+                    if ($secuencia < 1 || $secuencia > 99) {
+                        $errors['vigencia_hasta'] = 'La secuencia debe estar entre 01 y 99';
+                    }
                 }
                 
                 // Validar que vigencia_hasta sea mayor o igual a vigencia_desde
-                if (isset($data['vigencia_desde']) && $data['vigencia_hasta'] < $data['vigencia_desde']) {
+                if (isset($data['vigencia_desde']) && 
+                    $data['vigencia_desde'] !== '999999' && 
+                    $data['vigencia_hasta'] !== '999999' && 
+                    $data['vigencia_hasta'] < $data['vigencia_desde']) {
                     $errors['vigencia_hasta'] = 'La vigencia hasta debe ser mayor o igual a la vigencia desde';
                 }
             }
@@ -1015,20 +1029,103 @@ class AsignaturaController extends BaseController
         if (empty($data['codigos']) || !is_array($data['codigos'])) {
             $errors['codigos'] = 'Debe ingresar al menos un código de asignatura';
         } else {
+            // Validar códigos duplicados
+            $codigos = [];
+            $codigosDuplicados = [];
+            
             foreach ($data['codigos'] as $index => $codigo) {
-                if (empty($codigo['departamento_id'])) {
-                    $errors["codigos.{$index}.departamento_id"] = 'El departamento es requerido';
+                // Para Formación Electiva, no validar departamento ni cantidad de alumnos
+                if ($data['tipo'] !== 'FORMACION_ELECTIVA') {
+                    if (empty($codigo['departamento_id'])) {
+                        $errors["codigos.{$index}.departamento_id"] = 'El departamento es requerido';
+                    }
+                    if (empty($codigo['cantidad_alumnos'])) {
+                        $errors["codigos.{$index}.cantidad_alumnos"] = 'La cantidad de alumnos es requerida';
+                    }
                 }
+                
                 if (empty($codigo['codigo'])) {
                     $errors["codigos.{$index}.codigo"] = 'El código es requerido';
+                } else {
+                    // Verificar duplicados dentro del formulario
+                    $codigoKey = $codigo['codigo'];
+                    if (isset($codigos[$codigoKey])) {
+                        $codigosDuplicados[] = $codigoKey;
+                    } else {
+                        $codigos[$codigoKey] = $index;
+                    }
                 }
-                if (empty($codigo['cantidad_alumnos'])) {
-                    $errors["codigos.{$index}.cantidad_alumnos"] = 'La cantidad de alumnos es requerida';
+            }
+            
+            // Mostrar error para códigos duplicados dentro del formulario
+            if (!empty($codigosDuplicados)) {
+                $codigosUnicos = array_unique($codigosDuplicados);
+                $errors['codigos_duplicados_formulario'] = 'Los siguientes códigos están duplicados en el formulario: ' . implode(', ', $codigosUnicos);
+            }
+            
+            // Validar códigos duplicados en la base de datos
+            if (empty($errors)) {
+                foreach ($data['codigos'] as $index => $codigo) {
+                    if (!empty($codigo['codigo'])) {
+                        $codigoDuplicado = $this->verificarCodigoDuplicado($codigo['codigo'], $asignaturaId);
+                        if ($codigoDuplicado) {
+                            $errors["codigos.{$index}.codigo"] = "El código '{$codigo['codigo']}' ya existe en la asignatura '{$codigoDuplicado['nombre_asignatura']}' del departamento '{$codigoDuplicado['nombre_departamento']}'";
+                        }
+                    }
                 }
             }
         }
 
         return $errors;
+    }
+
+    /**
+     * Verifica si un código de asignatura ya existe en la base de datos
+     * @param string $codigo
+     * @param int|null $asignaturaId (para excluir la asignatura actual en edición)
+     * @return array|false Retorna información del duplicado o false si no existe
+     */
+    private function verificarCodigoDuplicado($codigo, $asignaturaId = null)
+    {
+        try {
+            if ($asignaturaId) {
+                // Para edición: excluir la asignatura actual
+                $stmt = $this->db->prepare("
+                    SELECT 
+                        a.nombre as nombre_asignatura,
+                        d.nombre as nombre_departamento,
+                        ad.codigo_asignatura
+                    FROM asignaturas_departamentos ad
+                    JOIN asignaturas a ON ad.asignatura_id = a.id
+                    JOIN departamentos d ON ad.departamento_id = d.id
+                    WHERE ad.codigo_asignatura = ? 
+                    AND ad.asignatura_id != ?
+                    AND a.estado = 1
+                    LIMIT 1
+                ");
+                $stmt->execute([$codigo, $asignaturaId]);
+            } else {
+                // Para creación: verificar todos los códigos
+                $stmt = $this->db->prepare("
+                    SELECT 
+                        a.nombre as nombre_asignatura,
+                        d.nombre as nombre_departamento,
+                        ad.codigo_asignatura
+                    FROM asignaturas_departamentos ad
+                    JOIN asignaturas a ON ad.asignatura_id = a.id
+                    JOIN departamentos d ON ad.departamento_id = d.id
+                    WHERE ad.codigo_asignatura = ? 
+                    AND a.estado = 1
+                    LIMIT 1
+                ");
+                $stmt->execute([$codigo]);
+            }
+            
+            return $stmt->fetch();
+        } catch (\Exception $e) {
+            error_log("Error al verificar código duplicado: " . $e->getMessage());
+            return false;
+        }
     }
 
     private function isAjaxRequest()
@@ -1037,14 +1134,15 @@ class AsignaturaController extends BaseController
                strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
     }
 
-    public function vinculacion()
+    public function vinculacion(Request $request, ResponseInterface $response, array $args = [])
     {
         try {
             // Verificar autenticación
             if (!$this->session->get('user_id')) {
                 $this->session->set('error', 'Por favor inicie sesión para acceder a esta funcionalidad');
-                header('Location: ' . Config::get('app_url') . 'login');
-                exit;
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'login')
+                    ->withStatus(302);
             }
 
             // Obtener asignaturas de tipo Formación Electiva
@@ -1079,7 +1177,7 @@ class AsignaturaController extends BaseController
             $user = $stmt->fetch();
 
             // Renderizar la vista usando la instancia de Twig del controlador
-            echo $this->twig->render('asignaturas/vinculacion.twig', [
+            $html = $this->twig->render('asignaturas/vinculacion.twig', [
                 'asignaturas_electivas' => $asignaturas_electivas,
                 'tipos_asignaturas' => $tipos_asignaturas,
                 'user' => $user,
@@ -1087,26 +1185,37 @@ class AsignaturaController extends BaseController
                 'session' => $_SESSION,
                 'current_page' => 'asignaturas'
             ]);
+            
+            $response->getBody()->write($html);
+            return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
+            
         } catch (\Exception $e) {
             error_log("Error en AsignaturaController@vinculacion: " . $e->getMessage());
             $this->session->set('error', 'Error al cargar la página de vinculación: ' . $e->getMessage());
-            header('Location: ' . Config::get('app_url') . 'asignaturas');
-            exit;
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'asignaturas')
+                ->withStatus(302);
         }
     }
 
-    public function getVinculacion($asignaturaFormacionId)
+    public function getVinculacion(Request $request, ResponseInterface $response, array $args = [])
     {
         try {
             // Verificar autenticación
             if (!$this->session->get('user_id')) {
-                header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'message' => 'No autorizado']);
-                exit;
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'No autorizado']));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            $asignaturaFormacionId = $args['id'] ?? null;
+            if (!$asignaturaFormacionId) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'ID de asignatura no proporcionado']));
+                return $response->withHeader('Content-Type', 'application/json');
             }
 
             // Obtener el tipo de asignatura solicitado
-            $tipo = $_GET['tipo'] ?? 'REGULAR';
+            $queryParams = $request->getQueryParams();
+            $tipo = $queryParams['tipo'] ?? 'REGULAR';
 
             // Obtener asignaturas vinculadas del tipo especificado
             $stmt = $this->db->prepare("
@@ -1138,37 +1247,43 @@ class AsignaturaController extends BaseController
             $stmt->execute([$tipo, $asignaturaFormacionId, $asignaturaFormacionId]);
             $no_vinculadas = $stmt->fetchAll();
 
-            header('Content-Type: application/json');
-            echo json_encode([
+            $response->getBody()->write(json_encode([
                 'success' => true,
                 'vinculadas' => $vinculadas,
                 'no_vinculadas' => $no_vinculadas
-            ]);
+            ]));
+            return $response->withHeader('Content-Type', 'application/json');
+            
         } catch (\Exception $e) {
             error_log("Error en AsignaturaController@getVinculacion: " . $e->getMessage());
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'message' => 'Error al obtener las asignaturas']);
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Error al obtener las asignaturas']));
+            return $response->withHeader('Content-Type', 'application/json');
         }
     }
 
-    public function agregarVinculacion($asignaturaFormacionId)
+    public function agregarVinculacion(Request $request, ResponseInterface $response, array $args = [])
     {
         try {
             // Verificar autenticación
             if (!$this->session->get('user_id')) {
-                header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'message' => 'No autorizado']);
-                exit;
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'No autorizado']));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            $asignaturaFormacionId = $args['id'] ?? null;
+            if (!$asignaturaFormacionId) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'ID de asignatura no proporcionado']));
+                return $response->withHeader('Content-Type', 'application/json');
             }
 
             // Obtener datos de la solicitud
-            $input = json_decode(file_get_contents('php://input'), true);
+            $inputData = $request->getBody()->getContents();
+            $input = json_decode($inputData, true);
             $asignaturasIds = $input['asignaturas'] ?? [];
 
             if (empty($asignaturasIds)) {
-                header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'message' => 'No se especificaron asignaturas']);
-                exit;
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'No se especificaron asignaturas']));
+                return $response->withHeader('Content-Type', 'application/json');
             }
 
             // Iniciar transacción
@@ -1214,37 +1329,43 @@ class AsignaturaController extends BaseController
                 }
 
                 $this->db->commit();
-                header('Content-Type: application/json');
-                echo json_encode(['success' => true, 'message' => 'Asignaturas vinculadas exitosamente']);
+                $response->getBody()->write(json_encode(['success' => true, 'message' => 'Asignaturas vinculadas exitosamente']));
+                return $response->withHeader('Content-Type', 'application/json');
+                
             } catch (\Exception $e) {
                 $this->db->rollBack();
                 throw $e;
             }
         } catch (\Exception $e) {
             error_log("Error en AsignaturaController@agregarVinculacion: " . $e->getMessage());
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'message' => 'Error al vincular las asignaturas: ' . $e->getMessage()]);
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Error al vincular las asignaturas: ' . $e->getMessage()]));
+            return $response->withHeader('Content-Type', 'application/json');
         }
     }
 
-    public function quitarVinculacion($asignaturaFormacionId)
+    public function quitarVinculacion(Request $request, ResponseInterface $response, array $args = [])
     {
         try {
             // Verificar autenticación
             if (!$this->session->get('user_id')) {
-                header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'message' => 'No autorizado']);
-                exit;
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'No autorizado']));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            $asignaturaFormacionId = $args['id'] ?? null;
+            if (!$asignaturaFormacionId) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'ID de asignatura no proporcionado']));
+                return $response->withHeader('Content-Type', 'application/json');
             }
 
             // Obtener datos de la solicitud
-            $input = json_decode(file_get_contents('php://input'), true);
+            $inputData = $request->getBody()->getContents();
+            $input = json_decode($inputData, true);
             $asignaturasIds = $input['asignaturas'] ?? [];
 
             if (empty($asignaturasIds)) {
-                header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'message' => 'No se especificaron asignaturas']);
-                exit;
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'No se especificaron asignaturas']));
+                return $response->withHeader('Content-Type', 'application/json');
             }
 
             // Iniciar transacción
@@ -1262,16 +1383,77 @@ class AsignaturaController extends BaseController
                 }
 
                 $this->db->commit();
-                header('Content-Type: application/json');
-                echo json_encode(['success' => true, 'message' => 'Asignaturas desvinculadas exitosamente']);
+                $response->getBody()->write(json_encode(['success' => true, 'message' => 'Asignaturas desvinculadas exitosamente']));
+                return $response->withHeader('Content-Type', 'application/json');
+                
             } catch (\Exception $e) {
                 $this->db->rollBack();
                 throw $e;
             }
         } catch (\Exception $e) {
             error_log("Error en AsignaturaController@quitarVinculacion: " . $e->getMessage());
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'message' => 'Error al desvincular las asignaturas']);
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Error al desvincular las asignaturas']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+    }
+
+    /**
+     * Obtiene las asignaturas por departamento (para AJAX).
+     */
+    public function getAsignaturasByDepartamento(Request $request, ResponseInterface $response, array $args = [])
+    {
+        try {
+            // Verificar autenticación
+            if (!$this->session->get('user_id')) {
+                $response->getBody()->write(json_encode(['error' => 'No autorizado'], JSON_UNESCAPED_UNICODE));
+                return $response
+                    ->withHeader('Content-Type', 'application/json; charset=utf-8')
+                    ->withStatus(401);
+            }
+
+            $departamentoId = $args['departamentoId'] ?? null;
+            
+            if (!$departamentoId) {
+                $response->getBody()->write(json_encode(['error' => 'ID de departamento requerido'], JSON_UNESCAPED_UNICODE));
+                return $response
+                    ->withHeader('Content-Type', 'application/json; charset=utf-8')
+                    ->withStatus(400);
+            }
+
+            // Obtener asignaturas del departamento
+            $stmt = $this->db->prepare("
+                SELECT DISTINCT 
+                    a.id,
+                    a.nombre,
+                    a.tipo,
+                    a.periodicidad,
+                    a.estado,
+                    GROUP_CONCAT(ad.codigo_asignatura ORDER BY ad.codigo_asignatura ASC SEPARATOR ', ') as codigos
+                FROM asignaturas a
+                INNER JOIN asignaturas_departamentos ad ON a.id = ad.asignatura_id
+                WHERE ad.departamento_id = ?
+                AND a.estado = 1
+                AND a.tipo IN ('REGULAR', 'FORMACION_ELECTIVA')
+                GROUP BY a.id, a.nombre, a.tipo, a.periodicidad, a.estado
+                ORDER BY a.nombre
+            ");
+            $stmt->execute([$departamentoId]);
+            $asignaturas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Procesar los códigos para que sean arrays
+            foreach ($asignaturas as &$asignatura) {
+                $asignatura['codigos'] = $asignatura['codigos'] ? explode(', ', $asignatura['codigos']) : [];
+            }
+
+            $response->getBody()->write(json_encode($asignaturas, JSON_UNESCAPED_UNICODE));
+            return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
+            
+        } catch (\Exception $e) {
+            error_log("Error en AsignaturaController@getAsignaturasByDepartamento: " . $e->getMessage());
+            $response->getBody()->write(json_encode(['error' => 'Error al obtener asignaturas'], JSON_UNESCAPED_UNICODE));
+            return $response
+                ->withHeader('Content-Type', 'application/json; charset=utf-8')
+                ->withStatus(500);
         }
     }
 } 

@@ -391,8 +391,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const facultadId = this.value;
         
         if (facultadId) {
-            // Caso especial para "Sin Facultad" (ID: 9)
-            if (facultadId === '9') {
+            // Caso especial para "Sin Facultad" (ID: 9) - solo cuando viene de "Sin Sede"
+            if (facultadId === '9' && sedeId === '14') {
                 departamentoSelect.innerHTML = '<option value="7">Sin Departamento</option>';
                 departamentoSelect.disabled = false;
                 cargarAsignaturasDepartamento('7');

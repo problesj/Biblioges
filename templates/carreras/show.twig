@@ -36,7 +36,17 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         <label class="font-weight-bold">Tipo de Programa:</label>
-                        <p>{{ carrera.tipo_programa == 'P' ? 'Pregrado' : 'Postgrado' }}</p>
+                        <p>
+                            {% if carrera.tipo_programa == 'P' %}
+                                Pregrado
+                            {% elseif carrera.tipo_programa == 'G' %}
+                                Postgrado
+                            {% elseif carrera.tipo_programa == 'O' %}
+                                Otro
+                            {% else %}
+                                {{ carrera.tipo_programa }}
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -86,19 +96,43 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for i in 0..(carrera.codigos_carrera|length - 1) %}
+                        {% if codigos_carrera is defined and codigos_carrera|length > 0 %}
+                            {% for codigo in codigos_carrera %}
+                                <tr>
+                                    <td>{{ codigo.codigo_carrera }}</td>
+                                    <td>
+                                        {{ codigo.vigencia_desde }} - {{ codigo.vigencia_hasta }}
+                                    </td>
+                                    <td>{{ codigo.facultad_nombre }}</td>
+                                    <td>{{ codigo.sede_nombre }}</td>
+                                    <td>
+                                        {% if codigo.estado == 1 %}
+                                            <span class="badge bg-success">Activo</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactivo</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% elseif carrera.codigos_carrera is defined and carrera.codigos_carrera|length > 0 %}
+                            {% for i in 0..(carrera.codigos_carrera|length - 1) %}
+                                <tr>
+                                    <td>{{ carrera.codigos_carrera[i] }}</td>
+                                    <td>
+                                        {{ carrera.vigencias_desde[i] }} - {{ carrera.vigencias_hasta[i] }}
+                                    </td>
+                                    <td>{{ carrera.facultades[i] }}</td>
+                                    <td>{{ carrera.sedes[i] }}</td>
+                                    <td>
+                                        <span class="badge bg-success">Activo</span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
                             <tr>
-                                <td>{{ carrera.codigos_carrera[i] }}</td>
-                                <td>
-                                    {{ carrera.vigencias_desde[i] }} - {{ carrera.vigencias_hasta[i] }}
-                                </td>
-                                <td>{{ carrera.facultades[i] }}</td>
-                                <td>{{ carrera.sedes[i] }}</td>
-                                <td>
-                                    <span class="badge bg-success">Activo</span>
-                                </td>
+                                <td colspan="5" class="text-center">No hay códigos de carrera asociados</td>
                             </tr>
-                        {% endfor %}
+                        {% endif %}
                     </tbody>
                 </table>
             </div>
@@ -106,8 +140,11 @@
     </div>
 
     <div class="card shadow mb-4">
-        <div class="card-header py-3">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
             <h6 class="m-0 font-weight-bold text-primary">Asignaturas Vinculadas</h6>
+            <a href="{{ app_url }}mallas/{{ carrera.id }}/edit" class="btn btn-primary btn-sm">
+                <i class="fas fa-edit"></i> Gestionar Malla
+            </a>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -122,8 +159,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% if carrera.asignaturas is defined and carrera.asignaturas|length > 0 %}
-                            {% for asignatura in carrera.asignaturas %}
+                        {% if asignaturas_vinculadas is defined and asignaturas_vinculadas|length > 0 %}
+                            {% for asignatura in asignaturas_vinculadas %}
                                 <tr>
                                     <td>{{ asignatura.semestre }}</td>
                                     <td>{{ asignatura.nombre }}</td>
@@ -140,7 +177,11 @@
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="5" class="text-center">No hay asignaturas vinculadas a esta carrera</td>
+                                <td colspan="5" class="text-center">
+                                    No hay asignaturas vinculadas a esta carrera
+                                    <br>
+                                    <small class="text-muted">Haz clic en "Gestionar Malla" para agregar asignaturas</small>
+                                </td>
                             </tr>
                         {% endif %}
                     </tbody>

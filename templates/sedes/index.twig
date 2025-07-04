@@ -4,68 +4,10 @@
 
 {% block stylesheets %}
 <link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap4.min.css">
-<style>
-    .alert {
-        display: flex;
-        align-items: center;
-        padding: 0.75rem 1.25rem;
-        margin-bottom: 1rem;
-        border-radius: 0.25rem;
-    }
-    .alert-content {
-        display: flex;
-        align-items: center;
-        flex: 1;
-    }
-    .alert-content i {
-        margin-right: 0.5rem;
-    }
-    .alert-actions {
-        display: flex;
-        align-items: center;
-    }
-    .alert .close {
-        padding: 0;
-        margin-left: 1rem;
-        color: inherit;
-        opacity: 0.5;
-        background: none;
-        border: none;
-        cursor: pointer;
-        font-size: 1.5rem;
-        line-height: 1;
-        font-weight: bold;
-    }
-    .alert .close:hover {
-        opacity: 0.75;
-    }
-    .alert .close:focus {
-        outline: none;
-    }
-</style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <!-- Mensajes de alerta -->
-    {% if error is not empty %}
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="fas fa-exclamation-circle me-2"></i>
-        {{ error }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    {{ clean_error_message()|raw }}
-    {% endif %}
-
-    {% if success is not empty %}
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="fas fa-check-circle me-2"></i>
-        {{ success }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    {{ clean_error_message()|raw }}
-    {% endif %}
-
     <div class="row">
         <div class="col-12">
             <div class="card shadow">
@@ -126,12 +68,9 @@
                                                 <a href="{{ app_url }}sedes/{{ sede.id }}/edit" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <form action="{{ app_url }}sedes/{{ sede.id }}" method="post" class="d-inline" onsubmit="return confirm('¿Está seguro de eliminar esta sede?');">
-                                                    <input type="hidden" name="_method" value="DELETE">
-                                                    <button type="submit" class="btn btn-sm btn-danger">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
+                                                <button type="button" class="btn btn-sm btn-danger" onclick="deleteSede({{ sede.id }}, '{{ sede.nombre }}')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -166,8 +105,76 @@
             "pageLength": 10
         });
 
-        // Cerrar alertas automáticamente después de 5 segundos
-        $('.alert').delay(5000).fadeOut(500);
+        // Mostrar alertas de SweetAlert2 si existen en la sesión
+        {% if session.swal %}
+            Swal.fire({
+                icon: '{{ session.swal.icon }}',
+                title: '{{ session.swal.title|raw }}',
+                text: '{{ session.swal.text|raw }}',
+                confirmButtonText: 'Aceptar',
+                confirmButtonColor: '#4e73df',
+                timer: null,
+                timerProgressBar: false,
+                allowOutsideClick: false
+            });
+
+            // Limpiar la alerta de la sesión después de mostrarla
+            fetch('{{ app_url }}clear-session-messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+        {% endif %}
     });
+
+    // Función para confirmar eliminación con SweetAlert2
+    function confirmDelete(message) {
+        return Swal.fire({
+            title: '¿Está seguro?',
+            text: message,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            return result.isConfirmed;
+        });
+    }
+
+    // Función para eliminar sede
+    function deleteSede(id, nombre) {
+        Swal.fire({
+            title: '¿Está seguro?',
+            text: `¿Está seguro de eliminar la sede "${nombre}"?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Crear un formulario temporal para enviar la petición POST
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ app_url }}sedes/' + id + '/delete';
+                
+                // Agregar token CSRF si es necesario
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_token';
+                csrfInput.value = '';
+                form.appendChild(csrfInput);
+                
+                // Agregar el formulario al DOM y enviarlo
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
 </script>
 {% endblock %} 

@@ -33,8 +33,10 @@
                         <div class="form-group">
                             <label for="tipo_programa" class="form-label">Tipo de Programa *</label>
                             <select class="form-select" id="tipo_programa" name="tipo_programa" required>
+                                <option value="">Seleccione un tipo</option>
                                 <option value="P" {% if carrera.tipo_programa == 'P' %}selected{% endif %}>Pregrado</option>
                                 <option value="G" {% if carrera.tipo_programa == 'G' %}selected{% endif %}>Postgrado</option>
+                                <option value="O" {% if carrera.tipo_programa == 'O' %}selected{% endif %}>Otro</option>
                             </select>
                         </div>
                     </div>
@@ -103,7 +105,10 @@
                                         <select class="form-select" name="facultades[]" required>
                                             <option value="">Seleccione una facultad</option>
                                             {% for facultad in facultades %}
-                                            <option value="{{ facultad.id }}" {% if facultades_ids[i] == facultad.id %}selected{% endif %}>{{ facultad.nombre }}</option>
+                                            <option value="{{ facultad.id }}" 
+                                                    {% if facultades_ids[i] is defined and facultades_ids[i] == facultad.id %}selected{% endif %}>
+                                                {{ facultad.nombre }}
+                                            </option>
                                             {% endfor %}
                                         </select>
                                     </div>
@@ -137,43 +142,31 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Función para cargar facultades
-        function cargarFacultades(sedeSelect) {
-            var sedeId = sedeSelect.val();
+        function cargarFacultades(sedeSelect, facultadSeleccionada = null) {
             var facultadSelect = sedeSelect.closest('.row').find('select[name="facultades[]"]');
-            var facultadIdActual = facultadSelect.val(); // Guardar la facultad actualmente seleccionada
+            facultadSelect.html('<option value="">Cargando...</option>');
             
-            if (sedeId) {
-                $.ajax({
-                    url: '{{ app_url }}carreras/facultades',
-                    method: 'GET',
-                    data: { sede_id: sedeId },
-                    dataType: 'json',
-                    success: function(facultades) {
-                        if (Array.isArray(facultades)) {
-                            facultadSelect.empty();
-                            facultadSelect.append('<option value="">Seleccione una facultad</option>');
-                            facultades.forEach(function(facultad) {
-                                var selected = facultad.id == facultadIdActual ? 'selected' : '';
-                                facultadSelect.append(`<option value="${facultad.id}" ${selected}>${facultad.nombre}</option>`);
-                            });
-                        } else {
-                            console.error('La respuesta no es un array:', facultades);
-                            facultadSelect.empty();
-                            facultadSelect.append('<option value="">Error al cargar facultades</option>');
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Error al cargar facultades:', error);
-                        console.error('Estado:', status);
-                        console.error('Respuesta:', xhr.responseText);
-                        facultadSelect.empty();
+            $.ajax({
+                url: '{{ app_url }}api/facultades',
+                method: 'GET',
+                data: { sede_id: sedeSelect.val() },
+                success: function(facultades) {
+                    facultadSelect.html('<option value="">Seleccione una facultad</option>');
+                    if (Array.isArray(facultades)) {
+                        facultades.forEach(function(facultad) {
+                            var selected = (facultadSeleccionada && facultadSeleccionada == facultad.id) ? 'selected' : '';
+                            facultadSelect.append('<option value="' + facultad.id + '" ' + selected + '>' + facultad.nombre + '</option>');
+                        });
+                    } else {
+                        console.error('La respuesta no es un array:', facultades);
                         facultadSelect.append('<option value="">Error al cargar facultades</option>');
                     }
-                });
-            } else {
-                facultadSelect.empty();
-                facultadSelect.append('<option value="">Seleccione una facultad</option>');
-            }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error al cargar facultades:', error);
+                    facultadSelect.html('<option value="">Error al cargar facultades</option>');
+                }
+            });
         }
 
         // Función para validar campos de vigencia
@@ -230,13 +223,15 @@
 
         // Agregar evento de cambio de sede a todas las filas existentes
         $('select[name="sedes[]"]').change(function() {
-            cargarFacultades($(this));
+            var facultadSeleccionada = $(this).closest('.row').find('select[name="facultades[]"]').val();
+            cargarFacultades($(this), facultadSeleccionada);
         });
 
-        // Cargar facultades iniciales si hay una sede seleccionada
+        // Cargar facultades para las sedes ya seleccionadas al cargar la página
         $('select[name="sedes[]"]').each(function() {
             if ($(this).val()) {
-                cargarFacultades($(this));
+                var facultadSeleccionada = $(this).closest('.row').find('select[name="facultades[]"]').val();
+                cargarFacultades($(this), facultadSeleccionada);
             }
         });
 

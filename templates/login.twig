@@ -6,7 +6,7 @@
 <div class="container-fluid">
     <div class="row vh-80 align-items-center justify-content-center">
         <div class="col-12 text-center mb-5">
-            <img src="{{ app_url }}public/assets/img/logo-ucn.png" alt="Logo UCN" class="img-fluid mb-3" style="max-height: 100px;">
+            <!-- <img src="{{ app_url }}public/assets/img/logo-ucn.png" alt="Logo UCN" class="img-fluid mb-3" style="max-height: 100px;"> -->
             <h2 class="display-4 fw-bold">Sistema de Gestión de Bibliografías UCN</h2>
         </div>
         <div class="col-10 col-md-6 col-lg-4">
@@ -33,6 +33,14 @@
                             <button type="submit" class="btn btn-primary btn-lg">Iniciar Sesión</button>
                         </div>
                     </form>
+                    
+                    <div class="mt-4 text-center">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i>
+                            El sistema utiliza autenticación con Active Directory. 
+                            Si el servidor LDAP no está disponible, se usará la contraseña local.
+                        </small>
+                    </div>
                 </div>
             </div>
         </div>

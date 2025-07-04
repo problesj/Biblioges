@@ -59,4 +59,10 @@ class Session
         unset($_SESSION['flash'][$key]);
         return $value;
     }
+
+    public function showLogin()
+    {
+        error_log('Entrando a showLogin');
+        // ... resto del código
+    }
 } 

@@ -29,7 +29,7 @@
 
     <div class="card">
         <div class="card-body">
-            <form method="POST" action="{{ isEdit ? app_url ~ 'bibliografias-disponibles/' ~ bibliografia.id : app_url ~ 'bibliografias-disponibles' }}" id="bibliografiaForm">
+            <form method="POST" action="{{ isEdit ? app_url ~ 'bibliografias-disponibles/' ~ bibliografia.id ~ '/update' : app_url ~ 'bibliografias-disponibles' }}" id="bibliografiaForm">
                 {% if isEdit %}
                     <input type="hidden" name="_method" value="PUT">
                 {% endif %}

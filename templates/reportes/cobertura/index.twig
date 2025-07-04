@@ -1,0 +1,94 @@
+{% extends "base.twig" %}
+
+{% block title %}Reporte de Cobertura{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Reporte de Cobertura</h3>
+                </div>
+                <div class="card-body">
+                    {# Debug: Mostrar número de carreras #}
+                    <p>Número de carreras: {{ carreras|length }}</p>
+
+                    <form id="reporteForm" method="post" action="/biblioges/reportes/cobertura/generar-reporte">
+                        <div class="form-group">
+                            <label for="carrera">Carrera</label>
+                            <select class="form-control" id="carrera" name="carrera_id" required>
+                                <option value="">Seleccione una carrera</option>
+                                {% for carrera in carreras %}
+                                    {# Debug: Mostrar información de cada carrera #}
+                                    <!-- Debug: Carrera {{ loop.index }}: {{ carrera.nombre }} -->
+                                    <option value="{{ carrera.id }}">{{ carrera.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Asignaturas de Formación</label>
+                            <div id="asignaturas-container">
+                                <p class="text-muted">Seleccione una carrera para ver las asignaturas</p>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Generar Reporte</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    $('#carrera').change(function() {
+        var carreraId = $(this).val();
+        if (carreraId) {
+            $.get('/biblioges/reportes/cobertura/asignaturas-formacion/' + carreraId, function(asignaturas) {
+                var container = $('#asignaturas-container');
+                container.empty();
+                
+                if (asignaturas.length > 0) {
+                    asignaturas.forEach(function(asignatura) {
+                        container.append(`
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" 
+                                       id="asignatura_${asignatura.id}" 
+                                       name="asignaturas[]" 
+                                       value="${asignatura.id}">
+                                <label class="custom-control-label" for="asignatura_${asignatura.id}">
+                                    ${asignatura.nombre}
+                                </label>
+                            </div>
+                        `);
+                    });
+                } else {
+                    container.html('<p class="text-muted">No hay asignaturas disponibles</p>');
+                }
+            });
+        } else {
+            $('#asignaturas-container').html('<p class="text-muted">Seleccione una carrera para ver las asignaturas</p>');
+        }
+    });
+
+    $('#reporteForm').submit(function(e) {
+        e.preventDefault();
+        
+        var formData = $(this).serialize();
+        
+        $.post($(this).attr('action'), formData, function(response) {
+            if (response.success) {
+                window.location.href = response.file_url;
+            } else {
+                alert('Error al generar el reporte: ' + response.error);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

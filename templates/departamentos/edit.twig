@@ -9,17 +9,7 @@
             <h6 class="m-0 font-weight-bold text-primary">Editar Departamento</h6>
         </div>
         <div class="card-body">
-            {% if error %}
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-circle me-2"></i>
-                {{ error }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            {{ clean_error_message()|raw }}
-            {% endif %}
-
-            <form method="POST" action="{{ app_url }}departamentos/{{ departamento.id }}">
-                <input type="hidden" name="_method" value="PUT">
+            <form method="POST" action="{{ app_url }}departamentos/{{ departamento.id }}/update">
                 
                 <div class="row">
                     <div class="col-md-6">
@@ -77,4 +67,20 @@
         </div>
     </div>
 </div>
+
+<script>
+// Mostrar mensajes de error con SweetAlert2
+{% if error is not empty %}
+document.addEventListener('DOMContentLoaded', function() {
+    Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: '{{ error|escape('js') }}',
+        timer: 5000,
+        timerProgressBar: true,
+        showConfirmButton: true
+    });
+});
+{% endif %}
+</script>
 {% endblock %} 

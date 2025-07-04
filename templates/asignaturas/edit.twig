@@ -13,7 +13,7 @@
 
     <div class="card shadow mb-4">
         <div class="card-body">
-            <form id="editAsignaturaForm" method="POST" action="{{ app_url }}asignaturas/{{ asignatura.id }}/actualizar">
+            <form id="editAsignaturaForm" method="POST" action="{{ app_url }}asignaturas/{{ asignatura.id }}/update">
                 <!-- Datos Básicos -->
                 <h5 class="mb-3">Datos Básicos</h5>
                 <div class="row">
@@ -87,52 +87,58 @@
                 <!-- Datos por Departamento -->
                 <h5 class="mb-3 mt-4">Datos por Departamento</h5>
                 <div id="codigosContainer">
-                    {% for info in asignatura.departamentos %}
-                    <div class="row mb-3 codigo-row">
-                        <div class="col-md-4">
-                            <label for="departamento_id_{{ loop.index0 }}" class="form-label">Departamento</label>
-                            <select class="form-control select-departamento" 
-                                    name="codigos[{{ loop.index0 }}][departamento_id]" 
-                                    data-index="{{ loop.index0 }}" required>
-                                <option value="">Seleccione un departamento</option>
-                                {% for departamento in departamentos %}
-                                <option value="{{ departamento.id }}" 
-                                        {% if departamento.id == info.departamento_id %}selected{% endif %}>
-                                    {{ departamento.sede_nombre }} - {{ departamento.facultad_nombre }} - {{ departamento.departamento_nombre }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                            <div class="invalid-feedback" id="departamentoError_{{ loop.index0 }}"></div>
-                        </div>
+                    {% if asignatura.departamentos %}
+                        {% for info in asignatura.departamentos %}
+                        <div class="row mb-3 codigo-row">
+                            <div class="col-md-4">
+                                <label for="departamento_id_{{ loop.index0 }}" class="form-label">Departamento</label>
+                                <select class="form-control select-departamento" 
+                                        name="codigos[{{ loop.index0 }}][departamento_id]" 
+                                        data-index="{{ loop.index0 }}" required>
+                                    <option value="">Seleccione un departamento</option>
+                                    {% for departamento in departamentos %}
+                                    <option value="{{ departamento.id }}" 
+                                            {% if departamento.id == info.departamento_id %}selected{% endif %}>
+                                        {{ departamento.sede_nombre }} - {{ departamento.facultad_nombre }} - {{ departamento.departamento_nombre }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback" id="departamentoError_{{ loop.index0 }}"></div>
+                            </div>
 
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="codigo_{{ loop.index0 }}" class="form-label">Código de Asignatura</label>
-                                <input type="text" class="form-control" id="codigo_{{ loop.index0 }}" 
-                                       name="codigos[{{ loop.index0 }}][codigo]" 
-                                       value="{{ info.codigo_asignatura }}" required>
-                                <div class="invalid-feedback" id="codigoError_{{ loop.index0 }}"></div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="codigo_{{ loop.index0 }}" class="form-label">Código de Asignatura</label>
+                                    <input type="text" class="form-control" id="codigo_{{ loop.index0 }}" 
+                                           name="codigos[{{ loop.index0 }}][codigo]" 
+                                           value="{{ info.codigo_asignatura }}" required>
+                                    <div class="invalid-feedback" id="codigoError_{{ loop.index0 }}"></div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="cantidad_alumnos_{{ loop.index0 }}" class="form-label">Cantidad de Alumnos</label>
+                                    <input type="number" class="form-control" id="cantidad_alumnos_{{ loop.index0 }}" 
+                                           name="codigos[{{ loop.index0 }}][cantidad_alumnos]" 
+                                           value="{{ info.cantidad_alumnos }}" min="1" required>
+                                    <div class="invalid-feedback" id="cantidadAlumnosError_{{ loop.index0 }}"></div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)" 
+                                        {% if loop.index0 == 0 %}style="display: none;"{% endif %}>
+                                    <i class="fas fa-times"></i>
+                                </button>
                             </div>
                         </div>
-
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="cantidad_alumnos_{{ loop.index0 }}" class="form-label">Cantidad de Alumnos</label>
-                                <input type="number" class="form-control" id="cantidad_alumnos_{{ loop.index0 }}" 
-                                       name="codigos[{{ loop.index0 }}][cantidad_alumnos]" 
-                                       value="{{ info.cantidad_alumnos }}" min="1" required>
-                                <div class="invalid-feedback" id="cantidadAlumnosError_{{ loop.index0 }}"></div>
-                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> No hay códigos de departamento vinculados a esta asignatura.
                         </div>
-
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)" 
-                                    {% if loop.index0 == 0 %}style="display: none;"{% endif %}>
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                    {% endfor %}
+                    {% endif %}
                 </div>
 
                 <div class="row mb-3">
@@ -156,7 +162,7 @@
 
 {% block scripts %}
 <script>
-let codigoCount = {{ asignatura.departamentos|length - 1 }};
+let codigoCount = {{ asignatura.departamentos ? asignatura.departamentos|length - 1 : -1 }};
 
 // Función para manejar el cambio en el tipo de asignatura
 function handleTipoChange() {
@@ -344,8 +350,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (codigo) {
                     hasValidCodigo = true;
                     if (data.tipo === 'FORMACION_ELECTIVA') {
+                        // Para Formación Electiva, buscar el departamento "Sin departamento"
+                        let sinDepartamentoId = null;
+                        const options = depSelect.querySelectorAll('option');
+                        options.forEach(option => {
+                            if (option.textContent.includes('Sin departamento')) {
+                                sinDepartamentoId = option.value;
+                            }
+                        });
+                        const departamentoId = sinDepartamentoId || depSelect.value;
+                        
                         data.codigos.push({
-                            departamento_id: depSelect.value,
+                            departamento_id: departamentoId,
                             codigo: codigo,
                             cantidad_alumnos: '0'
                         });
@@ -402,27 +418,94 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const result = await response.json();
             
-            if (response.ok) {
-                window.location.href = '{{ app_url }}asignaturas';
+            if (result.success) {
+                // Mostrar alerta de éxito con SweetAlert2
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: result.message || 'Asignatura actualizada exitosamente',
+                    showConfirmButton: false,
+                    timer: 2000
+                }).then(() => {
+                    window.location.href = '{{ app_url }}asignaturas';
+                });
             } else {
                 if (result.errors) {
+                    // Limpiar errores anteriores
+                    document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                    document.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+                    
+                    // Obtener el primer error para la alerta principal
+                    const firstErrorKey = Object.keys(result.errors)[0];
+                    const firstErrorMessage = result.errors[firstErrorKey];
+                    
+                    // Mostrar errores específicos
                     Object.entries(result.errors).forEach(([field, message]) => {
-                        const errorDiv = document.getElementById(`${field}Error`);
-                        if (errorDiv) {
-                            const input = document.getElementById(field);
-                            if (input) {
+                        if (field === 'codigos_duplicados_formulario') {
+                            // Mostrar alerta para códigos duplicados en el formulario
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Códigos Duplicados',
+                                text: message,
+                                confirmButtonColor: '#ffc107'
+                            });
+                        } else if (field.startsWith('codigos.')) {
+                            // Manejar errores de códigos específicos
+                            const parts = field.split('.');
+                            const index = parts[1];
+                            const subField = parts[2];
+                            
+                            const errorDiv = document.getElementById(`${subField}Error_${index}`);
+                            const input = document.getElementById(`${subField}_${index}`);
+                            
+                            if (errorDiv && input) {
                                 input.classList.add('is-invalid');
+                                errorDiv.textContent = message;
+                                
+                                // Si es un error de código duplicado, mostrar alerta adicional
+                                if (subField === 'codigo' && message.includes('ya existe')) {
+                                    Swal.fire({
+                                        icon: 'warning',
+                                        title: 'Código Duplicado',
+                                        text: message,
+                                        confirmButtonColor: '#ffc107'
+                                    });
+                                }
                             }
-                            errorDiv.textContent = message;
+                        } else {
+                            // Manejar otros errores
+                            const errorDiv = document.getElementById(`${field}Error`);
+                            const input = document.getElementById(field);
+                            
+                            if (errorDiv && input) {
+                                input.classList.add('is-invalid');
+                                errorDiv.textContent = message;
+                            }
                         }
                     });
+                    
+                    // Mostrar alerta principal con el error específico
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de Validación',
+                        text: firstErrorMessage,
+                        confirmButtonColor: '#d33'
+                    });
                 } else {
-                    alert('Error al actualizar la asignatura: ' + result.message);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al actualizar la asignatura: ' + result.message
+                    });
                 }
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error al procesar la solicitud');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al procesar la solicitud'
+            });
         }
     });
 });

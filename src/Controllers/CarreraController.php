@@ -26,7 +26,7 @@ class CarreraController
         $dbConfig = [
             'host' => $_ENV['DB_HOST'] ?? 'localhost',
             'port' => $_ENV['DB_PORT'] ?? '3306',
-            'dbname' => $_ENV['DB_DATABASE'] ?? 'biblioges',
+            'dbname' => $_ENV['DB_DATABASE'] ?? 'bibliografia',
             'user' => $_ENV['DB_USERNAME'] ?? 'root',
             'password' => $_ENV['DB_PASSWORD'] ?? ''
         ];
@@ -47,13 +47,14 @@ class CarreraController
         $this->twig = $twig;
     }
 
-    public function index()
+    public function index(Request $request, Response $response, array $args = [])
     {
         // Verificar autenticación
         if (!$this->session->get('user_id')) {
             $this->session->set('error', 'Por favor inicie sesión para acceder a las carreras');
-            header('Location: ' . Config::get('app_url') . 'login');
-            exit;
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'biblioges/login')
+                ->withStatus(302);
         }
 
         try {
@@ -130,14 +131,17 @@ class CarreraController
             ];
 
             // Renderizar la vista
-            echo $this->twig->render('carreras/index.twig', $viewData);
+            $html = $this->twig->render('carreras/index.twig', $viewData);
+            $response->getBody()->write($html);
+            return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
             
         } catch (\Exception $e) {
             error_log('CarreraController index: Error: ' . $e->getMessage());
             error_log('CarreraController index: Stack trace: ' . $e->getTraceAsString());
             $this->session->set('error', 'Error al cargar las carreras: ' . $e->getMessage());
-            header('Location: ' . Config::get('app_url') . 'dashboard');
-            exit;
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'dashboard')
+                ->withStatus(302);
         }
     }
 
@@ -148,13 +152,14 @@ class CarreraController
      * @param Response $response
      * @return Response
      */
-    public function create()
+    public function create(Request $request, Response $response, array $args = [])
     {
         // Verificar autenticación
         if (!$this->session->get('user_id')) {
             $this->session->set('error', 'Por favor inicie sesión para acceder a las carreras');
-            header('Location: ' . Config::get('app_url') . 'login');
-            exit;
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'biblioges/login')
+                ->withStatus(302);
         }
 
         // Obtener sedes y facultades
@@ -176,14 +181,17 @@ class CarreraController
         $user = $stmt->fetch();
 
         // Renderizar la vista
-        echo $this->twig->render('carreras/create.twig', [
+        $html = $this->twig->render('carreras/create.twig', [
             'sedes' => $sedes,
             'facultades' => $facultades,
             'app_url' => Config::get('app_url'),
             'user' => $user,
             'session' => $_SESSION,
-            'current_path' => 'carreras'
+            'current_page' => 'carreras'
         ]);
+        
+        $response->getBody()->write($html);
+        return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
     }
 
     /**
@@ -193,25 +201,27 @@ class CarreraController
      * @param Response $response
      * @return Response
      */
-    public function store()
+    public function store(Request $request, Response $response, array $args = [])
     {
         // Verificar autenticación
         if (!$this->session->get('user_id')) {
             $this->session->set('error', 'Por favor inicie sesión para acceder a las carreras');
-            header('Location: ' . Config::get('app_url') . 'login');
-            exit;
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'biblioges/login')
+                ->withStatus(302);
         }
 
         try {
             // Obtener datos del formulario
-            $nombre = $_POST['nombre'] ?? '';
-            $tipo_programa = $_POST['tipo_programa'] ?? '';
-            $estado = $_POST['estado'] ?? 1;
-            $codigos = $_POST['codigos'] ?? [];
-            $sedes = $_POST['sedes'] ?? [];
-            $facultades = $_POST['facultades'] ?? [];
-            $vigencias_desde = $_POST['vigencias_desde'] ?? [];
-            $vigencias_hasta = $_POST['vigencias_hasta'] ?? [];
+            $parsedBody = $request->getParsedBody();
+            $nombre = $parsedBody['nombre'] ?? '';
+            $tipo_programa = $parsedBody['tipo_programa'] ?? '';
+            $estado = $parsedBody['estado'] ?? 1;
+            $codigos = $parsedBody['codigos'] ?? [];
+            $sedes = $parsedBody['sedes'] ?? [];
+            $facultades = $parsedBody['facultades'] ?? [];
+            $vigencias_desde = $parsedBody['vigencias_desde'] ?? [];
+            $vigencias_hasta = $parsedBody['vigencias_hasta'] ?? [];
 
             // Validar datos básicos
             if (empty($nombre) || empty($tipo_programa)) {
@@ -221,6 +231,51 @@ class CarreraController
             // Validar códigos de carrera
             if (empty($codigos) || !is_array($codigos)) {
                 throw new \Exception('Debe ingresar al menos un código de carrera');
+            }
+
+            // Validar que no haya códigos duplicados por sede y facultad
+            $codigosValidos = [];
+            $duplicados = [];
+            
+            foreach ($codigos as $index => $codigo) {
+                if (empty($codigo) || empty($sedes[$index]) || empty($facultades[$index])) {
+                    continue;
+                }
+
+                $codigoKey = $codigo . '_' . $sedes[$index] . '_' . $facultades[$index];
+                
+                // Verificar duplicados en el formulario actual
+                if (in_array($codigoKey, $codigosValidos)) {
+                    $duplicados[] = $codigo;
+                } else {
+                    $codigosValidos[] = $codigoKey;
+                }
+            }
+
+            if (!empty($duplicados)) {
+                throw new \Exception('No se permiten códigos duplicados por sede y facultad. Códigos duplicados: ' . implode(', ', array_unique($duplicados)));
+            }
+
+            // Verificar duplicados en la base de datos
+            foreach ($codigos as $index => $codigo) {
+                if (empty($codigo) || empty($sedes[$index]) || empty($facultades[$index])) {
+                    continue;
+                }
+
+                // Verificar si ya existe un código con la misma sede y facultad
+                $sql = "SELECT ce.codigo_carrera, c.nombre as carrera_nombre, s.nombre as sede_nombre, f.nombre as facultad_nombre
+                        FROM carreras_espejos ce
+                        INNER JOIN carreras c ON ce.carrera_id = c.id
+                        INNER JOIN sedes s ON ce.sede_id = s.id
+                        INNER JOIN facultades f ON ce.facultad_id = f.id
+                        WHERE ce.codigo_carrera = ? AND ce.sede_id = ? AND ce.facultad_id = ?";
+                $stmt = $this->pdo->prepare($sql);
+                $stmt->execute([$codigo, $sedes[$index], $facultades[$index]]);
+                $existe = $stmt->fetch();
+
+                if ($existe) {
+                    throw new \Exception("El código '{$codigo}' ya existe para la sede '{$existe['sede_nombre']}' y facultad '{$existe['facultad_nombre']}' en la carrera '{$existe['carrera_nombre']}'");
+                }
             }
 
             // Iniciar transacción
@@ -272,8 +327,9 @@ class CarreraController
             $this->session->remove('error');
             $this->session->set('success', 'Carrera creada exitosamente');
             
-            header('Location: ' . Config::get('app_url') . 'carreras');
-            exit;
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'carreras')
+                ->withStatus(302);
         } catch (\Exception $e) {
             if ($this->pdo->inTransaction()) {
                 $this->pdo->rollBack();
@@ -294,13 +350,26 @@ class CarreraController
             $stmt->execute();
             $facultades = $stmt->fetchAll();
 
+            // Obtener datos del usuario
+            $user_id = $this->session->get('user_id');
+            $sql_user = "SELECT id, nombre, email FROM usuarios WHERE id = ?";
+            $stmt = $this->pdo->prepare($sql_user);
+            $stmt->execute([$user_id]);
+            $user = $stmt->fetch();
+
             // Renderizar la vista con los datos del formulario
-            echo $this->twig->render('carreras/create.twig', [
+            $html = $this->twig->render('carreras/create.twig', [
                 'sedes' => $sedes,
                 'facultades' => $facultades,
                 'app_url' => Config::get('app_url'),
-                'form_data' => $_POST
+                'user' => $user,
+                'session' => $_SESSION,
+                'current_page' => 'carreras',
+                'form_data' => $parsedBody
             ]);
+            
+            $response->getBody()->write($html);
+            return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
         }
     }
 
@@ -312,87 +381,31 @@ class CarreraController
      * @param array $args
      * @return Response
      */
-    public function show($id)
+    public function show(Request $request, Response $response, array $args = [])
     {
+        $id = $args['id'] ?? null;
+        
         // Verificar autenticación
         if (!$this->session->get('user_id')) {
             $this->session->set('error', 'Por favor inicie sesión para acceder a las carreras');
-            header('Location: ' . Config::get('app_url') . 'login');
-            exit;
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'login')
+                ->withStatus(302);
         }
 
         try {
-            // Obtener datos de la carrera
-            $sql = "SELECT 
-                        c.*,
-                        GROUP_CONCAT(ce.codigo_carrera) as codigos_carrera,
-                        GROUP_CONCAT(s.nombre) as sedes,
-                        GROUP_CONCAT(f.nombre) as facultades,
-                        GROUP_CONCAT(ce.vigencia_desde) as vigencias_desde,
-                        GROUP_CONCAT(ce.vigencia_hasta) as vigencias_hasta
-                    FROM carreras c
-                    LEFT JOIN carreras_espejos ce ON c.id = ce.carrera_id
-                    LEFT JOIN sedes s ON ce.sede_id = s.id
-                    LEFT JOIN facultades f ON ce.facultad_id = f.id
-                    WHERE c.id = ?
-                    GROUP BY c.id";
-
+            // Obtener datos básicos de la carrera
+            $sql = "SELECT c.* FROM carreras c WHERE c.id = ?";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([$id]);
             $carrera = $stmt->fetch();
 
             if (!$carrera) {
                 $this->session->set('error', 'Carrera no encontrada');
-                header('Location: ' . Config::get('app_url') . 'carreras');
-                exit;
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'carreras')
+                    ->withStatus(302);
             }
-
-            // Log para debug
-            error_log('Datos de carrera antes de procesar: ' . print_r($carrera, true));
-
-            // Procesar los resultados para asegurar el formato correcto
-            //$carrera['sedes'] = [];
-            //$carrera['facultades'] = [];
-            //$carrera['codigos_carrera'] = [];
-            //$carrera['vigencias_desde'] = [];
-            //$carrera['vigencias_hasta'] = [];
-
-            // Procesar cada campo solo si existe y es una cadena
-            if (isset($carrera['sedes']) && is_string($carrera['sedes'])) {
-                $carrera['sedes'] = array_filter(explode(',', $carrera['sedes']));
-            }
-            if (isset($carrera['facultades']) && is_string($carrera['facultades'])) {
-                $carrera['facultades'] = array_filter(explode(',', $carrera['facultades']));
-            }
-            if (isset($carrera['codigos_carrera']) && is_string($carrera['codigos_carrera'])) {
-                $carrera['codigos_carrera'] = array_filter(explode(',', $carrera['codigos_carrera']));
-            }
-            if (isset($carrera['vigencias_desde']) && is_string($carrera['vigencias_desde'])) {
-                $carrera['vigencias_desde'] = array_filter(explode(',', $carrera['vigencias_desde']));
-            }
-            if (isset($carrera['vigencias_hasta']) && is_string($carrera['vigencias_hasta'])) {
-                $carrera['vigencias_hasta'] = array_filter(explode(',', $carrera['vigencias_hasta']));
-            }
-
-            // Log para debug después de procesar
-            error_log('Datos de carrera después de procesar: ' . print_r($carrera, true));
-
-            // Obtener asignaturas vinculadas a través de la tabla mallas
-            $sql_asignaturas = "SELECT 
-                                a.id,
-                                a.nombre,
-                                a.tipo,
-                                a.periodicidad,
-                                a.estado,
-                                m.semestre
-                            FROM asignaturas a
-                            INNER JOIN mallas m ON a.id = m.asignatura_id
-                            WHERE m.carrera_id = ?
-                            ORDER BY m.semestre, a.nombre";
-
-            $stmt = $this->pdo->prepare($sql_asignaturas);
-            $stmt->execute([$id]);
-            $carrera['asignaturas'] = $stmt->fetchAll();
 
             // Obtener datos del usuario
             $user_id = $this->session->get('user_id');
@@ -401,28 +414,71 @@ class CarreraController
             $stmt->execute([$user_id]);
             $user = $stmt->fetch();
 
-            // Obtener mensajes de sesión y limpiarlos
-            $success = $this->session->get('success');
-            $error = $this->session->get('error');
-            $this->session->remove('success');
-            $this->session->remove('error');
+            // Obtener códigos de carrera con detalles
+            $sql = "SELECT ce.*, s.nombre as sede_nombre, f.nombre as facultad_nombre
+                    FROM carreras_espejos ce
+                    LEFT JOIN sedes s ON ce.sede_id = s.id
+                    LEFT JOIN facultades f ON ce.facultad_id = f.id
+                    WHERE ce.carrera_id = ?
+                    ORDER BY ce.codigo_carrera";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$id]);
+            $codigos_carrera = $stmt->fetchAll();
+
+            // Preparar arrays para el template (para compatibilidad con el template actual)
+            $codigos = [];
+            $vigencias_desde = [];
+            $vigencias_hasta = [];
+            $facultades = [];
+            $sedes = [];
+
+            foreach ($codigos_carrera as $codigo) {
+                $codigos[] = $codigo['codigo_carrera'];
+                $vigencias_desde[] = $codigo['vigencia_desde'];
+                $vigencias_hasta[] = $codigo['vigencia_hasta'];
+                $facultades[] = $codigo['facultad_nombre'];
+                $sedes[] = $codigo['sede_nombre'];
+            }
+
+            // Agregar los arrays a la carrera
+            $carrera['codigos_carrera'] = $codigos;
+            $carrera['vigencias_desde'] = $vigencias_desde;
+            $carrera['vigencias_hasta'] = $vigencias_hasta;
+            $carrera['facultades'] = $facultades;
+            $carrera['sedes'] = $sedes;
+
+            // Obtener asignaturas vinculadas desde la tabla mallas
+            $sql = "SELECT m.semestre, a.nombre, a.tipo, a.periodicidad, a.estado
+                    FROM mallas m
+                    INNER JOIN asignaturas a ON m.asignatura_id = a.id
+                    WHERE m.carrera_id = ?
+                    ORDER BY m.semestre ASC, a.nombre ASC";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$id]);
+            $asignaturas_vinculadas = $stmt->fetchAll();
+
+            // Preparar datos para la vista
+            $viewData = [
+                'carrera' => $carrera,
+                'codigos_carrera' => $codigos_carrera,
+                'asignaturas_vinculadas' => $asignaturas_vinculadas,
+                'user' => $user,
+                'current_page' => 'carreras',
+                'app_url' => Config::get('app_url'),
+                'session' => $_SESSION
+            ];
 
             // Renderizar la vista
-            echo $this->twig->render('carreras/show.twig', [
-                'carrera' => $carrera,
-                'app_url' => Config::get('app_url'),
-                'user' => $user,
-                'success' => $success,
-                'error' => $error,
-                'current_page' => 'carreras',
-                'session' => $_SESSION
-            ]);
+            $html = $this->twig->render('carreras/show.twig', $viewData);
+            $response->getBody()->write($html);
+            return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
+            
         } catch (\Exception $e) {
-            error_log('Error en CarreraController::show: ' . $e->getMessage());
-            error_log('Stack trace: ' . $e->getTraceAsString());
-            $this->session->set('error', 'Error al obtener los datos de la carrera: ' . $e->getMessage());
-            header('Location: ' . Config::get('app_url') . 'carreras');
-            exit;
+            error_log('CarreraController show: Error: ' . $e->getMessage());
+            $this->session->set('error', 'Error al cargar la carrera: ' . $e->getMessage());
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'carreras')
+                ->withStatus(302);
         }
     }
 
@@ -434,13 +490,16 @@ class CarreraController
      * @param array $args
      * @return Response
      */
-    public function edit($id)
+    public function edit(Request $request, Response $response, array $args = [])
     {
+        $id = $args['id'] ?? null;
+        
         // Verificar autenticación
         if (!$this->session->get('user_id')) {
             $this->session->set('error', 'Por favor inicie sesión para acceder a las carreras');
-            header('Location: ' . Config::get('app_url') . 'login');
-            exit;
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'login')
+                ->withStatus(302);
         }
 
         try {
@@ -481,8 +540,9 @@ class CarreraController
             
             if (!$carrera) {
                 $this->session->set('error', 'Carrera no encontrada');
-                header('Location: ' . Config::get('app_url') . 'carreras');
-                exit;
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'carreras')
+                    ->withStatus(302);
             }
 
             // Convertir los IDs de sedes y facultades a arrays
@@ -510,7 +570,7 @@ class CarreraController
             $stmt->execute([$user_id]);
             $user = $stmt->fetch();
 
-            echo $this->twig->render('carreras/edit.twig', [
+            $html = $this->twig->render('carreras/edit.twig', [
                 'carrera' => $carrera,
                 'sedes' => $sedes,
                 'facultades' => $facultades,
@@ -519,10 +579,15 @@ class CarreraController
                 'current_page' => 'carreras',
                 'session' => $_SESSION
             ]);
+            
+            $response->getBody()->write($html);
+            return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
+            
         } catch (\Exception $e) {
             $this->session->set('error', 'Error al obtener los datos de la carrera: ' . $e->getMessage());
-            header('Location: ' . Config::get('app_url') . 'carreras');
-            exit;
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'carreras')
+                ->withStatus(302);
         }
     }
 
@@ -534,26 +599,30 @@ class CarreraController
      * @param array $args
      * @return Response
      */
-    public function update($id)
+    public function update(Request $request, Response $response, array $args = [])
     {
+        $id = $args['id'] ?? null;
+        
         // Verificar autenticación
         if (!$this->session->get('user_id')) {
             $this->session->set('error', 'Por favor inicie sesión para acceder a las carreras');
-            header('Location: ' . Config::get('app_url') . 'login');
-            exit;
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'login')
+                ->withStatus(302);
         }
 
         try {
             // Obtener datos del formulario
-            $nombre = $_POST['nombre'] ?? '';
-            $tipo_programa = $_POST['tipo_programa'] ?? '';
-            $estado = $_POST['estado'] ?? 1;
-            $url_libro = $_POST['url_libro'] ?? null;
-            $codigos = $_POST['codigos'] ?? [];
-            $sedes = $_POST['sedes'] ?? [];
-            $facultades = $_POST['facultades'] ?? [];
-            $vigencias_desde = $_POST['vigencias_desde'] ?? [];
-            $vigencias_hasta = $_POST['vigencias_hasta'] ?? [];
+            $parsedBody = $request->getParsedBody();
+            $nombre = $parsedBody['nombre'] ?? '';
+            $tipo_programa = $parsedBody['tipo_programa'] ?? '';
+            $estado = $parsedBody['estado'] ?? 1;
+            $url_libro = $parsedBody['url_libro'] ?? null;
+            $codigos = $parsedBody['codigos'] ?? [];
+            $sedes = $parsedBody['sedes'] ?? [];
+            $facultades = $parsedBody['facultades'] ?? [];
+            $vigencias_desde = $parsedBody['vigencias_desde'] ?? [];
+            $vigencias_hasta = $parsedBody['vigencias_hasta'] ?? [];
 
             // Validar datos básicos
             if (empty($nombre) || empty($tipo_programa)) {
@@ -622,8 +691,9 @@ class CarreraController
             $this->session->set('success', 'Carrera actualizada exitosamente');
             
             // Redirigir a la lista de carreras
-            header('Location: ' . Config::get('app_url') . 'carreras');
-            exit;
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'carreras')
+                ->withStatus(302);
         } catch (\Exception $e) {
             // Revertir transacción en caso de error
             if ($this->pdo->inTransaction()) {
@@ -634,8 +704,9 @@ class CarreraController
             $this->session->set('error', 'Error al actualizar la carrera: ' . $e->getMessage());
             
             // Redirigir al formulario de edición
-            header('Location: ' . Config::get('app_url') . 'carreras/' . $id . '/edit');
-            exit;
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'carreras/' . $id . '/edit')
+                ->withStatus(302);
         }
     }
 
@@ -647,17 +718,20 @@ class CarreraController
      * @param array $args
      * @return Response
      */
-    public function delete($id)
+    public function delete(Request $request, Response $response, array $args = [])
     {
+        $id = $args['id'] ?? null;
+        
         // Verificar autenticación
         if (!$this->session->get('user_id')) {
             if ($this->isAjaxRequest()) {
-                echo json_encode(['success' => false, 'message' => 'No autorizado']);
-                exit;
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'No autorizado']));
+                return $response->withHeader('Content-Type', 'application/json');
             }
             $this->session->set('error', 'Por favor inicie sesión para acceder a las carreras');
-            header('Location: ' . Config::get('app_url') . 'login');
-            exit;
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'biblioges/login')
+                ->withStatus(302);
         }
 
         try {
@@ -668,14 +742,33 @@ class CarreraController
             $result = $stmt->fetch();
 
             if ($result['total'] > 0) {
-                $mensaje = 'No se puede eliminar la carrera porque tiene asignaturas vinculadas. Primero debe eliminar las asignaturas asociadas.';
+                $mensaje = 'No se puede eliminar la carrera porque tiene asignaturas vinculadas. Primero debe eliminar las asignaturas asociadas desde la gestión de mallas.';
                 if ($this->isAjaxRequest()) {
-                    echo json_encode(['success' => false, 'message' => $mensaje]);
-                    exit;
+                    $response->getBody()->write(json_encode(['success' => false, 'message' => $mensaje]));
+                    return $response->withHeader('Content-Type', 'application/json');
                 }
                 $this->session->set('error', $mensaje);
-                header('Location: ' . Config::get('app_url') . 'carreras');
-                exit;
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'carreras')
+                    ->withStatus(302);
+            }
+
+            // Verificar si la carrera existe
+            $sql = "SELECT nombre FROM carreras WHERE id = ?";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$id]);
+            $carrera = $stmt->fetch();
+
+            if (!$carrera) {
+                $mensaje = 'La carrera no existe o ya fue eliminada.';
+                if ($this->isAjaxRequest()) {
+                    $response->getBody()->write(json_encode(['success' => false, 'message' => $mensaje]));
+                    return $response->withHeader('Content-Type', 'application/json');
+                }
+                $this->session->set('error', $mensaje);
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'carreras')
+                    ->withStatus(302);
             }
 
             // Iniciar transacción
@@ -695,27 +788,53 @@ class CarreraController
             $this->pdo->commit();
 
             if ($this->isAjaxRequest()) {
-                echo json_encode(['success' => true, 'message' => 'Carrera eliminada exitosamente']);
-                exit;
+                $response->getBody()->write(json_encode(['success' => true, 'message' => 'Carrera "' . $carrera['nombre'] . '" eliminada exitosamente']));
+                return $response->withHeader('Content-Type', 'application/json');
             }
 
-            $this->session->set('success', 'Carrera eliminada exitosamente');
-            header('Location: ' . Config::get('app_url') . 'carreras');
-            exit;
+            $this->session->set('success', 'Carrera "' . $carrera['nombre'] . '" eliminada exitosamente');
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'carreras')
+                ->withStatus(302);
 
         } catch (\Exception $e) {
             if ($this->pdo->inTransaction()) {
                 $this->pdo->rollBack();
             }
 
-            if ($this->isAjaxRequest()) {
-                echo json_encode(['success' => false, 'message' => 'Error al eliminar la carrera: ' . $e->getMessage()]);
-                exit;
+            // Detectar errores de restricción de clave foránea
+            $mensaje = 'Error al eliminar la carrera';
+            
+            if (strpos($e->getMessage(), 'Integrity constraint violation') !== false) {
+                if (strpos($e->getMessage(), 'tesis_ibfk_2') !== false) {
+                    $mensaje = 'No se puede eliminar la carrera porque está vinculada a tesis en bibliografías declaradas. Primero debe eliminar o cambiar las tesis asociadas.';
+                } elseif (strpos($e->getMessage(), 'mallas_ibfk_1') !== false) {
+                    $mensaje = 'No se puede eliminar la carrera porque tiene asignaturas vinculadas en la malla curricular. Primero debe eliminar las asignaturas asociadas.';
+                } elseif (strpos($e->getMessage(), 'bibliografias_declaradas_ibfk') !== false) {
+                    $mensaje = 'No se puede eliminar la carrera porque está vinculada a bibliografías declaradas. Primero debe eliminar o cambiar las bibliografías asociadas.';
+                } elseif (strpos($e->getMessage(), 'bibliografias_disponibles_ibfk') !== false) {
+                    $mensaje = 'No se puede eliminar la carrera porque está vinculada a bibliografías disponibles. Primero debe eliminar o cambiar las bibliografías asociadas.';
+                } elseif (strpos($e->getMessage(), 'carreras_espejos_ibfk') !== false) {
+                    $mensaje = 'No se puede eliminar la carrera porque tiene códigos de carrera asociados.';
+                } elseif (strpos($e->getMessage(), 'FOREIGN KEY constraint fails') !== false) {
+                    // Mensaje genérico para cualquier restricción de clave foránea
+                    $mensaje = 'No se puede eliminar la carrera porque está siendo utilizada en otras partes del sistema. Verifique que no tenga datos asociados en bibliografías, mallas curriculares o tesis.';
+                } else {
+                    $mensaje = 'No se puede eliminar la carrera porque está siendo utilizada en otras partes del sistema. Verifique que no tenga datos asociados.';
+                }
+            } else {
+                $mensaje .= ': ' . $e->getMessage();
             }
 
-            $this->session->set('error', 'Error al eliminar la carrera: ' . $e->getMessage());
-            header('Location: ' . Config::get('app_url') . 'carreras');
-            exit;
+            if ($this->isAjaxRequest()) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => $mensaje]));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            $this->session->set('error', $mensaje);
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'carreras')
+                ->withStatus(302);
         }
     }
 
@@ -725,22 +844,39 @@ class CarreraController
                strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
     }
 
-    public function getFacultadesBySede($sede_id)
+    public function getFacultadesBySede(Request $request, Response $response, array $args = [])
     {
         try {
+            // Obtener el sede_id de los argumentos de la ruta
+            $sede_id = $args['sedeId'] ?? null;
+            
+            // Si no está en los argumentos, intentar obtenerlo de los query parameters (para compatibilidad)
+            if (!$sede_id) {
+                $queryParams = $request->getQueryParams();
+                $sede_id = $queryParams['sede_id'] ?? null;
+            }
+            
+            if (!$sede_id) {
+                $response->getBody()->write(json_encode(['error' => 'ID de sede requerido'], JSON_UNESCAPED_UNICODE));
+                return $response
+                    ->withHeader('Content-Type', 'application/json; charset=utf-8')
+                    ->withStatus(400);
+            }
+            
             $sql = "SELECT id, nombre FROM facultades WHERE sede_id = ? ORDER BY nombre";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([$sede_id]);
             $facultades = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            header('Content-Type: application/json; charset=utf-8');
-            echo json_encode($facultades, JSON_UNESCAPED_UNICODE);
-            exit;
+            $response->getBody()->write(json_encode($facultades, JSON_UNESCAPED_UNICODE));
+            return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
+            
         } catch (\Exception $e) {
-            header('Content-Type: application/json; charset=utf-8');
-            http_response_code(500);
-            echo json_encode(['error' => 'Error al obtener las facultades']);
-            exit;
+            error_log("Error en getFacultadesBySede: " . $e->getMessage());
+            $response->getBody()->write(json_encode(['error' => 'Error al obtener las facultades'], JSON_UNESCAPED_UNICODE));
+            return $response
+                ->withHeader('Content-Type', 'application/json; charset=utf-8')
+                ->withStatus(500);
         }
     }
 } 

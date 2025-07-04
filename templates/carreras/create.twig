@@ -24,15 +24,18 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <label for="nombre" class="form-label">Nombre de la Carrera *</label>
-                            <input type="text" class="form-control" id="nombre" name="nombre" required>
+                            <input type="text" class="form-control" id="nombre" name="nombre" 
+                                   value="{{ form_data.nombre|default('') }}" required>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="form-group">
                             <label for="tipo_programa" class="form-label">Tipo de Programa *</label>
                             <select class="form-select" id="tipo_programa" name="tipo_programa" required>
-                                <option value="P">Pregrado</option>
-                                <option value="G">Postgrado</option>
+                                <option value="">Seleccione un tipo</option>
+                                <option value="P" {{ form_data.tipo_programa|default('') == 'P' ? 'selected' : '' }}>Pregrado</option>
+                                <option value="G" {{ form_data.tipo_programa|default('') == 'G' ? 'selected' : '' }}>Postgrado</option>
+                                <option value="O" {{ form_data.tipo_programa|default('') == 'O' ? 'selected' : '' }}>Otro</option>
                             </select>
                         </div>
                     </div>
@@ -40,8 +43,8 @@
                         <div class="form-group">
                             <label for="estado" class="form-label">Estado</label>
                             <select class="form-select" id="estado" name="estado">
-                                <option value="1">Activo</option>
-                                <option value="0">Inactivo</option>
+                                <option value="1" {{ form_data.estado|default('1') == '1' ? 'selected' : '' }}>Activo</option>
+                                <option value="0" {{ form_data.estado|default('1') == '0' ? 'selected' : '' }}>Inactivo</option>
                             </select>
                         </div>
                     </div>
@@ -52,6 +55,63 @@
                     <div class="col-12">
                         <h6 class="mb-3">Códigos de Carrera</h6>
                         <div id="codigos-container">
+                            {% if form_data.codigos is defined and form_data.codigos|length > 0 %}
+                                {% for index, codigo in form_data.codigos %}
+                                    {% if codigo is not empty %}
+                                    <div class="row mb-3 codigo-row">
+                                        <div class="col-md-2">
+                                            <div class="form-group">
+                                                <label for="codigos[]" class="form-label">Código *</label>
+                                                <input type="text" class="form-control" name="codigos[]" 
+                                                       value="{{ codigo }}" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="form-group">
+                                                <label for="vigencias_desde[]" class="form-label">Vigencia Desde *</label>
+                                                <input type="text" class="form-control" name="vigencias_desde[]" 
+                                                       value="{{ form_data.vigencias_desde[index]|default('') }}"
+                                                       pattern="\d{6}" title="Formato: AAAAMM" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="form-group">
+                                                <label for="vigencias_hasta[]" class="form-label">Vigencia Hasta</label>
+                                                <input type="text" class="form-control" name="vigencias_hasta[]" 
+                                                       value="{{ form_data.vigencias_hasta[index]|default('999999') }}"
+                                                       pattern="\d{6}" title="Formato: AAAAMM">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label for="sedes[]" class="form-label">Sede *</label>
+                                                <select class="form-select" name="sedes[]" required>
+                                                    <option value="">Seleccione una sede</option>
+                                                    {% for sede in sedes %}
+                                                    <option value="{{ sede.id }}" {{ form_data.sedes[index]|default('') == sede.id ? 'selected' : '' }}>
+                                                        {{ sede.nombre }}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label for="facultades[]" class="form-label">Facultad *</label>
+                                                <select class="form-select" name="facultades[]" required>
+                                                    <option value="">Seleccione una facultad</option>
+                                                    {% for facultad in facultades %}
+                                                    <option value="{{ facultad.id }}" {{ form_data.facultades[index]|default('') == facultad.id ? 'selected' : '' }}>
+                                                        {{ facultad.nombre }}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
                             <div class="row mb-3 codigo-row">
                                 <div class="col-md-2">
                                     <div class="form-group">
@@ -96,6 +156,7 @@
                                     </div>
                                 </div>
                             </div>
+                            {% endif %}
                         </div>
                         <button type="button" class="btn btn-secondary btn-sm" id="agregar-codigo">
                             <i class="fas fa-plus"></i> Agregar otro código
@@ -122,42 +183,40 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Mostrar error de sesión con SweetAlert2 si existe
+        {% if session.error %}
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            html: `{{ session.error|e('js') }}`
+        });
+        {% endif %}
+
         // Función para cargar facultades
         function cargarFacultades(sedeSelect) {
-            var sedeId = sedeSelect.val();
             var facultadSelect = sedeSelect.closest('.row').find('select[name="facultades[]"]');
+            facultadSelect.html('<option value="">Cargando...</option>');
             
-            if (sedeId) {
-                $.ajax({
-                    url: '{{ app_url }}carreras/facultades',
-                    method: 'GET',
-                    data: { sede_id: sedeId },
-                    dataType: 'json',
-                    success: function(facultades) {
-                        if (Array.isArray(facultades)) {
-                            facultadSelect.empty();
-                            facultadSelect.append('<option value="">Seleccione una facultad</option>');
-                            facultades.forEach(function(facultad) {
-                                facultadSelect.append(`<option value="${facultad.id}">${facultad.nombre}</option>`);
-                            });
-                        } else {
-                            console.error('La respuesta no es un array:', facultades);
-                            facultadSelect.empty();
-                            facultadSelect.append('<option value="">Error al cargar facultades</option>');
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Error al cargar facultades:', error);
-                        console.error('Estado:', status);
-                        console.error('Respuesta:', xhr.responseText);
-                        facultadSelect.empty();
+            $.ajax({
+                url: '{{ app_url }}api/facultades',
+                method: 'GET',
+                data: { sede_id: sedeSelect.val() },
+                success: function(facultades) {
+                    facultadSelect.html('<option value="">Seleccione una facultad</option>');
+                    if (Array.isArray(facultades)) {
+                        facultades.forEach(function(facultad) {
+                            facultadSelect.append('<option value="' + facultad.id + '">' + facultad.nombre + '</option>');
+                        });
+                    } else {
+                        console.error('La respuesta no es un array:', facultades);
                         facultadSelect.append('<option value="">Error al cargar facultades</option>');
                     }
-                });
-            } else {
-                facultadSelect.empty();
-                facultadSelect.append('<option value="">Seleccione una facultad</option>');
-            }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error al cargar facultades:', error);
+                    facultadSelect.html('<option value="">Error al cargar facultades</option>');
+                }
+            });
         }
 
         // Función para validar campos de vigencia
@@ -181,21 +240,66 @@
             }
         }
 
+        // Función para validar duplicados en tiempo real
+        function validarDuplicadosEnTiempoReal() {
+            var codigosValidos = [];
+            var duplicados = [];
+            
+            $('.codigo-row').each(function() {
+                var codigo = $(this).find('input[name="codigos[]"]').val();
+                var sede = $(this).find('select[name="sedes[]"]').val();
+                var facultad = $(this).find('select[name="facultades[]"]').val();
+                
+                if (codigo && sede && facultad) {
+                    var codigoKey = codigo + '_' + sede + '_' + facultad;
+                    if (codigosValidos.indexOf(codigoKey) !== -1) {
+                        duplicados.push(codigo);
+                        $(this).find('input[name="codigos[]"]').addClass('is-invalid');
+                        $(this).find('select[name="sedes[]"]').addClass('is-invalid');
+                        $(this).find('select[name="facultades[]"]').addClass('is-invalid');
+                    } else {
+                        codigosValidos.push(codigoKey);
+                        $(this).find('input[name="codigos[]"]').removeClass('is-invalid');
+                        $(this).find('select[name="sedes[]"]').removeClass('is-invalid');
+                        $(this).find('select[name="facultades[]"]').removeClass('is-invalid');
+                    }
+                } else {
+                    $(this).find('input[name="codigos[]"]').removeClass('is-invalid');
+                    $(this).find('select[name="sedes[]"]').removeClass('is-invalid');
+                    $(this).find('select[name="facultades[]"]').removeClass('is-invalid');
+                }
+            });
+            
+            return duplicados;
+        }
+
+        // Agregar eventos para validación en tiempo real
+        $(document).on('input change', '.codigo-row input[name="codigos[]"], .codigo-row select[name="sedes[]"], .codigo-row select[name="facultades[]"]', function() {
+            validarDuplicadosEnTiempoReal();
+        });
+
         // Clonar fila de código
         $('#agregar-codigo').click(function() {
             var row = $('.codigo-row:first').clone();
             row.find('input').val('');
             row.find('select').val('');
+            row.find('input, select').removeClass('is-invalid');
             $('#codigos-container').append(row);
             
             // Agregar evento de cambio de sede a la nueva fila
             row.find('select[name="sedes[]"]').change(function() {
                 cargarFacultades($(this));
+                validarDuplicadosEnTiempoReal();
             });
             
             // Agregar validación a los campos de vigencia
             row.find('input[name^="vigencias_"]').on('input', function() {
                 validarVigencia(this);
+            });
+            
+            // Agregar eventos para validación en tiempo real
+            row.find('input[name="codigos[]"], select[name="facultades[]"]').on('input change', function() {
+                validarDuplicadosEnTiempoReal();
             });
         });
 
@@ -207,6 +311,7 @@
         // Agregar evento de cambio de sede a todas las filas existentes
         $('select[name="sedes[]"]').change(function() {
             cargarFacultades($(this));
+            validarDuplicadosEnTiempoReal();
         });
 
         // Cargar facultades iniciales si hay una sede seleccionada
@@ -215,6 +320,18 @@
                 cargarFacultades($(this));
             }
         });
+
+        // Cargar facultades para los códigos existentes después de un error
+        {% if form_data.codigos is defined and form_data.codigos|length > 0 %}
+        setTimeout(function() {
+            $('.codigo-row').each(function(index) {
+                var sedeSelect = $(this).find('select[name="sedes[]"]');
+                if (sedeSelect.val()) {
+                    cargarFacultades(sedeSelect);
+                }
+            });
+        }, 500);
+        {% endif %}
 
         // Toggle del panel lateral
         $('#sidebarToggle').click(function() {
@@ -227,9 +344,13 @@
 
         // Manejar el envío del formulario
         $('#form-carrera').on('submit', function(e) {
+            e.preventDefault();
+            
             // Validar que al menos un código esté completo
             var codigosCompletos = false;
             var vigenciasValidas = true;
+            var codigosValidos = [];
+            var duplicados = [];
             
             $('.codigo-row').each(function() {
                 var codigo = $(this).find('input[name="codigos[]"]').val();
@@ -239,6 +360,14 @@
                 
                 if (codigo && sede && facultad && vigenciaDesde) {
                     codigosCompletos = true;
+                    
+                    // Verificar duplicados en el formulario
+                    var codigoKey = codigo + '_' + sede + '_' + facultad;
+                    if (codigosValidos.indexOf(codigoKey) !== -1) {
+                        duplicados.push(codigo);
+                    } else {
+                        codigosValidos.push(codigoKey);
+                    }
                 }
                 
                 // Validar formato de vigencia
@@ -249,19 +378,34 @@
             });
 
             if (!codigosCompletos) {
-                e.preventDefault();
-                alert('Debe completar al menos un código de carrera con todos sus datos');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de validación',
+                    text: 'Debe completar al menos un código de carrera con todos sus datos'
+                });
                 return false;
             }
             
             if (!vigenciasValidas) {
-                e.preventDefault();
-                alert('Los campos de vigencia deben tener exactamente 6 dígitos');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de validación',
+                    text: 'Los campos de vigencia deben tener exactamente 6 dígitos'
+                });
                 return false;
             }
 
-            // Si todo está bien, permitir el envío normal del formulario
-            return true;
+            if (duplicados.length > 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Códigos duplicados',
+                    text: 'No se permiten códigos duplicados por sede y facultad. Códigos duplicados: ' + duplicados.join(', ')
+                });
+                return false;
+            }
+
+            // Si todo está bien, enviar el formulario
+            this.submit();
         });
     });
 </script>

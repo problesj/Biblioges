@@ -326,8 +326,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (codigo) {
                     hasValidCodigo = true;
                     if (data.tipo === 'FORMACION_ELECTIVA') {
+                        // Para Formación Electiva, buscar el departamento "Sin departamento"
+                        let sinDepartamentoId = null;
+                        const options = depSelect.querySelectorAll('option');
+                        options.forEach(option => {
+                            if (option.textContent.includes('Sin departamento')) {
+                                sinDepartamentoId = option.value;
+                            }
+                        });
+                        const departamentoId = sinDepartamentoId || depSelect.value;
+                        
                         data.codigos.push({
-                            departamento_id: depSelect.value,
+                            departamento_id: departamentoId,
                             codigo: codigo,
                             cantidad_alumnos: '0'
                         });
@@ -340,7 +350,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             errores[`cantidad_alumnos_${index}`] = 'La cantidad de alumnos debe ser mayor a 0';
                             cantInput.classList.add('is-invalid');
                         }
-            data.codigos.push({
+                        data.codigos.push({
                             departamento_id: depSelect.value,
                             codigo: codigo,
                             cantidad_alumnos: cantInput.value
@@ -384,27 +394,94 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const result = await response.json();
             
-            if (response.ok) {
-                window.location.href = '{{ app_url }}asignaturas';
+            if (result.success) {
+                // Mostrar alerta de éxito con SweetAlert2
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: result.message || 'Asignatura creada exitosamente',
+                    showConfirmButton: false,
+                    timer: 2000
+                }).then(() => {
+                    window.location.href = '{{ app_url }}asignaturas';
+                });
             } else {
                 if (result.errors) {
+                    // Limpiar errores anteriores
+                    document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                    document.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+                    
+                    // Obtener el primer error para la alerta principal
+                    const firstErrorKey = Object.keys(result.errors)[0];
+                    const firstErrorMessage = result.errors[firstErrorKey];
+                    
+                    // Mostrar errores específicos
                     Object.entries(result.errors).forEach(([field, message]) => {
-                        const errorDiv = document.getElementById(`${field}Error`);
-                        if (errorDiv) {
-                        const input = document.getElementById(field);
-                            if (input) {
-                            input.classList.add('is-invalid');
+                        if (field === 'codigos_duplicados_formulario') {
+                            // Mostrar alerta para códigos duplicados en el formulario
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Códigos Duplicados',
+                                text: message,
+                                confirmButtonColor: '#ffc107'
+                            });
+                        } else if (field.startsWith('codigos.')) {
+                            // Manejar errores de códigos específicos
+                            const parts = field.split('.');
+                            const index = parts[1];
+                            const subField = parts[2];
+                            
+                            const errorDiv = document.getElementById(`${subField}Error_${index}`);
+                            const input = document.getElementById(`${subField}_${index}`);
+                            
+                            if (errorDiv && input) {
+                                input.classList.add('is-invalid');
+                                errorDiv.textContent = message;
+                                
+                                // Si es un error de código duplicado, mostrar alerta adicional
+                                if (subField === 'codigo' && message.includes('ya existe')) {
+                                    Swal.fire({
+                                        icon: 'warning',
+                                        title: 'Código Duplicado',
+                                        text: message,
+                                        confirmButtonColor: '#ffc107'
+                                    });
+                                }
                             }
-                            errorDiv.textContent = message;
+                        } else {
+                            // Manejar otros errores
+                            const errorDiv = document.getElementById(`${field}Error`);
+                            const input = document.getElementById(field);
+                            
+                            if (errorDiv && input) {
+                                input.classList.add('is-invalid');
+                                errorDiv.textContent = message;
+                            }
                         }
                     });
+                    
+                    // Mostrar alerta principal con el error específico
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de Validación',
+                        text: firstErrorMessage,
+                        confirmButtonColor: '#d33'
+                    });
                 } else {
-                    alert('Error al crear la asignatura: ' + result.message);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al crear la asignatura: ' + result.message
+                    });
                 }
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error al procesar la solicitud');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al procesar la solicitud'
+            });
         }
     });
 });

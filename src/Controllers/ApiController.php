@@ -109,12 +109,13 @@ class ApiController
     public function getAsignaturasDepartamento($departamentoId)
     {
         try {
-            $sql = "SELECT 
+            $sql = "SELECT DISTINCT 
                         a.*,
                         GROUP_CONCAT(DISTINCT ad.codigo_asignatura) as codigos
                     FROM asignaturas a
-                    LEFT JOIN asignaturas_departamentos ad ON a.id = ad.asignatura_id
-                    WHERE a.departamento_id = ?
+                    INNER JOIN asignaturas_departamentos ad ON a.id = ad.asignatura_id
+                    WHERE ad.departamento_id = ?
+                    AND a.estado = 1
                     AND a.tipo IN ('REGULAR', 'FORMACION_ELECTIVA')
                     GROUP BY a.id, a.nombre, a.tipo, a.periodicidad, a.estado
                     ORDER BY a.nombre";

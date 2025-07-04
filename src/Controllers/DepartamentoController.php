@@ -1,6 +1,6 @@
 <?php
 
-namespace src\Controllers;
+namespace App\Controllers;
 
 use App\Core\Session;
 use App\Core\Config;
@@ -27,20 +27,19 @@ class DepartamentoController
     /**
      * Muestra la lista de departamentos.
      */
-    public function index()
+    public function index($request, $response, $args)
     {
         try {
             // Verificar autenticación
             if (!$this->session->get('user_id')) {
-                $this->session->set('error', 'Por favor inicie sesión para acceder a los departamentos');
-                header('Location: ' . Config::get('app_url') . 'login');
-                exit;
+                $this->session->setFlash('error', 'Por favor inicie sesión para acceder a los departamentos');
+                return $response->withHeader('Location', Config::get('app_url') . 'login')->withStatus(302);
             }
 
             // Obtener filtros
-            $sede_id = $_GET['sede_id'] ?? null;
-            $facultad_id = $_GET['facultad_id'] ?? null;
-            $estado = $_GET['estado'] ?? null;
+            $sede_id = $request->getQueryParams()['sede_id'] ?? null;
+            $facultad_id = $request->getQueryParams()['facultad_id'] ?? null;
+            $estado = $request->getQueryParams()['estado'] ?? null;
 
             // Construir la consulta
             $query = Departamento::with(['facultad.sede'])
@@ -74,15 +73,11 @@ class DepartamentoController
             $user = $usuario->find($this->session->get('user_id'));
 
             // Obtener mensajes de sesión
-            $success = $this->session->get('success');
-            $error = $this->session->get('error');
-
-            // Limpiar mensajes de sesión
-            $this->session->remove('success');
-            $this->session->remove('error');
+            $success = $this->session->getFlash('success');
+            $error = $this->session->getFlash('error');
 
             // Renderizar la vista
-            echo $this->twig->render('departamentos/index.twig', [
+            $body = $this->twig->render('departamentos/index.twig', [
                 'departamentos' => $departamentos,
                 'facultades' => $facultades,
                 'sedes' => $sedes,
@@ -94,29 +89,30 @@ class DepartamentoController
                 'user' => $user,
                 'app_url' => Config::get('app_url'),
                 'session' => $_SESSION,
-                'current_path' => 'departamentos',
+                'current_page' => 'departamentos',
                 'success' => $success,
                 'error' => $error
             ]);
+            
+            $response->getBody()->write($body);
+            return $response;
         } catch (\Exception $e) {
             error_log("Error en DepartamentoController@index: " . $e->getMessage());
-            $this->session->set('error', 'Error al cargar los departamentos');
-            header('Location: ' . Config::get('app_url') . 'departamentos');
-            exit;
+            $this->session->setFlash('error', 'Error al cargar los departamentos');
+            return $response->withHeader('Location', Config::get('app_url') . 'departamentos')->withStatus(302);
         }
     }
 
     /**
      * Muestra el formulario de creación de departamento.
      */
-    public function create()
+    public function create($request, $response, $args)
     {
         try {
             // Verificar autenticación
             if (!$this->session->get('user_id')) {
-                $this->session->set('error', 'Por favor inicie sesión para crear departamentos');
-                header('Location: ' . Config::get('app_url') . 'login');
-                exit;
+                $this->session->setFlash('error', 'Por favor inicie sesión para crear departamentos');
+                return $response->withHeader('Location', Config::get('app_url') . 'login')->withStatus(302);
             }
 
             // Obtener facultades para el select
@@ -127,11 +123,10 @@ class DepartamentoController
             $user = $usuario->find($this->session->get('user_id'));
 
             // Obtener mensajes de error si existen
-            $error = $this->session->get('error');
-            $this->session->remove('error');
+            $error = $this->session->getFlash('error');
 
             // Renderizar la vista
-            echo $this->twig->render('departamentos/create.twig', [
+            $body = $this->twig->render('departamentos/create.twig', [
                 'facultades' => $facultades,
                 'user' => $user,
                 'app_url' => Config::get('app_url'),
@@ -139,32 +134,34 @@ class DepartamentoController
                 'current_page' => 'departamentos',
                 'error' => $error
             ]);
+            
+            $response->getBody()->write($body);
+            return $response;
         } catch (\Exception $e) {
             error_log("Error en DepartamentoController@create: " . $e->getMessage());
-            $this->session->set('error', 'Error al cargar el formulario de creación');
-            header('Location: ' . Config::get('app_url') . 'departamentos');
-            exit;
+            $this->session->setFlash('error', 'Error al cargar el formulario de creación');
+            return $response->withHeader('Location', Config::get('app_url') . 'departamentos')->withStatus(302);
         }
     }
 
     /**
      * Almacena un nuevo departamento.
      */
-    public function store()
+    public function store($request, $response, $args)
     {
         try {
             // Verificar autenticación
             if (!$this->session->get('user_id')) {
-                $this->session->set('error', 'Por favor inicie sesión para crear departamentos');
-                header('Location: ' . Config::get('app_url') . 'login');
-                exit;
+                $this->session->setFlash('error', 'Por favor inicie sesión para crear departamentos');
+                return $response->withHeader('Location', Config::get('app_url') . 'login')->withStatus(302);
             }
 
-            // Validar datos
-            $codigo = trim($_POST['codigo'] ?? '');
-            $nombre = trim($_POST['nombre'] ?? '');
-            $facultad_id = $_POST['facultad_id'] ?? null;
-            $estado = $_POST['estado'] ?? '1';
+            // Obtener datos del formulario
+            $parsedBody = $request->getParsedBody();
+            $codigo = trim($parsedBody['codigo'] ?? '');
+            $nombre = trim($parsedBody['nombre'] ?? '');
+            $facultad_id = $parsedBody['facultad_id'] ?? null;
+            $estado = $parsedBody['estado'] ?? '1';
 
             // Validaciones
             $errores = [];
@@ -209,9 +206,8 @@ class DepartamentoController
 
             // Si hay errores, redirigir al formulario
             if (!empty($errores)) {
-                $this->session->set('error', implode('. ', $errores));
-                header('Location: ' . Config::get('app_url') . 'departamentos/create');
-                exit;
+                $this->session->setFlash('error', implode('. ', $errores));
+                return $response->withHeader('Location', Config::get('app_url') . 'departamentos/create')->withStatus(302);
             }
 
             // Crear el departamento
@@ -222,72 +218,81 @@ class DepartamentoController
             $departamento->estado = $estado;
             $departamento->save();
 
-            $this->session->set('success', 'Departamento creado exitosamente');
-            header('Location: ' . Config::get('app_url') . 'departamentos');
-            exit;
+            $this->session->setFlash('success', 'Departamento creado exitosamente');
+            return $response->withHeader('Location', Config::get('app_url') . 'departamentos')->withStatus(302);
         } catch (\Exception $e) {
             error_log("Error en DepartamentoController@store: " . $e->getMessage());
-            $this->session->set('error', 'Error al crear el departamento: ' . $e->getMessage());
-            header('Location: ' . Config::get('app_url') . 'departamentos/create');
-            exit;
+            $this->session->setFlash('error', 'Error al crear el departamento');
+            return $response->withHeader('Location', Config::get('app_url') . 'departamentos/create')->withStatus(302);
         }
     }
 
     /**
-     * Muestra un departamento específico.
+     * Muestra los detalles de un departamento.
      */
-    public function show($id)
+    public function show($request, $response, $args)
     {
         try {
             // Verificar autenticación
             if (!$this->session->get('user_id')) {
-                $this->session->set('error', 'Por favor inicie sesión para acceder a los departamentos');
-                header('Location: ' . Config::get('app_url') . 'login');
-                exit;
+                $this->session->setFlash('error', 'Por favor inicie sesión para acceder a los departamentos');
+                return $response->withHeader('Location', Config::get('app_url') . 'login')->withStatus(302);
             }
 
-            $departamento = Departamento::with('facultad')->find($id);
-            
+            $id = $args['id'] ?? null;
+            if (!$id) {
+                $this->session->setFlash('error', 'ID de departamento requerido');
+                return $response->withHeader('Location', Config::get('app_url') . 'departamentos')->withStatus(302);
+            }
+
+            // Obtener el departamento con sus relaciones
+            $departamento = Departamento::with(['facultad.sede'])->find($id);
             if (!$departamento) {
-                $this->session->set('error', 'Departamento no encontrado');
-                header('Location: ' . Config::get('app_url') . 'departamentos');
-                exit;
+                $this->session->setFlash('error', 'Departamento no encontrado');
+                return $response->withHeader('Location', Config::get('app_url') . 'departamentos')->withStatus(302);
             }
 
-            echo $this->twig->render('departamentos/show.twig', [
+            // Renderizar la vista
+            $body = $this->twig->render('departamentos/show.twig', [
                 'departamento' => $departamento,
                 'app_url' => Config::get('app_url'),
                 'session' => $_SESSION,
-                'current_path' => 'departamentos'
+                'current_page' => 'departamentos'
             ]);
+            
+            $response->getBody()->write($body);
+            return $response;
         } catch (\Exception $e) {
             error_log("Error en DepartamentoController@show: " . $e->getMessage());
-            $this->session->set('error', 'Error al cargar el departamento');
-            header('Location: ' . Config::get('app_url') . 'departamentos');
-            exit;
+            $this->session->setFlash('error', 'Error al cargar el departamento');
+            return $response->withHeader('Location', Config::get('app_url') . 'departamentos')->withStatus(302);
         }
     }
 
     /**
      * Muestra el formulario de edición de un departamento.
      */
-    public function edit($id)
+    public function edit($request, $response, $args)
     {
         try {
             // Verificar autenticación
             if (!$this->session->get('user_id')) {
-                $this->session->set('error', 'Por favor inicie sesión para acceder a los departamentos');
-                header('Location: ' . Config::get('app_url') . 'login');
-                exit;
+                $this->session->setFlash('error', 'Por favor inicie sesión para acceder a los departamentos');
+                return $response->withHeader('Location', Config::get('app_url') . 'login')->withStatus(302);
+            }
+
+            $id = $args['id'] ?? null;
+            if (!$id) {
+                $this->session->setFlash('error', 'ID de departamento requerido');
+                return $response->withHeader('Location', Config::get('app_url') . 'departamentos')->withStatus(302);
             }
 
             // Obtener el departamento
             $departamento = Departamento::find($id);
         
             if (!$departamento) {
-                $this->session->set('error', 'Departamento no encontrado');
-                header('Location: ' . Config::get('app_url') . 'departamentos');
-                exit;
+                $this->session->setFlash('error', 'Departamento no encontrado');
+                return $response->withHeader('Location', Config::get('app_url') . 'departamentos')->withStatus(302);
             }
 
             // Obtener facultades
@@ -298,45 +303,52 @@ class DepartamentoController
             $user = $usuario->find($this->session->get('user_id'));
 
             // Obtener mensajes de error si existen
-            $error = $this->session->get('error');
-            $this->session->remove('error');
+            $error = $this->session->getFlash('error');
 
             // Renderizar la vista
-            echo $this->twig->render('departamentos/edit.twig', [
+            $body = $this->twig->render('departamentos/edit.twig', [
                 'departamento' => $departamento,
                 'facultades' => $facultades,
                 'user' => $user,
                 'app_url' => Config::get('app_url'),
                 'session' => $_SESSION,
-                'current_path' => 'departamentos',
+                'current_page' => 'departamentos',
                 'error' => $error
             ]);
+            
+            $response->getBody()->write($body);
+            return $response;
         } catch (\Exception $e) {
             error_log("Error en DepartamentoController@edit: " . $e->getMessage());
-            $this->session->set('error', 'Error al cargar el formulario de edición');
-            header('Location: ' . Config::get('app_url') . 'departamentos');
-            exit;
+            $this->session->setFlash('error', 'Error al cargar el formulario de edición');
+            return $response->withHeader('Location', Config::get('app_url') . 'departamentos')->withStatus(302);
         }
     }
 
     /**
      * Actualiza un departamento existente.
      */
-    public function update($id)
+    public function update($request, $response, $args)
     {
         try {
             // Verificar autenticación
             if (!$this->session->get('user_id')) {
-                $this->session->set('error', 'Por favor inicie sesión para acceder a los departamentos');
-                header('Location: ' . Config::get('app_url') . 'login');
-                exit;
+                $this->session->setFlash('error', 'Por favor inicie sesión para acceder a los departamentos');
+                return $response->withHeader('Location', Config::get('app_url') . 'login')->withStatus(302);
             }
 
-            // Validar datos
-            $codigo = trim($_POST['codigo'] ?? '');
-            $nombre = trim($_POST['nombre'] ?? '');
-            $facultad_id = $_POST['facultad_id'] ?? null;
-            $estado = $_POST['estado'] ?? '1';
+            $id = $args['id'] ?? null;
+            if (!$id) {
+                $this->session->setFlash('error', 'ID de departamento requerido');
+                return $response->withHeader('Location', Config::get('app_url') . 'departamentos')->withStatus(302);
+            }
+
+            // Obtener datos del formulario
+            $parsedBody = $request->getParsedBody();
+            $codigo = trim($parsedBody['codigo'] ?? '');
+            $nombre = trim($parsedBody['nombre'] ?? '');
+            $facultad_id = $parsedBody['facultad_id'] ?? null;
+            $estado = $parsedBody['estado'] ?? '1';
 
             if (empty($codigo)) {
                 throw new \Exception('El código del departamento es requerido');
@@ -353,9 +365,8 @@ class DepartamentoController
             // Obtener el departamento
             $departamento = Departamento::find($id);
             if (!$departamento) {
-                $this->session->set('error', 'Departamento no encontrado');
-                header('Location: ' . Config::get('app_url') . 'departamentos');
-                exit;
+                $this->session->setFlash('error', 'Departamento no encontrado');
+                return $response->withHeader('Location', Config::get('app_url') . 'departamentos')->withStatus(302);
             }
 
             // Verificar si ya existe un departamento con el mismo código (excluyendo el actual)
@@ -383,36 +394,38 @@ class DepartamentoController
             $departamento->estado = $estado;
             $departamento->save();
 
-            $this->session->set('success', 'Departamento actualizado exitosamente');
-            header('Location: ' . Config::get('app_url') . 'departamentos');
-            exit;
+            $this->session->setFlash('success', 'Departamento actualizado exitosamente');
+            return $response->withHeader('Location', Config::get('app_url') . 'departamentos')->withStatus(302);
         } catch (\Exception $e) {
             error_log("Error en DepartamentoController@update: " . $e->getMessage());
-            $this->session->set('error', $e->getMessage());
-            header('Location: ' . Config::get('app_url') . 'departamentos/' . $id . '/edit');
-            exit;
+            $this->session->setFlash('error', $e->getMessage());
+            return $response->withHeader('Location', Config::get('app_url') . 'departamentos/' . $id . '/edit')->withStatus(302);
         }
     }
 
     /**
      * Elimina un departamento.
      */
-    public function destroy($id)
+    public function destroy($request, $response, $args)
     {
         try {
             // Verificar autenticación
             if (!$this->session->get('user_id')) {
-                $this->session->set('error', 'Por favor inicie sesión para acceder a los departamentos');
-                header('Location: ' . Config::get('app_url') . 'login');
-                exit;
+                $this->session->setFlash('error', 'Por favor inicie sesión para acceder a los departamentos');
+                return $response->withHeader('Location', Config::get('app_url') . 'login')->withStatus(302);
+            }
+
+            $id = $args['id'] ?? null;
+            if (!$id) {
+                $this->session->setFlash('error', 'ID de departamento requerido');
+                return $response->withHeader('Location', Config::get('app_url') . 'departamentos')->withStatus(302);
             }
 
             // Obtener el departamento
             $departamento = Departamento::find($id);
             if (!$departamento) {
-                $this->session->set('error', 'Departamento no encontrado');
-                header('Location: ' . Config::get('app_url') . 'departamentos');
-                exit;
+                $this->session->setFlash('error', 'Departamento no encontrado');
+                return $response->withHeader('Location', Config::get('app_url') . 'departamentos')->withStatus(302);
             }
 
             // Verificar si el departamento tiene asignaturas o carreras asociadas
@@ -432,22 +445,88 @@ class DepartamentoController
                 }
                 $mensaje .= " vinculada" . (($asignaturasCount + $carrerasCount) > 1 ? 's' : '') . ".";
 
-                $this->session->set('error', $mensaje);
-                header('Location: ' . Config::get('app_url') . 'departamentos');
-                exit;
+                $this->session->setFlash('error', $mensaje);
+                return $response->withHeader('Location', Config::get('app_url') . 'departamentos')->withStatus(302);
             }
 
             // Eliminar el departamento
             $departamento->delete();
 
-            $this->session->set('success', 'Departamento eliminado correctamente');
-            header('Location: ' . Config::get('app_url') . 'departamentos');
-            exit;
+            $this->session->setFlash('success', 'Departamento eliminado correctamente');
+            return $response->withHeader('Location', Config::get('app_url') . 'departamentos')->withStatus(302);
         } catch (\Exception $e) {
             error_log("Error en DepartamentoController@destroy: " . $e->getMessage());
-            $this->session->set('error', 'Error al eliminar el departamento');
-            header('Location: ' . Config::get('app_url') . 'departamentos');
-            exit;
+            $this->session->setFlash('error', 'Error al eliminar el departamento');
+            return $response->withHeader('Location', Config::get('app_url') . 'departamentos')->withStatus(302);
+        }
+    }
+
+    /**
+     * Obtiene los departamentos por facultad (para AJAX).
+     */
+    public function getDepartamentosByFacultad($request, $response, $args)
+    {
+        try {
+            $facultad_id = $args['facultad_id'] ?? null;
+            
+            if (!$facultad_id) {
+                return $response->withJson(['error' => 'ID de facultad requerido'], 400);
+            }
+
+            $departamentos = Departamento::where('facultad_id', $facultad_id)
+                ->where('estado', 1)
+                ->orderBy('nombre')
+                ->get(['id', 'nombre', 'codigo']);
+
+            return $response->withJson($departamentos);
+        } catch (\Exception $e) {
+            error_log("Error en DepartamentoController@getDepartamentosByFacultad: " . $e->getMessage());
+            return $response->withJson(['error' => 'Error al obtener departamentos'], 500);
+        }
+    }
+
+    /**
+     * Obtiene los departamentos por sede y facultad (para AJAX).
+     */
+    public function getDepartamentosBySedeAndFacultad($request, $response, $args)
+    {
+        try {
+            $sede_id = $args['sedeId'] ?? null;
+            $facultad_id = $args['facultadId'] ?? null;
+            
+            if (!$sede_id || !$facultad_id) {
+                $response->getBody()->write(json_encode(['error' => 'ID de sede y facultad requeridos'], JSON_UNESCAPED_UNICODE));
+                return $response
+                    ->withHeader('Content-Type', 'application/json; charset=utf-8')
+                    ->withStatus(400);
+            }
+
+            // Verificar que la facultad pertenezca a la sede
+            $facultad = Facultad::where('id', $facultad_id)
+                ->where('sede_id', $sede_id)
+                ->first();
+
+            if (!$facultad) {
+                $response->getBody()->write(json_encode(['error' => 'La facultad no pertenece a la sede especificada'], JSON_UNESCAPED_UNICODE));
+                return $response
+                    ->withHeader('Content-Type', 'application/json; charset=utf-8')
+                    ->withStatus(400);
+            }
+
+            $departamentos = Departamento::where('facultad_id', $facultad_id)
+                ->where('estado', 1)
+                ->orderBy('nombre')
+                ->get(['id', 'nombre', 'codigo']);
+
+            $response->getBody()->write(json_encode($departamentos, JSON_UNESCAPED_UNICODE));
+            return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
+            
+        } catch (\Exception $e) {
+            error_log("Error en DepartamentoController@getDepartamentosBySedeAndFacultad: " . $e->getMessage());
+            $response->getBody()->write(json_encode(['error' => 'Error al obtener departamentos'], JSON_UNESCAPED_UNICODE));
+            return $response
+                ->withHeader('Content-Type', 'application/json; charset=utf-8')
+                ->withStatus(500);
         }
     }
 } 

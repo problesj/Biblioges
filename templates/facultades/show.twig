@@ -1,88 +1,194 @@
 {% extends "base.twig" %}
 
-{% block title %}
-    {{ facultad.nombre }} - Biblioges
+{% block title %}Detalles de Facultad - Biblioges{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .detail-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .detail-card {
+        background: #f8f9fc;
+        border-left: 4px solid #4e73df;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    .detail-label {
+        font-weight: bold;
+        color: #5a5c69;
+        margin-bottom: 0.25rem;
+    }
+    .detail-value {
+        color: #333;
+        font-size: 1.1rem;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h2 class="card-title mb-0">Detalles de la Facultad</h2>
-        <div>
-            <a href="{{ app_url }}facultades/{{ facultad.id }}/edit" class="btn btn-primary me-2">
-                <i class="fas fa-edit"></i> Editar
-            </a>
-            <a href="{{ app_url }}facultades" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Volver
-            </a>
-        </div>
-    </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
-                <h4>Información General</h4>
-                <table class="table">
-                    <tr>
-                        <th>Código:</th>
-                        <td>{{ facultad.codigo }}</td>
-                    </tr>
-                    <tr>
-                        <th>Nombre:</th>
-                        <td>{{ facultad.nombre }}</td>
-                    </tr>
-                    <tr>
-                        <th>Sede:</th>
-                        <td>{{ facultad.sede.nombre }}</td>
-                    </tr>
-                    <tr>
-                        <th>Estado:</th>
-                        <td>
-                            {% if facultad.estado %}
-                                <span class="badge bg-success">Activo</span>
-                            {% else %}
-                                <span class="badge bg-danger">Inactivo</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                </table>
+<div class="container-fluid">
+    <div class="detail-container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Detalles de la Facultad</h1>
+            <div>
+                <a href="{{ app_url }}facultades/{{ facultad.id }}/edit" class="btn btn-primary me-2">
+                    <i class="fas fa-edit"></i> Editar
+                </a>
+                <a href="{{ app_url }}facultades" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
             </div>
         </div>
 
-        <div class="mt-4">
-            <h4>Departamentos</h4>
-            {% if facultad.departamentos|length > 0 %}
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Código</th>
-                            <th>Nombre</th>
-                            <th>Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for departamento in facultad.departamentos %}
-                        <tr>
-                            <td>{{ departamento.codigo }}</td>
-                            <td>{{ departamento.nombre }}</td>
-                            <td>
-                                {% if departamento.estado %}
-                                    <span class="badge bg-success">Activo</span>
-                                {% else %}
-                                    <span class="badge bg-danger">Inactivo</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Información de la Facultad</h6>
             </div>
-            {% else %}
-            <div class="alert alert-info">
-                No hay departamentos registrados en esta facultad.
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="detail-card">
+                            <div class="detail-label">Código de la Facultad</div>
+                            <div class="detail-value">{{ facultad.codigo }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-card">
+                            <div class="detail-label">Nombre de la Facultad</div>
+                            <div class="detail-value">{{ facultad.nombre }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="detail-card">
+                            <div class="detail-label">Sede</div>
+                            <div class="detail-value">{{ facultad.sede_nombre ?? 'Sin sede asignada' }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-card">
+                            <div class="detail-label">Estado</div>
+                            <div class="detail-value">
+                                <span class="badge {% if facultad.estado %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ facultad.estado ? 'Activo' : 'Inactivo' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="detail-card">
+                            <div class="detail-label">ID de la Facultad</div>
+                            <div class="detail-value">{{ facultad.id }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if facultad.created_at %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="detail-card">
+                            <div class="detail-label">Fecha de Creación</div>
+                            <div class="detail-value">{{ facultad.created_at|date('d/m/Y H:i:s') }}</div>
+                        </div>
+                    </div>
+                    {% if facultad.updated_at and facultad.updated_at != facultad.created_at %}
+                    <div class="col-md-6">
+                        <div class="detail-card">
+                            <div class="detail-label">Última Actualización</div>
+                            <div class="detail-value">{{ facultad.updated_at|date('d/m/Y H:i:s') }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
-            {% endif %}
+        </div>
+
+        <!-- Acciones adicionales -->
+        <div class="card shadow mt-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Acciones</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-2">
+                        <a href="{{ app_url }}facultades/{{ facultad.id }}/edit" class="btn btn-primary btn-block">
+                            <i class="fas fa-edit"></i> Editar Facultad
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <button type="button" class="btn btn-danger btn-block" 
+                                onclick="confirmarEliminacion({{ facultad.id }}, '{{ facultad.nombre }}')">
+                            <i class="fas fa-trash"></i> Eliminar Facultad
+                        </button>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <a href="{{ app_url }}facultades" class="btn btn-secondary btn-block">
+                            <i class="fas fa-list"></i> Ver Todas las Facultades
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Formulario oculto para eliminación -->
+<form id="deleteForm" method="POST" style="display: none;">
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    $(document).ready(function() {
+        // Mostrar mensajes de sesión con SweetAlert2
+        {% if session.flash.success %}
+            Swal.fire({
+                icon: 'success',
+                title: '¡Éxito!',
+                text: '{{ session.flash.success|raw }}',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        {% endif %}
+
+        {% if session.flash.error %}
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: '{{ session.flash.error|raw }}',
+                timer: 5000,
+                showConfirmButton: false
+            });
+        {% endif %}
+    });
+
+    function confirmarEliminacion(id, nombre) {
+        Swal.fire({
+            title: '¿Está seguro?',
+            text: `¿Desea eliminar la facultad "${nombre}"? Esta acción no se puede deshacer.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.getElementById('deleteForm');
+                form.action = '{{ app_url }}facultades/' + id + '/delete';
+                form.submit();
+            }
+        });
+    }
+</script>
 {% endblock %} 

@@ -1,0 +1,69 @@
+{% extends "base.twig" %}
+
+{% block title %}Detalles del Departamento{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-sitemap"></i> Detalles del Departamento
+                    </h5>
+                    <div>
+                        <a href="{{ app_url }}departamentos" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </a>
+                        <a href="{{ app_url }}departamentos/{{ departamento.id }}/edit" class="btn btn-primary btn-sm">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th width="30%"><strong>Código:</strong></th>
+                                    <td>{{ departamento.codigo }}</td>
+                                </tr>
+                                <tr>
+                                    <th><strong>Nombre:</strong></th>
+                                    <td>{{ departamento.nombre }}</td>
+                                </tr>
+                                <tr>
+                                    <th><strong>Facultad:</strong></th>
+                                    <td>{{ departamento.facultad.nombre }}</td>
+                                </tr>
+                                <tr>
+                                    <th><strong>Sede:</strong></th>
+                                    <td>{{ departamento.facultad.sede.nombre }}</td>
+                                </tr>
+                                <tr>
+                                    <th><strong>Estado:</strong></th>
+                                    <td>
+                                        {% if departamento.estado == 1 %}
+                                            <span class="badge bg-success">Activo</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactivo</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th><strong>Fecha de Creación:</strong></th>
+                                    <td>{{ departamento.created_at|date('d/m/Y H:i:s') }}</td>
+                                </tr>
+                                <tr>
+                                    <th><strong>Última Actualización:</strong></th>
+                                    <td>{{ departamento.updated_at|date('d/m/Y H:i:s') }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

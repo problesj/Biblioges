@@ -1,0 +1,199 @@
+{% extends "base.twig" %}
+
+{% block title %}Coberturas Básicas{% endblock %}
+
+{% block styles %}
+<style>
+.btn-excel {
+    background-color: #217346;
+    border-color: #217346;
+    color: white;
+}
+
+.btn-excel:hover {
+    background-color: #1e6b3d;
+    border-color: #1e6b3d;
+    color: white;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Coberturas Básicas</h3>
+                    <h5 class="card-subtitle">{{ carrera.sede }} - {{ carrera.codigo }} - {{ carrera.nombre }}</h5>
+                    <h6 class="card-subtitle">Asignatura: {{ asignatura.codigo }} - {{ asignatura.nombre }}</h6>
+                </div>
+                <div class="card-body">
+                    <!-- Botones de acción -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-secondary" onclick="window.history.back()">
+                                    <i class="fas fa-arrow-left"></i> Volver
+                                </button>
+                                <button type="button" class="btn btn-excel" onclick="exportarCSV()">
+                                    <i class="fas fa-file-csv"></i> Exportar CSV
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>Título</th>
+                                <th>Tipo</th>
+                                <th>Año</th>
+                                <th>Editorial</th>
+                                <th>Edición</th>
+                                <th>ISBN/DOI</th>
+                                <th>Formato</th>
+                                <th># Ejemplares Impresos</th>
+                                <th># Ejemplares Digitales</th>
+                                <th>Disponibilidad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for bibliografia in bibliografias %}
+                            <tr>
+                                <td>
+                                    <strong>{{ bibliografia.titulo }}</strong>
+                                    {% if bibliografia.nota %}
+                                        <br><small class="text-muted">{{ bibliografia.nota }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if bibliografia.tipo == 'libro' %}
+                                        <span class="badge bg-primary">Libro</span>
+                                    {% elseif bibliografia.tipo == 'articulo' %}
+                                        <span class="badge bg-info">Artículo</span>
+                                    {% elseif bibliografia.tipo == 'tesis' %}
+                                        <span class="badge bg-warning">Tesis</span>
+                                    {% elseif bibliografia.tipo == 'software' %}
+                                        <span class="badge bg-secondary">Software</span>
+                                    {% elseif bibliografia.tipo == 'sitio_web' %}
+                                        <span class="badge bg-success">Sitio Web</span>
+                                    {% elseif bibliografia.tipo == 'generico' %}
+                                        <span class="badge bg-dark">Genérico</span>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark">{{ bibliografia.tipo|title }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ bibliografia.anio_publicacion }}</td>
+                                <td>{{ bibliografia.editorial }}</td>
+                                <td>{{ bibliografia.edicion }}</td>
+                                <td>
+                                    {% if bibliografia.isbn %}
+                                        <strong>ISBN:</strong> {{ bibliografia.isbn }}<br>
+                                    {% endif %}
+                                    {% if bibliografia.doi %}
+                                        <strong>DOI:</strong> {{ bibliografia.doi }}
+                                    {% endif %}
+                                    {% if not bibliografia.isbn and not bibliografia.doi %}
+                                        <span class="text-muted">No disponible</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if bibliografia.formato == 'impreso' %}
+                                        <span class="badge bg-secondary">Impreso</span>
+                                    {% elseif bibliografia.formato == 'electronico' %}
+                                        <span class="badge bg-info">Electrónico</span>
+                                    {% elseif bibliografia.formato == 'ambos' %}
+                                        <span class="badge bg-primary">Ambos</span>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark">{{ bibliografia.formato|title }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">{{ bibliografia.ejemplares_impresos }}</td>
+                                <td class="text-center">
+                                    {% if bibliografia.ejemplares_digitales == 0 %}
+                                        <span class="text-success">Ilimitado</span>
+                                    {% else %}
+                                        {{ bibliografia.ejemplares_digitales }}
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if bibliografia.disponible %}
+                                        <span class="badge bg-success">Disponible</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">No disponible</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="10" class="text-center">No hay bibliografías declaradas de tipo básica para esta asignatura.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function exportarCSV() {
+    // Crear el contenido CSV
+    let csvContent = '\uFEFF'; // BOM para UTF-8
+    
+    // Encabezados
+    const headers = [
+        'Título',
+        'Tipo',
+        'Año',
+        'Editorial', 
+        'Edición',
+        'ISBN',
+        'DOI',
+        'Formato',
+        'Ejemplares Impresos',
+        'Ejemplares Digitales',
+        'Disponibilidad'
+    ];
+    csvContent += headers.join(',') + '\n';
+    
+    // Datos de las bibliografías
+    {% for bibliografia in bibliografias %}
+    const row{{ loop.index }} = [
+        '"{{ bibliografia.titulo|replace({'"': '""'}) }}"',
+        '"{{ bibliografia.tipo|title }}"',
+        '{{ bibliografia.anio_publicacion }}',
+        '"{{ bibliografia.editorial|replace({'"': '""'}) }}"',
+        '"{{ bibliografia.edicion|replace({'"': '""'}) }}"',
+        '"{{ bibliografia.isbn|replace({'"': '""'}) }}"',
+        '"{{ bibliografia.doi|replace({'"': '""'}) }}"',
+        '"{{ bibliografia.formato|title }}"',
+        '{{ bibliografia.ejemplares_impresos }}',
+        '{{ bibliografia.ejemplares_digitales == 0 ? "Ilimitado" : bibliografia.ejemplares_digitales }}',
+        '"{{ bibliografia.disponible ? "Disponible" : "No disponible" }}"'
+    ];
+    csvContent += row{{ loop.index }}.join(',') + '\n';
+    {% endfor %}
+    
+    // Crear y descargar el archivo
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'bibliografia_basica_{{ asignatura.codigo|replace({" ": "_"}) }}.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+</script>
+{% endblock %} 

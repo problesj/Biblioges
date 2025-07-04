@@ -1,0 +1,350 @@
+{% extends "base.twig" %}
+
+{% block title %}Tareas Programadas - Biblioges{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-clock"></i> Tareas Programadas
+                    </h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevaTarea">
+                            <i class="fas fa-plus"></i> Nueva Tarea
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped" id="tablaTareas">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Tipo de Reporte</th>
+                                    <th>Sede</th>
+                                    <th>Carrera</th>
+                                    <th>Fecha Programada</th>
+                                    <th>Estado</th>
+                                    <th>Fecha Creación</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tarea in tareas %}
+                                <tr>
+                                    <td>{{ tarea.id }}</td>
+                                    <td>{{ tarea.nombre }}</td>
+                                    <td>
+                                        {% if tarea.tipo_reporte == 'cobertura_basica_expandido' %}
+                                            <span class="badge badge-info">Cobertura Básica Expandido</span>
+                                        {% elseif tarea.tipo_reporte == 'cobertura_complementaria_expandido' %}
+                                            <span class="badge badge-warning">Cobertura Complementaria Expandido</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ tarea.sede_nombre }}</td>
+                                    <td>{{ tarea.carrera_nombre }}</td>
+                                    <td>{{ tarea.fecha_programada|date('d/m/Y H:i') }}</td>
+                                    <td>
+                                        {% if tarea.estado == 'pendiente' %}
+                                            <span class="badge badge-secondary">Pendiente</span>
+                                        {% elseif tarea.estado == 'en_proceso' %}
+                                            <span class="badge badge-primary">En Proceso</span>
+                                        {% elseif tarea.estado == 'completada' %}
+                                            <span class="badge badge-success">Completada</span>
+                                        {% elseif tarea.estado == 'error' %}
+                                            <span class="badge badge-danger">Error</span>
+                                        {% elseif tarea.estado == 'cancelada' %}
+                                            <span class="badge badge-dark">Cancelada</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ tarea.fecha_creacion|date('d/m/Y H:i') }}</td>
+                                    <td>
+                                        {% if tarea.estado == 'pendiente' %}
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="cancelarTarea({{ tarea.id }})">
+                                                <i class="fas fa-times"></i> Cancelar
+                                            </button>
+                                        {% endif %}
+                                        {% if tarea.estado == 'error' %}
+                                            <button type="button" class="btn btn-sm btn-info" onclick="verError({{ tarea.id }}, '{{ tarea.error_mensaje|escape }}')">
+                                                <i class="fas fa-exclamation-triangle"></i> Ver Error
+                                            </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nueva Tarea -->
+<div class="modal fade" id="modalNuevaTarea" tabindex="-1" role="dialog" aria-labelledby="modalNuevaTareaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalNuevaTareaLabel">
+                    <i class="fas fa-plus"></i> Nueva Tarea Programada
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="formNuevaTarea">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="nombre">Nombre de la Tarea *</label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="tipo_reporte">Tipo de Reporte *</label>
+                                <select class="form-control" id="tipo_reporte" name="tipo_reporte" required>
+                                    <option value="">Seleccione un tipo</option>
+                                    <option value="cobertura_basica_expandido">Cobertura Básica Expandido</option>
+                                    <option value="cobertura_complementaria_expandido">Cobertura Complementaria Expandido</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="sede_id">Sede *</label>
+                                <select class="form-control" id="sede_id" name="sede_id" required>
+                                    <option value="">Seleccione una sede</option>
+                                    {% for sede in sedes %}
+                                    <option value="{{ sede.id }}">{{ sede.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="carrera_id">Carrera *</label>
+                                <select class="form-control" id="carrera_id" name="carrera_id" required>
+                                    <option value="">Seleccione una carrera</option>
+                                    {% for carrera in carreras %}
+                                    <option value="{{ carrera.id }}">{{ carrera.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="fecha_programada">Fecha y Hora de Ejecución *</label>
+                                <input type="datetime-local" class="form-control" id="fecha_programada" name="fecha_programada" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Filtros de Formación (Opcional)</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="filtro_basica" name="filtros_formacion[]" value="FORMACION_BASICA">
+                                    <label class="form-check-label" for="filtro_basica">Formación Básica</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="filtro_general" name="filtros_formacion[]" value="FORMACION_GENERAL">
+                                    <label class="form-check-label" for="filtro_general">Formación General</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="filtro_idioma" name="filtros_formacion[]" value="FORMACION_IDIOMAS">
+                                    <label class="form-check-label" for="filtro_idioma">Formación Idiomas</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="filtro_profesional" name="filtros_formacion[]" value="FORMACION_PROFESIONAL">
+                                    <label class="form-check-label" for="filtro_profesional">Formación Profesional</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="filtro_valores" name="filtros_formacion[]" value="FORMACION_VALORES">
+                                    <label class="form-check-label" for="filtro_valores">Formación Valores</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="filtro_especialidad" name="filtros_formacion[]" value="FORMACION_ESPECIALIDAD">
+                                    <label class="form-check-label" for="filtro_especialidad">Formación Especialidad</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="filtro_especial" name="filtros_formacion[]" value="FORMACION_ESPECIAL">
+                                    <label class="form-check-label" for="filtro_especial">Formación Especial</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Crear Tarea
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ver Error -->
+<div class="modal fade" id="modalError" tabindex="-1" role="dialog" aria-labelledby="modalErrorLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalErrorLabel">
+                    <i class="fas fa-exclamation-triangle text-danger"></i> Error en la Tarea
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <strong>Mensaje de Error:</strong>
+                    <p id="errorMensaje"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Inicializar DataTable
+    $('#tablaTareas').DataTable({
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
+        },
+        "order": [[5, "desc"]], // Ordenar por fecha programada descendente
+        "pageLength": 25
+    });
+
+    // Establecer fecha mínima como ahora
+    var now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('fecha_programada').min = now.toISOString().slice(0,16);
+
+    // Manejar envío del formulario
+    $('#formNuevaTarea').on('submit', function(e) {
+        e.preventDefault();
+        
+        var formData = {
+            nombre: $('#nombre').val(),
+            tipo_reporte: $('#tipo_reporte').val(),
+            sede_id: $('#sede_id').val(),
+            carrera_id: $('#carrera_id').val(),
+            fecha_programada: $('#fecha_programada').val(),
+            filtros_formacion: $('input[name="filtros_formacion[]"]:checked').map(function() {
+                return this.value;
+            }).get()
+        };
+
+        var url = '{{ app_url }}tareas-programadas';
+        console.log('URL a enviar:', url);
+        $.ajax({
+            url: url,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            success: function(response) {
+                if (response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        text: response.message,
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.error || 'Error al crear la tarea',
+                        confirmButtonText: 'Aceptar'
+                    });
+                }
+            },
+            error: function(xhr) {
+                var error = 'Error al crear la tarea';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    error = xhr.responseJSON.error;
+                }
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error,
+                    confirmButtonText: 'Aceptar'
+                });
+            }
+        });
+    });
+});
+
+function cancelarTarea(id) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Esta acción cancelará la tarea programada",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, cancelar',
+        cancelButtonText: 'No, mantener'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: '{{ app_url }}tareas-programadas/' + id + '/cancelar',
+                type: 'POST',
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Cancelada!',
+                            text: response.message,
+                            confirmButtonText: 'Aceptar'
+                        }).then((result) => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.error || 'Error al cancelar la tarea',
+                            confirmButtonText: 'Aceptar'
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    var error = 'Error al cancelar la tarea';
+                    if (xhr.responseJSON && xhr.responseJSON.error) {
+                        error = xhr.responseJSON.error;
+                    }
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: error,
+                        confirmButtonText: 'Aceptar'
+                    });
+                }
+            });
+        }
+    });
+}
+
+function verError(id, mensaje) {
+    $('#errorMensaje').text(mensaje);
+    var modal = new bootstrap.Modal(document.getElementById('modalError'));
+    modal.show();
+}
+</script>
+{% endblock %} 

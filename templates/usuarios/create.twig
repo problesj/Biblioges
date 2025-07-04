@@ -1,0 +1,191 @@
+{% extends "base.twig" %}
+
+{% block title %}Crear Usuario{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="card-title">
+                            <i class="fas fa-user-plus"></i> Crear Nuevo Usuario
+                        </h3>
+                        <div>
+                            <a href="{{ app_url }}usuarios" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Volver
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form id="createUserForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="rut" class="form-label">RUT *</label>
+                                    <input type="text" class="form-control" id="rut" name="rut" 
+                                           placeholder="12345678-9" required>
+                                    <div class="invalid-feedback" id="rut-error"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="nombre" class="form-label">Nombre Completo *</label>
+                                    <input type="text" class="form-control" id="nombre" name="nombre" 
+                                           placeholder="Juan Pérez" required>
+                                    <div class="invalid-feedback" id="nombre-error"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email *</label>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           placeholder="usuario@ejemplo.com" required>
+                                    <div class="invalid-feedback" id="email-error"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">Contraseña *</label>
+                                    <input type="password" class="form-control" id="password" name="password" 
+                                           placeholder="Mínimo 6 caracteres" required>
+                                    <div class="invalid-feedback" id="password-error"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="rol" class="form-label">Rol *</label>
+                                    <select class="form-select" id="rol" name="rol" required>
+                                        <option value="">Seleccione un rol</option>
+                                        {% for key, value in roles %}
+                                            <option value="{{ key }}">{{ value }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="invalid-feedback" id="rol-error"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="estado" class="form-label">Estado</label>
+                                    <select class="form-select" id="estado" name="estado">
+                                        {% for key, value in estados %}
+                                            <option value="{{ key }}" {{ key == 1 ? 'selected' : '' }}>
+                                                {{ value }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{{ app_url }}usuarios" class="btn btn-secondary">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Guardar Usuario
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function limpiarRut(rut) {
+    return rut.replace(/\.|-/g, '').toUpperCase();
+}
+
+document.getElementById('createUserForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Limpiar errores previos
+    clearErrors();
+    
+    // Limpiar el RUT antes de enviar
+    const rutInput = document.getElementById('rut');
+    rutInput.value = limpiarRut(rutInput.value);
+
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData.entries());
+    
+    fetch('{{ app_url }}usuarios', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                title: '¡Éxito!',
+                text: data.message,
+                icon: 'success',
+                confirmButtonText: 'Continuar'
+            }).then(() => {
+                window.location.href = data.redirect;
+            });
+        } else {
+            if (data.errors) {
+                showErrors(data.errors);
+            } else {
+                Swal.fire({
+                    title: 'Error',
+                    text: data.message,
+                    icon: 'error',
+                    confirmButtonText: 'Entendido'
+                });
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            title: 'Error',
+            text: 'Ocurrió un error al procesar la solicitud',
+            icon: 'error',
+            confirmButtonText: 'Entendido'
+        });
+    });
+});
+
+function clearErrors() {
+    const fields = ['rut', 'nombre', 'email', 'password', 'rol'];
+    fields.forEach(field => {
+        const element = document.getElementById(field);
+        const errorElement = document.getElementById(field + '-error');
+        element.classList.remove('is-invalid');
+        errorElement.textContent = '';
+    });
+}
+
+function showErrors(errors) {
+    Object.keys(errors).forEach(field => {
+        const element = document.getElementById(field);
+        const errorElement = document.getElementById(field + '-error');
+        if (element && errorElement) {
+            element.classList.add('is-invalid');
+            errorElement.textContent = errors[field];
+        }
+    });
+}
+</script>
+{% endblock %} 

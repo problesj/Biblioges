@@ -47,12 +47,14 @@ class DashboardController extends BaseController
         }
     }
 
-    public function index()
+    public function index($request, $response, $args = [])
     {
         // Verificar autenticación
         if (!isset($_SESSION['user_id'])) {
             $_SESSION['error'] = 'Por favor inicie sesión para acceder al dashboard';
-            return $this->redirect('login');
+            return $response
+                ->withHeader('Location', '/biblioges/login')
+                ->withStatus(302);
         }
 
         // Obtener datos del usuario
@@ -61,7 +63,9 @@ class DashboardController extends BaseController
         if (!$user) {
             session_destroy();
             $_SESSION['error'] = 'Usuario no encontrado';
-            return $this->redirect('login');
+            return $response
+                ->withHeader('Location', '/biblioges/login')
+                ->withStatus(302);
         }
 
         // Obtener estadísticas
@@ -100,9 +104,9 @@ class DashboardController extends BaseController
         ")->fetchAll();
 
         // Renderizar la vista
-        echo $this->twig->render('dashboard/index.twig', [
+        $body = $this->twig->render('dashboard/index.twig', [
             'session' => [
-            'user' => $user,
+                'user' => $user,
                 'user_id' => $user['id'],
                 'user_email' => $user['email'],
                 'user_nombre' => $user['nombre'],
@@ -117,5 +121,7 @@ class DashboardController extends BaseController
             'app_url' => Config::get('app_url'),
             'current_path' => 'dashboard'
         ]);
+        $response->getBody()->write($body);
+        return $response;
     }
 } 

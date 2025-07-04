@@ -2,7 +2,9 @@
 
 namespace src\Models;
 
-class Autor extends BaseModel
+use Illuminate\Database\Eloquent\Model;
+
+class Autor extends Model
 {
     /**
      * La tabla asociada con el modelo.
@@ -12,7 +14,14 @@ class Autor extends BaseModel
     protected $table = 'autores';
 
     /**
-     * Los atributos que deberían ser asignados en masa.
+     * La clave primaria del modelo.
+     *
+     * @var string
+     */
+    protected $primaryKey = 'id';
+
+    /**
+     * Los atributos que son asignables en masa.
      *
      * @var array
      */
@@ -23,11 +32,35 @@ class Autor extends BaseModel
     ];
 
     /**
-     * Obtener las bibliografías del autor.
+     * Indica si el modelo debe tener timestamps.
+     *
+     * @var bool
      */
-    public function bibliografias()
+    public $timestamps = false;
+
+    /**
+     * Obtiene las bibliografías declaradas del autor.
+     */
+    public function bibliografiasDeclaradas()
     {
-        return $this->belongsToMany(BibliografiaDeclarada::class, 'bibliografias_autores', 'autor_id', 'bibliografia_id')
-            ->withTimestamps('fecha_creacion', 'fecha_actualizacion');
+        return $this->belongsToMany(
+            BibliografiaDeclarada::class,
+            'bibliografias_autores',
+            'autor_id',
+            'bibliografia_id'
+        );
+    }
+
+    /**
+     * Obtiene las bibliografías disponibles del autor.
+     */
+    public function bibliografiasDisponibles()
+    {
+        return $this->belongsToMany(
+            BibliografiaDisponible::class,
+            'bibliografias_disponibles_autores',
+            'autor_id',
+            'bibliografia_disponible_id'
+        );
     }
 } 
