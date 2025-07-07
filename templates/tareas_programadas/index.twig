@@ -40,9 +40,11 @@
                                     <td>{{ tarea.nombre }}</td>
                                     <td>
                                         {% if tarea.tipo_reporte == 'cobertura_basica_expandido' %}
-                                            <span class="badge badge-info">Cobertura Básica Expandido</span>
+                                            <span class="badge bg-info text-dark">Cobertura Básica Expandido</span>
                                         {% elseif tarea.tipo_reporte == 'cobertura_complementaria_expandido' %}
-                                            <span class="badge badge-warning">Cobertura Complementaria Expandido</span>
+                                            <span class="badge bg-warning text-dark">Cobertura Complementaria Expandido</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Sin tipo</span>
                                         {% endif %}
                                     </td>
                                     <td>{{ tarea.sede_nombre }}</td>
@@ -50,15 +52,17 @@
                                     <td>{{ tarea.fecha_programada|date('d/m/Y H:i') }}</td>
                                     <td>
                                         {% if tarea.estado == 'pendiente' %}
-                                            <span class="badge badge-secondary">Pendiente</span>
+                                            <span class="badge bg-secondary">Pendiente</span>
                                         {% elseif tarea.estado == 'en_proceso' %}
-                                            <span class="badge badge-primary">En Proceso</span>
+                                            <span class="badge bg-primary">En Proceso</span>
                                         {% elseif tarea.estado == 'completada' %}
-                                            <span class="badge badge-success">Completada</span>
+                                            <span class="badge bg-success">Completada</span>
                                         {% elseif tarea.estado == 'error' %}
-                                            <span class="badge badge-danger">Error</span>
+                                            <span class="badge bg-danger">Error</span>
                                         {% elseif tarea.estado == 'cancelada' %}
-                                            <span class="badge badge-dark">Cancelada</span>
+                                            <span class="badge bg-dark">Cancelada</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Desconocido</span>
                                         {% endif %}
                                     </td>
                                     <td>{{ tarea.fecha_creacion|date('d/m/Y H:i') }}</td>
@@ -122,7 +126,7 @@
                                 <select class="form-control" id="sede_id" name="sede_id" required>
                                     <option value="">Seleccione una sede</option>
                                     {% for sede in sedes %}
-                                    <option value="{{ sede.id }}">{{ sede.nombre }}</option>
+                                    <option value="{{ sede.id }}">{{ sede.sede }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -130,11 +134,9 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="carrera_id">Carrera *</label>
-                                <select class="form-control" id="carrera_id" name="carrera_id" required>
+                                <select class="form-control" id="carrera_id" name="carrera_id[]" multiple required>
                                     <option value="">Seleccione una carrera</option>
-                                    {% for carrera in carreras %}
-                                    <option value="{{ carrera.id }}">{{ carrera.nombre }}</option>
-                                    {% endfor %}
+                                    {# Las opciones se llenarán dinámicamente por JS según la sede seleccionada #}
                                 </select>
                             </div>
                         </div>
@@ -144,39 +146,6 @@
                             <div class="form-group">
                                 <label for="fecha_programada">Fecha y Hora de Ejecución *</label>
                                 <input type="datetime-local" class="form-control" id="fecha_programada" name="fecha_programada" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Filtros de Formación (Opcional)</label>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="filtro_basica" name="filtros_formacion[]" value="FORMACION_BASICA">
-                                    <label class="form-check-label" for="filtro_basica">Formación Básica</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="filtro_general" name="filtros_formacion[]" value="FORMACION_GENERAL">
-                                    <label class="form-check-label" for="filtro_general">Formación General</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="filtro_idioma" name="filtros_formacion[]" value="FORMACION_IDIOMAS">
-                                    <label class="form-check-label" for="filtro_idioma">Formación Idiomas</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="filtro_profesional" name="filtros_formacion[]" value="FORMACION_PROFESIONAL">
-                                    <label class="form-check-label" for="filtro_profesional">Formación Profesional</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="filtro_valores" name="filtros_formacion[]" value="FORMACION_VALORES">
-                                    <label class="form-check-label" for="filtro_valores">Formación Valores</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="filtro_especialidad" name="filtros_formacion[]" value="FORMACION_ESPECIALIDAD">
-                                    <label class="form-check-label" for="filtro_especialidad">Formación Especialidad</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="filtro_especial" name="filtros_formacion[]" value="FORMACION_ESPECIAL">
-                                    <label class="form-check-label" for="filtro_especial">Formación Especial</label>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -218,6 +187,9 @@
 
 {% block scripts %}
 <script>
+// Datos de carreras para filtrado dinámico
+var carreras = {{ carreras|json_encode|raw }};
+
 $(document).ready(function() {
     // Inicializar DataTable
     $('#tablaTareas').DataTable({
@@ -233,21 +205,30 @@ $(document).ready(function() {
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     document.getElementById('fecha_programada').min = now.toISOString().slice(0,16);
 
+    // Filtrar carreras según sede seleccionada
+    $('#sede_id').on('change', function() {
+        var sedeId = $(this).val();
+        var $carreraSelect = $('#carrera_id');
+        $carreraSelect.empty();
+        $carreraSelect.append('<option value="">Seleccione una carrera</option>');
+        if (sedeId) {
+            var carrerasFiltradas = carreras.filter(function(c) { return c.id_sede == sedeId; });
+            carrerasFiltradas.forEach(function(c) {
+                $carreraSelect.append('<option value="'+c.id+'">'+c.carrera+'</option>');
+            });
+        }
+    });
+
     // Manejar envío del formulario
     $('#formNuevaTarea').on('submit', function(e) {
         e.preventDefault();
-        
         var formData = {
             nombre: $('#nombre').val(),
             tipo_reporte: $('#tipo_reporte').val(),
             sede_id: $('#sede_id').val(),
             carrera_id: $('#carrera_id').val(),
-            fecha_programada: $('#fecha_programada').val(),
-            filtros_formacion: $('input[name="filtros_formacion[]"]:checked').map(function() {
-                return this.value;
-            }).get()
+            fecha_programada: $('#fecha_programada').val()
         };
-
         var url = '{{ app_url }}tareas-programadas';
         console.log('URL a enviar:', url);
         $.ajax({

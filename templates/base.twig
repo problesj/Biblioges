@@ -241,18 +241,7 @@
                             <i class="fas fa-list"></i> Listado de Bibliografías
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if current_page == 'tareas_programadas' %}active{% endif %}" href="{{ app_url }}tareas-programadas">
-                            <i class="fas fa-clock"></i> Tareas Programadas
-                        </a>
-                    </li>
-                    <!--
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ app_url }}reportes/cobertura">
-                            <i class="fas fa-chart-pie"></i> Cobertura
-                        </a>
-                    </li>
-                    -->
+                    <!-- La opción de Tareas Programadas se moverá a ADMINISTRACIÓN -->
                     <li class="nav-item">
                         <a class="nav-link {% if current_page == 'reportes-personalizados' %}active{% endif %}" href="{{ app_url }}reportes-personalizados">
                             <i class="fas fa-cogs"></i> Reportes Personalizados
@@ -281,6 +270,11 @@
                     <li class="nav-item">
                         <a class="nav-link {% if current_page == 'usuarios' %}active{% endif %}" href="{{ app_url }}usuarios">
                             <i class="fas fa-users"></i> Usuarios
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if current_page == 'tareas_programadas' %}active{% endif %}" href="{{ app_url }}tareas-programadas">
+                            <i class="fas fa-clock"></i> Tareas Programadas
                         </a>
                     </li>
                     {% endif %}

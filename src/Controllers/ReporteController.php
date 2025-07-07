@@ -2646,37 +2646,37 @@ class ReporteController extends BaseController
                         
                         // # Ejemplares impresos (suma de ejemplares de la sede)
                         $ejemplaresImpresos = DB::table('vw_bib_declarada_sede_noejem')
-                            ->where('id_bib_declarada', $bibliografia->id)
-                            ->where('id_sede', $sedeId)
-                            ->value('no_ejem_imp_sede') ?? 0;
+                        ->where('id_bib_declarada', $bibliografia->id)
+                        ->where('id_sede', $sedeId)
+                        ->value('no_ejem_imp_sede') ?? 0;
                             
                         // # Ejemplares digitales (usar bibliografias_disponibles)
                         $ejemplaresDigitales = DB::table('bibliografias_disponibles')
-                            ->where('bibliografia_declarada_id', $bibliografia->id)
-                            ->where('disponibilidad', '!=', 'impreso')
-                            ->pluck('ejemplares_digitales');
+                        ->where('bibliografia_declarada_id', $bibliografia->id)
+                        ->where('disponibilidad', '!=', 'impreso')
+                        ->pluck('ejemplares_digitales');
 
                         // Si hay algún 0, el resultado es 0 (Ilimitado)
                         $ejemplaresDigitales = $ejemplaresDigitales->contains(0) ? 0 : $ejemplaresDigitales->sum();
                         
-                        // Disponibilidad
-                        $disponible = DB::table('bibliografias_disponibles')
-                            ->where('bibliografia_declarada_id', $bibliografia->id)
-                            ->where('estado', 1)
-                            ->where(function ($query) use ($sedeId) {
-                                $query->whereIn('disponibilidad', ['electronico', 'ambos'])
-                                      ->orWhere(function ($q) use ($sedeId) {
-                                          $q->where('disponibilidad', 'impreso')
-                                            ->whereExists(function ($sub) use ($sedeId) {
-                                                $sub->select(DB::raw(1))
-                                                    ->from('bibliografias_disponibles_sedes')
-                                                    ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
-                                                    ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
-                                                    ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
-                                            });
-                                      });
-                            })
-                            ->exists();
+                    // Disponibilidad
+                    $disponible = DB::table('bibliografias_disponibles')
+                        ->where('bibliografia_declarada_id', $bibliografia->id)
+                        ->where('estado', 1)
+                        ->where(function ($query) use ($sedeId) {
+                            $query->whereIn('disponibilidad', ['electronico', 'ambos'])
+                                  ->orWhere(function ($q) use ($sedeId) {
+                                      $q->where('disponibilidad', 'impreso')
+                                        ->whereExists(function ($sub) use ($sedeId) {
+                                            $sub->select(DB::raw(1))
+                                                ->from('bibliografias_disponibles_sedes')
+                                                ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
+                                                ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
+                                                ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
+                                        });
+                                  });
+                        })
+                        ->exists();
                         
                         // Calcular cobertura (siempre será 100% si está disponible, 0% si no)
                         $cobertura = $disponible ? 100 : 0;
