@@ -443,4 +443,185 @@ class UsuarioController extends BaseController
 
         return $errors;
     }
+
+    /**
+     * Mostrar el perfil del usuario autenticado
+     */
+    public function perfil($request, $response, $args = [])
+    {
+        try {
+            $userId = $_SESSION['user_id'] ?? null;
+            if (!$userId) {
+                return $response->withHeader('Location', '/biblioges/login')->withStatus(302);
+            }
+            $usuario = $this->usuarioModel->find($userId);
+            if (!$usuario) {
+                return $response->withHeader('Location', '/biblioges/login')->withStatus(302);
+            }
+            return $this->render($response, 'perfil.twig', [
+                'usuario' => $usuario,
+                'app_url' => $GLOBALS['twig']->getGlobals()['app_url'] ?? '',
+                'session' => $_SESSION,
+                'current_page' => 'perfil'
+            ]);
+        } catch (\Exception $e) {
+            error_log("Error en UsuarioController@perfil: " . $e->getMessage());
+            return $response->withHeader('Location', '/biblioges/login')->withStatus(302);
+        }
+    }
+
+    /**
+     * Actualizar el perfil del usuario autenticado (API)
+     */
+    public function actualizarPerfil($request, $response, $args = [])
+    {
+        // Limpiar cualquier salida anterior
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+        
+        try {
+            error_log('=== INICIO actualizarPerfil ===');
+            
+            $userId = $_SESSION['user_id'] ?? null;
+            if (!$userId) {
+                error_log('Usuario no autenticado');
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'No autenticado']));
+                return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
+            }
+            
+            $body = $request->getBody()->getContents();
+            error_log('Body recibido: ' . $body);
+            
+            $data = json_decode($body, true);
+            if (!$data) {
+                error_log('Error al decodificar JSON: ' . json_last_error_msg());
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Datos inválidos: ' . json_last_error_msg()]));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            }
+            
+            error_log('Datos decodificados: ' . print_r($data, true));
+            
+            $nombre = trim($data['nombre'] ?? '');
+            $email = trim($data['email'] ?? '');
+            
+            if ($nombre === '' || $email === '') {
+                error_log('Campos obligatorios vacíos');
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Nombre y correo electrónico son obligatorios']));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            }
+            
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                error_log('Email inválido: ' . $email);
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'El correo electrónico no es válido']));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            }
+            
+            // Verificar unicidad del email
+            error_log('Verificando unicidad del email: ' . $email . ' para usuario: ' . $userId);
+            if ($this->usuarioModel->emailExists($email, $userId)) {
+                error_log('Email ya existe');
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'El correo electrónico ya está en uso por otro usuario']));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            }
+            
+            // Actualizar usuario
+            error_log('Actualizando usuario con ID: ' . $userId);
+            $updateData = [
+                'nombre' => $nombre,
+                'email' => $email
+            ];
+            error_log('Datos a actualizar: ' . print_r($updateData, true));
+            
+            $success = $this->usuarioModel->update($userId, $updateData);
+            if (!$success) {
+                error_log('Error al actualizar usuario en la base de datos');
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Error al actualizar el usuario en la base de datos']));
+                return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+            }
+            
+            // Actualizar sesión
+            $_SESSION['user_nombre'] = $nombre;
+            $_SESSION['user_email'] = $email;
+            
+            // Devolver datos actualizados
+            $usuario = $this->usuarioModel->find($userId);
+            error_log('Usuario actualizado: ' . print_r($usuario, true));
+            
+            $responseData = [
+                'success' => true, 
+                'message' => 'Perfil actualizado correctamente', 
+                'data' => $usuario
+            ];
+            
+            error_log('Respuesta a enviar: ' . json_encode($responseData));
+            error_log('=== FIN actualizarPerfil ===');
+            
+            $response->getBody()->write(json_encode($responseData));
+            return $response->withHeader('Content-Type', 'application/json');
+                
+        } catch (\Exception $e) {
+            error_log('Error en actualizarPerfil: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Error interno al actualizar el perfil: ' . $e->getMessage()]));
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        }
+    }
+
+    /**
+     * Actualizar la contraseña del usuario autenticado (API)
+     */
+    public function actualizarPassword($request, $response, $args = [])
+    {
+        try {
+            $userId = $_SESSION['user_id'] ?? null;
+            if (!$userId) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'No autenticado']));
+                return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
+            }
+            $data = json_decode($request->getBody()->getContents(), true);
+            if (!$data) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Datos inválidos']));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            }
+            $passwordActual = $data['password_actual'] ?? '';
+            $passwordNuevo = $data['password_nuevo'] ?? '';
+            $passwordConfirmar = $data['password_confirmar'] ?? '';
+            if ($passwordActual === '' || $passwordNuevo === '' || $passwordConfirmar === '') {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Todos los campos de contraseña son obligatorios']));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            }
+            if ($passwordNuevo !== $passwordConfirmar) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'La nueva contraseña y su confirmación no coinciden']));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            }
+            if (strlen($passwordNuevo) < 8) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'La nueva contraseña debe tener al menos 8 caracteres']));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            }
+            // Obtener usuario actual
+            $usuario = $this->usuarioModel->find($userId);
+            if (!$usuario) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Usuario no encontrado']));
+                return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
+            }
+            // Verificar contraseña actual
+            if (!password_verify($passwordActual, $usuario['password'])) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'La contraseña actual es incorrecta']));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            }
+            // Hashear nueva contraseña
+            $passwordHash = password_hash($passwordNuevo, PASSWORD_DEFAULT);
+            // Actualizar contraseña
+            $this->usuarioModel->update($userId, [
+                'password' => $passwordHash
+            ]);
+            $response->getBody()->write(json_encode(['success' => true, 'message' => 'Contraseña actualizada correctamente']));
+            return $response->withHeader('Content-Type', 'application/json');
+        } catch (\Exception $e) {
+            error_log('Error en actualizarPassword: ' . $e->getMessage());
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Error interno al actualizar la contraseña']));
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        }
+    }
 } 

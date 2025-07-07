@@ -253,4 +253,25 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     //         ->withHeader('Location', '/biblioges/login')
     //         ->withStatus(302);
     // });
+
+    // Ruta de prueba para verificar que las rutas API funcionan
+    $group->get('/test-api', function ($request, $response) {
+        $response->getBody()->write(json_encode(['success' => true, 'message' => 'API funcionando']));
+        return $response->withHeader('Content-Type', 'application/json');
+    });
+
+    // Ruta de prueba POST para verificar que las rutas POST funcionan
+    $group->post('/test-post', function ($request, $response) {
+        $response->getBody()->write(json_encode(['success' => true, 'message' => 'POST funcionando']));
+        return $response->withHeader('Content-Type', 'application/json');
+    });
+
+    // API para actualizar el perfil del usuario autenticado
+    $group->post('/perfil/actualizar', [UsuarioController::class, 'actualizarPerfil']);
+
+    // API para cambiar la contraseña del usuario autenticado
+    $group->post('/perfil/cambiar-password', [UsuarioController::class, 'actualizarPassword']);
+
+    // Ruta para el perfil de usuario autenticado (debe ir al final para evitar conflictos)
+    $group->get('/perfil', [UsuarioController::class, 'perfil']);
 })->add(new AuthMiddleware()); 

@@ -241,12 +241,7 @@
                             <i class="fas fa-list"></i> Listado de Bibliografías
                         </a>
                     </li>
-                    <!-- La opción de Tareas Programadas se moverá a ADMINISTRACIÓN -->
-                    <li class="nav-item">
-                        <a class="nav-link {% if current_page == 'reportes-personalizados' %}active{% endif %}" href="{{ app_url }}reportes-personalizados">
-                            <i class="fas fa-cogs"></i> Reportes Personalizados
-                        </a>
-                    </li>
+
 
                     <!-- ADMINISTRACIÓN -->
                     {% if session.user_rol == 'admin' %}

@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
         mostrarCargando('Guardando cambios...');
 
         // Enviar solicitud al servidor
-        fetch('/api/perfil/actualizar', {
+        fetch('/biblioges/perfil/actualizar', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
         mostrarCargando('Cambiando contraseña...');
 
         // Enviar solicitud al servidor
-        fetch('/api/perfil/cambiar-password', {
+        fetch('/biblioges/perfil/cambiar-password', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Mostrar indicador de carga
         mostrarCargando('Eliminando cuenta...');
 
-        fetch('/api/perfil/eliminar', {
+        fetch('/biblioges/perfil/eliminar', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

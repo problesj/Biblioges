@@ -2120,9 +2120,9 @@ class BibliografiaDeclaradaController
     private function obtenerRegistrosGrupoFRBR(string $titulo, string $frbrGroupId): array
     {
         $url = "https://api-na.hosted.exlibrisgroup.com/primo/v1/search?" .
-               'vid=56UCN_INST:UCN' .
+               'vid=' . ($_ENV['PRIMO_VID'] ?? '56UCN_INST:UCN') .
                '&tab=ALL' .
-               '&inst=56UCN_INST' .
+               '&inst=' . ($_ENV['PRIMO_INST'] ?? '56UCN_INST') .
                '&scope=MyInst_and_CI' .
                '&q=title,exact,' . urlencode($titulo) .
                '&qInclude=facet_frbrgroupid,exact,' . $frbrGroupId .
@@ -2134,7 +2134,7 @@ class BibliografiaDeclaradaController
                '&skipDelivery=true' .
                '&disableSplitFacets=false' .
                '&lang=es' .
-               '&apikey=l8xx97a02ce2328f496bb59a58bee79148dd';
+               '&apikey=' . ($_ENV['PRIMO_API_KEY'] ?? '');
 
         error_log('URL de búsqueda FRBR: ' . $url);
 
@@ -2232,9 +2232,9 @@ class BibliografiaDeclaradaController
             
             // Construir la URL
             $url = "https://api-na.hosted.exlibrisgroup.com/primo/v1/search?" .
-                   'vid=56UCN_INST:UCN' .
+                   'vid=' . ($_ENV['PRIMO_VID'] ?? '56UCN_INST:UCN') .
                    '&tab=ALL' .
-                   '&inst=56UCN_INST' .
+                   '&inst=' . ($_ENV['PRIMO_INST'] ?? '56UCN_INST') .
                    '&scope=MyInst_and_CI' .
                    '&q=' . $query .
                    '&mode=advanced' .
@@ -2245,7 +2245,7 @@ class BibliografiaDeclaradaController
                    '&skipDelivery=true' .
                    '&disableSplitFacets=false' .
                    '&lang=es' .
-                   '&apikey=l8xx97a02ce2328f496bb59a58bee79148dd';
+                   '&apikey=' . ($_ENV['PRIMO_API_KEY'] ?? '');
 
             error_log('URL de búsqueda: ' . $url);
 
@@ -2421,7 +2421,7 @@ class BibliografiaDeclaradaController
     private function obtenerEjemplares($recordId) {
         try {
             // API key específica para holdings y ejemplares
-            $apiKey = 'l8xxf1c969797c9b4dbf9b30f5f36302d8fa';
+            $apiKey = $_ENV['ALMA_API_KEY'] ?? '';
             $url = "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/{$recordId}/holdings?apikey={$apiKey}";
             error_log('URL de holdings: ' . $url);
             
@@ -2693,7 +2693,7 @@ class BibliografiaDeclaradaController
                             error_log('Ejemplares obtenidos: ' . json_encode($ejemplares));
                             
                             // Verificar portafolios
-                            $portfoliosUrl = "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/{$idMms}/portfolios?limit=10&offset=0&apikey=l8xxf1c969797c9b4dbf9b30f5f36302d8fa";
+                            $portfoliosUrl = "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/{$idMms}/portfolios?limit=10&offset=0&apikey=" . ($_ENV['ALMA_API_KEY'] ?? '');
                             error_log('Consultando portafolios: ' . $portfoliosUrl);
                             $portfoliosResponse = @file_get_contents($portfoliosUrl);
                             if ($portfoliosResponse !== false) {
@@ -2705,7 +2705,7 @@ class BibliografiaDeclaradaController
                             }
                             
                             // Verificar representaciones digitales
-                            $representationsUrl = "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/{$idMms}/representations?limit=10&offset=0&use_updated_terminology=false&apikey=l8xxf1c969797c9b4dbf9b30f5f36302d8fa";
+                            $representationsUrl = "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/{$idMms}/representations?limit=10&offset=0&use_updated_terminology=false&apikey=" . ($_ENV['ALMA_API_KEY'] ?? '');
                             error_log('Consultando representaciones: ' . $representationsUrl);
                             $representationsResponse = @file_get_contents($representationsUrl);
                             if ($representationsResponse !== false) {

@@ -1,0 +1,105 @@
+{% extends "base.twig" %}
+
+{% block title %}Mi Perfil{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="m-0 font-weight-bold text-primary"><i class="fas fa-user"></i> Mi Perfil</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Alertas -->
+                    <div id="alertasPerfil"></div>
+
+                    <form id="perfilForm" autocomplete="off">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="rut" class="form-label">RUT</label>
+                                <input type="text" class="form-control" id="rut" name="rut" value="{{ usuario.rut }}" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Correo electrónico</label>
+                                <input type="email" class="form-control" id="email" name="email" value="{{ usuario.email }}" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="nombre" class="form-label">Nombre</label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" value="{{ usuario.nombre }}" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Rol</label>
+                                <div class="form-control-plaintext">
+                                    {% if usuario.rol == 'admin' %}
+                                        <span class="badge bg-primary">Administrador</span>
+                                    {% elseif usuario.rol == 'admin_bidoc' %}
+                                        <span class="badge bg-info text-dark">Administrador Biblioteca</span>
+                                    {% elseif usuario.rol == 'usuario' %}
+                                        <span class="badge bg-secondary">Usuario</span>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark">{{ usuario.rol|title }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Fecha de Creación</label>
+                                        <div class="form-control-plaintext">
+                                            <i class="fas fa-calendar-plus text-muted"></i> {{ usuario.fecha_creacion|date('d/m/Y H:i') }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Última Actualización</label>
+                                        <div class="form-control-plaintext">
+                                            <i class="fas fa-calendar-check text-muted"></i> {{ usuario.fecha_actualizacion|date('d/m/Y H:i') }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-primary" id="btnGuardarPerfil">
+                                <i class="fas fa-save"></i> Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+
+                    <hr>
+                    <h5 class="mt-4 mb-3"><i class="fas fa-key"></i> Cambiar Contraseña</h5>
+                    <form id="cambioPasswordForm" autocomplete="off">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="password_actual" class="form-label">Contraseña Actual</label>
+                                <input type="password" class="form-control" id="password_actual" name="password_actual" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="nueva_password" class="form-label">Nueva Contraseña</label>
+                                <input type="password" class="form-control" id="nueva_password" name="nueva_password" minlength="8" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="confirmar_password" class="form-label">Confirmar Nueva Contraseña</label>
+                                <input type="password" class="form-control" id="confirmar_password" name="confirmar_password" minlength="8" required>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-warning" id="btnCambiarPassword">
+                                <i class="fas fa-key"></i> Cambiar Contraseña
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ app_url }}js/perfil.js?v={{ "now"|date("U") }}"></script>
+{% endblock %} 

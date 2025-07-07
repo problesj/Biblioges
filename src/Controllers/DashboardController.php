@@ -103,6 +103,43 @@ class DashboardController extends BaseController
             LIMIT 5
         ")->fetchAll();
 
+        // Obtener datos de cobertura básica por carrera usando la misma lógica del reporte
+        $coberturaCarreras = $this->pdo->query("
+            SELECT 
+                c.nombre as carrera_nombre,
+                ce.codigo_carrera as carrera_codigo,
+                ROUND(
+                    CASE 
+                        WHEN COUNT(DISTINCT ab.bibliografia_id) > 0 THEN
+                            (COUNT(DISTINCT CASE WHEN bd.id IS NOT NULL THEN ab.bibliografia_id END) / 
+                             COUNT(DISTINCT ab.bibliografia_id)) * 100
+                        ELSE 0 
+                    END, 1
+                ) as cobertura_basica
+            FROM carreras_espejos ce
+            INNER JOIN carreras c ON c.id = ce.carrera_id
+            INNER JOIN mallas m ON m.carrera_id = c.id
+            INNER JOIN asignaturas_departamentos ad ON ad.asignatura_id = m.asignatura_id
+            INNER JOIN asignaturas_bibliografias ab ON ab.asignatura_id = ad.asignatura_id
+            LEFT JOIN bibliografias_disponibles bd ON bd.bibliografia_declarada_id = ab.bibliografia_id 
+                AND bd.estado = 1
+                AND (
+                    bd.disponibilidad IN ('electronico', 'ambos')
+                    OR (bd.disponibilidad = 'impreso' AND EXISTS (
+                        SELECT 1 FROM bibliografias_disponibles_sedes bds 
+                        WHERE bds.bibliografia_disponible_id = bd.id 
+                        AND bds.ejemplares > 0
+                    ))
+                )
+            WHERE c.tipo_programa = 'P'
+            AND ab.tipo_bibliografia = 'basica'
+            AND c.estado = 1
+            GROUP BY ce.codigo_carrera, c.nombre
+            HAVING cobertura_basica > 0
+            ORDER BY cobertura_basica DESC
+            LIMIT 10
+        ")->fetchAll();
+
         // Renderizar la vista
         $body = $this->twig->render('dashboard/index.twig', [
             'session' => [
@@ -118,6 +155,7 @@ class DashboardController extends BaseController
             'totalCarreras' => $totalCarreras,
             'bibliografiasRecientes' => $bibliografiasRecientes,
             'asignaturasRecientes' => $asignaturasRecientes,
+            'coberturaCarreras' => $coberturaCarreras,
             'app_url' => Config::get('app_url'),
             'current_path' => 'dashboard'
         ]);
