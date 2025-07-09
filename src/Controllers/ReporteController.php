@@ -3586,20 +3586,20 @@ class ReporteController extends BaseController
                     ->where('asignaturas_bibliografias.tipo_bibliografia', 'complementaria')
                     ->where('bibliografias_disponibles.estado', 1)
                     ->whereIn('asignaturas_departamentos.codigo_asignatura', $codigosAsignaturas)
-                    ->where(function ($query) use ($sedeId) {
+                            ->where(function ($query) use ($sedeId) {
                         $query->where('bibliografias_disponibles.disponibilidad', 'electronico')
                               ->orWhere('bibliografias_disponibles.disponibilidad', 'ambos')
-                              ->orWhere(function ($q) use ($sedeId) {
+                                      ->orWhere(function ($q) use ($sedeId) {
                                   $q->where('bibliografias_disponibles.disponibilidad', 'impreso')
                                     ->whereExists(function ($subQuery) use ($sedeId) {
                                         $subQuery->select(DB::raw(1))
-                                                ->from('bibliografias_disponibles_sedes')
-                                                ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
-                                                ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
-                                                ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
-                                    });
-                              });
-                    })
+                                                    ->from('bibliografias_disponibles_sedes')
+                                                    ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
+                                                    ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
+                                                    ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
+                                            });
+                                      });
+                            })
                     ->select('bibliografias_declaradas.id')
                     ->distinct()
                     ->pluck('bibliografias_declaradas.id');

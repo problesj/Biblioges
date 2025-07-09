@@ -201,12 +201,6 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->get('/reportes/listado-bibliografias', [ReporteController::class, 'bibliografiasDeclaradas']);
     $group->get('/reportes/listado-bibliografias/data', [ReporteController::class, 'getBibliografiasDeclaradas']);
     $group->get('/reportes/listado-bibliografias/exportar', [ReporteController::class, 'exportarBibliografiasDeclaradas']);
-    
-    // Ruta de prueba para debug
-    $group->get('/test-reporte', function ($request, $response) {
-        $response->getBody()->write("Test de reporte funcionando correctamente");
-        return $response->withHeader('Content-Type', 'text/html');
-    });
     $group->get('/reportes/ejemplares', [ReporteController::class, 'ejemplares']);
     $group->get('/reportes/estudiantes', [ReporteController::class, 'estudiantes']);
     $group->get('/reportes/profesores', [ReporteController::class, 'profesores']);
@@ -251,25 +245,6 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     
     // Ruta para ejecutar tareas pendientes (para cron)
     $group->post('/tareas-programadas/ejecutar', [TareaProgramadaController::class, 'ejecutarTareasPendientes']);
-
-    // Redirección para evitar error Not found en /reportes/login
-    // $group->get('/reportes/login', function ($request, $response) {
-    //     return $response
-    //         ->withHeader('Location', '/biblioges/login')
-    //         ->withStatus(302);
-    // });
-
-    // Ruta de prueba para verificar que las rutas API funcionan
-    $group->get('/test-api', function ($request, $response) {
-        $response->getBody()->write(json_encode(['success' => true, 'message' => 'API funcionando']));
-        return $response->withHeader('Content-Type', 'application/json');
-    });
-
-    // Ruta de prueba POST para verificar que las rutas POST funcionan
-    $group->post('/test-post', function ($request, $response) {
-        $response->getBody()->write(json_encode(['success' => true, 'message' => 'POST funcionando']));
-        return $response->withHeader('Content-Type', 'application/json');
-    });
 
     // API para actualizar el perfil del usuario autenticado
     $group->post('/perfil/actualizar', [UsuarioController::class, 'actualizarPerfil']);
