@@ -238,6 +238,11 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->get('/reportes/coberturas-complementaria-expandido-excel/{sede_id}/{carrera_id}', [ReporteController::class, 'exportarBibliografiaComplementariaExpandidoExcel']);
     $group->post('/reportes/guardar-cobertura-complementaria/{sede_id}/{carrera_id}', [ReporteController::class, 'guardarCoberturaComplementaria']);
 
+    // Rutas para Reporte Fusionado de Coberturas
+    $group->get('/reportes/coberturas-fusionado/{sede_id}/{carrera_id}', [ReporteController::class, 'reporteCoberturasFusionado']);
+    $group->get('/reportes/coberturas-fusionado-excel/{sede_id}/{carrera_id}', [ReporteController::class, 'exportarCoberturasFusionadoExcel']);
+    $group->post('/reportes/guardar-cobertura-fusionado/{sede_id}/{carrera_id}', [ReporteController::class, 'guardarCoberturaFusionado']);
+
     // Rutas para Tareas Programadas
     $group->get('/tareas-programadas', [TareaProgramadaController::class, 'index']);
     $group->post('/tareas-programadas', [TareaProgramadaController::class, 'crear']);

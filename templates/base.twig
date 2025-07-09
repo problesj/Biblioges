@@ -179,8 +179,11 @@
             }
         }
     </style>
+    
+    {% block styles %}{% endblock %}
 </head>
 <body>
+{% set current_page = block('current_page') is defined ? block('current_page') : current_page|default('') %}
     {% if session.user_id %}
     <div class="d-flex">
         <!-- Sidebar -->

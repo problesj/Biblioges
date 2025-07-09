@@ -704,7 +704,13 @@ class ReporteController extends BaseController
         $carrera = DB::table('vw_mallas')
             ->where('id_sede', $sedeId)
             ->where('id_carrera', $carreraId)
-            ->select('sede', 'codigo_carrera as codigo', 'carrera as nombre', 'id_sede as sede_id', 'id_carrera as carrera_id')
+            ->select(
+                'id_sede as sede_id',
+                'id_carrera as carrera_id',
+                'sede as sede',
+                'codigo_carrera as codigo',
+                'carrera as nombre'
+            )
             ->first();
             
         if (!$carrera) {
@@ -988,7 +994,13 @@ class ReporteController extends BaseController
         $carrera = DB::table('vw_mallas')
             ->where('id_sede', $sedeId)
             ->where('id_carrera', $carreraId)
-            ->select('sede', 'codigo_carrera as codigo', 'carrera as nombre')
+            ->select(
+                'id_sede as sede_id',
+                'id_carrera as carrera_id',
+                'sede as sede',
+                'codigo_carrera as codigo',
+                'carrera as nombre'
+            )
             ->first();
             
         if (!$carrera) {
@@ -1202,7 +1214,13 @@ class ReporteController extends BaseController
         $carrera = DB::table('vw_mallas')
             ->where('id_sede', $sedeId)
             ->where('id_carrera', $carreraId)
-            ->select('sede', 'codigo_carrera as codigo', 'carrera as nombre', 'id_sede as sede_id', 'id_carrera as carrera_id')
+            ->select(
+                'id_sede as sede_id',
+                'id_carrera as carrera_id',
+                'sede as sede',
+                'codigo_carrera as codigo',
+                'carrera as nombre'
+            )
             ->first();
             
         if (!$carrera) {
@@ -1777,7 +1795,13 @@ class ReporteController extends BaseController
             $carrera = DB::table('vw_mallas')
                 ->where('id_sede', $sedeId)
                 ->where('id_carrera', $carreraId)
-                ->select('sede', 'codigo_carrera as codigo', 'carrera as nombre', 'id_sede as sede_id', 'id_carrera as carrera_id')
+                ->select(
+                    'id_sede as sede_id',
+                    'id_carrera as carrera_id',
+                    'sede as sede',
+                    'codigo_carrera as codigo',
+                    'carrera as nombre'
+                )
                 ->first();
                 
             if (!$carrera) {
@@ -2208,7 +2232,13 @@ class ReporteController extends BaseController
         $carrera = DB::table('vw_mallas')
             ->where('id_sede', $sedeId)
             ->where('id_carrera', $carreraId)
-            ->select('sede', 'codigo_carrera as codigo', 'carrera as nombre', 'id_sede as sede_id', 'id_carrera as carrera_id')
+            ->select(
+                'id_sede as sede_id',
+                'id_carrera as carrera_id',
+                'sede as sede',
+                'codigo_carrera as codigo',
+                'carrera as nombre'
+            )
             ->first();
             
         if (!$carrera) {
@@ -2413,7 +2443,7 @@ class ReporteController extends BaseController
                 ->select('codigo_carrera as codigo')
             ->first();
             
-        if (!$carrera) {
+            if (!$carrera) {
                 error_log('ReporteController@guardarFiltrosFormacion: No se encontró la carrera');
                 $response->getBody()->write(json_encode(['error' => 'Carrera no encontrada']));
                 return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
@@ -2520,7 +2550,13 @@ class ReporteController extends BaseController
             $carrera = DB::table('vw_mallas')
                 ->where('id_sede', $sedeId)
                 ->where('id_carrera', $carreraId)
-                ->select('sede', 'codigo_carrera as codigo', 'carrera as nombre', 'id_sede as sede_id', 'id_carrera as carrera_id')
+                ->select(
+                    'id_sede as sede_id',
+                    'id_carrera as carrera_id',
+                    'sede as sede',
+                    'codigo_carrera as codigo',
+                    'carrera as nombre'
+                )
                 ->first();
                 
             if (!$carrera) {
@@ -3265,7 +3301,13 @@ class ReporteController extends BaseController
         $carrera = DB::table('vw_mallas')
             ->where('id_sede', $sedeId)
             ->where('id_carrera', $carreraId)
-            ->select('sede', 'codigo_carrera as codigo', 'carrera as nombre', 'id_sede as sede_id', 'id_carrera as carrera_id')
+            ->select(
+                'id_sede as sede_id',
+                'id_carrera as carrera_id',
+                'sede as sede',
+                'codigo_carrera as codigo',
+                'carrera as nombre'
+            )
             ->first();
             
         if (!$carrera) {
@@ -3634,4 +3676,425 @@ class ReporteController extends BaseController
         }
     }
 
+    // Reporte fusionado de coberturas básicas y complementarias
+    public function reporteCoberturasFusionado(Request $request, Response $response, array $args): Response
+    {
+        error_log('ReporteController@reporteCoberturasFusionado: Iniciando método');
+        
+        $sedeId = $args['sede_id'];
+        $carreraId = $args['carrera_id'];
+        
+        // Obtener información de la carrera
+        $carrera = DB::table('vw_mallas')
+            ->where('id_sede', $sedeId)
+            ->where('id_carrera', $carreraId)
+            ->select(
+                'id_sede as sede_id',
+                'id_carrera as carrera_id',
+                'sede as sede',
+                'codigo_carrera as codigo',
+                'carrera as nombre'
+            )
+            ->first();
+            
+        if (!$carrera) {
+            error_log('ReporteController@reporteCoberturasFusionado: Carrera no encontrada');
+            $response->getBody()->write('Carrera no encontrada');
+            return $response->withStatus(404);
+        }
+
+        // Obtener datos de cobertura básica desde la tabla de reportes guardados
+        $datosBasicos = DB::table('reporte_coberturas_carreras_basicas')
+            ->where('codigo_carrera', $carrera->codigo)
+            ->whereYear('fecha_medicion', date('Y'))
+            ->select(
+                'codigo_asignatura',
+                'id_bibliografia_declarada',
+                'no_ejem_imp as ejemplares_impresos',
+                'no_ejem_dig as ejemplares_digitales',
+                'no_bib_disponible_basica as disponible'
+            )
+            ->get();
+
+        // Obtener datos de cobertura complementaria desde la tabla de reportes guardados
+        $datosComplementarios = DB::table('reporte_coberturas_carreras_complementarias')
+            ->where('codigo_carrera', $carrera->codigo)
+            ->whereYear('fecha_medicion', date('Y'))
+            ->select(
+                'codigo_asignatura',
+                'id_bibliografia_declarada',
+                'no_ejem_imp as ejemplares_impresos',
+                'no_ejem_dig as ejemplares_digitales',
+                'no_bib_disponible_complementaria as disponible'
+            )
+            ->get();
+
+        // Si no hay datos guardados, mostrar alerta
+        if ($datosBasicos->isEmpty() && $datosComplementarios->isEmpty()) {
+            error_log('ReporteController@reporteCoberturasFusionado: No hay reportes generados');
+            
+            $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
+            $template = $view->load('reportes/coberturas/carrera_fusionado.twig');
+            
+            $html = $template->render([
+                'carrera' => $carrera,
+                'datos_basicos' => [],
+                'datos_complementarios' => [],
+                'cobertura_basica' => 0,
+                'cobertura_complementaria' => 0,
+                'totales_basica' => ['titulos_declarados' => 0, 'titulos_disponibles' => 0],
+                'totales_complementaria' => ['titulos_declarados' => 0, 'titulos_disponibles' => 0],
+                'sin_datos' => true,
+                'session' => $_SESSION ?? [],
+                'app_url' => app_url()
+            ]);
+            
+            $response->getBody()->write($html);
+            return $response->withHeader('Content-Type', 'text/html');
+        }
+
+        // Procesar datos básicos
+        $datosBasicosProcesados = collect();
+        if (!$datosBasicos->isEmpty()) {
+            foreach ($datosBasicos as $dato) {
+                // Obtener información de la bibliografía declarada
+                $bibliografia = DB::table('bibliografias_declaradas')
+                    ->where('id', $dato->id_bibliografia_declarada)
+                    ->first();
+                    
+                if ($bibliografia) {
+                    // Obtener información de la asignatura
+                    $asignatura = DB::table('asignaturas_departamentos')
+                        ->where('codigo_asignatura', $dato->codigo_asignatura)
+                        ->first();
+                        
+                    if ($asignatura) {
+                        $asignaturaInfo = DB::table('asignaturas')
+                            ->where('id', $asignatura->asignatura_id)
+                            ->first();
+                            
+                        $datosBasicosProcesados->push([
+                            'codigo_asignatura' => $dato->codigo_asignatura,
+                            'nombre_asignatura' => $asignaturaInfo->nombre ?? 'N/A',
+                            'tipo_asignatura' => $asignaturaInfo->tipo ?? 'N/A',
+                            'titulo_declarado' => $bibliografia->titulo,
+                            'anio_edicion' => $bibliografia->anio_publicacion,
+                            'ejemplares_impresos' => $dato->ejemplares_impresos,
+                            'ejemplares_digitales' => $dato->ejemplares_digitales,
+                            'cobertura' => $dato->disponible ? 100 : 0,
+                            'id_bibliografia_declarada' => $dato->id_bibliografia_declarada
+                        ]);
+                    }
+                }
+            }
+        }
+
+        // Procesar datos complementarios
+        $datosComplementariosProcesados = collect();
+        if (!$datosComplementarios->isEmpty()) {
+            foreach ($datosComplementarios as $dato) {
+                // Obtener información de la bibliografía declarada
+                $bibliografia = DB::table('bibliografias_declaradas')
+                    ->where('id', $dato->id_bibliografia_declarada)
+                    ->first();
+                    
+                if ($bibliografia) {
+                    // Obtener información de la asignatura
+                    $asignatura = DB::table('asignaturas_departamentos')
+                        ->where('codigo_asignatura', $dato->codigo_asignatura)
+                        ->first();
+                        
+                    if ($asignatura) {
+                        $asignaturaInfo = DB::table('asignaturas')
+                            ->where('id', $asignatura->asignatura_id)
+                            ->first();
+                            
+                        $datosComplementariosProcesados->push([
+                            'codigo_asignatura' => $dato->codigo_asignatura,
+                            'nombre_asignatura' => $asignaturaInfo->nombre ?? 'N/A',
+                            'tipo_asignatura' => $asignaturaInfo->tipo ?? 'N/A',
+                            'titulo_declarado' => $bibliografia->titulo,
+                            'anio_edicion' => $bibliografia->anio_publicacion,
+                            'ejemplares_impresos' => $dato->ejemplares_impresos,
+                            'ejemplares_digitales' => $dato->ejemplares_digitales,
+                            'cobertura' => $dato->disponible ? 100 : 0,
+                            'id_bibliografia_declarada' => $dato->id_bibliografia_declarada
+                        ]);
+                    }
+                }
+            }
+        }
+
+        // Calcular coberturas totales
+        $coberturaBasica = $datosBasicosProcesados->isNotEmpty() 
+            ? round(($datosBasicosProcesados->where('cobertura', '>', 0)->count() / $datosBasicosProcesados->count()) * 100, 2)
+            : 0;
+            
+        $coberturaComplementaria = $datosComplementariosProcesados->isNotEmpty()
+            ? round(($datosComplementariosProcesados->where('cobertura', '>', 0)->count() / $datosComplementariosProcesados->count()) * 100, 2)
+            : 0;
+
+        // Calcular totales
+        $totalesBasica = [
+            'titulos_declarados' => $datosBasicosProcesados->count(),
+            'titulos_disponibles' => $datosBasicosProcesados->where('cobertura', '>', 0)->count()
+        ];
+        
+        $totalesComplementaria = [
+            'titulos_declarados' => $datosComplementariosProcesados->count(),
+            'titulos_disponibles' => $datosComplementariosProcesados->where('cobertura', '>', 0)->count()
+        ];
+
+        // Agrupar por asignatura
+        $asignaturas = [];
+        foreach ($datosBasicosProcesados as $item) {
+            $codigo = $item['codigo_asignatura'];
+            if (!isset($asignaturas[$codigo])) {
+                $asignaturas[$codigo] = [
+                    'nombre' => $item['nombre_asignatura'],
+                    'tipo' => $item['tipo_asignatura'],
+                    'basica' => [],
+                    'complementaria' => []
+                ];
+            }
+            $asignaturas[$codigo]['basica'][] = $item;
+        }
+        foreach ($datosComplementariosProcesados as $item) {
+            $codigo = $item['codigo_asignatura'];
+            if (!isset($asignaturas[$codigo])) {
+                $asignaturas[$codigo] = [
+                    'nombre' => $item['nombre_asignatura'],
+                    'tipo' => $item['tipo_asignatura'],
+                    'basica' => [],
+                    'complementaria' => []
+                ];
+            }
+            $asignaturas[$codigo]['complementaria'][] = $item;
+        }
+
+        // Renderizar la vista
+        $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
+        $template = $view->load('reportes/coberturas/carrera_fusionado.twig');
+        
+        $html = $template->render([
+            'carrera' => $carrera,
+            'datos_basicos' => $datosBasicosProcesados,
+            'datos_complementarios' => $datosComplementariosProcesados,
+            'asignaturas' => $asignaturas,
+            'cobertura_basica' => $coberturaBasica,
+            'cobertura_complementaria' => $coberturaComplementaria,
+            'totales_basica' => $totalesBasica,
+            'totales_complementaria' => $totalesComplementaria,
+            'sin_datos' => false,
+            'session' => $_SESSION ?? [],
+            'app_url' => app_url()
+        ]);
+        
+        error_log('ReporteController@reporteCoberturasFusionado: Vista renderizada correctamente');
+        $response->getBody()->write($html);
+        return $response->withHeader('Content-Type', 'text/html');
+    }
+
+    // Exportar reporte fusionado a Excel
+    public function exportarCoberturasFusionadoExcel(Request $request, Response $response, array $args): Response
+    {
+        error_log('ReporteController@exportarCoberturasFusionadoExcel: Iniciando método');
+        
+        $sedeId = $args['sede_id'];
+        $carreraId = $args['carrera_id'];
+        
+        // Obtener información de la carrera
+        $carrera = DB::table('vw_mallas')
+            ->where('id_sede', $sedeId)
+            ->where('id_carrera', $carreraId)
+            ->select(
+                'sede as sede',
+                'codigo_carrera as codigo',
+                'carrera as nombre'
+            )
+            ->first();
+            
+        if (!$carrera) {
+            $response->getBody()->write(json_encode(['error' => 'Carrera no encontrada']));
+            return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
+        }
+
+        // Obtener datos de cobertura básica
+        $datosBasicos = DB::table('reporte_coberturas_carreras_basicas')
+            ->where('codigo_carrera', $carrera->codigo)
+            ->whereYear('fecha_medicion', date('Y'))
+            ->get();
+
+        // Obtener datos de cobertura complementaria
+        $datosComplementarios = DB::table('reporte_coberturas_carreras_complementarias')
+            ->where('codigo_carrera', $carrera->codigo)
+            ->whereYear('fecha_medicion', date('Y'))
+            ->get();
+
+        // Si no hay datos, retornar error
+        if ($datosBasicos->isEmpty() && $datosComplementarios->isEmpty()) {
+            $response->getBody()->write(json_encode(['error' => 'No hay reportes generados para esta carrera']));
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+        }
+
+        // Procesar y agrupar datos igual que en la vista fusionada
+        $datosBasicosProcesados = collect();
+        foreach ($datosBasicos as $dato) {
+            $bibliografia = DB::table('bibliografias_declaradas')->where('id', $dato->id_bibliografia_declarada)->first();
+            $asignatura = DB::table('asignaturas_departamentos')->where('codigo_asignatura', $dato->codigo_asignatura)->first();
+            if ($bibliografia && $asignatura) {
+                $asignaturaInfo = DB::table('asignaturas')->where('id', $asignatura->asignatura_id)->first();
+                $datosBasicosProcesados->push([
+                    'codigo_asignatura' => $dato->codigo_asignatura,
+                    'nombre_asignatura' => $asignaturaInfo->nombre ?? 'N/A',
+                    'tipo_asignatura' => $asignaturaInfo->tipo ?? 'N/A',
+                    'titulo_declarado' => $bibliografia->titulo,
+                    'anio_edicion' => $bibliografia->anio_publicacion,
+                    'ejemplares_impresos' => $dato->no_ejem_imp,
+                    'ejemplares_digitales' => $dato->no_ejem_dig,
+                    'cobertura' => $dato->no_bib_disponible_basica ? 100 : 0
+                ]);
+            }
+        }
+        $datosComplementariosProcesados = collect();
+        foreach ($datosComplementarios as $dato) {
+            $bibliografia = DB::table('bibliografias_declaradas')->where('id', $dato->id_bibliografia_declarada)->first();
+            $asignatura = DB::table('asignaturas_departamentos')->where('codigo_asignatura', $dato->codigo_asignatura)->first();
+            if ($bibliografia && $asignatura) {
+                $asignaturaInfo = DB::table('asignaturas')->where('id', $asignatura->asignatura_id)->first();
+                $datosComplementariosProcesados->push([
+                    'codigo_asignatura' => $dato->codigo_asignatura,
+                    'nombre_asignatura' => $asignaturaInfo->nombre ?? 'N/A',
+                    'tipo_asignatura' => $asignaturaInfo->tipo ?? 'N/A',
+                    'titulo_declarado' => $bibliografia->titulo,
+                    'anio_edicion' => $bibliografia->anio_publicacion,
+                    'ejemplares_impresos' => $dato->no_ejem_imp,
+                    'ejemplares_digitales' => $dato->no_ejem_dig,
+                    'cobertura' => $dato->no_bib_disponible_complementaria ? 100 : 0
+                ]);
+            }
+        }
+        // Agrupar por asignatura
+        $asignaturas = [];
+        foreach ($datosBasicosProcesados as $item) {
+            $codigo = $item['codigo_asignatura'];
+            if (!isset($asignaturas[$codigo])) {
+                $asignaturas[$codigo] = [
+                    'nombre' => $item['nombre_asignatura'],
+                    'tipo' => $item['tipo_asignatura'],
+                    'basica' => [],
+                    'complementaria' => []
+                ];
+            }
+            $asignaturas[$codigo]['basica'][] = $item;
+        }
+        foreach ($datosComplementariosProcesados as $item) {
+            $codigo = $item['codigo_asignatura'];
+            if (!isset($asignaturas[$codigo])) {
+                $asignaturas[$codigo] = [
+                    'nombre' => $item['nombre_asignatura'],
+                    'tipo' => $item['tipo_asignatura'],
+                    'basica' => [],
+                    'complementaria' => []
+                ];
+            }
+            $asignaturas[$codigo]['complementaria'][] = $item;
+        }
+        // Crear hoja fusionada
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Reporte Fusionado');
+        $headers = [
+            'Tipo de actividad curricular',
+            'Nombre de la actividad o asignatura',
+            'Título (Obligatoria)', 'Año (Obligatoria)', 'N° ejemplares físicos (Obligatoria)', 'N° ejemplares electrónicos (Obligatoria)', '% Cobertura (Obligatoria)',
+            'Título (Complementaria)', 'Año (Complementaria)', 'N° ejemplares físicos (Complementaria)', 'N° ejemplares electrónicos (Complementaria)', '% Cobertura (Complementaria)'
+        ];
+        $sheet->fromArray($headers, null, 'A1');
+        $rowNum = 2;
+        foreach ($asignaturas as $asignatura) {
+            $len_basica = count($asignatura['basica']);
+            $len_complementaria = count($asignatura['complementaria']);
+            $max_filas = max($len_basica, $len_complementaria);
+            for ($i = 0; $i < $max_filas; $i++) {
+                $b = $asignatura['basica'][$i] ?? null;
+                $c = $asignatura['complementaria'][$i] ?? null;
+                $sheet->setCellValue('A'.$rowNum, $i == 0 ? $asignatura['tipo'] : '');
+                $sheet->setCellValue('B'.$rowNum, $i == 0 ? $asignatura['nombre'] : '');
+                // Básica
+                $sheet->setCellValue('C'.$rowNum, $b['titulo_declarado'] ?? '');
+                $sheet->setCellValue('D'.$rowNum, $b['anio_edicion'] ?? '');
+                $sheet->setCellValue('E'.$rowNum, $b['ejemplares_impresos'] ?? '');
+                $sheet->setCellValue('F'.$rowNum, $b['ejemplares_digitales'] ?? '');
+                $sheet->setCellValue('G'.$rowNum, isset($b['cobertura']) ? $b['cobertura'].'%' : '');
+                // Complementaria
+                $sheet->setCellValue('H'.$rowNum, $c['titulo_declarado'] ?? '');
+                $sheet->setCellValue('I'.$rowNum, $c['anio_edicion'] ?? '');
+                $sheet->setCellValue('J'.$rowNum, $c['ejemplares_impresos'] ?? '');
+                $sheet->setCellValue('K'.$rowNum, $c['ejemplares_digitales'] ?? '');
+                $sheet->setCellValue('L'.$rowNum, isset($c['cobertura']) ? $c['cobertura'].'%' : '');
+                $rowNum++;
+            }
+        }
+        // Formato: negrita encabezados y bordes
+        $sheet->getStyle('A1:L1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:L'.($rowNum-1))->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+        foreach (range('A','L') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+        $filename = 'Reporte_Fusionado_Coberturas_' . $carrera->sede . '_' . $carrera->codigo . '_' . str_replace(' ', '_', $carrera->nombre) . '.xlsx';
+        $filepath = __DIR__ . '/../../public/exports/' . $filename;
+        if (!is_dir(dirname($filepath))) {
+            mkdir(dirname($filepath), 0755, true);
+        }
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($filepath);
+        $response->getBody()->write(json_encode([
+            'url' => '/biblioges/exports/' . $filename
+        ]));
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    // Guardar reporte fusionado
+    public function guardarCoberturaFusionado(Request $request, Response $response, array $args): Response
+    {
+        error_log('ReporteController@guardarCoberturaFusionado: Iniciando método');
+        
+        $sedeId = $args['sede_id'];
+        $carreraId = $args['carrera_id'];
+        
+        $body = $request->getBody()->getContents();
+        $data = json_decode($body, true);
+        
+        try {
+            if (!$data) {
+                $response->getBody()->write(json_encode(['error' => 'Datos inválidos']));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            }
+            
+            // Obtener el código de la carrera
+            $carrera = DB::table('vw_mallas')
+                ->where('id_sede', $sedeId)
+                ->where('id_carrera', $carreraId)
+                ->select('codigo_carrera as codigo')
+                ->first();
+                
+            if (!$carrera) {
+                $response->getBody()->write(json_encode(['error' => 'Carrera no encontrada']));
+                return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
+            }
+
+            $response->getBody()->write(json_encode([
+                'success' => true, 
+                'message' => 'Reporte fusionado guardado correctamente'
+            ]));
+            
+            return $response->withHeader('Content-Type', 'application/json');
+            
+        } catch (\Exception $e) {
+            error_log('Error en guardarCoberturaFusionado: ' . $e->getMessage());
+            $response->getBody()->write(json_encode(['error' => 'Error al guardar el reporte: ' . $e->getMessage()]));
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        }
+    }
 } 
