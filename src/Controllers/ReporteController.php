@@ -612,21 +612,60 @@ class ReporteController extends BaseController
             ->get();
         error_log('ReporteController@coberturaBasica: Total carreras encontradas: ' . count($carreras));
 
-        // Obtener datos de cobertura básica y complementaria para el año actual
-        $coberturasBasicas = DB::table('vw_car_cobertura_basica')
-            ->where('anho', $anioActual)
-            ->pluck('cobertura_basica', 'codigo_carrera')
-            ->toArray();
-            
-        $coberturasComplementarias = DB::table('vw_car_cobertura_complementaria')
-            ->where('anho', $anioActual)
-            ->pluck('cobertura_complementaria', 'codigo_carrera')
-            ->toArray();
+        // Cobertura básica por carrera
+        $coberturasBasicas = [];
+        $carrerasCodigos = $carreras->pluck('codigo');
+        foreach ($carrerasCodigos as $codigoCarrera) {
+            $ultimaFecha = DB::table('reporte_coberturas_carreras_basicas')
+                ->where('codigo_carrera', $codigoCarrera)
+                ->whereYear('fecha_medicion', $anioActual)
+                ->max('fecha_medicion');
+            if ($ultimaFecha) {
+                $cobertura = DB::table('reporte_coberturas_carreras_basicas')
+                    ->select(
+                        DB::raw('COUNT(DISTINCT id_bibliografia_declarada) AS total_declaradas'),
+                        DB::raw('COUNT(DISTINCT CASE WHEN no_bib_disponible_basica > 0 THEN id_bibliografia_declarada END) AS total_disponibles'),
+                        DB::raw('ROUND(LEAST(COUNT(DISTINCT CASE WHEN no_bib_disponible_basica > 0 THEN id_bibliografia_declarada END) * 100.0 / NULLIF(COUNT(DISTINCT id_bibliografia_declarada), 0), 100), 2) AS cobertura')
+                    )
+                    ->where('codigo_carrera', $codigoCarrera)
+                    ->where('fecha_medicion', $ultimaFecha)
+                    ->first();
+                $coberturasBasicas[$codigoCarrera] = $cobertura->cobertura ?? 'Sin información';
+            } else {
+                $coberturasBasicas[$codigoCarrera] = 'Sin información';
+            }
+        }
+
+        // Cobertura complementaria por carrera
+        $coberturasComplementarias = [];
+        foreach ($carrerasCodigos as $codigoCarrera) {
+            $ultimaFecha = DB::table('reporte_coberturas_carreras_complementarias')
+                ->where('codigo_carrera', $codigoCarrera)
+                ->whereYear('fecha_medicion', $anioActual)
+                ->max('fecha_medicion');
+            if ($ultimaFecha) {
+                $cobertura = DB::table('reporte_coberturas_carreras_complementarias')
+                    ->select(
+                        DB::raw('COUNT(DISTINCT id_bibliografia_declarada) AS total_declaradas'),
+                        DB::raw('COUNT(DISTINCT CASE WHEN no_bib_disponible_complementaria > 0 THEN id_bibliografia_declarada END) AS total_disponibles'),
+                        DB::raw('ROUND(LEAST(COUNT(DISTINCT CASE WHEN no_bib_disponible_complementaria > 0 THEN id_bibliografia_declarada END) * 100.0 / NULLIF(COUNT(DISTINCT id_bibliografia_declarada), 0), 100), 2) AS cobertura')
+                    )
+                    ->where('codigo_carrera', $codigoCarrera)
+                    ->where('fecha_medicion', $ultimaFecha)
+                    ->first();
+                $coberturasComplementarias[$codigoCarrera] = $cobertura->cobertura ?? 'Sin información';
+            } else {
+                $coberturasComplementarias[$codigoCarrera] = 'Sin información';
+            }
+        }
 
         // Agregar datos de cobertura a cada carrera
         foreach ($carreras as $carrera) {
-            $carrera->cobertura_basica = $coberturasBasicas[$carrera->codigo] ?? null;
-            $carrera->cobertura_complementaria = $coberturasComplementarias[$carrera->codigo] ?? null;
+            $carreraCodigo = $carrera->codigo ?? null;
+            $coberturaBasica = $coberturasBasicas[$carreraCodigo] ?? 'Sin información';
+            $coberturaComplementaria = $coberturasComplementarias[$carreraCodigo] ?? 'Sin información';
+            $carrera->cobertura_basica = $coberturaBasica;
+            $carrera->cobertura_complementaria = $coberturaComplementaria;
         }
 
         $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
@@ -872,7 +911,6 @@ class ReporteController extends BaseController
         ];
 
         // Obtener todas las bibliografías declaradas únicas de la carrera (sin duplicados)
-        // Crear una consulta que maneje tanto asignaturas regulares como de formación
         $codigosAsignaturas = $asignaturas->pluck('codigo');
 
         if ($codigosAsignaturas->isEmpty()) {
@@ -882,19 +920,22 @@ class ReporteController extends BaseController
             $totalesCarrera['ejemplares_digitales'] = 0;
             $coberturaBasicaTotal = 0;
         } else {
-            // Solo contar bibliografías declaradas de las asignaturas visibles
+            // Agrupar por id de bibliografía declarada para evitar duplicados
             $bibliografiasDeclaradasUnicas = DB::table('asignaturas_bibliografias')
                 ->join('asignaturas_departamentos', 'asignaturas_bibliografias.asignatura_id', '=', 'asignaturas_departamentos.asignatura_id')
+                ->join('bibliografias_declaradas', 'asignaturas_bibliografias.bibliografia_id', '=', 'bibliografias_declaradas.id')
                 ->where('asignaturas_bibliografias.tipo_bibliografia', 'basica')
                 ->whereIn('asignaturas_departamentos.codigo_asignatura', $codigosAsignaturas)
-                ->distinct('asignaturas_bibliografias.bibliografia_id')
-                ->pluck('asignaturas_bibliografias.bibliografia_id');
+                ->select('bibliografias_declaradas.id')
+                ->distinct()
+                ->pluck('bibliografias_declaradas.id');
 
             $totalesCarrera['titulos_declarados'] = $bibliografiasDeclaradasUnicas->count();
 
-            // Solo contar bibliografías disponibles de las asignaturas visibles
+            // Solo contar bibliografías disponibles únicas por id
             $bibliografiasDisponiblesUnicas = DB::table('asignaturas_bibliografias')
                 ->join('asignaturas_departamentos', 'asignaturas_bibliografias.asignatura_id', '=', 'asignaturas_departamentos.asignatura_id')
+                ->join('bibliografias_declaradas', 'asignaturas_bibliografias.bibliografia_id', '=', 'bibliografias_declaradas.id')
                 ->join('bibliografias_disponibles', 'asignaturas_bibliografias.bibliografia_id', '=', 'bibliografias_disponibles.bibliografia_declarada_id')
                 ->where('asignaturas_bibliografias.tipo_bibliografia', 'basica')
                 ->where('bibliografias_disponibles.estado', 1)
@@ -913,8 +954,9 @@ class ReporteController extends BaseController
                                 });
                           });
                 })
-                ->distinct('asignaturas_bibliografias.bibliografia_id')
-                ->pluck('asignaturas_bibliografias.bibliografia_id');
+                ->select('bibliografias_declaradas.id')
+                ->distinct()
+                ->pluck('bibliografias_declaradas.id');
 
             $totalesCarrera['titulos_disponibles'] = $bibliografiasDisponiblesUnicas->count();
 
@@ -1422,19 +1464,22 @@ class ReporteController extends BaseController
             $totalesCarrera['ejemplares_digitales'] = 0;
             $coberturaBasicaTotal = 0;
         } else {
-            // Solo contar bibliografías declaradas de las asignaturas visibles
+            // Agrupar por id de bibliografía declarada para evitar duplicados
             $bibliografiasDeclaradasUnicas = DB::table('asignaturas_bibliografias')
                 ->join('asignaturas_departamentos', 'asignaturas_bibliografias.asignatura_id', '=', 'asignaturas_departamentos.asignatura_id')
+                ->join('bibliografias_declaradas', 'asignaturas_bibliografias.bibliografia_id', '=', 'bibliografias_declaradas.id')
                 ->where('asignaturas_bibliografias.tipo_bibliografia', 'basica')
                 ->whereIn('asignaturas_departamentos.codigo_asignatura', $codigosAsignaturas)
-                ->distinct('asignaturas_bibliografias.bibliografia_id')
-                ->pluck('asignaturas_bibliografias.bibliografia_id');
+                ->select('bibliografias_declaradas.id')
+                ->distinct()
+                ->pluck('bibliografias_declaradas.id');
 
             $totalesCarrera['titulos_declarados'] = $bibliografiasDeclaradasUnicas->count();
 
-            // Solo contar bibliografías disponibles de las asignaturas visibles
+            // Solo contar bibliografías disponibles únicas por id
             $bibliografiasDisponiblesUnicas = DB::table('asignaturas_bibliografias')
                 ->join('asignaturas_departamentos', 'asignaturas_bibliografias.asignatura_id', '=', 'asignaturas_departamentos.asignatura_id')
+                ->join('bibliografias_declaradas', 'asignaturas_bibliografias.bibliografia_id', '=', 'bibliografias_declaradas.id')
                 ->join('bibliografias_disponibles', 'asignaturas_bibliografias.bibliografia_id', '=', 'bibliografias_disponibles.bibliografia_declarada_id')
                 ->where('asignaturas_bibliografias.tipo_bibliografia', 'basica')
                 ->where('bibliografias_disponibles.estado', 1)
@@ -1453,8 +1498,9 @@ class ReporteController extends BaseController
                                 });
                           });
                 })
-                ->distinct('asignaturas_bibliografias.bibliografia_id')
-                ->pluck('asignaturas_bibliografias.bibliografia_id');
+                ->select('bibliografias_declaradas.id')
+                ->distinct()
+                ->pluck('bibliografias_declaradas.id');
 
             $totalesCarrera['titulos_disponibles'] = $bibliografiasDisponiblesUnicas->count();
 
@@ -1977,19 +2023,22 @@ class ReporteController extends BaseController
                 $totalesCarrera['ejemplares_digitales'] = 0;
                 $coberturaBasicaTotal = 0;
             } else {
-                // Solo contar bibliografías declaradas de las asignaturas visibles
+                // Agrupar por id de bibliografía declarada para evitar duplicados
                 $bibliografiasDeclaradasUnicas = DB::table('asignaturas_bibliografias')
                     ->join('asignaturas_departamentos', 'asignaturas_bibliografias.asignatura_id', '=', 'asignaturas_departamentos.asignatura_id')
+                    ->join('bibliografias_declaradas', 'asignaturas_bibliografias.bibliografia_id', '=', 'bibliografias_declaradas.id')
                     ->where('asignaturas_bibliografias.tipo_bibliografia', 'basica')
                     ->whereIn('asignaturas_departamentos.codigo_asignatura', $codigosAsignaturas)
-                    ->distinct('asignaturas_bibliografias.bibliografia_id')
-                    ->pluck('asignaturas_bibliografias.bibliografia_id');
+                    ->select('bibliografias_declaradas.id')
+                    ->distinct()
+                    ->pluck('bibliografias_declaradas.id');
 
                 $totalesCarrera['titulos_declarados'] = $bibliografiasDeclaradasUnicas->count();
 
-                // Solo contar bibliografías disponibles de las asignaturas visibles
+                // Solo contar bibliografías disponibles únicas por id
                 $bibliografiasDisponiblesUnicas = DB::table('asignaturas_bibliografias')
                     ->join('asignaturas_departamentos', 'asignaturas_bibliografias.asignatura_id', '=', 'asignaturas_departamentos.asignatura_id')
+                    ->join('bibliografias_declaradas', 'asignaturas_bibliografias.bibliografia_id', '=', 'bibliografias_declaradas.id')
                     ->join('bibliografias_disponibles', 'asignaturas_bibliografias.bibliografia_id', '=', 'bibliografias_disponibles.bibliografia_declarada_id')
                     ->where('asignaturas_bibliografias.tipo_bibliografia', 'basica')
                     ->where('bibliografias_disponibles.estado', 1)
@@ -2008,8 +2057,9 @@ class ReporteController extends BaseController
                                     });
                               });
                     })
-                    ->distinct('asignaturas_bibliografias.bibliografia_id')
-                    ->pluck('asignaturas_bibliografias.bibliografia_id');
+                    ->select('bibliografias_declaradas.id')
+                    ->distinct()
+                    ->pluck('bibliografias_declaradas.id');
 
                 $totalesCarrera['titulos_disponibles'] = $bibliografiasDisponiblesUnicas->count();
 
@@ -2767,19 +2817,22 @@ class ReporteController extends BaseController
             $totalesCarrera['ejemplares_digitales'] = 0;
             $coberturaComplementariaTotal = 0;
                 } else {
-            // Solo contar bibliografías declaradas de las asignaturas visibles
+            // Agrupar por id de bibliografía declarada para evitar duplicados
             $bibliografiasDeclaradasUnicas = DB::table('asignaturas_bibliografias')
                 ->join('asignaturas_departamentos', 'asignaturas_bibliografias.asignatura_id', '=', 'asignaturas_departamentos.asignatura_id')
+                ->join('bibliografias_declaradas', 'asignaturas_bibliografias.bibliografia_id', '=', 'bibliografias_declaradas.id')
                 ->where('asignaturas_bibliografias.tipo_bibliografia', 'complementaria')
                 ->whereIn('asignaturas_departamentos.codigo_asignatura', $codigosAsignaturas)
-                ->distinct('asignaturas_bibliografias.bibliografia_id')
-                ->pluck('asignaturas_bibliografias.bibliografia_id');
+                ->select('bibliografias_declaradas.id')
+                ->distinct()
+                ->pluck('bibliografias_declaradas.id');
 
             $totalesCarrera['titulos_declarados'] = $bibliografiasDeclaradasUnicas->count();
 
-            // Solo contar bibliografías disponibles de las asignaturas visibles
+            // Solo contar bibliografías disponibles únicas por id
             $bibliografiasDisponiblesUnicas = DB::table('asignaturas_bibliografias')
                 ->join('asignaturas_departamentos', 'asignaturas_bibliografias.asignatura_id', '=', 'asignaturas_departamentos.asignatura_id')
+                ->join('bibliografias_declaradas', 'asignaturas_bibliografias.bibliografia_id', '=', 'bibliografias_declaradas.id')
                 ->join('bibliografias_disponibles', 'asignaturas_bibliografias.bibliografia_id', '=', 'bibliografias_disponibles.bibliografia_declarada_id')
                 ->where('asignaturas_bibliografias.tipo_bibliografia', 'complementaria')
                 ->where('bibliografias_disponibles.estado', 1)
@@ -2798,8 +2851,9 @@ class ReporteController extends BaseController
                                 });
                           });
                 })
-                ->distinct('asignaturas_bibliografias.bibliografia_id')
-                ->pluck('asignaturas_bibliografias.bibliografia_id');
+                ->select('bibliografias_declaradas.id')
+                ->distinct()
+                ->pluck('bibliografias_declaradas.id');
 
             $totalesCarrera['titulos_disponibles'] = $bibliografiasDisponiblesUnicas->count();
 
@@ -3512,39 +3566,43 @@ class ReporteController extends BaseController
                 $totalesCarrera['ejemplares_digitales'] = 0;
                 $coberturaComplementariaTotal = 0;
             } else {
-                // Solo contar bibliografías declaradas de las asignaturas visibles
+                // Agrupar por id de bibliografía declarada para evitar duplicados
                 $bibliografiasDeclaradasUnicas = DB::table('asignaturas_bibliografias')
                     ->join('asignaturas_departamentos', 'asignaturas_bibliografias.asignatura_id', '=', 'asignaturas_departamentos.asignatura_id')
+                    ->join('bibliografias_declaradas', 'asignaturas_bibliografias.bibliografia_id', '=', 'bibliografias_declaradas.id')
                     ->where('asignaturas_bibliografias.tipo_bibliografia', 'complementaria')
                     ->whereIn('asignaturas_departamentos.codigo_asignatura', $codigosAsignaturas)
-                    ->distinct('asignaturas_bibliografias.bibliografia_id')
-                    ->pluck('asignaturas_bibliografias.bibliografia_id');
+                    ->select('bibliografias_declaradas.id')
+                    ->distinct()
+                    ->pluck('bibliografias_declaradas.id');
 
                 $totalesCarrera['titulos_declarados'] = $bibliografiasDeclaradasUnicas->count();
 
-                // Solo contar bibliografías disponibles de las asignaturas visibles
+                // Solo contar bibliografías disponibles únicas por id
                 $bibliografiasDisponiblesUnicas = DB::table('asignaturas_bibliografias')
                     ->join('asignaturas_departamentos', 'asignaturas_bibliografias.asignatura_id', '=', 'asignaturas_departamentos.asignatura_id')
+                    ->join('bibliografias_declaradas', 'asignaturas_bibliografias.bibliografia_id', '=', 'bibliografias_declaradas.id')
                     ->join('bibliografias_disponibles', 'asignaturas_bibliografias.bibliografia_id', '=', 'bibliografias_disponibles.bibliografia_declarada_id')
                     ->where('asignaturas_bibliografias.tipo_bibliografia', 'complementaria')
                     ->where('bibliografias_disponibles.estado', 1)
                     ->whereIn('asignaturas_departamentos.codigo_asignatura', $codigosAsignaturas)
-                            ->where(function ($query) use ($sedeId) {
+                    ->where(function ($query) use ($sedeId) {
                         $query->where('bibliografias_disponibles.disponibilidad', 'electronico')
                               ->orWhere('bibliografias_disponibles.disponibilidad', 'ambos')
-                                      ->orWhere(function ($q) use ($sedeId) {
+                              ->orWhere(function ($q) use ($sedeId) {
                                   $q->where('bibliografias_disponibles.disponibilidad', 'impreso')
                                     ->whereExists(function ($subQuery) use ($sedeId) {
                                         $subQuery->select(DB::raw(1))
-                                                    ->from('bibliografias_disponibles_sedes')
-                                                    ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
-                                                    ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
-                                                    ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
-                                            });
-                                      });
-                            })
-                    ->distinct('asignaturas_bibliografias.bibliografia_id')
-                    ->pluck('asignaturas_bibliografias.bibliografia_id');
+                                                ->from('bibliografias_disponibles_sedes')
+                                                ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
+                                                ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
+                                                ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
+                                    });
+                              });
+                    })
+                    ->select('bibliografias_declaradas.id')
+                    ->distinct()
+                    ->pluck('bibliografias_declaradas.id');
 
                 $totalesCarrera['titulos_disponibles'] = $bibliografiasDisponiblesUnicas->count();
 
