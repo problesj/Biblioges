@@ -14,30 +14,6 @@ CREATE TABLE IF NOT EXISTS sedes (
     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- Tabla de facultades
-CREATE TABLE IF NOT EXISTS facultades (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    codigo VARCHAR(10) NOT NULL UNIQUE,
-    nombre VARCHAR(250) NOT NULL,
-    sede_id INT NOT NULL,
-    estado TINYINT(1) DEFAULT 1,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE RESTRICT
-) ENGINE=InnoDB;
-
--- Tabla de departamentos
-CREATE TABLE IF NOT EXISTS departamentos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    codigo VARCHAR(10) NOT NULL UNIQUE,
-    nombre VARCHAR(250) NOT NULL,
-    facultad_id INT NOT NULL,
-    estado TINYINT(1) DEFAULT 1,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (facultad_id) REFERENCES facultades(id) ON DELETE RESTRICT
-) ENGINE=InnoDB;
-
 -- Tabla de carreras
 CREATE TABLE IF NOT EXISTS carreras (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -408,15 +384,13 @@ INSERT INTO sedes (codigo, nombre) VALUES
 ('SEDE2', 'Sede Norte'),
 ('SEDE3', 'Sede Sur');
 
-INSERT INTO facultades (codigo, nombre, sede_id) VALUES 
-('FAC1', 'Facultad de Ingeniería', 1),
-('FAC2', 'Facultad de Ciencias', 1),
-('FAC3', 'Facultad de Humanidades', 2);
+-- Sede especial para casos sin sede
+INSERT INTO sedes (id, codigo, nombre) VALUES (0, 'S000', 'Sin sede')
+    ON DUPLICATE KEY UPDATE nombre = 'Sin sede';
 
-INSERT INTO departamentos (codigo, nombre, facultad_id) VALUES 
-('DEP1', 'Departamento de Sistemas', 1),
-('DEP2', 'Departamento de Electrónica', 1),
-('DEP3', 'Departamento de Matemáticas', 2);
+-- Unidad especial para casos sin unidad, vinculada a 'Sin sede'
+INSERT INTO unidades (id, codigo, nombre, sede_id, id_unidad_padre) VALUES (0, 'SIN_UNIDAD', 'Sin unidad', 0, NULL)
+    ON DUPLICATE KEY UPDATE nombre = 'Sin unidad', sede_id = 0, id_unidad_padre = NULL;
 
 INSERT INTO carreras (nombre, tipo_programa, estado) VALUES 
 ('Ingeniería en Sistemas', 'P', 1),
@@ -663,7 +637,9 @@ JOIN unidades ON asignaturas_departamentos.id_unidad = unidades.id
 JOIN sedes ON unidades.sede_id = sedes.id
 JOIN carreras_espejos ON mallas.carrera_id = carreras_espejos.carrera_id
 JOIN carreras ON mallas.carrera_id = carreras.id
-JOIN asignaturas_departamentos AS asignaturas_departamentos_formacion ON asignaturas_formacion.id = asignaturas_departamentos_formacion.asignatura_id;
+JOIN asignaturas_departamentos AS asignaturas_departamentos_formacion ON asignaturas_formacion.id = asignaturas_departamentos_formacion.asignatura_id
+WHERE (sedes.id = 0)
+ORDER BY codigo_carrera, sede, asignatura;
 
 -- Vista de asignaturas con bibliografías declaradas
 CREATE OR REPLACE VIEW vw_asig_bib_declarada AS

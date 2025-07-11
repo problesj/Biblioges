@@ -60,15 +60,6 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->post('/sedes/{id}/update', [SedeController::class, 'update']);
     $group->post('/sedes/{id}/delete', [SedeController::class, 'destroy']);
 
-    // Rutas de facultades (movidas dentro del grupo protegido)
-    $group->get('/facultades', [FacultadController::class, 'index']);
-    $group->get('/facultades/create', [FacultadController::class, 'create']);
-    $group->post('/facultades/store', [FacultadController::class, 'store']);
-    $group->post('/facultades/{id}/delete', [FacultadController::class, 'destroy']);
-    $group->get('/facultades/{id}/edit', [FacultadController::class, 'edit']);
-    $group->post('/facultades/{id}/update', [FacultadController::class, 'update']);
-    $group->get('/facultades/{id}', [FacultadController::class, 'show']);
-
     // API para obtener unidades por sede
     $group->get('/api/unidades/sede/{sedeId}', [ApiController::class, 'getUnidadesBySede']);
     $group->get('/api/unidades', [ApiController::class, 'getUnidadesBySede']);
@@ -175,17 +166,6 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->get('/autores/duplicados-globales', [src\Controllers\AutorController::class, 'buscarDuplicadosGlobales']);
     $group->post('/autores/fusionar-grupo', [src\Controllers\AutorController::class, 'fusionarGrupo']);
     $group->post('/autores/{id}/fusionar/{duplicado_id}', [src\Controllers\AutorController::class, 'fusionar']);
-
-    // Rutas para Departamentos
-    $group->get('/departamentos', [DepartamentoController::class, 'index']);
-    $group->get('/departamentos/create', [DepartamentoController::class, 'create']);
-    $group->post('/departamentos', [DepartamentoController::class, 'store']);
-    $group->get('/departamentos/{id}', [DepartamentoController::class, 'show']);
-    $group->get('/departamentos/{id}/edit', [DepartamentoController::class, 'edit']);
-    $group->post('/departamentos/{id}/update', [DepartamentoController::class, 'update']);
-    $group->post('/departamentos/{id}/delete', [DepartamentoController::class, 'destroy']);
-    // Rutas para obtener departamentos por facultad
-    $group->get('/departamentos/facultad/{facultad_id}', [DepartamentoController::class, 'getDepartamentosByFacultad'])->setName('departamentos.by.facultad');
 
     // Rutas para Usuarios
     $group->get('/usuarios', [UsuarioController::class, 'index']);
