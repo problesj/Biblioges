@@ -165,31 +165,31 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
                     </select>
                 </div>
                 <div class=\"col-md-4\">
-                    <label for=\"departamento\" class=\"form-label\">Departamento</label>
-                    <select class=\"form-select\" id=\"departamento\" name=\"departamento\">
-                        <option value=\"\">Todos los departamentos</option>
+                    <label for=\"unidad\" class=\"form-label\">Unidad</label>
+                    <select class=\"form-select\" id=\"unidad\" name=\"unidad\">
+                        <option value=\"\">Todas las unidades</option>
                         ";
         // line 49
         $context['_parent'] = $context;
-        $context['_seq'] = CoreExtension::ensureTraversable(($context["departamentos"] ?? null));
-        foreach ($context['_seq'] as $context["_key"] => $context["departamento"]) {
+        $context['_seq'] = CoreExtension::ensureTraversable(($context["unidades"] ?? null));
+        foreach ($context['_seq'] as $context["_key"] => $context["unidad"]) {
             // line 50
             yield "                            <option value=\"";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "id", [], "any", false, false, false, 50), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "id", [], "any", false, false, false, 50), "html", null, true);
             yield "\" ";
-            if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "departamento", [], "any", false, false, false, 50) == CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "id", [], "any", false, false, false, 50))) {
+            if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "unidad", [], "any", false, false, false, 50) == CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "id", [], "any", false, false, false, 50))) {
                 yield "selected";
             }
             yield ">
                                 ";
             // line 51
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "nombre", [], "any", false, false, false, 51), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "nombre", [], "any", false, false, false, 51), "html", null, true);
             yield "
                             </option>
                         ";
         }
         $_parent = $context['_parent'];
-        unset($context['_seq'], $context['_key'], $context['departamento'], $context['_parent']);
+        unset($context['_seq'], $context['_key'], $context['unidad'], $context['_parent']);
         $context = array_intersect_key($context, $_parent) + $_parent;
         // line 54
         yield "                    </select>
@@ -239,7 +239,7 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
                             <th>Vigencia</th>
                             <th>Periodicidad</th>
                             <th>Estado</th>
-                            <th>Departamentos</th>
+                            <th>Unidades</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -283,7 +283,7 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
                             </td>
                             <td style=\"white-space: pre-line\">";
             // line 104
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "departamentos", [], "any", true, true, false, 104)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "departamentos", [], "any", false, false, false, 104), "Sin departamento")) : ("Sin departamento")), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "unidades", [], "any", true, true, false, 104)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "unidades", [], "any", false, false, false, 104), "Sin unidad")) : ("Sin unidad")), "html", null, true);
             yield "</td>
                             <td>
                                 <div class=\"btn-group\">
@@ -580,12 +580,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     </select>
                 </div>
                 <div class=\"col-md-4\">
-                    <label for=\"departamento\" class=\"form-label\">Departamento</label>
-                    <select class=\"form-select\" id=\"departamento\" name=\"departamento\">
-                        <option value=\"\">Todos los departamentos</option>
-                        {% for departamento in departamentos %}
-                            <option value=\"{{ departamento.id }}\" {% if filtros.departamento == departamento.id %}selected{% endif %}>
-                                {{ departamento.nombre }}
+                    <label for=\"unidad\" class=\"form-label\">Unidad</label>
+                    <select class=\"form-select\" id=\"unidad\" name=\"unidad\">
+                        <option value=\"\">Todas las unidades</option>
+                        {% for unidad in unidades %}
+                            <option value=\"{{ unidad.id }}\" {% if filtros.unidad == unidad.id %}selected{% endif %}>
+                                {{ unidad.nombre }}
                             </option>
                         {% endfor %}
                     </select>
@@ -622,7 +622,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <th>Vigencia</th>
                             <th>Periodicidad</th>
                             <th>Estado</th>
-                            <th>Departamentos</th>
+                            <th>Unidades</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -638,7 +638,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     {{ asignatura.estado == '1' ? 'Activo' : 'Inactivo' }}
                                 </span>
                             </td>
-                            <td style=\"white-space: pre-line\">{{ asignatura.departamentos|default('Sin departamento') }}</td>
+                            <td style=\"white-space: pre-line\">{{ asignatura.unidades|default('Sin unidad') }}</td>
                             <td>
                                 <div class=\"btn-group\">
                                     <a href=\"{{ app_url }}asignaturas/{{ asignatura.id }}\" class=\"btn btn-sm btn-primary\" title=\"Ver\">

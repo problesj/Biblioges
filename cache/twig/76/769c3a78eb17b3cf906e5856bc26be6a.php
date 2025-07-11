@@ -203,7 +203,7 @@ class __TwigTemplate_ed3e3da13d7985b417858c2bf3734227 extends Template
                             <th>Código(s)</th>
                             <th>Nombre</th>
                             <th>Tipo de Programa</th>
-                            <th>Sede-Facultad</th>
+                            <th>Sede-Unidad</th>
                             <th class=\"text-center\">Estado</th>
                             <th>Acciones</th>
                         </tr>
@@ -257,7 +257,7 @@ $context["carrera"], "tipo_programa", [], "any", false, false, false, 101) == "O
             $context["sedes"] = Twig\Extension\CoreExtension::split($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sedes", [], "any", false, false, false, 108), ",");
             // line 109
             yield "                                ";
-            $context["facultades"] = Twig\Extension\CoreExtension::split($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "facultades", [], "any", false, false, false, 109), ",");
+            $context["unidades"] = Twig\Extension\CoreExtension::split($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "unidades", [], "any", false, false, false, 109), ",");
             // line 110
             yield "                                ";
             $context['_parent'] = $context;
@@ -280,7 +280,7 @@ $context["carrera"], "tipo_programa", [], "any", false, false, false, 101) == "O
                 yield "                                    ";
                 yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v0 = ($context["sedes"] ?? null)) && is_array($_v0) || $_v0 instanceof ArrayAccess ? ($_v0[$context["i"]] ?? null) : null), "html", null, true);
                 yield " - ";
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v1 = ($context["facultades"] ?? null)) && is_array($_v1) || $_v1 instanceof ArrayAccess ? ($_v1[$context["i"]] ?? null) : null), "html", null, true);
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v1 = ($context["unidades"] ?? null)) && is_array($_v1) || $_v1 instanceof ArrayAccess ? ($_v1[$context["i"]] ?? null) : null), "html", null, true);
                 if ( !CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "last", [], "any", false, false, false, 111)) {
                     yield "<br>";
                 }
@@ -593,7 +593,7 @@ $context["carrera"], "tipo_programa", [], "any", false, false, false, 101) == "O
                             <th>Código(s)</th>
                             <th>Nombre</th>
                             <th>Tipo de Programa</th>
-                            <th>Sede-Facultad</th>
+                            <th>Sede-Unidad</th>
                             <th class=\"text-center\">Estado</th>
                             <th>Acciones</th>
                         </tr>
@@ -616,9 +616,9 @@ $context["carrera"], "tipo_programa", [], "any", false, false, false, 101) == "O
                             </td>
                             <td>
                                 {% set sedes = carrera.sedes|split(',') %}
-                                {% set facultades = carrera.facultades|split(',') %}
+                                {% set unidades = carrera.unidades|split(',') %}
                                 {% for i in 0..sedes|length-1 %}
-                                    {{ sedes[i] }} - {{ facultades[i] }}{% if not loop.last %}<br>{% endif %}
+                                    {{ sedes[i] }} - {{ unidades[i] }}{% if not loop.last %}<br>{% endif %}
                                 {% endfor %}
                             </td>
                             <td class=\"text-center\">

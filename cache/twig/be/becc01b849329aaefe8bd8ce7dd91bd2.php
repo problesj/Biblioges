@@ -153,40 +153,38 @@ class __TwigTemplate_4f3539fdd19eb2947ee43ce6684c74bf extends Template
                     </div>
                 </div>
 
-                <!-- Datos por Departamento -->
-                <h5 class=\"mb-3 mt-4\">Datos por Departamento</h5>
+                <!-- Datos por Unidad -->
+                <h5 class=\"mb-3 mt-4\">Datos por Unidad</h5>
                 <div id=\"codigosContainer\">
                     <div class=\"row mb-3 codigo-row\">
                         <div class=\"col-md-4\">
-                            <label for=\"departamento_id_0\" class=\"form-label\">Departamento</label>
-                            <select class=\"form-select\" id=\"departamento_id_0\" name=\"codigos[0][departamento_id]\" required>
-                                <option value=\"\">Seleccione un departamento</option>
+                            <label for=\"id_unidad_0\" class=\"form-label\">Unidad</label>
+                            <select class=\"form-select\" id=\"id_unidad_0\" name=\"codigos[0][id_unidad]\" required>
+                                <option value=\"\">Seleccione una unidad</option>
                                 ";
         // line 93
         $context['_parent'] = $context;
-        $context['_seq'] = CoreExtension::ensureTraversable(($context["departamentos"] ?? null));
-        foreach ($context['_seq'] as $context["_key"] => $context["departamento"]) {
+        $context['_seq'] = CoreExtension::ensureTraversable(($context["unidades"] ?? null));
+        foreach ($context['_seq'] as $context["_key"] => $context["unidad"]) {
             // line 94
             yield "                                <option value=\"";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "id", [], "any", false, false, false, 94), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "id", [], "any", false, false, false, 94), "html", null, true);
             yield "\">
                                     ";
             // line 95
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "sede_nombre", [], "any", false, false, false, 95), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "sede_nombre", [], "any", false, false, false, 95), "html", null, true);
             yield " - ";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "facultad_nombre", [], "any", false, false, false, 95), "html", null, true);
-            yield " - ";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "departamento_nombre", [], "any", false, false, false, 95), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "unidad_nombre", [], "any", false, false, false, 95), "html", null, true);
             yield "
                                 </option>
                                 ";
         }
         $_parent = $context['_parent'];
-        unset($context['_seq'], $context['_key'], $context['departamento'], $context['_parent']);
+        unset($context['_seq'], $context['_key'], $context['unidad'], $context['_parent']);
         $context = array_intersect_key($context, $_parent) + $_parent;
         // line 98
         yield "                            </select>
-                            <div class=\"invalid-feedback\" id=\"departamentoError_0\"></div>
+                            <div class=\"invalid-feedback\" id=\"unidadError_0\"></div>
                         </div>
 
                         <div class=\"col-md-3\">
@@ -247,7 +245,7 @@ function handleTipoChange() {
     const codigosContainer = document.getElementById('codigosContainer');
     const addRowButton = document.querySelector('button[onclick=\"addRow()\"]');
     const cantidadAlumnosInput = document.getElementById('cantidad_alumnos_0');
-    const departamentoSelect = document.getElementById('departamento_id_0');
+    const unidadSelect = document.getElementById('id_unidad_0');
     
     if (tipoSelect.value === 'FORMACION_ELECTIVA') {
         // Mantener el botón de agregar códigos visible para Formación Electiva
@@ -257,13 +255,13 @@ function handleTipoChange() {
         cantidadAlumnosInput.value = '0';
         cantidadAlumnosInput.disabled = true;
         
-        // Buscar y seleccionar \"Sin departamento\"
-        Array.from(departamentoSelect.options).forEach(option => {
-            if (option.text.includes('Sin departamento')) {
-                departamentoSelect.value = option.value;
+        // Buscar y seleccionar \"Sin unidad\"
+        Array.from(unidadSelect.options).forEach(option => {
+            if (option.text.includes('Sin unidad')) {
+                unidadSelect.value = option.value;
             }
         });
-        departamentoSelect.disabled = true;
+        unidadSelect.disabled = true;
 
         // Actualizar todas las filas existentes
         document.querySelectorAll('.codigo-row').forEach((row, index) => {
@@ -272,7 +270,7 @@ function handleTipoChange() {
             if (cantInput && depSelect) {
                 cantInput.value = '0';
                 cantInput.disabled = true;
-                depSelect.value = departamentoSelect.value;
+                depSelect.value = unidadSelect.value;
                 depSelect.disabled = true;
             }
         });
@@ -281,8 +279,8 @@ function handleTipoChange() {
         addRowButton.style.display = 'block';
         cantidadAlumnosInput.disabled = false;
         cantidadAlumnosInput.value = '';
-        departamentoSelect.disabled = false;
-        departamentoSelect.value = '';
+        unidadSelect.disabled = false;
+        unidadSelect.value = '';
 
         // Restaurar todas las filas existentes
         document.querySelectorAll('.codigo-row').forEach(row => {
@@ -305,35 +303,33 @@ function addRow() {
     newRow.className = 'row mb-3 codigo-row';
     newRow.innerHTML = `
         <div class=\"col-md-4\">
-            <label for=\"departamento_id_\${codigoCount}\" class=\"form-label\">Departamento</label>
-            <select class=\"form-select\" id=\"departamento_id_\${codigoCount}\" name=\"codigos[\${codigoCount}][departamento_id]\" required>
-                <option value=\"\">Seleccione un departamento</option>
+            <label for=\"id_unidad_\${codigoCount}\" class=\"form-label\">Unidad</label>
+            <select class=\"form-select\" id=\"id_unidad_\${codigoCount}\" name=\"codigos[\${codigoCount}][id_unidad]\" required>
+                <option value=\"\">Seleccione una unidad</option>
                 ";
         // line 212
         $context['_parent'] = $context;
-        $context['_seq'] = CoreExtension::ensureTraversable(($context["departamentos"] ?? null));
-        foreach ($context['_seq'] as $context["_key"] => $context["departamento"]) {
+        $context['_seq'] = CoreExtension::ensureTraversable(($context["unidades"] ?? null));
+        foreach ($context['_seq'] as $context["_key"] => $context["unidad"]) {
             // line 213
             yield "                <option value=\"";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "id", [], "any", false, false, false, 213), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "id", [], "any", false, false, false, 213), "html", null, true);
             yield "\">
                     ";
             // line 214
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "sede_nombre", [], "any", false, false, false, 214), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "sede_nombre", [], "any", false, false, false, 214), "html", null, true);
             yield " - ";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "facultad_nombre", [], "any", false, false, false, 214), "html", null, true);
-            yield " - ";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "departamento_nombre", [], "any", false, false, false, 214), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "unidad_nombre", [], "any", false, false, false, 214), "html", null, true);
             yield "
                 </option>
                 ";
         }
         $_parent = $context['_parent'];
-        unset($context['_seq'], $context['_key'], $context['departamento'], $context['_parent']);
+        unset($context['_seq'], $context['_key'], $context['unidad'], $context['_parent']);
         $context = array_intersect_key($context, $_parent) + $_parent;
         // line 217
         yield "            </select>
-            <div class=\"invalid-feedback\" id=\"departamentoError_\${codigoCount}\"></div>
+            <div class=\"invalid-feedback\" id=\"unidadError_\${codigoCount}\"></div>
         </div>
 
         <div class=\"col-md-3\">
@@ -371,13 +367,13 @@ function reindexRows() {
         const cantInput = row.querySelector('input[name\$=\"[cantidad_alumnos]\"]');
         
         if (depSelect && codInput && cantInput) {
-            depSelect.name = `codigos[\${index}][departamento_id]`;
-            depSelect.id = `departamento_id_\${index}`;
+            depSelect.name = `codigos[\${index}][id_unidad]`;
+            depSelect.id = `id_unidad_\${index}`;
             codInput.name = `codigos[\${index}][codigo]`;
             codInput.id = `codigo_\${index}`;
             cantInput.name = `codigos[\${index}][cantidad_alumnos]`;
             cantInput.id = `cantidad_alumnos_\${index}`;
-            row.querySelector(`[id^=\"departamentoError\"]`).id = `departamentoError_\${index}`;
+            row.querySelector(`[id^=\"unidadError\"]`).id = `unidadError_\${index}`;
             row.querySelector(`[id^=\"codigoError\"]`).id = `codigoError_\${index}`;
             row.querySelector(`[id^=\"cantidadAlumnosError\"]`).id = `cantidadAlumnosError_\${index}`;
         }
@@ -444,24 +440,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (codigo) {
                     hasValidCodigo = true;
                     if (data.tipo === 'FORMACION_ELECTIVA') {
-                        // Para Formación Electiva, buscar el departamento \"Sin departamento\"
-                        let sinDepartamentoId = null;
+                        // Para Formación Electiva, buscar la unidad \"Sin unidad\"
+                        let sinUnidadId = null;
                         const options = depSelect.querySelectorAll('option');
                         options.forEach(option => {
-                            if (option.textContent.includes('Sin departamento')) {
-                                sinDepartamentoId = option.value;
+                            if (option.textContent.includes('Sin unidad')) {
+                                sinUnidadId = option.value;
                             }
                         });
-                        const departamentoId = sinDepartamentoId || depSelect.value;
+                        const unidadId = sinUnidadId || depSelect.value;
                         
                         data.codigos.push({
-                            departamento_id: departamentoId,
+                            id_unidad: unidadId,
                             codigo: codigo,
                             cantidad_alumnos: '0'
                         });
                     } else {
                         if (!depSelect.value) {
-                            errores[`departamento_\${index}`] = 'El departamento es requerido';
+                            errores[`unidad_\${index}`] = 'La unidad es requerida';
                             depSelect.classList.add('is-invalid');
                         }
                         if (!cantInput.value || cantInput.value < 1) {
@@ -469,7 +465,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             cantInput.classList.add('is-invalid');
                         }
                         data.codigos.push({
-                            departamento_id: depSelect.value,
+                            id_unidad: depSelect.value,
                             codigo: codigo,
                             cantidad_alumnos: cantInput.value
                         });
@@ -635,7 +631,7 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     public function getDebugInfo(): array
     {
-        return array (  529 => 406,  506 => 386,  335 => 217,  322 => 214,  317 => 213,  313 => 212,  241 => 142,  234 => 141,  188 => 98,  175 => 95,  170 => 94,  166 => 93,  86 => 16,  76 => 9,  71 => 6,  64 => 5,  53 => 3,  42 => 1,);
+        return array (  525 => 406,  502 => 386,  331 => 217,  320 => 214,  315 => 213,  311 => 212,  239 => 142,  232 => 141,  186 => 98,  175 => 95,  170 => 94,  166 => 93,  86 => 16,  76 => 9,  71 => 6,  64 => 5,  53 => 3,  42 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -724,21 +720,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
 
-                <!-- Datos por Departamento -->
-                <h5 class=\"mb-3 mt-4\">Datos por Departamento</h5>
+                <!-- Datos por Unidad -->
+                <h5 class=\"mb-3 mt-4\">Datos por Unidad</h5>
                 <div id=\"codigosContainer\">
                     <div class=\"row mb-3 codigo-row\">
                         <div class=\"col-md-4\">
-                            <label for=\"departamento_id_0\" class=\"form-label\">Departamento</label>
-                            <select class=\"form-select\" id=\"departamento_id_0\" name=\"codigos[0][departamento_id]\" required>
-                                <option value=\"\">Seleccione un departamento</option>
-                                {% for departamento in departamentos %}
-                                <option value=\"{{ departamento.id }}\">
-                                    {{ departamento.sede_nombre }} - {{ departamento.facultad_nombre }} - {{ departamento.departamento_nombre }}
+                            <label for=\"id_unidad_0\" class=\"form-label\">Unidad</label>
+                            <select class=\"form-select\" id=\"id_unidad_0\" name=\"codigos[0][id_unidad]\" required>
+                                <option value=\"\">Seleccione una unidad</option>
+                                {% for unidad in unidades %}
+                                <option value=\"{{ unidad.id }}\">
+                                    {{ unidad.sede_nombre }} - {{ unidad.unidad_nombre }}
                                 </option>
                                 {% endfor %}
                             </select>
-                            <div class=\"invalid-feedback\" id=\"departamentoError_0\"></div>
+                            <div class=\"invalid-feedback\" id=\"unidadError_0\"></div>
                         </div>
 
                         <div class=\"col-md-3\">
@@ -790,7 +786,7 @@ function handleTipoChange() {
     const codigosContainer = document.getElementById('codigosContainer');
     const addRowButton = document.querySelector('button[onclick=\"addRow()\"]');
     const cantidadAlumnosInput = document.getElementById('cantidad_alumnos_0');
-    const departamentoSelect = document.getElementById('departamento_id_0');
+    const unidadSelect = document.getElementById('id_unidad_0');
     
     if (tipoSelect.value === 'FORMACION_ELECTIVA') {
         // Mantener el botón de agregar códigos visible para Formación Electiva
@@ -800,13 +796,13 @@ function handleTipoChange() {
         cantidadAlumnosInput.value = '0';
         cantidadAlumnosInput.disabled = true;
         
-        // Buscar y seleccionar \"Sin departamento\"
-        Array.from(departamentoSelect.options).forEach(option => {
-            if (option.text.includes('Sin departamento')) {
-                departamentoSelect.value = option.value;
+        // Buscar y seleccionar \"Sin unidad\"
+        Array.from(unidadSelect.options).forEach(option => {
+            if (option.text.includes('Sin unidad')) {
+                unidadSelect.value = option.value;
             }
         });
-        departamentoSelect.disabled = true;
+        unidadSelect.disabled = true;
 
         // Actualizar todas las filas existentes
         document.querySelectorAll('.codigo-row').forEach((row, index) => {
@@ -815,7 +811,7 @@ function handleTipoChange() {
             if (cantInput && depSelect) {
                 cantInput.value = '0';
                 cantInput.disabled = true;
-                depSelect.value = departamentoSelect.value;
+                depSelect.value = unidadSelect.value;
                 depSelect.disabled = true;
             }
         });
@@ -824,8 +820,8 @@ function handleTipoChange() {
         addRowButton.style.display = 'block';
         cantidadAlumnosInput.disabled = false;
         cantidadAlumnosInput.value = '';
-        departamentoSelect.disabled = false;
-        departamentoSelect.value = '';
+        unidadSelect.disabled = false;
+        unidadSelect.value = '';
 
         // Restaurar todas las filas existentes
         document.querySelectorAll('.codigo-row').forEach(row => {
@@ -848,16 +844,16 @@ function addRow() {
     newRow.className = 'row mb-3 codigo-row';
     newRow.innerHTML = `
         <div class=\"col-md-4\">
-            <label for=\"departamento_id_\${codigoCount}\" class=\"form-label\">Departamento</label>
-            <select class=\"form-select\" id=\"departamento_id_\${codigoCount}\" name=\"codigos[\${codigoCount}][departamento_id]\" required>
-                <option value=\"\">Seleccione un departamento</option>
-                {% for departamento in departamentos %}
-                <option value=\"{{ departamento.id }}\">
-                    {{ departamento.sede_nombre }} - {{ departamento.facultad_nombre }} - {{ departamento.departamento_nombre }}
+            <label for=\"id_unidad_\${codigoCount}\" class=\"form-label\">Unidad</label>
+            <select class=\"form-select\" id=\"id_unidad_\${codigoCount}\" name=\"codigos[\${codigoCount}][id_unidad]\" required>
+                <option value=\"\">Seleccione una unidad</option>
+                {% for unidad in unidades %}
+                <option value=\"{{ unidad.id }}\">
+                    {{ unidad.sede_nombre }} - {{ unidad.unidad_nombre }}
                 </option>
                 {% endfor %}
             </select>
-            <div class=\"invalid-feedback\" id=\"departamentoError_\${codigoCount}\"></div>
+            <div class=\"invalid-feedback\" id=\"unidadError_\${codigoCount}\"></div>
         </div>
 
         <div class=\"col-md-3\">
@@ -895,13 +891,13 @@ function reindexRows() {
         const cantInput = row.querySelector('input[name\$=\"[cantidad_alumnos]\"]');
         
         if (depSelect && codInput && cantInput) {
-            depSelect.name = `codigos[\${index}][departamento_id]`;
-            depSelect.id = `departamento_id_\${index}`;
+            depSelect.name = `codigos[\${index}][id_unidad]`;
+            depSelect.id = `id_unidad_\${index}`;
             codInput.name = `codigos[\${index}][codigo]`;
             codInput.id = `codigo_\${index}`;
             cantInput.name = `codigos[\${index}][cantidad_alumnos]`;
             cantInput.id = `cantidad_alumnos_\${index}`;
-            row.querySelector(`[id^=\"departamentoError\"]`).id = `departamentoError_\${index}`;
+            row.querySelector(`[id^=\"unidadError\"]`).id = `unidadError_\${index}`;
             row.querySelector(`[id^=\"codigoError\"]`).id = `codigoError_\${index}`;
             row.querySelector(`[id^=\"cantidadAlumnosError\"]`).id = `cantidadAlumnosError_\${index}`;
         }
@@ -968,24 +964,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (codigo) {
                     hasValidCodigo = true;
                     if (data.tipo === 'FORMACION_ELECTIVA') {
-                        // Para Formación Electiva, buscar el departamento \"Sin departamento\"
-                        let sinDepartamentoId = null;
+                        // Para Formación Electiva, buscar la unidad \"Sin unidad\"
+                        let sinUnidadId = null;
                         const options = depSelect.querySelectorAll('option');
                         options.forEach(option => {
-                            if (option.textContent.includes('Sin departamento')) {
-                                sinDepartamentoId = option.value;
+                            if (option.textContent.includes('Sin unidad')) {
+                                sinUnidadId = option.value;
                             }
                         });
-                        const departamentoId = sinDepartamentoId || depSelect.value;
+                        const unidadId = sinUnidadId || depSelect.value;
                         
                         data.codigos.push({
-                            departamento_id: departamentoId,
+                            id_unidad: unidadId,
                             codigo: codigo,
                             cantidad_alumnos: '0'
                         });
                     } else {
                         if (!depSelect.value) {
-                            errores[`departamento_\${index}`] = 'El departamento es requerido';
+                            errores[`unidad_\${index}`] = 'La unidad es requerida';
                             depSelect.classList.add('is-invalid');
                         }
                         if (!cantInput.value || cantInput.value < 1) {
@@ -993,7 +989,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             cantInput.classList.add('is-invalid');
                         }
                         data.codigos.push({
-                            departamento_id: depSelect.value,
+                            id_unidad: depSelect.value,
                             codigo: codigo,
                             cantidad_alumnos: cantInput.value
                         });

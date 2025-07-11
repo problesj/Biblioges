@@ -46,15 +46,15 @@
                     <thead>
                         <tr>
                             <th>Código Asignatura</th>
-                            <th>Sede - Facultad - Departamento</th>
+                            <th>Sede - Unidad</th>
                             <th>Cantidad de Alumnos</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for info in asignatura.departamentos %}
+                        {% for info in asignatura.unidades %}
                             <tr>
                                 <td>{{ info.codigo_asignatura }}</td>
-                                <td>{{ info.sede_nombre }} - {{ info.facultad_nombre }} - {{ info.departamento_nombre }}</td>
+                                <td>{{ info.sede_nombre }} - {{ info.unidad_nombre }}</td>
                                 <td>{{ info.cantidad_alumnos }}</td>
                             </tr>
                         {% endfor %}

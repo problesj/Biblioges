@@ -6,6 +6,8 @@ use App\Core\Config;
 use App\Core\Session;
 use PDO;
 use PDOException;
+use Psr\Http\Message\RequestInterface as Request;
+use Psr\Http\Message\ResponseInterface as Response;
 
 class ApiController
 {
@@ -35,6 +37,66 @@ class ApiController
         }
 
         $this->session = new Session();
+    }
+
+    public function getUnidadesBySede(Request $request, Response $response, array $args = [])
+    {
+        // Verificar autenticación
+        if (!$this->session->get('user_id')) {
+            $response->getBody()->write(json_encode(['error' => 'No autorizado']));
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withStatus(401);
+        }
+
+        try {
+            // Obtener el sede_id de los argumentos de la ruta
+            $sedeId = $args['sedeId'] ?? null;
+            
+            // Si no está en los argumentos, intentar obtenerlo de los query parameters
+            if (!$sedeId) {
+                $queryParams = $request->getQueryParams();
+                $sedeId = $queryParams['sede_id'] ?? null;
+            }
+            
+            if (!$sedeId) {
+                $response->getBody()->write(json_encode(['error' => 'ID de sede requerido']));
+                return $response
+                    ->withHeader('Content-Type', 'application/json')
+                    ->withStatus(400);
+            }
+
+            // Log para depuración
+            error_log('Obteniendo unidades para sede ID: ' . $sedeId);
+
+            // Consulta SQL para obtener todas las unidades de la sede
+            $sql = "SELECT u.id, u.nombre 
+                    FROM unidades u
+                    WHERE u.sede_id = :sede_id AND u.estado = 1
+                    ORDER BY u.nombre";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindParam(':sede_id', $sedeId, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $unidades = $stmt->fetchAll();
+
+            // Log para depuración
+            error_log('SQL ejecutada: ' . $sql);
+            error_log('Parámetros: sede_id = ' . $sedeId);
+            error_log('Unidades encontradas: ' . print_r($unidades, true));
+
+            $response->getBody()->write(json_encode($unidades));
+            return $response->withHeader('Content-Type', 'application/json');
+            
+        } catch (\Exception $e) {
+            error_log('Error al obtener unidades: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            $response->getBody()->write(json_encode(['error' => 'Error al obtener las unidades: ' . $e->getMessage()]));
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withStatus(500);
+        }
     }
 
     public function getFacultadesBySede($sedeId)
@@ -259,6 +321,60 @@ class ApiController
 
             http_response_code(500);
             echo json_encode(['error' => 'Error al actualizar la malla: ' . $e->getMessage()]);
+        }
+    }
+
+    public function getUnidadesHijas(Request $request, Response $response, array $args = [])
+    {
+        // Verificar autenticación
+        if (!$this->session->get('user_id')) {
+            $response->getBody()->write(json_encode(['error' => 'No autorizado']));
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withStatus(401);
+        }
+
+        try {
+            // Obtener el unidad_id de los argumentos de la ruta
+            $unidadId = $args['unidadId'] ?? null;
+            
+            if (!$unidadId) {
+                $response->getBody()->write(json_encode(['error' => 'ID de unidad requerido']));
+                return $response
+                    ->withHeader('Content-Type', 'application/json')
+                    ->withStatus(400);
+            }
+
+            // Log para depuración
+            error_log('Obteniendo unidades hijas para unidad ID: ' . $unidadId);
+
+            // Consulta SQL para obtener las unidades hijas
+            $sql = "SELECT u.id, u.nombre 
+                    FROM unidades u
+                    WHERE u.id_unidad_padre = :unidad_id AND u.estado = 1
+                    ORDER BY u.nombre";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindParam(':unidad_id', $unidadId, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $unidadesHijas = $stmt->fetchAll();
+
+            // Log para depuración
+            error_log('SQL ejecutada: ' . $sql);
+            error_log('Parámetros: unidad_id = ' . $unidadId);
+            error_log('Unidades hijas encontradas: ' . print_r($unidadesHijas, true));
+
+            $response->getBody()->write(json_encode($unidadesHijas));
+            return $response->withHeader('Content-Type', 'application/json');
+            
+        } catch (\Exception $e) {
+            error_log('Error al obtener unidades hijas: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            $response->getBody()->write(json_encode(['error' => 'Error al obtener las unidades hijas: ' . $e->getMessage()]));
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withStatus(500);
         }
     }
 } 

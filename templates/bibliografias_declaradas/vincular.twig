@@ -96,15 +96,9 @@
                     <select name="ubicacion" id="ubicacion" class="form-select">
                         <option value="">Seleccione Ubicación</option>
                         {% for sede in sedes %}
-                            <optgroup label="{{ sede.nombre }}">
-                                {% for facultad in sede.facultades %}
-                                    <optgroup label="&nbsp;&nbsp;{{ facultad.nombre }}">
-                                        {% for departamento in facultad.departamentos %}
-                                            <option value="d_{{ departamento.id }}">&nbsp;&nbsp;&nbsp;&nbsp;{{ departamento.nombre }}</option>
-                                        {% endfor %}
-                                    </optgroup>
-                                {% endfor %}
-                            </optgroup>
+                            {% for unidad in sede.unidades %}
+                                <option value="u_{{ unidad.id }}">{{ sede.nombre }} - {{ unidad.nombre }}</option>
+                            {% endfor %}
                         {% endfor %}
                     </select>
                 </div>
@@ -276,18 +270,12 @@ function getUrlParameter(name) {
 
 // Función para establecer valores de filtros desde la URL
 function establecerFiltrosDesdeURL() {
-    const departamento = getUrlParameter('departamento');
-    const facultad = getUrlParameter('facultad');
-    const sede = getUrlParameter('sede');
+    const unidad = getUrlParameter('unidad');
     const tipoAsignatura = getUrlParameter('tipo_asignatura');
     
     // Establecer valor del filtro de ubicación
-    if (departamento) {
-        document.getElementById('ubicacion').value = 'd_' + departamento;
-    } else if (facultad) {
-        document.getElementById('ubicacion').value = 'f_' + facultad;
-    } else if (sede) {
-        document.getElementById('ubicacion').value = 's_' + sede;
+    if (unidad) {
+        document.getElementById('ubicacion').value = 'u_' + unidad;
     }
     
     // Establecer valor del filtro de tipo de asignatura
@@ -301,11 +289,11 @@ function verificarFiltrosIniciales() {
     // Primero establecer los valores de los filtros desde la URL
     establecerFiltrosDesdeURL();
     
-    const ubicacion = document.getElementById('ubicacion').value;
+    const unidad = document.getElementById('ubicacion').value;
     const tipoAsignatura = document.getElementById('tipo_asignatura').value;
     
     // Verificar si se ha seleccionado al menos un filtro
-    const hayFiltrosSeleccionados = ubicacion || tipoAsignatura;
+    const hayFiltrosSeleccionados = unidad || tipoAsignatura;
     
     // Controlar visibilidad del mensaje y las asignaturas
     const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
@@ -331,11 +319,11 @@ function verificarFiltrosIniciales() {
 
 // Función para aplicar filtros
 function aplicarFiltros() {
-    const ubicacion = document.getElementById('ubicacion').value;
+    const unidad = document.getElementById('ubicacion').value;
     const tipoAsignatura = document.getElementById('tipo_asignatura').value;
     
     // Verificar si se ha seleccionado al menos un filtro
-    const hayFiltrosSeleccionados = ubicacion || tipoAsignatura;
+    const hayFiltrosSeleccionados = unidad || tipoAsignatura;
     
     // Controlar visibilidad del mensaje y las asignaturas
     const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
@@ -362,13 +350,9 @@ function aplicarFiltros() {
     let url = `{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/vincular?`;
     const params = new URLSearchParams();
     
-    if (ubicacion) {
-        if (ubicacion.startsWith('d_')) {
-            params.append('departamento', ubicacion.substring(2));
-        } else if (ubicacion.startsWith('f_')) {
-            params.append('facultad', ubicacion.substring(2));
-        } else if (ubicacion.startsWith('s_')) {
-            params.append('sede', ubicacion.substring(2));
+    if (unidad) {
+        if (unidad.startsWith('u_')) {
+            params.append('unidad', unidad.substring(2));
         }
     }
     

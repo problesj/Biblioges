@@ -1087,14 +1087,11 @@ class BibliografiaDeclaradaController
                 SELECT 
                     s.id as sede_id,
                     s.nombre as sede_nombre,
-                    f.id as facultad_id,
-                    f.nombre as facultad_nombre,
-                    d.id as departamento_id,
-                    d.nombre as departamento_nombre
+                    u.id as unidad_id,
+                    u.nombre as unidad_nombre
                 FROM sedes s
-                LEFT JOIN facultades f ON f.sede_id = s.id
-                LEFT JOIN departamentos d ON d.facultad_id = f.id
-                ORDER BY s.nombre, f.nombre, d.nombre
+                LEFT JOIN unidades u ON u.sede_id = s.id
+                ORDER BY s.nombre, u.nombre
             ");
             $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
@@ -1105,22 +1102,14 @@ class BibliografiaDeclaradaController
                     $sedes[$row['sede_id']] = [
                         'id' => $row['sede_id'],
                         'nombre' => $row['sede_nombre'],
-                        'facultades' => []
+                        'unidades' => []
                     ];
                 }
                 
-                if ($row['facultad_id'] && !isset($sedes[$row['sede_id']]['facultades'][$row['facultad_id']])) {
-                    $sedes[$row['sede_id']]['facultades'][$row['facultad_id']] = [
-                        'id' => $row['facultad_id'],
-                        'nombre' => $row['facultad_nombre'],
-                        'departamentos' => []
-                    ];
-                }
-                
-                if ($row['departamento_id']) {
-                    $sedes[$row['sede_id']]['facultades'][$row['facultad_id']]['departamentos'][] = [
-                        'id' => $row['departamento_id'],
-                        'nombre' => $row['departamento_nombre']
+                if ($row['unidad_id'] && !isset($sedes[$row['sede_id']]['unidades'][$row['unidad_id']])) {
+                    $sedes[$row['sede_id']]['unidades'][$row['unidad_id']] = [
+                        'id' => $row['unidad_id'],
+                        'nombre' => $row['unidad_nombre']
                     ];
                 }
             }
@@ -1128,10 +1117,23 @@ class BibliografiaDeclaradaController
             // Convertir el array asociativo a array indexado
             $sedes = array_values($sedes);
             foreach ($sedes as &$sede) {
-                $sede['facultades'] = array_values($sede['facultades']);
+                $sede['unidades'] = array_values($sede['unidades']);
             }
             
             error_log('Estructura jerárquica obtenida: ' . print_r($sedes, true));
+
+            // Ordenar sedes por nombre
+            usort($sedes, function($a, $b) {
+                return strcmp($a['nombre'], $b['nombre']);
+            });
+            // Ordenar unidades por nombre en cada sede
+            foreach ($sedes as &$sede) {
+                if (isset($sede['unidades']) && is_array($sede['unidades'])) {
+                    usort($sede['unidades'], function($a, $b) {
+                        return strcmp($a['nombre'], $b['nombre']);
+                    });
+                }
+            }
 
             // Obtener las asignaturas vinculadas
             error_log('Obteniendo asignaturas vinculadas');
@@ -1211,9 +1213,8 @@ class BibliografiaDeclaradaController
                 ab.tipo_bibliografia
             FROM asignaturas a
             INNER JOIN asignaturas_departamentos ad ON a.id = ad.asignatura_id
-            INNER JOIN departamentos d ON ad.departamento_id = d.id
-            INNER JOIN facultades f ON d.facultad_id = f.id
-            INNER JOIN sedes s ON f.sede_id = s.id
+            INNER JOIN unidades u ON ad.id_unidad = u.id
+            INNER JOIN sedes s ON u.sede_id = s.id
             LEFT JOIN asignaturas_bibliografias ab ON a.id = ab.asignatura_id AND ab.bibliografia_id = :bibliografia_id_1
             WHERE a.id NOT IN (
                 SELECT asignatura_id 
@@ -1236,7 +1237,7 @@ class BibliografiaDeclaradaController
         }
 
         if (!empty($filtros['facultad'])) {
-            $sql .= " AND f.id = :facultad_id";
+            $sql .= " AND u.id = :facultad_id";
             $params[':facultad_id'] = $filtros['facultad'];
         }
 

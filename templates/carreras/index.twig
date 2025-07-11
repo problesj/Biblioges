@@ -83,7 +83,7 @@
                             <th>Código(s)</th>
                             <th>Nombre</th>
                             <th>Tipo de Programa</th>
-                            <th>Sede-Facultad</th>
+                            <th>Sede-Unidad</th>
                             <th class="text-center">Estado</th>
                             <th>Acciones</th>
                         </tr>
@@ -106,9 +106,9 @@
                             </td>
                             <td>
                                 {% set sedes = carrera.sedes|split(',') %}
-                                {% set facultades = carrera.facultades|split(',') %}
+                                {% set unidades = carrera.unidades|split(',') %}
                                 {% for i in 0..sedes|length-1 %}
-                                    {{ sedes[i] }} - {{ facultades[i] }}{% if not loop.last %}<br>{% endif %}
+                                    {{ sedes[i] }} - {{ unidades[i] }}{% if not loop.last %}<br>{% endif %}
                                 {% endfor %}
                             </td>
                             <td class="text-center">

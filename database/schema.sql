@@ -612,65 +612,58 @@ CREATE TABLE IF NOT EXISTS reporte_coberturas_carreras_complementarias (
     INDEX idx_fecha_medicion (fecha_medicion)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Vista de mallas curriculares
+-- Vista actualizada de mallas basada en unidades
 CREATE OR REPLACE VIEW vw_mallas AS
-SELECT 
-    sedes.id AS id_sede,
-    sedes.nombre AS sede,
-    facultades.id AS id_facultad,
-    facultades.nombre AS facultad,
-    carreras_espejos.codigo_carrera AS codigo_carrera,
-    carreras.id AS id_carrera,
-    carreras.nombre AS carrera,
-    asignaturas_departamentos.codigo_asignatura AS codigo_asignatura,
-    asignaturas.id AS id_asignatura,
-    asignaturas.nombre AS asignatura,
-    asignaturas.tipo AS tipo_asignatura,
-    NULL AS codigo_asignatura_formacion,
-    NULL AS id_asignatura_formacion,
-    NULL AS asignatura_formacion
-FROM mallas 
+SELECT
+  sedes.id AS id_sede,
+  sedes.nombre AS sede,
+  unidades.id AS id_unidad,
+  unidades.nombre AS unidad,
+  carreras_espejos.codigo_carrera AS codigo_carrera,
+  carreras.id AS id_carrera,
+  carreras.nombre AS carrera,
+  asignaturas_departamentos.codigo_asignatura AS codigo_asignatura,
+  asignaturas.id AS id_asignatura,
+  asignaturas.nombre AS asignatura,
+  asignaturas.tipo AS tipo_asignatura,
+  NULL AS codigo_asignatura_formacion,
+  NULL AS id_asignatura_formacion,
+  NULL AS asignatura_formacion
+FROM mallas
 JOIN asignaturas ON mallas.asignatura_id = asignaturas.id
 JOIN carreras_espejos ON mallas.carrera_id = carreras_espejos.carrera_id
-JOIN carreras ON mallas.carrera_id = carreras.id AND carreras_espejos.carrera_id = carreras.id
+JOIN carreras ON mallas.carrera_id = carreras.id
 JOIN asignaturas_departamentos ON asignaturas_departamentos.asignatura_id = asignaturas.id
 JOIN sedes ON carreras_espejos.sede_id = sedes.id
-JOIN departamentos ON asignaturas_departamentos.departamento_id = departamentos.id
-JOIN facultades ON facultades.sede_id = sedes.id AND departamentos.facultad_id = facultades.id
+JOIN unidades ON asignaturas_departamentos.id_unidad = unidades.id
 
 UNION
 
-SELECT DISTINCT 
-    sedes_1.id AS id_sede,
-    sedes_1.nombre AS sede,
-    facultades_1.id AS id_facultad,
-    facultades_1.nombre AS facultad,
-    carreras_espejos.codigo_carrera AS codigo_carrera,
-    mallas.carrera_id AS id_carrera,
-    carreras.nombre AS carrera,
-    asignaturas_departamentos.codigo_asignatura AS codigo_asignatura,
-    asignaturas_departamentos.asignatura_id AS id_asignatura,
-    asignaturas.nombre AS asignatura,
-    asignaturas_1.tipo AS tipo_asignatura,
-    asignaturas_departamentos_1.codigo_asignatura AS codigo_asignatura_formacion,
-    asignaturas_1.id AS id_asignatura_formacion,
-    asignaturas_1.nombre AS asignatura_formacion
-FROM asignaturas 
+SELECT DISTINCT
+  sedes.id AS id_sede,
+  sedes.nombre AS sede,
+  unidades.id AS id_unidad,
+  unidades.nombre AS unidad,
+  carreras_espejos.codigo_carrera AS codigo_carrera,
+  mallas.carrera_id AS id_carrera,
+  carreras.nombre AS carrera,
+  asignaturas_departamentos.codigo_asignatura AS codigo_asignatura,
+  asignaturas_departamentos.asignatura_id AS id_asignatura,
+  asignaturas.nombre AS asignatura,
+  asignaturas_formacion.tipo AS tipo_asignatura,
+  asignaturas_departamentos_formacion.codigo_asignatura AS codigo_asignatura_formacion,
+  asignaturas_formacion.id AS id_asignatura_formacion,
+  asignaturas_formacion.nombre AS asignatura_formacion
+FROM asignaturas
 JOIN asignaturas_formacion ON asignaturas_formacion.asignatura_formacion_id = asignaturas.id
-JOIN asignaturas asignaturas_1 ON asignaturas_1.id = asignaturas_formacion.asignatura_regular_id
+JOIN asignaturas AS asignaturas_formacion ON asignaturas_formacion.id = asignaturas_formacion.asignatura_regular_id
 JOIN mallas ON asignaturas.id = mallas.asignatura_id
-JOIN asignaturas_departamentos ON mallas.asignatura_id = asignaturas_departamentos.asignatura_id AND asignaturas_departamentos.asignatura_id = asignaturas.id
-JOIN departamentos ON departamentos.id = asignaturas_departamentos.departamento_id
-JOIN facultades ON facultades.id = departamentos.facultad_id
-JOIN sedes ON sedes.id = facultades.sede_id
-JOIN asignaturas_departamentos asignaturas_departamentos_1 ON asignaturas_1.id = asignaturas_departamentos_1.asignatura_id
-JOIN departamentos departamentos_1 ON asignaturas_departamentos_1.departamento_id = departamentos_1.id
-JOIN facultades facultades_1 ON departamentos_1.facultad_id = facultades_1.id
-JOIN sedes sedes_1 ON facultades_1.sede_id = sedes_1.id
+JOIN asignaturas_departamentos ON mallas.asignatura_id = asignaturas_departamentos.asignatura_id
+JOIN unidades ON asignaturas_departamentos.id_unidad = unidades.id
+JOIN sedes ON unidades.sede_id = sedes.id
 JOIN carreras_espejos ON mallas.carrera_id = carreras_espejos.carrera_id
-JOIN carreras ON mallas.carrera_id = carreras.id AND carreras_espejos.carrera_id = carreras.id
-WHERE sedes.id = 4
-ORDER BY sede, codigo_carrera, asignatura;
+JOIN carreras ON mallas.carrera_id = carreras.id
+JOIN asignaturas_departamentos AS asignaturas_departamentos_formacion ON asignaturas_formacion.id = asignaturas_departamentos_formacion.asignatura_id;
 
 -- Vista de asignaturas con bibliografías declaradas
 CREATE OR REPLACE VIEW vw_asig_bib_declarada AS
@@ -687,42 +680,6 @@ FROM asignaturas_bibliografias
 JOIN asignaturas ON asignaturas_bibliografias.asignatura_id = asignaturas.id
 JOIN bibliografias_declaradas ON asignaturas_bibliografias.bibliografia_id = bibliografias_declaradas.id
 ORDER BY asignaturas.id, asignaturas_bibliografias.tipo_bibliografia, bibliografias_declaradas.titulo;
-
--- Vista de electivas en mallas
-CREATE OR REPLACE VIEW vw_electivas_mallas AS
-SELECT 
-    mallas.carrera_id AS id_carrera,
-    asignaturas_departamentos.asignatura_id AS id_asignatura_electiva,
-    asignaturas_departamentos.codigo_asignatura AS codigo_asignatura,
-    asignaturas.nombre AS asignatura_electiva,
-    asignaturas_1.id AS id_asignatura_formacion,
-    asignaturas_1.nombre AS asignatura_formacion
-FROM mallas 
-JOIN asignaturas_departamentos ON mallas.asignatura_id = asignaturas_departamentos.asignatura_id
-JOIN departamentos ON asignaturas_departamentos.departamento_id = departamentos.id
-JOIN facultades ON departamentos.facultad_id = facultades.id
-JOIN sedes ON facultades.sede_id = sedes.id
-JOIN asignaturas ON mallas.asignatura_id = asignaturas.id AND asignaturas_departamentos.asignatura_id = asignaturas.id
-LEFT JOIN asignaturas_formacion ON asignaturas_formacion.asignatura_formacion_id = asignaturas.id
-JOIN asignaturas asignaturas_1 ON asignaturas_1.id = asignaturas_formacion.asignatura_regular_id
-WHERE sedes.id = 4;
-
--- Vista de número de bibliografías declaradas
-CREATE OR REPLACE VIEW vw_no_bib_declaradas AS
-SELECT 
-    sedes.id AS id_sede,
-    facultades.id AS id_facultad,
-    departamentos.id AS id_departamento,
-    asignaturas_departamentos.codigo_asignatura AS cod_asignatura,
-    asignaturas_bibliografias.tipo_bibliografia AS tipo_bibliografia,
-    COUNT(asignaturas_bibliografias.bibliografia_id) AS no_bib_declarada
-FROM asignaturas_departamentos 
-JOIN asignaturas ON asignaturas_departamentos.asignatura_id = asignaturas.id
-JOIN departamentos ON asignaturas_departamentos.departamento_id = departamentos.id
-JOIN facultades ON departamentos.facultad_id = facultades.id
-JOIN sedes ON facultades.sede_id = sedes.id
-JOIN asignaturas_bibliografias ON asignaturas_bibliografias.asignatura_id = asignaturas.id
-GROUP BY asignaturas_departamentos.codigo_asignatura, departamentos.id, facultades.id, sedes.id, asignaturas_bibliografias.tipo_bibliografia;
 
 -- Vista de bibliografías declaradas por sede y ejemplares
 CREATE OR REPLACE VIEW vw_bib_declarada_sede_noejem AS

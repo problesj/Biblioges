@@ -43,12 +43,12 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label for="departamento" class="form-label">Departamento</label>
-                    <select class="form-select" id="departamento" name="departamento">
-                        <option value="">Todos los departamentos</option>
-                        {% for departamento in departamentos %}
-                            <option value="{{ departamento.id }}" {% if filtros.departamento == departamento.id %}selected{% endif %}>
-                                {{ departamento.nombre }}
+                    <label for="unidad" class="form-label">Unidad</label>
+                    <select class="form-select" id="unidad" name="unidad">
+                        <option value="">Todas las unidades</option>
+                        {% for unidad in unidades %}
+                            <option value="{{ unidad.id }}" {% if filtros.unidad == unidad.id %}selected{% endif %}>
+                                {{ unidad.nombre }}
                             </option>
                         {% endfor %}
                     </select>
@@ -85,7 +85,7 @@
                             <th>Vigencia</th>
                             <th>Periodicidad</th>
                             <th>Estado</th>
-                            <th>Departamentos</th>
+                            <th>Unidades</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -101,7 +101,7 @@
                                     {{ asignatura.estado == '1' ? 'Activo' : 'Inactivo' }}
                                 </span>
                             </td>
-                            <td style="white-space: pre-line">{{ asignatura.departamentos|default('Sin departamento') }}</td>
+                            <td style="white-space: pre-line">{{ asignatura.unidades|default('Sin unidad') }}</td>
                             <td>
                                 <div class="btn-group">
                                     <a href="{{ app_url }}asignaturas/{{ asignatura.id }}" class="btn btn-sm btn-primary" title="Ver">

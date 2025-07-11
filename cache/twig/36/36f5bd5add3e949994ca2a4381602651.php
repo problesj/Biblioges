@@ -231,16 +231,16 @@ class __TwigTemplate_d928239d2ce252e2d5453eff60820277 extends Template
                     </div>
                 </div>
 
-                <!-- Datos por Departamento -->
-                <h5 class=\"mb-3 mt-4\">Datos por Departamento</h5>
+                <!-- Datos por Unidad -->
+                <h5 class=\"mb-3 mt-4\">Datos por Unidad</h5>
                 <div id=\"codigosContainer\">
                     ";
         // line 90
-        if (CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "departamentos", [], "any", false, false, false, 90)) {
+        if (CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "unidades", [], "any", false, false, false, 90)) {
             // line 91
             yield "                        ";
             $context['_parent'] = $context;
-            $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "departamentos", [], "any", false, false, false, 91));
+            $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "unidades", [], "any", false, false, false, 91));
             $context['loop'] = [
               'parent' => $context['_parent'],
               'index0' => 0,
@@ -258,78 +258,74 @@ class __TwigTemplate_d928239d2ce252e2d5453eff60820277 extends Template
                 // line 92
                 yield "                        <div class=\"row mb-3 codigo-row\">
                             <div class=\"col-md-4\">
-                                <label for=\"departamento_id_";
+                                <label for=\"unidad_id_";
                 // line 94
                 yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 94), "html", null, true);
-                yield "\" class=\"form-label\">Departamento</label>
-                                <select class=\"form-control select-departamento\" 
+                yield "\" class=\"form-label\">Unidad</label>
+                                <select class=\"form-control select-unidad\" 
                                         name=\"codigos[";
                 // line 96
                 yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 96), "html", null, true);
-                yield "][departamento_id]\" 
+                yield "][id_unidad]\" 
                                         data-index=\"";
                 // line 97
                 yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 97), "html", null, true);
                 yield "\" required>
-                                    <option value=\"\">Seleccione un departamento</option>
+                                    <option value=\"\">Seleccione una unidad</option>
                                     ";
                 // line 99
                 $context['_parent'] = $context;
-                $context['_seq'] = CoreExtension::ensureTraversable(($context["departamentos"] ?? null));
-                foreach ($context['_seq'] as $context["_key"] => $context["departamento"]) {
+                $context['_seq'] = CoreExtension::ensureTraversable(($context["unidades"] ?? null));
+                foreach ($context['_seq'] as $context["_key"] => $context["unidad"]) {
                     // line 100
                     yield "                                    <option value=\"";
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "id", [], "any", false, false, false, 100), "html", null, true);
-                    yield "\" 
-                                            ";
-                    // line 101
-                    if ((CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "id", [], "any", false, false, false, 101) == CoreExtension::getAttribute($this->env, $this->source, $context["info"], "departamento_id", [], "any", false, false, false, 101))) {
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "id", [], "any", false, false, false, 100), "html", null, true);
+                    yield "\" ";
+                    if ((CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "id", [], "any", false, false, false, 100) == CoreExtension::getAttribute($this->env, $this->source, $context["info"], "unidad_id", [], "any", false, false, false, 100))) {
                         yield "selected";
                     }
                     yield ">
                                         ";
-                    // line 102
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "sede_nombre", [], "any", false, false, false, 102), "html", null, true);
+                    // line 101
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "sede_nombre", [], "any", false, false, false, 101), "html", null, true);
                     yield " - ";
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "facultad_nombre", [], "any", false, false, false, 102), "html", null, true);
-                    yield " - ";
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "departamento_nombre", [], "any", false, false, false, 102), "html", null, true);
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "unidad_nombre", [], "any", false, false, false, 101), "html", null, true);
                     yield "
                                     </option>
                                     ";
                 }
                 $_parent = $context['_parent'];
-                unset($context['_seq'], $context['_key'], $context['departamento'], $context['_parent']);
+                unset($context['_seq'], $context['_key'], $context['unidad'], $context['_parent']);
                 $context = array_intersect_key($context, $_parent) + $_parent;
-                // line 105
+                // line 104
                 yield "                                </select>
-                                <div class=\"invalid-feedback\" id=\"departamentoError_";
-                // line 106
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 106), "html", null, true);
+                                <div class=\"invalid-feedback\" id=\"unidadError_";
+                // line 105
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 105), "html", null, true);
                 yield "\"></div>
                             </div>
 
                             <div class=\"col-md-4\">
                                 <div class=\"form-group\">
                                     <label for=\"codigo_";
-                // line 111
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 111), "html", null, true);
+                // line 110
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 110), "html", null, true);
                 yield "\" class=\"form-label\">Código de Asignatura</label>
                                     <input type=\"text\" class=\"form-control\" id=\"codigo_";
-                // line 112
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 112), "html", null, true);
+                // line 111
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 111), "html", null, true);
                 yield "\" 
                                            name=\"codigos[";
-                // line 113
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 113), "html", null, true);
+                // line 112
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 112), "html", null, true);
                 yield "][codigo]\" 
                                            value=\"";
-                // line 114
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["info"], "codigo_asignatura", [], "any", false, false, false, 114), "html", null, true);
+                // line 113
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["info"], "codigo_asignatura", [], "any", false, false, false, 113), "html", null, true);
                 yield "\" required>
                                     <div class=\"invalid-feedback\" id=\"codigoError_";
-                // line 115
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 115), "html", null, true);
+                // line 114
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 114), "html", null, true);
                 yield "\"></div>
                                 </div>
                             </div>
@@ -337,24 +333,24 @@ class __TwigTemplate_d928239d2ce252e2d5453eff60820277 extends Template
                             <div class=\"col-md-4\">
                                 <div class=\"form-group\">
                                     <label for=\"cantidad_alumnos_";
-                // line 121
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 121), "html", null, true);
+                // line 120
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 120), "html", null, true);
                 yield "\" class=\"form-label\">Cantidad de Alumnos</label>
                                     <input type=\"number\" class=\"form-control\" id=\"cantidad_alumnos_";
-                // line 122
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 122), "html", null, true);
+                // line 121
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 121), "html", null, true);
                 yield "\" 
                                            name=\"codigos[";
-                // line 123
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 123), "html", null, true);
+                // line 122
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 122), "html", null, true);
                 yield "][cantidad_alumnos]\" 
                                            value=\"";
-                // line 124
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["info"], "cantidad_alumnos", [], "any", false, false, false, 124), "html", null, true);
+                // line 123
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["info"], "cantidad_alumnos", [], "any", false, false, false, 123), "html", null, true);
                 yield "\" min=\"1\" required>
                                     <div class=\"invalid-feedback\" id=\"cantidadAlumnosError_";
-                // line 125
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 125), "html", null, true);
+                // line 124
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 124), "html", null, true);
                 yield "\"></div>
                                 </div>
                             </div>
@@ -362,8 +358,8 @@ class __TwigTemplate_d928239d2ce252e2d5453eff60820277 extends Template
                             <div class=\"col-md-2 d-flex align-items-end\">
                                 <button type=\"button\" class=\"btn btn-danger btn-sm\" onclick=\"removeRow(this)\" 
                                         ";
-                // line 131
-                if ((CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 131) == 0)) {
+                // line 130
+                if ((CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 130) == 0)) {
                     yield "style=\"display: none;\"";
                 }
                 yield ">
@@ -384,16 +380,16 @@ class __TwigTemplate_d928239d2ce252e2d5453eff60820277 extends Template
             $_parent = $context['_parent'];
             unset($context['_seq'], $context['_key'], $context['info'], $context['_parent'], $context['loop']);
             $context = array_intersect_key($context, $_parent) + $_parent;
-            // line 137
+            // line 136
             yield "                    ";
         } else {
-            // line 138
+            // line 137
             yield "                        <div class=\"alert alert-info\">
-                            <i class=\"fas fa-info-circle\"></i> No hay códigos de departamento vinculados a esta asignatura.
+                            <i class=\"fas fa-info-circle\"></i> No hay códigos de unidad vinculados a esta asignatura.
                         </div>
                     ";
         }
-        // line 142
+        // line 141
         yield "                </div>
 
                 <div class=\"row mb-3\">
@@ -417,18 +413,18 @@ class __TwigTemplate_d928239d2ce252e2d5453eff60820277 extends Template
         yield from [];
     }
 
-    // line 163
+    // line 162
     /**
      * @return iterable<null|scalar|\Stringable>
      */
     public function block_scripts(array $context, array $blocks = []): iterable
     {
         $macros = $this->macros;
-        // line 164
+        // line 163
         yield "<script>
 let codigoCount = ";
-        // line 165
-        yield ((CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "departamentos", [], "any", false, false, false, 165)) ? ($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((Twig\Extension\CoreExtension::length($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "departamentos", [], "any", false, false, false, 165)) - 1), "html", null, true)) : ($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape( -1, "html", null, true)));
+        // line 164
+        yield ((CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "unidades", [], "any", false, false, false, 164)) ? ($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((Twig\Extension\CoreExtension::length($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "unidades", [], "any", false, false, false, 164)) - 1), "html", null, true)) : ($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape( -1, "html", null, true)));
         yield ";
 
 // Función para manejar el cambio en el tipo de asignatura
@@ -478,37 +474,35 @@ function addRow() {
     newRow.className = 'row mb-3 codigo-row';
     newRow.innerHTML = `
         <div class=\"col-md-4\">
-            <label for=\"departamento_id_\${codigoCount}\" class=\"form-label\">Departamento</label>
-            <select class=\"form-control select-departamento\" 
-                    name=\"codigos[\${codigoCount}][departamento_id]\" 
+            <label for=\"unidad_id_\${codigoCount}\" class=\"form-label\">Unidad</label>
+            <select class=\"form-control select-unidad\" 
+                    name=\"codigos[\${codigoCount}][id_unidad]\" 
                     data-index=\"\${codigoCount}\" required>
-                <option value=\"\">Seleccione un departamento</option>
+                <option value=\"\">Seleccione una unidad</option>
                 ";
-        // line 219
+        // line 218
         $context['_parent'] = $context;
-        $context['_seq'] = CoreExtension::ensureTraversable(($context["departamentos"] ?? null));
-        foreach ($context['_seq'] as $context["_key"] => $context["departamento"]) {
-            // line 220
+        $context['_seq'] = CoreExtension::ensureTraversable(($context["unidades"] ?? null));
+        foreach ($context['_seq'] as $context["_key"] => $context["unidad"]) {
+            // line 219
             yield "                <option value=\"";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "id", [], "any", false, false, false, 220), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "id", [], "any", false, false, false, 219), "html", null, true);
             yield "\">
                     ";
-            // line 221
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "sede_nombre", [], "any", false, false, false, 221), "html", null, true);
+            // line 220
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "sede_nombre", [], "any", false, false, false, 220), "html", null, true);
             yield " - ";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "facultad_nombre", [], "any", false, false, false, 221), "html", null, true);
-            yield " - ";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "departamento_nombre", [], "any", false, false, false, 221), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "unidad_nombre", [], "any", false, false, false, 220), "html", null, true);
             yield "
                 </option>
                 ";
         }
         $_parent = $context['_parent'];
-        unset($context['_seq'], $context['_key'], $context['departamento'], $context['_parent']);
+        unset($context['_seq'], $context['_key'], $context['unidad'], $context['_parent']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 224
+        // line 223
         yield "            </select>
-            <div class=\"invalid-feedback\" id=\"departamentoError_\${codigoCount}\"></div>
+            <div class=\"invalid-feedback\" id=\"unidadError_\${codigoCount}\"></div>
         </div>
 
         <div class=\"col-md-4\">
@@ -542,7 +536,7 @@ function addRow() {
         if (cantInput && depSelect) {
             cantInput.value = '0';
             cantInput.disabled = true;
-            depSelect.value = document.getElementById('departamento_id_0').value;
+            depSelect.value = document.getElementById('unidad_id_0').value;
             depSelect.disabled = true;
         }
     }
@@ -562,13 +556,13 @@ function reindexRows() {
         const cantInput = row.querySelector('input[name\$=\"[cantidad_alumnos]\"]');
         
         if (depSelect && codInput && cantInput) {
-            depSelect.name = `codigos[\${index}][departamento_id]`;
-            depSelect.id = `departamento_id_\${index}`;
+            depSelect.name = `codigos[\${index}][id_unidad]`;
+            depSelect.id = `unidad_id_\${index}`;
             codInput.name = `codigos[\${index}][codigo]`;
             codInput.id = `codigo_\${index}`;
             cantInput.name = `codigos[\${index}][cantidad_alumnos]`;
             cantInput.id = `cantidad_alumnos_\${index}`;
-            row.querySelector(`[id^=\"departamentoError\"]`).id = `departamentoError_\${index}`;
+            row.querySelector(`[id^=\"unidadError\"]`).id = `unidadError_\${index}`;
             row.querySelector(`[id^=\"codigoError\"]`).id = `codigoError_\${index}`;
             row.querySelector(`[id^=\"cantidadAlumnosError\"]`).id = `cantidadAlumnosError_\${index}`;
         }
@@ -636,24 +630,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (codigo) {
                     hasValidCodigo = true;
                     if (data.tipo === 'FORMACION_ELECTIVA') {
-                        // Para Formación Electiva, buscar el departamento \"Sin departamento\"
-                        let sinDepartamentoId = null;
+                        // Para Formación Electiva, buscar la unidad \"Sin unidad\"
+                        let sinUnidadId = null;
                         const options = depSelect.querySelectorAll('option');
                         options.forEach(option => {
-                            if (option.textContent.includes('Sin departamento')) {
-                                sinDepartamentoId = option.value;
+                            if (option.textContent.includes('Sin unidad')) {
+                                sinUnidadId = option.value;
                             }
                         });
-                        const departamentoId = sinDepartamentoId || depSelect.value;
+                        const unidadId = sinUnidadId || depSelect.value;
                         
                         data.codigos.push({
-                            departamento_id: departamentoId,
+                            id_unidad: unidadId,
                             codigo: codigo,
                             cantidad_alumnos: '0'
                         });
                     } else {
                         if (!depSelect.value) {
-                            errores[`departamento_\${index}`] = 'El departamento es requerido';
+                            errores[`unidad_\${index}`] = 'La unidad es requerida';
                             depSelect.classList.add('is-invalid');
                         }
                         if (!cantInput.value || cantInput.value < 1) {
@@ -661,7 +655,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             cantInput.classList.add('is-invalid');
                         }
                         data.codigos.push({
-                            departamento_id: depSelect.value,
+                            id_unidad: depSelect.value,
                             codigo: codigo,
                             cantidad_alumnos: cantInput.value
                         });
@@ -714,7 +708,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     timer: 2000
                 }).then(() => {
                     window.location.href = '";
-        // line 430
+        // line 429
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "asignaturas';
                 });
@@ -824,7 +818,7 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     public function getDebugInfo(): array
     {
-        return array (  718 => 430,  510 => 224,  497 => 221,  492 => 220,  488 => 219,  431 => 165,  428 => 164,  421 => 163,  397 => 142,  391 => 138,  388 => 137,  366 => 131,  357 => 125,  353 => 124,  349 => 123,  345 => 122,  341 => 121,  332 => 115,  328 => 114,  324 => 113,  320 => 112,  316 => 111,  308 => 106,  305 => 105,  292 => 102,  286 => 101,  281 => 100,  277 => 99,  272 => 97,  268 => 96,  263 => 94,  259 => 92,  241 => 91,  239 => 90,  225 => 81,  219 => 80,  206 => 72,  200 => 71,  184 => 58,  171 => 48,  156 => 38,  150 => 37,  144 => 36,  138 => 35,  132 => 34,  126 => 33,  120 => 32,  114 => 31,  108 => 30,  97 => 22,  86 => 16,  76 => 9,  71 => 6,  64 => 5,  53 => 3,  42 => 1,);
+        return array (  712 => 429,  504 => 223,  493 => 220,  488 => 219,  484 => 218,  427 => 164,  424 => 163,  417 => 162,  393 => 141,  387 => 137,  384 => 136,  362 => 130,  353 => 124,  349 => 123,  345 => 122,  341 => 121,  337 => 120,  328 => 114,  324 => 113,  320 => 112,  316 => 111,  312 => 110,  304 => 105,  301 => 104,  290 => 101,  281 => 100,  277 => 99,  272 => 97,  268 => 96,  263 => 94,  259 => 92,  241 => 91,  239 => 90,  225 => 81,  219 => 80,  206 => 72,  200 => 71,  184 => 58,  171 => 48,  156 => 38,  150 => 37,  144 => 36,  138 => 35,  132 => 34,  126 => 33,  120 => 32,  114 => 31,  108 => 30,  97 => 22,  86 => 16,  76 => 9,  71 => 6,  64 => 5,  53 => 3,  42 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -915,26 +909,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
 
-                <!-- Datos por Departamento -->
-                <h5 class=\"mb-3 mt-4\">Datos por Departamento</h5>
+                <!-- Datos por Unidad -->
+                <h5 class=\"mb-3 mt-4\">Datos por Unidad</h5>
                 <div id=\"codigosContainer\">
-                    {% if asignatura.departamentos %}
-                        {% for info in asignatura.departamentos %}
+                    {% if asignatura.unidades %}
+                        {% for info in asignatura.unidades %}
                         <div class=\"row mb-3 codigo-row\">
                             <div class=\"col-md-4\">
-                                <label for=\"departamento_id_{{ loop.index0 }}\" class=\"form-label\">Departamento</label>
-                                <select class=\"form-control select-departamento\" 
-                                        name=\"codigos[{{ loop.index0 }}][departamento_id]\" 
+                                <label for=\"unidad_id_{{ loop.index0 }}\" class=\"form-label\">Unidad</label>
+                                <select class=\"form-control select-unidad\" 
+                                        name=\"codigos[{{ loop.index0 }}][id_unidad]\" 
                                         data-index=\"{{ loop.index0 }}\" required>
-                                    <option value=\"\">Seleccione un departamento</option>
-                                    {% for departamento in departamentos %}
-                                    <option value=\"{{ departamento.id }}\" 
-                                            {% if departamento.id == info.departamento_id %}selected{% endif %}>
-                                        {{ departamento.sede_nombre }} - {{ departamento.facultad_nombre }} - {{ departamento.departamento_nombre }}
+                                    <option value=\"\">Seleccione una unidad</option>
+                                    {% for unidad in unidades %}
+                                    <option value=\"{{ unidad.id }}\" {% if unidad.id == info.unidad_id %}selected{% endif %}>
+                                        {{ unidad.sede_nombre }} - {{ unidad.unidad_nombre }}
                                     </option>
                                     {% endfor %}
                                 </select>
-                                <div class=\"invalid-feedback\" id=\"departamentoError_{{ loop.index0 }}\"></div>
+                                <div class=\"invalid-feedback\" id=\"unidadError_{{ loop.index0 }}\"></div>
                             </div>
 
                             <div class=\"col-md-4\">
@@ -967,7 +960,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         {% endfor %}
                     {% else %}
                         <div class=\"alert alert-info\">
-                            <i class=\"fas fa-info-circle\"></i> No hay códigos de departamento vinculados a esta asignatura.
+                            <i class=\"fas fa-info-circle\"></i> No hay códigos de unidad vinculados a esta asignatura.
                         </div>
                     {% endif %}
                 </div>
@@ -993,7 +986,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 {% block scripts %}
 <script>
-let codigoCount = {{ asignatura.departamentos ? asignatura.departamentos|length - 1 : -1 }};
+let codigoCount = {{ asignatura.unidades ? asignatura.unidades|length - 1 : -1 }};
 
 // Función para manejar el cambio en el tipo de asignatura
 function handleTipoChange() {
@@ -1042,18 +1035,18 @@ function addRow() {
     newRow.className = 'row mb-3 codigo-row';
     newRow.innerHTML = `
         <div class=\"col-md-4\">
-            <label for=\"departamento_id_\${codigoCount}\" class=\"form-label\">Departamento</label>
-            <select class=\"form-control select-departamento\" 
-                    name=\"codigos[\${codigoCount}][departamento_id]\" 
+            <label for=\"unidad_id_\${codigoCount}\" class=\"form-label\">Unidad</label>
+            <select class=\"form-control select-unidad\" 
+                    name=\"codigos[\${codigoCount}][id_unidad]\" 
                     data-index=\"\${codigoCount}\" required>
-                <option value=\"\">Seleccione un departamento</option>
-                {% for departamento in departamentos %}
-                <option value=\"{{ departamento.id }}\">
-                    {{ departamento.sede_nombre }} - {{ departamento.facultad_nombre }} - {{ departamento.departamento_nombre }}
+                <option value=\"\">Seleccione una unidad</option>
+                {% for unidad in unidades %}
+                <option value=\"{{ unidad.id }}\">
+                    {{ unidad.sede_nombre }} - {{ unidad.unidad_nombre }}
                 </option>
                 {% endfor %}
             </select>
-            <div class=\"invalid-feedback\" id=\"departamentoError_\${codigoCount}\"></div>
+            <div class=\"invalid-feedback\" id=\"unidadError_\${codigoCount}\"></div>
         </div>
 
         <div class=\"col-md-4\">
@@ -1087,7 +1080,7 @@ function addRow() {
         if (cantInput && depSelect) {
             cantInput.value = '0';
             cantInput.disabled = true;
-            depSelect.value = document.getElementById('departamento_id_0').value;
+            depSelect.value = document.getElementById('unidad_id_0').value;
             depSelect.disabled = true;
         }
     }
@@ -1107,13 +1100,13 @@ function reindexRows() {
         const cantInput = row.querySelector('input[name\$=\"[cantidad_alumnos]\"]');
         
         if (depSelect && codInput && cantInput) {
-            depSelect.name = `codigos[\${index}][departamento_id]`;
-            depSelect.id = `departamento_id_\${index}`;
+            depSelect.name = `codigos[\${index}][id_unidad]`;
+            depSelect.id = `unidad_id_\${index}`;
             codInput.name = `codigos[\${index}][codigo]`;
             codInput.id = `codigo_\${index}`;
             cantInput.name = `codigos[\${index}][cantidad_alumnos]`;
             cantInput.id = `cantidad_alumnos_\${index}`;
-            row.querySelector(`[id^=\"departamentoError\"]`).id = `departamentoError_\${index}`;
+            row.querySelector(`[id^=\"unidadError\"]`).id = `unidadError_\${index}`;
             row.querySelector(`[id^=\"codigoError\"]`).id = `codigoError_\${index}`;
             row.querySelector(`[id^=\"cantidadAlumnosError\"]`).id = `cantidadAlumnosError_\${index}`;
         }
@@ -1181,24 +1174,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (codigo) {
                     hasValidCodigo = true;
                     if (data.tipo === 'FORMACION_ELECTIVA') {
-                        // Para Formación Electiva, buscar el departamento \"Sin departamento\"
-                        let sinDepartamentoId = null;
+                        // Para Formación Electiva, buscar la unidad \"Sin unidad\"
+                        let sinUnidadId = null;
                         const options = depSelect.querySelectorAll('option');
                         options.forEach(option => {
-                            if (option.textContent.includes('Sin departamento')) {
-                                sinDepartamentoId = option.value;
+                            if (option.textContent.includes('Sin unidad')) {
+                                sinUnidadId = option.value;
                             }
                         });
-                        const departamentoId = sinDepartamentoId || depSelect.value;
+                        const unidadId = sinUnidadId || depSelect.value;
                         
                         data.codigos.push({
-                            departamento_id: departamentoId,
+                            id_unidad: unidadId,
                             codigo: codigo,
                             cantidad_alumnos: '0'
                         });
                     } else {
                         if (!depSelect.value) {
-                            errores[`departamento_\${index}`] = 'El departamento es requerido';
+                            errores[`unidad_\${index}`] = 'La unidad es requerida';
                             depSelect.classList.add('is-invalid');
                         }
                         if (!cantInput.value || cantInput.value < 1) {
@@ -1206,7 +1199,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             cantInput.classList.add('is-invalid');
                         }
                         data.codigos.push({
-                            departamento_id: depSelect.value,
+                            id_unidad: depSelect.value,
                             codigo: codigo,
                             cantidad_alumnos: cantInput.value
                         });

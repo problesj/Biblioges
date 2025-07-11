@@ -60,7 +60,7 @@
                             {% set vigencias_desde = carrera.vigencias_desde|split('|') %}
                             {% set vigencias_hasta = carrera.vigencias_hasta|split('|') %}
                             {% set sedes_ids = carrera.sedes_ids %}
-                            {% set facultades_ids = carrera.facultades_ids %}
+                            {% set unidades_ids = carrera.unidades_ids %}
                             
                             {% for i in 0..(codigos|length - 1) %}
                             <div class="row mb-3 codigo-row">
@@ -101,13 +101,13 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <label class="form-label">Facultad *</label>
-                                        <select class="form-select" name="facultades[]" required>
-                                            <option value="">Seleccione una facultad</option>
-                                            {% for facultad in facultades %}
-                                            <option value="{{ facultad.id }}" 
-                                                    {% if facultades_ids[i] is defined and facultades_ids[i] == facultad.id %}selected{% endif %}>
-                                                {{ facultad.nombre }}
+                                        <label class="form-label">Unidad *</label>
+                                        <select class="form-select" name="unidades[]" required>
+                                            <option value="">Seleccione una unidad</option>
+                                            {% for unidad in unidades %}
+                                            <option value="{{ unidad.id }}" 
+                                                    {% if unidades_ids[i] is defined and unidades_ids[i] == unidad.id %}selected{% endif %}>
+                                                {{ unidad.nombre }}
                                             </option>
                                             {% endfor %}
                                         </select>
@@ -141,30 +141,30 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Función para cargar facultades
-        function cargarFacultades(sedeSelect, facultadSeleccionada = null) {
-            var facultadSelect = sedeSelect.closest('.row').find('select[name="facultades[]"]');
-            facultadSelect.html('<option value="">Cargando...</option>');
+        // Función para cargar unidades por sede
+        function cargarUnidadesPorSede(sedeSelect, unidadSeleccionada = null) {
+            var unidadSelect = sedeSelect.closest('.row').find('select[name="unidades[]"]');
+            unidadSelect.html('<option value="">Cargando...</option>');
             
             $.ajax({
-                url: '{{ app_url }}api/facultades',
+                url: '{{ app_url }}api/unidades',
                 method: 'GET',
                 data: { sede_id: sedeSelect.val() },
-                success: function(facultades) {
-                    facultadSelect.html('<option value="">Seleccione una facultad</option>');
-                    if (Array.isArray(facultades)) {
-                        facultades.forEach(function(facultad) {
-                            var selected = (facultadSeleccionada && facultadSeleccionada == facultad.id) ? 'selected' : '';
-                            facultadSelect.append('<option value="' + facultad.id + '" ' + selected + '>' + facultad.nombre + '</option>');
+                success: function(unidades) {
+                    unidadSelect.html('<option value="">Seleccione una unidad</option>');
+                    if (Array.isArray(unidades)) {
+                        unidades.forEach(function(unidad) {
+                            var selected = (unidadSeleccionada && unidadSeleccionada == unidad.id) ? 'selected' : '';
+                            unidadSelect.append('<option value="' + unidad.id + '" ' + selected + '>' + unidad.nombre + '</option>');
                         });
                     } else {
-                        console.error('La respuesta no es un array:', facultades);
-                        facultadSelect.append('<option value="">Error al cargar facultades</option>');
+                        console.error('La respuesta no es un array:', unidades);
+                        unidadSelect.append('<option value="">Error al cargar unidades</option>');
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Error al cargar facultades:', error);
-                    facultadSelect.html('<option value="">Error al cargar facultades</option>');
+                    console.error('Error al cargar unidades:', error);
+                    unidadSelect.html('<option value="">Error al cargar unidades</option>');
                 }
             });
         }
@@ -207,7 +207,7 @@
             
             // Agregar evento de cambio de sede a la nueva fila
             row.find('select[name="sedes[]"]').change(function() {
-                cargarFacultades($(this));
+                cargarUnidadesPorSede($(this));
             });
             
             // Agregar validación a los campos de vigencia
@@ -223,15 +223,15 @@
 
         // Agregar evento de cambio de sede a todas las filas existentes
         $('select[name="sedes[]"]').change(function() {
-            var facultadSeleccionada = $(this).closest('.row').find('select[name="facultades[]"]').val();
-            cargarFacultades($(this), facultadSeleccionada);
+            var unidadSeleccionada = $(this).closest('.row').find('select[name="unidades[]"]').val();
+            cargarUnidadesPorSede($(this), unidadSeleccionada);
         });
 
-        // Cargar facultades para las sedes ya seleccionadas al cargar la página
+        // Cargar unidades para las sedes ya seleccionadas al cargar la página
         $('select[name="sedes[]"]').each(function() {
             if ($(this).val()) {
-                var facultadSeleccionada = $(this).closest('.row').find('select[name="facultades[]"]').val();
-                cargarFacultades($(this), facultadSeleccionada);
+                var unidadSeleccionada = $(this).closest('.row').find('select[name="unidades[]"]').val();
+                cargarUnidadesPorSede($(this), unidadSeleccionada);
             }
         });
 
@@ -253,10 +253,10 @@
             $('.codigo-row').each(function() {
                 var codigo = $(this).find('input[name="codigos[]"]').val();
                 var sede = $(this).find('select[name="sedes[]"]').val();
-                var facultad = $(this).find('select[name="facultades[]"]').val();
+                var unidad = $(this).find('select[name="unidades[]"]').val();
                 var vigenciaDesde = $(this).find('input[name="vigencias_desde[]"]').val();
                 
-                if (codigo && sede && facultad && vigenciaDesde) {
+                if (codigo && sede && unidad && vigenciaDesde) {
                     codigosCompletos = true;
                 }
                 

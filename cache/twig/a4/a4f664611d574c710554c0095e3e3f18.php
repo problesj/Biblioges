@@ -254,49 +254,30 @@ class __TwigTemplate_6b4959f1ae57c18788a9dcecd85387ae extends Template
         $context['_seq'] = CoreExtension::ensureTraversable(($context["sedes"] ?? null));
         foreach ($context['_seq'] as $context["_key"] => $context["sede"]) {
             // line 99
-            yield "                            <optgroup label=\"";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["sede"], "nombre", [], "any", false, false, false, 99), "html", null, true);
-            yield "\">
-                                ";
-            // line 100
+            yield "                            ";
             $context['_parent'] = $context;
-            $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, $context["sede"], "facultades", [], "any", false, false, false, 100));
-            foreach ($context['_seq'] as $context["_key"] => $context["facultad"]) {
-                // line 101
-                yield "                                    <optgroup label=\"&nbsp;&nbsp;";
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["facultad"], "nombre", [], "any", false, false, false, 101), "html", null, true);
-                yield "\">
-                                        ";
-                // line 102
-                $context['_parent'] = $context;
-                $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, $context["facultad"], "departamentos", [], "any", false, false, false, 102));
-                foreach ($context['_seq'] as $context["_key"] => $context["departamento"]) {
-                    // line 103
-                    yield "                                            <option value=\"d_";
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "id", [], "any", false, false, false, 103), "html", null, true);
-                    yield "\">&nbsp;&nbsp;&nbsp;&nbsp;";
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["departamento"], "nombre", [], "any", false, false, false, 103), "html", null, true);
-                    yield "</option>
-                                        ";
-                }
-                $_parent = $context['_parent'];
-                unset($context['_seq'], $context['_key'], $context['departamento'], $context['_parent']);
-                $context = array_intersect_key($context, $_parent) + $_parent;
-                // line 105
-                yield "                                    </optgroup>
-                                ";
+            $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, $context["sede"], "unidades", [], "any", false, false, false, 99));
+            foreach ($context['_seq'] as $context["_key"] => $context["unidad"]) {
+                // line 100
+                yield "                                <option value=\"u_";
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "id", [], "any", false, false, false, 100), "html", null, true);
+                yield "\">";
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["sede"], "nombre", [], "any", false, false, false, 100), "html", null, true);
+                yield " - ";
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "nombre", [], "any", false, false, false, 100), "html", null, true);
+                yield "</option>
+                            ";
             }
             $_parent = $context['_parent'];
-            unset($context['_seq'], $context['_key'], $context['facultad'], $context['_parent']);
+            unset($context['_seq'], $context['_key'], $context['unidad'], $context['_parent']);
             $context = array_intersect_key($context, $_parent) + $_parent;
-            // line 107
-            yield "                            </optgroup>
-                        ";
+            // line 102
+            yield "                        ";
         }
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_key'], $context['sede'], $context['_parent']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 109
+        // line 103
         yield "                    </select>
                 </div>
                 <div class=\"col-md-6\">
@@ -346,46 +327,46 @@ class __TwigTemplate_6b4959f1ae57c18788a9dcecd85387ae extends Template
                                     </td>
                                 </tr>
                                 ";
-        // line 157
+        // line 151
         $context['_parent'] = $context;
         $context['_seq'] = CoreExtension::ensureTraversable(($context["asignaturas_disponibles"] ?? null));
         foreach ($context['_seq'] as $context["_key"] => $context["asignatura"]) {
-            // line 158
+            // line 152
             yield "                                <tr class=\"asignatura-disponible\" style=\"display: none;\">
                                     <td class=\"align-top\">
                                         <input type=\"checkbox\" class=\"form-check-input\" name=\"asignaturas[]\" value=\"";
-            // line 160
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 160), "html", null, true);
+            // line 154
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 154), "html", null, true);
             yield "\" data-nombre=\"";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "nombre", [], "any", false, false, false, 160), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "nombre", [], "any", false, false, false, 154), "html", null, true);
             yield "\" data-tipo=\"";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "tipo", [], "any", false, false, false, 160), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "tipo", [], "any", false, false, false, 154), "html", null, true);
             yield "\">
                                     </td>
                                     <td class=\"align-top\">
                                         <div style=\"font-size: 0.9em; word-break: break-all;\">
                                             ";
-            // line 164
-            yield Twig\Extension\CoreExtension::nl2br($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::trim(Twig\Extension\CoreExtension::replace(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "codigos", [], "any", false, false, false, 164), [", " => "
+            // line 158
+            yield Twig\Extension\CoreExtension::nl2br($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::trim(Twig\Extension\CoreExtension::replace(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "codigos", [], "any", false, false, false, 158), [", " => "
 "])), "html", null, true));
             yield "
                                         </div>
                                     </td>
                                     <td class=\"align-top\">";
-            // line 167
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "nombre", [], "any", false, false, false, 167), "html", null, true);
+            // line 161
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "nombre", [], "any", false, false, false, 161), "html", null, true);
             yield "</td>
                                     <td class=\"align-top\">
                                         <div class=\"form-check\">
                                             <input class=\"form-check-input tipo-bibliografia\" type=\"radio\" 
                                                    name=\"tipo_bibliografia_";
-            // line 171
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 171), "html", null, true);
+            // line 165
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 165), "html", null, true);
             yield "\" 
                                                    value=\"basica\" 
                                                    data-asignatura-id=\"";
-            // line 173
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 173), "html", null, true);
+            // line 167
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 167), "html", null, true);
             yield "\"
                                                    checked>
                                             <label class=\"form-check-label\">Básica</label>
@@ -393,26 +374,26 @@ class __TwigTemplate_6b4959f1ae57c18788a9dcecd85387ae extends Template
                                         <div class=\"form-check\">
                                             <input class=\"form-check-input tipo-bibliografia\" type=\"radio\" 
                                                    name=\"tipo_bibliografia_";
-            // line 179
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 179), "html", null, true);
+            // line 173
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 173), "html", null, true);
             yield "\" 
                                                    value=\"complementaria\" 
                                                    data-asignatura-id=\"";
-            // line 181
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 181), "html", null, true);
+            // line 175
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 175), "html", null, true);
             yield "\">
                                             <label class=\"form-check-label\">Complementaria</label>
                                         </div>
                                         <div class=\"form-check\">
                                             <input class=\"form-check-input tipo-bibliografia\" type=\"radio\" 
                                                    name=\"tipo_bibliografia_";
-            // line 186
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 186), "html", null, true);
+            // line 180
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 180), "html", null, true);
             yield "\" 
                                                    value=\"otro\" 
                                                    data-asignatura-id=\"";
-            // line 188
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 188), "html", null, true);
+            // line 182
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 182), "html", null, true);
             yield "\">
                                             <label class=\"form-check-label\">Otro</label>
                                         </div>
@@ -423,7 +404,7 @@ class __TwigTemplate_6b4959f1ae57c18788a9dcecd85387ae extends Template
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_key'], $context['asignatura'], $context['_parent']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 194
+        // line 188
         yield "                            </tbody>
                         </table>
                     </div>
@@ -466,52 +447,52 @@ class __TwigTemplate_6b4959f1ae57c18788a9dcecd85387ae extends Template
                             </thead>
                             <tbody>
                                 ";
-        // line 235
+        // line 229
         $context['_parent'] = $context;
         $context['_seq'] = CoreExtension::ensureTraversable(($context["asignaturas_vinculadas"] ?? null));
         $context['_iterated'] = false;
         foreach ($context['_seq'] as $context["_key"] => $context["asignatura"]) {
-            // line 236
+            // line 230
             yield "                                <tr>
                                     <td>
                                         <input type=\"checkbox\" class=\"form-check-input\" name=\"vinculaciones[]\" value=\"";
-            // line 238
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "vinculacion_id", [], "any", false, false, false, 238), "html", null, true);
+            // line 232
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "vinculacion_id", [], "any", false, false, false, 232), "html", null, true);
             yield "\">
                                     </td>
                                     <td>
                                         <div style=\"font-size: 0.9em;\">
                                             ";
-            // line 242
-            if (CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "codigos", [], "any", false, false, false, 242)) {
-                // line 243
+            // line 236
+            if (CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "codigos", [], "any", false, false, false, 236)) {
+                // line 237
                 yield "                                                ";
-                yield Twig\Extension\CoreExtension::nl2br($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::trim(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "codigos", [], "any", false, false, false, 243)), "html", null, true));
+                yield Twig\Extension\CoreExtension::nl2br($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::trim(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "codigos", [], "any", false, false, false, 237)), "html", null, true));
                 yield "
                                             ";
             } else {
-                // line 245
+                // line 239
                 yield "                                                Sin código
                                             ";
             }
-            // line 247
+            // line 241
             yield "                                        </div>
                                     </td>
                                     <td>";
-            // line 249
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "nombre", [], "any", false, false, false, 249), "html", null, true);
+            // line 243
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "nombre", [], "any", false, false, false, 243), "html", null, true);
             yield "</td>
                                     <td>";
-            // line 250
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "tipo_bibliografia", [], "any", false, false, false, 250), "html", null, true);
+            // line 244
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "tipo_bibliografia", [], "any", false, false, false, 244), "html", null, true);
             yield "</td>
                                 </tr>
                                 ";
             $context['_iterated'] = true;
         }
-        // line 252
+        // line 246
         if (!$context['_iterated']) {
-            // line 253
+            // line 247
             yield "                                <tr>
                                     <td colspan=\"4\" class=\"text-center\">No hay asignaturas vinculadas</td>
                                 </tr>
@@ -520,7 +501,7 @@ class __TwigTemplate_6b4959f1ae57c18788a9dcecd85387ae extends Template
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_key'], $context['asignatura'], $context['_parent'], $context['_iterated']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 257
+        // line 251
         yield "                            </tbody>
                         </table>
                     </div>
@@ -533,14 +514,14 @@ class __TwigTemplate_6b4959f1ae57c18788a9dcecd85387ae extends Template
         yield from [];
     }
 
-    // line 267
+    // line 261
     /**
      * @return iterable<null|scalar|\Stringable>
      */
     public function block_scripts(array $context, array $blocks = []): iterable
     {
         $macros = $this->macros;
-        // line 268
+        // line 262
         yield from $this->yieldParentBlock("scripts", $context, $blocks);
         yield "
 <script src=\"https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js\"></script>
@@ -553,18 +534,12 @@ function getUrlParameter(name) {
 
 // Función para establecer valores de filtros desde la URL
 function establecerFiltrosDesdeURL() {
-    const departamento = getUrlParameter('departamento');
-    const facultad = getUrlParameter('facultad');
-    const sede = getUrlParameter('sede');
+    const unidad = getUrlParameter('unidad');
     const tipoAsignatura = getUrlParameter('tipo_asignatura');
     
     // Establecer valor del filtro de ubicación
-    if (departamento) {
-        document.getElementById('ubicacion').value = 'd_' + departamento;
-    } else if (facultad) {
-        document.getElementById('ubicacion').value = 'f_' + facultad;
-    } else if (sede) {
-        document.getElementById('ubicacion').value = 's_' + sede;
+    if (unidad) {
+        document.getElementById('ubicacion').value = 'u_' + unidad;
     }
     
     // Establecer valor del filtro de tipo de asignatura
@@ -578,11 +553,11 @@ function verificarFiltrosIniciales() {
     // Primero establecer los valores de los filtros desde la URL
     establecerFiltrosDesdeURL();
     
-    const ubicacion = document.getElementById('ubicacion').value;
+    const unidad = document.getElementById('ubicacion').value;
     const tipoAsignatura = document.getElementById('tipo_asignatura').value;
     
     // Verificar si se ha seleccionado al menos un filtro
-    const hayFiltrosSeleccionados = ubicacion || tipoAsignatura;
+    const hayFiltrosSeleccionados = unidad || tipoAsignatura;
     
     // Controlar visibilidad del mensaje y las asignaturas
     const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
@@ -608,11 +583,11 @@ function verificarFiltrosIniciales() {
 
 // Función para aplicar filtros
 function aplicarFiltros() {
-    const ubicacion = document.getElementById('ubicacion').value;
+    const unidad = document.getElementById('ubicacion').value;
     const tipoAsignatura = document.getElementById('tipo_asignatura').value;
     
     // Verificar si se ha seleccionado al menos un filtro
-    const hayFiltrosSeleccionados = ubicacion || tipoAsignatura;
+    const hayFiltrosSeleccionados = unidad || tipoAsignatura;
     
     // Controlar visibilidad del mensaje y las asignaturas
     const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
@@ -637,20 +612,16 @@ function aplicarFiltros() {
     
     // Construir la URL con los filtros
     let url = `";
-        // line 362
+        // line 350
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "bibliografias-declaradas/";
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 362), "html", null, true);
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 350), "html", null, true);
         yield "/vincular?`;
     const params = new URLSearchParams();
     
-    if (ubicacion) {
-        if (ubicacion.startsWith('d_')) {
-            params.append('departamento', ubicacion.substring(2));
-        } else if (ubicacion.startsWith('f_')) {
-            params.append('facultad', ubicacion.substring(2));
-        } else if (ubicacion.startsWith('s_')) {
-            params.append('sede', ubicacion.substring(2));
+    if (unidad) {
+        if (unidad.startsWith('u_')) {
+            params.append('unidad', unidad.substring(2));
         }
     }
     
@@ -703,10 +674,10 @@ function agregarSeleccionadas() {
     
     // Realizar la petición AJAX
     const url = '";
-        // line 423
+        // line 407
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "bibliografias-declaradas/";
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 423), "html", null, true);
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 407), "html", null, true);
         yield "/vincularMultiple'.replace(/([^:]\\/)\\/+/g, \"\$1\");
     fetch(url, {
         method: 'POST',
@@ -783,10 +754,10 @@ function quitarSeleccionadas() {
             }
 
             const url = `";
-        // line 498
+        // line 482
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "bibliografias-declaradas/";
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 498), "html", null, true);
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 482), "html", null, true);
         yield "/desvincularMultiple`;
             
             fetch(url, {
@@ -846,10 +817,10 @@ function agregarAsignatura(asignaturaId) {
 
     // Realizar la petición AJAX
     const url = '";
-        // line 556
+        // line 540
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "bibliografias-declaradas/";
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 556), "html", null, true);
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 540), "html", null, true);
         yield "/vincularMultiple'.replace(/([^:]\\/)\\/+/g, \"\$1\");
     fetch(url, {
         method: 'POST',
@@ -919,8 +890,8 @@ function quitarAsignatura(vinculacionId) {
     }
 
     const url = `";
-        // line 624
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((((($context["app_url"] ?? null) . "bibliografias-declaradas/") . CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 624)) . "/desvincularSingle/"), "html", null, true);
+        // line 608
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((((($context["app_url"] ?? null) . "bibliografias-declaradas/") . CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 608)) . "/desvincularSingle/"), "html", null, true);
         yield "\${vinculacionId}`;
     
     fetch(url, {
@@ -988,10 +959,10 @@ function vincularAsignaturas() {
 
     // Realizar la petición AJAX
     const url = '";
-        // line 690
+        // line 674
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "bibliografias-declaradas/";
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 690), "html", null, true);
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 674), "html", null, true);
         yield "/vincularMultiple'.replace(/([^:]\\/)\\/+/g, \"\$1\");
     fetch(url, {
         method: 'POST',
@@ -1077,7 +1048,7 @@ function vincularAsignaturas() {
      */
     public function getDebugInfo(): array
     {
-        return array (  992 => 690,  923 => 624,  850 => 556,  787 => 498,  707 => 423,  641 => 362,  544 => 268,  537 => 267,  524 => 257,  515 => 253,  513 => 252,  506 => 250,  502 => 249,  498 => 247,  494 => 245,  488 => 243,  486 => 242,  479 => 238,  475 => 236,  470 => 235,  427 => 194,  415 => 188,  410 => 186,  402 => 181,  397 => 179,  388 => 173,  383 => 171,  376 => 167,  369 => 164,  358 => 160,  354 => 158,  350 => 157,  300 => 109,  293 => 107,  286 => 105,  275 => 103,  271 => 102,  266 => 101,  262 => 100,  257 => 99,  253 => 98,  235 => 82,  229 => 80,  227 => 79,  222 => 78,  220 => 77,  215 => 76,  213 => 75,  209 => 74,  205 => 73,  200 => 72,  198 => 71,  193 => 70,  191 => 69,  186 => 68,  184 => 67,  177 => 62,  173 => 60,  167 => 58,  165 => 57,  158 => 52,  154 => 50,  146 => 48,  144 => 47,  135 => 41,  129 => 38,  121 => 33,  115 => 30,  109 => 27,  93 => 14,  88 => 11,  81 => 10,  73 => 6,  66 => 5,  54 => 3,  43 => 1,);
+        return array (  963 => 674,  894 => 608,  821 => 540,  758 => 482,  678 => 407,  616 => 350,  525 => 262,  518 => 261,  505 => 251,  496 => 247,  494 => 246,  487 => 244,  483 => 243,  479 => 241,  475 => 239,  469 => 237,  467 => 236,  460 => 232,  456 => 230,  451 => 229,  408 => 188,  396 => 182,  391 => 180,  383 => 175,  378 => 173,  369 => 167,  364 => 165,  357 => 161,  350 => 158,  339 => 154,  335 => 152,  331 => 151,  281 => 103,  275 => 102,  262 => 100,  257 => 99,  253 => 98,  235 => 82,  229 => 80,  227 => 79,  222 => 78,  220 => 77,  215 => 76,  213 => 75,  209 => 74,  205 => 73,  200 => 72,  198 => 71,  193 => 70,  191 => 69,  186 => 68,  184 => 67,  177 => 62,  173 => 60,  167 => 58,  165 => 57,  158 => 52,  154 => 50,  146 => 48,  144 => 47,  135 => 41,  129 => 38,  121 => 33,  115 => 30,  109 => 27,  93 => 14,  88 => 11,  81 => 10,  73 => 6,  66 => 5,  54 => 3,  43 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -1180,15 +1151,9 @@ function vincularAsignaturas() {
                     <select name=\"ubicacion\" id=\"ubicacion\" class=\"form-select\">
                         <option value=\"\">Seleccione Ubicación</option>
                         {% for sede in sedes %}
-                            <optgroup label=\"{{ sede.nombre }}\">
-                                {% for facultad in sede.facultades %}
-                                    <optgroup label=\"&nbsp;&nbsp;{{ facultad.nombre }}\">
-                                        {% for departamento in facultad.departamentos %}
-                                            <option value=\"d_{{ departamento.id }}\">&nbsp;&nbsp;&nbsp;&nbsp;{{ departamento.nombre }}</option>
-                                        {% endfor %}
-                                    </optgroup>
-                                {% endfor %}
-                            </optgroup>
+                            {% for unidad in sede.unidades %}
+                                <option value=\"u_{{ unidad.id }}\">{{ sede.nombre }} - {{ unidad.nombre }}</option>
+                            {% endfor %}
                         {% endfor %}
                     </select>
                 </div>
@@ -1360,18 +1325,12 @@ function getUrlParameter(name) {
 
 // Función para establecer valores de filtros desde la URL
 function establecerFiltrosDesdeURL() {
-    const departamento = getUrlParameter('departamento');
-    const facultad = getUrlParameter('facultad');
-    const sede = getUrlParameter('sede');
+    const unidad = getUrlParameter('unidad');
     const tipoAsignatura = getUrlParameter('tipo_asignatura');
     
     // Establecer valor del filtro de ubicación
-    if (departamento) {
-        document.getElementById('ubicacion').value = 'd_' + departamento;
-    } else if (facultad) {
-        document.getElementById('ubicacion').value = 'f_' + facultad;
-    } else if (sede) {
-        document.getElementById('ubicacion').value = 's_' + sede;
+    if (unidad) {
+        document.getElementById('ubicacion').value = 'u_' + unidad;
     }
     
     // Establecer valor del filtro de tipo de asignatura
@@ -1385,11 +1344,11 @@ function verificarFiltrosIniciales() {
     // Primero establecer los valores de los filtros desde la URL
     establecerFiltrosDesdeURL();
     
-    const ubicacion = document.getElementById('ubicacion').value;
+    const unidad = document.getElementById('ubicacion').value;
     const tipoAsignatura = document.getElementById('tipo_asignatura').value;
     
     // Verificar si se ha seleccionado al menos un filtro
-    const hayFiltrosSeleccionados = ubicacion || tipoAsignatura;
+    const hayFiltrosSeleccionados = unidad || tipoAsignatura;
     
     // Controlar visibilidad del mensaje y las asignaturas
     const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
@@ -1415,11 +1374,11 @@ function verificarFiltrosIniciales() {
 
 // Función para aplicar filtros
 function aplicarFiltros() {
-    const ubicacion = document.getElementById('ubicacion').value;
+    const unidad = document.getElementById('ubicacion').value;
     const tipoAsignatura = document.getElementById('tipo_asignatura').value;
     
     // Verificar si se ha seleccionado al menos un filtro
-    const hayFiltrosSeleccionados = ubicacion || tipoAsignatura;
+    const hayFiltrosSeleccionados = unidad || tipoAsignatura;
     
     // Controlar visibilidad del mensaje y las asignaturas
     const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
@@ -1446,13 +1405,9 @@ function aplicarFiltros() {
     let url = `{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/vincular?`;
     const params = new URLSearchParams();
     
-    if (ubicacion) {
-        if (ubicacion.startsWith('d_')) {
-            params.append('departamento', ubicacion.substring(2));
-        } else if (ubicacion.startsWith('f_')) {
-            params.append('facultad', ubicacion.substring(2));
-        } else if (ubicacion.startsWith('s_')) {
-            params.append('sede', ubicacion.substring(2));
+    if (unidad) {
+        if (unidad.startsWith('u_')) {
+            params.append('unidad', unidad.substring(2));
         }
     }
     

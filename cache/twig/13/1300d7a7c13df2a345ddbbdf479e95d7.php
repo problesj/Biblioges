@@ -199,7 +199,7 @@ class __TwigTemplate_cb8122c50c7c21b18f880e5b0ecb548b extends Template
                         <tr>
                             <th>Código</th>
                             <th>Vigencia</th>
-                            <th>Facultad</th>
+                            <th>Unidad</th>
                             <th>Sede</th>
                             <th>Estado</th>
                         </tr>
@@ -229,7 +229,7 @@ class __TwigTemplate_cb8122c50c7c21b18f880e5b0ecb548b extends Template
                                     </td>
                                     <td>";
                 // line 106
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["codigo"], "facultad_nombre", [], "any", false, false, false, 106), "html", null, true);
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["codigo"], "unidad_nombre", [], "any", false, false, false, 106), "html", null, true);
                 yield "</td>
                                     <td>";
                 // line 107
@@ -279,7 +279,7 @@ class __TwigTemplate_cb8122c50c7c21b18f880e5b0ecb548b extends Template
                                     </td>
                                     <td>";
                 // line 124
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v3 = CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "facultades", [], "any", false, false, false, 124)) && is_array($_v3) || $_v3 instanceof ArrayAccess ? ($_v3[$context["i"]] ?? null) : null), "html", null, true);
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v3 = CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "unidades", [], "any", false, false, false, 124)) && is_array($_v3) || $_v3 instanceof ArrayAccess ? ($_v3[$context["i"]] ?? null) : null), "html", null, true);
                 yield "</td>
                                     <td>";
                 // line 125
@@ -558,7 +558,7 @@ class __TwigTemplate_cb8122c50c7c21b18f880e5b0ecb548b extends Template
                         <tr>
                             <th>Código</th>
                             <th>Vigencia</th>
-                            <th>Facultad</th>
+                            <th>Unidad</th>
                             <th>Sede</th>
                             <th>Estado</th>
                         </tr>
@@ -571,7 +571,7 @@ class __TwigTemplate_cb8122c50c7c21b18f880e5b0ecb548b extends Template
                                     <td>
                                         {{ codigo.vigencia_desde }} - {{ codigo.vigencia_hasta }}
                                     </td>
-                                    <td>{{ codigo.facultad_nombre }}</td>
+                                    <td>{{ codigo.unidad_nombre }}</td>
                                     <td>{{ codigo.sede_nombre }}</td>
                                     <td>
                                         {% if codigo.estado == 1 %}
@@ -589,7 +589,7 @@ class __TwigTemplate_cb8122c50c7c21b18f880e5b0ecb548b extends Template
                                     <td>
                                         {{ carrera.vigencias_desde[i] }} - {{ carrera.vigencias_hasta[i] }}
                                     </td>
-                                    <td>{{ carrera.facultades[i] }}</td>
+                                    <td>{{ carrera.unidades[i] }}</td>
                                     <td>{{ carrera.sedes[i] }}</td>
                                     <td>
                                         <span class=\"badge bg-success\">Activo</span>

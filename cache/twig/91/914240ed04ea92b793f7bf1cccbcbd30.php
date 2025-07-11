@@ -218,29 +218,29 @@ class __TwigTemplate_ffa4d2f16e9c69ed2a7e3237dc809bcb extends Template
                                         </div>
                                         <div class=\"col-md-3\">
                                             <div class=\"form-group\">
-                                                <label for=\"facultades[]\" class=\"form-label\">Facultad *</label>
-                                                <select class=\"form-select\" name=\"facultades[]\" required>
-                                                    <option value=\"\">Seleccione una facultad</option>
+                                                <label for=\"unidades[]\" class=\"form-label\">Unidad *</label>
+                                                <select class=\"form-select\" name=\"unidades[]\" required>
+                                                    <option value=\"\">Seleccione una unidad</option>
                                                     ";
                     // line 103
                     $context['_parent'] = $context;
-                    $context['_seq'] = CoreExtension::ensureTraversable(($context["facultades"] ?? null));
-                    foreach ($context['_seq'] as $context["_key"] => $context["facultad"]) {
+                    $context['_seq'] = CoreExtension::ensureTraversable(($context["unidades"] ?? null));
+                    foreach ($context['_seq'] as $context["_key"] => $context["unidad"]) {
                         // line 104
                         yield "                                                    <option value=\"";
-                        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["facultad"], "id", [], "any", false, false, false, 104), "html", null, true);
+                        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "id", [], "any", false, false, false, 104), "html", null, true);
                         yield "\" ";
-                        yield (((((CoreExtension::getAttribute($this->env, $this->source, CoreExtension::getAttribute($this->env, $this->source, ($context["form_data"] ?? null), "facultades", [], "any", false, true, false, 104), $context["index"], [], "array", true, true, false, 104)) ? (Twig\Extension\CoreExtension::default((($_v3 = CoreExtension::getAttribute($this->env, $this->source, ($context["form_data"] ?? null), "facultades", [], "any", false, false, false, 104)) && is_array($_v3) || $_v3 instanceof ArrayAccess ? ($_v3[$context["index"]] ?? null) : null), "")) : ("")) == CoreExtension::getAttribute($this->env, $this->source, $context["facultad"], "id", [], "any", false, false, false, 104))) ? ("selected") : (""));
+                        yield (((((CoreExtension::getAttribute($this->env, $this->source, CoreExtension::getAttribute($this->env, $this->source, ($context["form_data"] ?? null), "unidades", [], "any", false, true, false, 104), $context["index"], [], "array", true, true, false, 104)) ? (Twig\Extension\CoreExtension::default((($_v3 = CoreExtension::getAttribute($this->env, $this->source, ($context["form_data"] ?? null), "unidades", [], "any", false, false, false, 104)) && is_array($_v3) || $_v3 instanceof ArrayAccess ? ($_v3[$context["index"]] ?? null) : null), "")) : ("")) == CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "id", [], "any", false, false, false, 104))) ? ("selected") : (""));
                         yield ">
                                                         ";
                         // line 105
-                        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["facultad"], "nombre", [], "any", false, false, false, 105), "html", null, true);
+                        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "nombre", [], "any", false, false, false, 105), "html", null, true);
                         yield "
                                                     </option>
                                                     ";
                     }
                     $_parent = $context['_parent'];
-                    unset($context['_seq'], $context['_key'], $context['facultad'], $context['_parent']);
+                    unset($context['_seq'], $context['_key'], $context['unidad'], $context['_parent']);
                     $context = array_intersect_key($context, $_parent) + $_parent;
                     // line 108
                     yield "                                                </select>
@@ -307,24 +307,24 @@ class __TwigTemplate_ffa4d2f16e9c69ed2a7e3237dc809bcb extends Template
                                 </div>
                                 <div class=\"col-md-3\">
                                     <div class=\"form-group\">
-                                        <label for=\"facultades[]\" class=\"form-label\">Facultad *</label>
-                                        <select class=\"form-select\" name=\"facultades[]\" required>
-                                            <option value=\"\">Seleccione una facultad</option>
+                                        <label for=\"unidades[]\" class=\"form-label\">Unidad *</label>
+                                        <select class=\"form-select\" name=\"unidades[]\" required>
+                                            <option value=\"\">Seleccione una unidad</option>
                                             ";
             // line 152
             $context['_parent'] = $context;
-            $context['_seq'] = CoreExtension::ensureTraversable(($context["facultades"] ?? null));
-            foreach ($context['_seq'] as $context["_key"] => $context["facultad"]) {
+            $context['_seq'] = CoreExtension::ensureTraversable(($context["unidades"] ?? null));
+            foreach ($context['_seq'] as $context["_key"] => $context["unidad"]) {
                 // line 153
                 yield "                                            <option value=\"";
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["facultad"], "id", [], "any", false, false, false, 153), "html", null, true);
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "id", [], "any", false, false, false, 153), "html", null, true);
                 yield "\">";
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["facultad"], "nombre", [], "any", false, false, false, 153), "html", null, true);
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "nombre", [], "any", false, false, false, 153), "html", null, true);
                 yield "</option>
                                             ";
             }
             $_parent = $context['_parent'];
-            unset($context['_seq'], $context['_key'], $context['facultad'], $context['_parent']);
+            unset($context['_seq'], $context['_key'], $context['unidad'], $context['_parent']);
             $context = array_intersect_key($context, $_parent) + $_parent;
             // line 155
             yield "                                        </select>
@@ -389,32 +389,32 @@ class __TwigTemplate_ffa4d2f16e9c69ed2a7e3237dc809bcb extends Template
         }
         // line 194
         yield "
-        // Función para cargar facultades
-        function cargarFacultades(sedeSelect) {
-            var facultadSelect = sedeSelect.closest('.row').find('select[name=\"facultades[]\"]');
-            facultadSelect.html('<option value=\"\">Cargando...</option>');
+        // Función para cargar unidades por sede
+        function cargarUnidadesPorSede(sedeSelect) {
+            var unidadSelect = sedeSelect.closest('.row').find('select[name=\"unidades[]\"]');
+            unidadSelect.html('<option value=\"\">Cargando...</option>');
             
             \$.ajax({
                 url: '";
         // line 201
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
-        yield "api/facultades',
+        yield "api/unidades',
                 method: 'GET',
                 data: { sede_id: sedeSelect.val() },
-                success: function(facultades) {
-                    facultadSelect.html('<option value=\"\">Seleccione una facultad</option>');
-                    if (Array.isArray(facultades)) {
-                        facultades.forEach(function(facultad) {
-                            facultadSelect.append('<option value=\"' + facultad.id + '\">' + facultad.nombre + '</option>');
+                success: function(unidades) {
+                    unidadSelect.html('<option value=\"\">Seleccione una unidad</option>');
+                    if (Array.isArray(unidades)) {
+                        unidades.forEach(function(unidad) {
+                            unidadSelect.append('<option value=\"' + unidad.id + '\">' + unidad.nombre + '</option>');
                         });
                     } else {
-                        console.error('La respuesta no es un array:', facultades);
-                        facultadSelect.append('<option value=\"\">Error al cargar facultades</option>');
+                        console.error('La respuesta no es un array:', unidades);
+                        unidadSelect.append('<option value=\"\">Error al cargar unidades</option>');
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Error al cargar facultades:', error);
-                    facultadSelect.html('<option value=\"\">Error al cargar facultades</option>');
+                    console.error('Error al cargar unidades:', error);
+                    unidadSelect.html('<option value=\"\">Error al cargar unidades</option>');
                 }
             });
         }
@@ -448,25 +448,25 @@ class __TwigTemplate_ffa4d2f16e9c69ed2a7e3237dc809bcb extends Template
             \$('.codigo-row').each(function() {
                 var codigo = \$(this).find('input[name=\"codigos[]\"]').val();
                 var sede = \$(this).find('select[name=\"sedes[]\"]').val();
-                var facultad = \$(this).find('select[name=\"facultades[]\"]').val();
+                var unidad = \$(this).find('select[name=\"unidades[]\"]').val();
                 
-                if (codigo && sede && facultad) {
-                    var codigoKey = codigo + '_' + sede + '_' + facultad;
+                if (codigo && sede && unidad) {
+                    var codigoKey = codigo + '_' + sede + '_' + unidad;
                     if (codigosValidos.indexOf(codigoKey) !== -1) {
                         duplicados.push(codigo);
                         \$(this).find('input[name=\"codigos[]\"]').addClass('is-invalid');
                         \$(this).find('select[name=\"sedes[]\"]').addClass('is-invalid');
-                        \$(this).find('select[name=\"facultades[]\"]').addClass('is-invalid');
+                        \$(this).find('select[name=\"unidades[]\"]').addClass('is-invalid');
                     } else {
                         codigosValidos.push(codigoKey);
                         \$(this).find('input[name=\"codigos[]\"]').removeClass('is-invalid');
                         \$(this).find('select[name=\"sedes[]\"]').removeClass('is-invalid');
-                        \$(this).find('select[name=\"facultades[]\"]').removeClass('is-invalid');
+                        \$(this).find('select[name=\"unidades[]\"]').removeClass('is-invalid');
                     }
                 } else {
                     \$(this).find('input[name=\"codigos[]\"]').removeClass('is-invalid');
                     \$(this).find('select[name=\"sedes[]\"]').removeClass('is-invalid');
-                    \$(this).find('select[name=\"facultades[]\"]').removeClass('is-invalid');
+                    \$(this).find('select[name=\"unidades[]\"]').removeClass('is-invalid');
                 }
             });
             
@@ -474,7 +474,7 @@ class __TwigTemplate_ffa4d2f16e9c69ed2a7e3237dc809bcb extends Template
         }
 
         // Agregar eventos para validación en tiempo real
-        \$(document).on('input change', '.codigo-row input[name=\"codigos[]\"], .codigo-row select[name=\"sedes[]\"], .codigo-row select[name=\"facultades[]\"]', function() {
+        \$(document).on('input change', '.codigo-row input[name=\"codigos[]\"], .codigo-row select[name=\"sedes[]\"], .codigo-row select[name=\"unidades[]\"]', function() {
             validarDuplicadosEnTiempoReal();
         });
 
@@ -488,7 +488,7 @@ class __TwigTemplate_ffa4d2f16e9c69ed2a7e3237dc809bcb extends Template
             
             // Agregar evento de cambio de sede a la nueva fila
             row.find('select[name=\"sedes[]\"]').change(function() {
-                cargarFacultades(\$(this));
+                cargarUnidadesPorSede(\$(this));
                 validarDuplicadosEnTiempoReal();
             });
             
@@ -498,7 +498,7 @@ class __TwigTemplate_ffa4d2f16e9c69ed2a7e3237dc809bcb extends Template
             });
             
             // Agregar eventos para validación en tiempo real
-            row.find('input[name=\"codigos[]\"], select[name=\"facultades[]\"]').on('input change', function() {
+            row.find('input[name=\"codigos[]\"], select[name=\"unidades[]\"]').on('input change', function() {
                 validarDuplicadosEnTiempoReal();
             });
         });
@@ -510,18 +510,18 @@ class __TwigTemplate_ffa4d2f16e9c69ed2a7e3237dc809bcb extends Template
 
         // Agregar evento de cambio de sede a todas las filas existentes
         \$('select[name=\"sedes[]\"]').change(function() {
-            cargarFacultades(\$(this));
+            cargarUnidadesPorSede(\$(this));
             validarDuplicadosEnTiempoReal();
         });
 
-        // Cargar facultades iniciales si hay una sede seleccionada
+        // Cargar unidades iniciales si hay una sede seleccionada
         \$('select[name=\"sedes[]\"]').each(function() {
             if (\$(this).val()) {
-                cargarFacultades(\$(this));
+                cargarUnidadesPorSede(\$(this));
             }
         });
 
-        // Cargar facultades para los códigos existentes después de un error
+        // Cargar unidades para los códigos existentes después de un error
         ";
         // line 325
         if ((CoreExtension::getAttribute($this->env, $this->source, ($context["form_data"] ?? null), "codigos", [], "any", true, true, false, 325) && (Twig\Extension\CoreExtension::length($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, ($context["form_data"] ?? null), "codigos", [], "any", false, false, false, 325)) > 0))) {
@@ -530,7 +530,7 @@ class __TwigTemplate_ffa4d2f16e9c69ed2a7e3237dc809bcb extends Template
             \$('.codigo-row').each(function(index) {
                 var sedeSelect = \$(this).find('select[name=\"sedes[]\"]');
                 if (sedeSelect.val()) {
-                    cargarFacultades(sedeSelect);
+                    cargarUnidadesPorSede(sedeSelect);
                 }
             });
         }, 500);
@@ -560,14 +560,14 @@ class __TwigTemplate_ffa4d2f16e9c69ed2a7e3237dc809bcb extends Template
             \$('.codigo-row').each(function() {
                 var codigo = \$(this).find('input[name=\"codigos[]\"]').val();
                 var sede = \$(this).find('select[name=\"sedes[]\"]').val();
-                var facultad = \$(this).find('select[name=\"facultades[]\"]').val();
+                var unidad = \$(this).find('select[name=\"unidades[]\"]').val();
                 var vigenciaDesde = \$(this).find('input[name=\"vigencias_desde[]\"]').val();
                 
-                if (codigo && sede && facultad && vigenciaDesde) {
+                if (codigo && sede && unidad && vigenciaDesde) {
                     codigosCompletos = true;
                     
                     // Verificar duplicados en el formulario
-                    var codigoKey = codigo + '_' + sede + '_' + facultad;
+                    var codigoKey = codigo + '_' + sede + '_' + unidad;
                     if (codigosValidos.indexOf(codigoKey) !== -1) {
                         duplicados.push(codigo);
                     } else {
@@ -604,7 +604,7 @@ class __TwigTemplate_ffa4d2f16e9c69ed2a7e3237dc809bcb extends Template
                 Swal.fire({
                     icon: 'error',
                     title: 'Códigos duplicados',
-                    text: 'No se permiten códigos duplicados por sede y facultad. Códigos duplicados: ' + duplicados.join(', ')
+                    text: 'No se permiten códigos duplicados por sede y unidad. Códigos duplicados: ' + duplicados.join(', ')
                 });
                 return false;
             }
@@ -743,12 +743,12 @@ class __TwigTemplate_ffa4d2f16e9c69ed2a7e3237dc809bcb extends Template
                                         </div>
                                         <div class=\"col-md-3\">
                                             <div class=\"form-group\">
-                                                <label for=\"facultades[]\" class=\"form-label\">Facultad *</label>
-                                                <select class=\"form-select\" name=\"facultades[]\" required>
-                                                    <option value=\"\">Seleccione una facultad</option>
-                                                    {% for facultad in facultades %}
-                                                    <option value=\"{{ facultad.id }}\" {{ form_data.facultades[index]|default('') == facultad.id ? 'selected' : '' }}>
-                                                        {{ facultad.nombre }}
+                                                <label for=\"unidades[]\" class=\"form-label\">Unidad *</label>
+                                                <select class=\"form-select\" name=\"unidades[]\" required>
+                                                    <option value=\"\">Seleccione una unidad</option>
+                                                    {% for unidad in unidades %}
+                                                    <option value=\"{{ unidad.id }}\" {{ form_data.unidades[index]|default('') == unidad.id ? 'selected' : '' }}>
+                                                        {{ unidad.nombre }}
                                                     </option>
                                                     {% endfor %}
                                                 </select>
@@ -792,11 +792,11 @@ class __TwigTemplate_ffa4d2f16e9c69ed2a7e3237dc809bcb extends Template
                                 </div>
                                 <div class=\"col-md-3\">
                                     <div class=\"form-group\">
-                                        <label for=\"facultades[]\" class=\"form-label\">Facultad *</label>
-                                        <select class=\"form-select\" name=\"facultades[]\" required>
-                                            <option value=\"\">Seleccione una facultad</option>
-                                            {% for facultad in facultades %}
-                                            <option value=\"{{ facultad.id }}\">{{ facultad.nombre }}</option>
+                                        <label for=\"unidades[]\" class=\"form-label\">Unidad *</label>
+                                        <select class=\"form-select\" name=\"unidades[]\" required>
+                                            <option value=\"\">Seleccione una unidad</option>
+                                            {% for unidad in unidades %}
+                                            <option value=\"{{ unidad.id }}\">{{ unidad.nombre }}</option>
                                             {% endfor %}
                                         </select>
                                     </div>
@@ -838,29 +838,29 @@ class __TwigTemplate_ffa4d2f16e9c69ed2a7e3237dc809bcb extends Template
         });
         {% endif %}
 
-        // Función para cargar facultades
-        function cargarFacultades(sedeSelect) {
-            var facultadSelect = sedeSelect.closest('.row').find('select[name=\"facultades[]\"]');
-            facultadSelect.html('<option value=\"\">Cargando...</option>');
+        // Función para cargar unidades por sede
+        function cargarUnidadesPorSede(sedeSelect) {
+            var unidadSelect = sedeSelect.closest('.row').find('select[name=\"unidades[]\"]');
+            unidadSelect.html('<option value=\"\">Cargando...</option>');
             
             \$.ajax({
-                url: '{{ app_url }}api/facultades',
+                url: '{{ app_url }}api/unidades',
                 method: 'GET',
                 data: { sede_id: sedeSelect.val() },
-                success: function(facultades) {
-                    facultadSelect.html('<option value=\"\">Seleccione una facultad</option>');
-                    if (Array.isArray(facultades)) {
-                        facultades.forEach(function(facultad) {
-                            facultadSelect.append('<option value=\"' + facultad.id + '\">' + facultad.nombre + '</option>');
+                success: function(unidades) {
+                    unidadSelect.html('<option value=\"\">Seleccione una unidad</option>');
+                    if (Array.isArray(unidades)) {
+                        unidades.forEach(function(unidad) {
+                            unidadSelect.append('<option value=\"' + unidad.id + '\">' + unidad.nombre + '</option>');
                         });
                     } else {
-                        console.error('La respuesta no es un array:', facultades);
-                        facultadSelect.append('<option value=\"\">Error al cargar facultades</option>');
+                        console.error('La respuesta no es un array:', unidades);
+                        unidadSelect.append('<option value=\"\">Error al cargar unidades</option>');
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Error al cargar facultades:', error);
-                    facultadSelect.html('<option value=\"\">Error al cargar facultades</option>');
+                    console.error('Error al cargar unidades:', error);
+                    unidadSelect.html('<option value=\"\">Error al cargar unidades</option>');
                 }
             });
         }
@@ -894,25 +894,25 @@ class __TwigTemplate_ffa4d2f16e9c69ed2a7e3237dc809bcb extends Template
             \$('.codigo-row').each(function() {
                 var codigo = \$(this).find('input[name=\"codigos[]\"]').val();
                 var sede = \$(this).find('select[name=\"sedes[]\"]').val();
-                var facultad = \$(this).find('select[name=\"facultades[]\"]').val();
+                var unidad = \$(this).find('select[name=\"unidades[]\"]').val();
                 
-                if (codigo && sede && facultad) {
-                    var codigoKey = codigo + '_' + sede + '_' + facultad;
+                if (codigo && sede && unidad) {
+                    var codigoKey = codigo + '_' + sede + '_' + unidad;
                     if (codigosValidos.indexOf(codigoKey) !== -1) {
                         duplicados.push(codigo);
                         \$(this).find('input[name=\"codigos[]\"]').addClass('is-invalid');
                         \$(this).find('select[name=\"sedes[]\"]').addClass('is-invalid');
-                        \$(this).find('select[name=\"facultades[]\"]').addClass('is-invalid');
+                        \$(this).find('select[name=\"unidades[]\"]').addClass('is-invalid');
                     } else {
                         codigosValidos.push(codigoKey);
                         \$(this).find('input[name=\"codigos[]\"]').removeClass('is-invalid');
                         \$(this).find('select[name=\"sedes[]\"]').removeClass('is-invalid');
-                        \$(this).find('select[name=\"facultades[]\"]').removeClass('is-invalid');
+                        \$(this).find('select[name=\"unidades[]\"]').removeClass('is-invalid');
                     }
                 } else {
                     \$(this).find('input[name=\"codigos[]\"]').removeClass('is-invalid');
                     \$(this).find('select[name=\"sedes[]\"]').removeClass('is-invalid');
-                    \$(this).find('select[name=\"facultades[]\"]').removeClass('is-invalid');
+                    \$(this).find('select[name=\"unidades[]\"]').removeClass('is-invalid');
                 }
             });
             
@@ -920,7 +920,7 @@ class __TwigTemplate_ffa4d2f16e9c69ed2a7e3237dc809bcb extends Template
         }
 
         // Agregar eventos para validación en tiempo real
-        \$(document).on('input change', '.codigo-row input[name=\"codigos[]\"], .codigo-row select[name=\"sedes[]\"], .codigo-row select[name=\"facultades[]\"]', function() {
+        \$(document).on('input change', '.codigo-row input[name=\"codigos[]\"], .codigo-row select[name=\"sedes[]\"], .codigo-row select[name=\"unidades[]\"]', function() {
             validarDuplicadosEnTiempoReal();
         });
 
@@ -934,7 +934,7 @@ class __TwigTemplate_ffa4d2f16e9c69ed2a7e3237dc809bcb extends Template
             
             // Agregar evento de cambio de sede a la nueva fila
             row.find('select[name=\"sedes[]\"]').change(function() {
-                cargarFacultades(\$(this));
+                cargarUnidadesPorSede(\$(this));
                 validarDuplicadosEnTiempoReal();
             });
             
@@ -944,7 +944,7 @@ class __TwigTemplate_ffa4d2f16e9c69ed2a7e3237dc809bcb extends Template
             });
             
             // Agregar eventos para validación en tiempo real
-            row.find('input[name=\"codigos[]\"], select[name=\"facultades[]\"]').on('input change', function() {
+            row.find('input[name=\"codigos[]\"], select[name=\"unidades[]\"]').on('input change', function() {
                 validarDuplicadosEnTiempoReal();
             });
         });
@@ -956,24 +956,24 @@ class __TwigTemplate_ffa4d2f16e9c69ed2a7e3237dc809bcb extends Template
 
         // Agregar evento de cambio de sede a todas las filas existentes
         \$('select[name=\"sedes[]\"]').change(function() {
-            cargarFacultades(\$(this));
+            cargarUnidadesPorSede(\$(this));
             validarDuplicadosEnTiempoReal();
         });
 
-        // Cargar facultades iniciales si hay una sede seleccionada
+        // Cargar unidades iniciales si hay una sede seleccionada
         \$('select[name=\"sedes[]\"]').each(function() {
             if (\$(this).val()) {
-                cargarFacultades(\$(this));
+                cargarUnidadesPorSede(\$(this));
             }
         });
 
-        // Cargar facultades para los códigos existentes después de un error
+        // Cargar unidades para los códigos existentes después de un error
         {% if form_data.codigos is defined and form_data.codigos|length > 0 %}
         setTimeout(function() {
             \$('.codigo-row').each(function(index) {
                 var sedeSelect = \$(this).find('select[name=\"sedes[]\"]');
                 if (sedeSelect.val()) {
-                    cargarFacultades(sedeSelect);
+                    cargarUnidadesPorSede(sedeSelect);
                 }
             });
         }, 500);
@@ -1001,14 +1001,14 @@ class __TwigTemplate_ffa4d2f16e9c69ed2a7e3237dc809bcb extends Template
             \$('.codigo-row').each(function() {
                 var codigo = \$(this).find('input[name=\"codigos[]\"]').val();
                 var sede = \$(this).find('select[name=\"sedes[]\"]').val();
-                var facultad = \$(this).find('select[name=\"facultades[]\"]').val();
+                var unidad = \$(this).find('select[name=\"unidades[]\"]').val();
                 var vigenciaDesde = \$(this).find('input[name=\"vigencias_desde[]\"]').val();
                 
-                if (codigo && sede && facultad && vigenciaDesde) {
+                if (codigo && sede && unidad && vigenciaDesde) {
                     codigosCompletos = true;
                     
                     // Verificar duplicados en el formulario
-                    var codigoKey = codigo + '_' + sede + '_' + facultad;
+                    var codigoKey = codigo + '_' + sede + '_' + unidad;
                     if (codigosValidos.indexOf(codigoKey) !== -1) {
                         duplicados.push(codigo);
                     } else {
@@ -1045,7 +1045,7 @@ class __TwigTemplate_ffa4d2f16e9c69ed2a7e3237dc809bcb extends Template
                 Swal.fire({
                     icon: 'error',
                     title: 'Códigos duplicados',
-                    text: 'No se permiten códigos duplicados por sede y facultad. Códigos duplicados: ' + duplicados.join(', ')
+                    text: 'No se permiten códigos duplicados por sede y unidad. Códigos duplicados: ' + duplicados.join(', ')
                 });
                 return false;
             }

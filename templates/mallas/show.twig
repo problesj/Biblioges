@@ -91,7 +91,7 @@
                             <th>Vigencia Desde</th>
                             <th>Vigencia Hasta</th>
                             <th>Sede</th>
-                            <th>Facultad</th>
+                            <th>Unidad</th>
                             <th>Estado</th>
                         </tr>
                     </thead>
@@ -102,7 +102,7 @@
                             <td>{{ carrera.vigencias_desde[loop.index0] }}</td>
                             <td>{{ carrera.vigencias_hasta[loop.index0] }}</td>
                             <td>{{ carrera.sedes[loop.index0] }}</td>
-                            <td>{{ carrera.facultades[loop.index0] }}</td>
+                            <td>{{ carrera.unidades[loop.index0] }}</td>
                             <td>
                                 {% if carrera.estado == 1 %}
                                     <span class="badge bg-success">Activo</span>

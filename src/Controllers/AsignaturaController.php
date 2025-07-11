@@ -70,7 +70,7 @@ class AsignaturaController extends BaseController
             $queryParams = $request->getQueryParams();
             $nombre = $queryParams['nombre'] ?? null;
             $tipo = $queryParams['tipo'] ?? null;
-            $departamento = $queryParams['departamento'] ?? null;
+            $unidad = $queryParams['unidad'] ?? null;
             $estado = $queryParams['estado'] ?? null;
 
             // Construir la consulta base
@@ -82,10 +82,10 @@ class AsignaturaController extends BaseController
                 a.vigencia_hasta,
                 a.periodicidad,
                 a.estado,
-                GROUP_CONCAT(CONCAT(ad.codigo_asignatura, ' - ', d.nombre) SEPARATOR '\n') as departamentos 
+                GROUP_CONCAT(CONCAT(ad.codigo_asignatura, ' - ', u.nombre) SEPARATOR '\n') as unidades 
                 FROM asignaturas a 
                 LEFT JOIN asignaturas_departamentos ad ON a.id = ad.asignatura_id 
-                LEFT JOIN departamentos d ON ad.departamento_id = d.id";
+                LEFT JOIN unidades u ON ad.id_unidad = u.id";
 
             $params = [];
             $where = [];
@@ -100,9 +100,9 @@ class AsignaturaController extends BaseController
                 $params[] = $tipo;
             }
 
-            if ($departamento) {
-                $where[] = "ad.departamento_id = ?";
-                $params[] = $departamento;
+            if ($unidad) {
+                $where[] = "ad.id_unidad = ?";
+                $params[] = $unidad;
             }
 
             if ($estado !== null && $estado !== '') {
@@ -121,9 +121,9 @@ class AsignaturaController extends BaseController
             $stmt->execute($params);
             $asignaturas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Obtener departamentos para el filtro
-            $stmt = $this->db->query("SELECT * FROM departamentos ORDER BY nombre");
-            $departamentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            // Obtener unidades para el filtro
+            $stmt = $this->db->query("SELECT * FROM unidades WHERE estado = 1 ORDER BY nombre");
+            $unidades = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             // Obtener datos del usuario
             $user_id = $this->session->get('user_id');
@@ -134,11 +134,11 @@ class AsignaturaController extends BaseController
             // Renderizar la vista
             $html = $this->twig->render('asignaturas/index.twig', [
                 'asignaturas' => $asignaturas,
-                'departamentos' => $departamentos,
+                'unidades' => $unidades,
                 'filtros' => [
                     'nombre' => $nombre,
                     'tipo' => $tipo,
-                    'departamento' => $departamento,
+                    'unidad' => $unidad,
                     'estado' => $estado
                 ],
                 'user' => $user,
@@ -189,46 +189,42 @@ class AsignaturaController extends BaseController
                     ->withStatus(302);
             }
 
-            // Si es una asignatura regular, obtener información de departamentos
+            // Si es una asignatura regular, obtener información de unidades
             if ($asignatura['tipo'] == 'REGULAR') {
                 $stmt = $this->db->prepare("
                     SELECT 
                         ad.codigo_asignatura as codigo_asignatura,
-                        ad.departamento_id,
+                        ad.id_unidad,
                         ad.cantidad_alumnos,
-                        d.id as departamento_id,
-                        d.nombre as departamento_nombre,
-                        f.nombre as facultad_nombre,
+                        u.id as unidad_id,
+                        u.nombre as unidad_nombre,
                         s.nombre as sede_nombre
                     FROM asignaturas_departamentos ad
-                    JOIN departamentos d ON ad.departamento_id = d.id
-                    JOIN facultades f ON d.facultad_id = f.id
-                    JOIN sedes s ON f.sede_id = s.id
+                    JOIN unidades u ON ad.id_unidad = u.id
+                    JOIN sedes s ON u.sede_id = s.id
                     WHERE ad.asignatura_id = ?
-                    ORDER BY s.nombre, d.nombre
+                    ORDER BY s.nombre, u.nombre
                 ");
                 $stmt->execute([$id]);
-                $asignatura['departamentos'] = $stmt->fetchAll();
+                $asignatura['unidades'] = $stmt->fetchAll();
             } else {
-                // Si es una asignatura de formación, obtener información de departamentos
+                // Si es una asignatura de formación, obtener información de unidades
                 $stmt = $this->db->prepare("
                     SELECT 
                         ad.codigo_asignatura,
-                        ad.departamento_id,
+                        ad.id_unidad,
                         ad.cantidad_alumnos,
-                        d.id as departamento_id,
-                        d.nombre as departamento_nombre,
-                        f.nombre as facultad_nombre,
+                        u.id as unidad_id,
+                        u.nombre as unidad_nombre,
                         s.nombre as sede_nombre
                     FROM asignaturas_departamentos ad
-                    JOIN departamentos d ON ad.departamento_id = d.id
-                    JOIN facultades f ON d.facultad_id = f.id
-                    JOIN sedes s ON f.sede_id = s.id
+                    JOIN unidades u ON ad.id_unidad = u.id
+                    JOIN sedes s ON u.sede_id = s.id
                     WHERE ad.asignatura_id = ?
-                    ORDER BY s.nombre, d.nombre
+                    ORDER BY s.nombre, u.nombre
                 ");
                 $stmt->execute([$id]);
-                $asignatura['departamentos'] = $stmt->fetchAll();
+                $asignatura['unidades'] = $stmt->fetchAll();
 
                 // Si es una asignatura de formación electiva, obtener las asignaturas vinculadas
                 if ($asignatura['tipo'] == 'FORMACION_ELECTIVA') {
@@ -362,32 +358,32 @@ class AsignaturaController extends BaseController
                 $asignatura_id = $asignatura->id;
                 error_log("[LOG] Asignatura insertada con ID: $asignatura_id");
 
-                // Insertar códigos de departamento
+                // Insertar códigos de unidad
                 $stmt = $this->db->prepare("
                     INSERT INTO asignaturas_departamentos (
-                        asignatura_id, departamento_id, codigo_asignatura, 
+                        asignatura_id, id_unidad, codigo_asignatura, 
                         cantidad_alumnos, fecha_creacion, fecha_actualizacion
                     ) VALUES (?, ?, ?, ?, NOW(), NOW())
                 ");
                 
                 // Si es Formación Electiva, usar valores por defecto
                 if ($tipo === 'FORMACION_ELECTIVA') {
-                    // Obtener el ID del departamento "Sin departamento"
-                    $stmtDep = $this->db->prepare("
-                        SELECT id FROM departamentos WHERE nombre = 'Sin departamento' LIMIT 1
+                    // Obtener el ID de la unidad "Sin unidad"
+                    $stmtUnidad = $this->db->prepare("
+                        SELECT id FROM unidades WHERE nombre = 'Sin unidad' LIMIT 1
                     ");
-                    $stmtDep->execute();
-                    $sinDepartamento = $stmtDep->fetch(PDO::FETCH_ASSOC);
+                    $stmtUnidad->execute();
+                    $sinUnidad = $stmtUnidad->fetch(PDO::FETCH_ASSOC);
                     
-                    if (!$sinDepartamento) {
-                        // Si no existe "Sin departamento", crearlo
-                        $stmtCreateDep = $this->db->prepare("
-                            INSERT INTO departamentos (nombre, estado) VALUES ('Sin departamento', 1)
+                    if (!$sinUnidad) {
+                        // Si no existe "Sin unidad", crearla
+                        $stmtCreateUnidad = $this->db->prepare("
+                            INSERT INTO unidades (codigo, nombre, sede_id, estado) VALUES ('SIN_UNIDAD', 'Sin unidad', 1, 1)
                         ");
-                        $stmtCreateDep->execute();
-                        $sinDepartamentoId = $this->db->lastInsertId();
+                        $stmtCreateUnidad->execute();
+                        $sinUnidadId = $this->db->lastInsertId();
                     } else {
-                        $sinDepartamentoId = $sinDepartamento['id'];
+                        $sinUnidadId = $sinUnidad['id'];
                     }
 
                     // Insertar con valores por defecto para Formación Electiva
@@ -396,7 +392,7 @@ class AsignaturaController extends BaseController
                             error_log("[LOG] Insertando código Formación Electiva: " . print_r($codigo, true));
                             $stmt->execute([
                                 $asignatura_id,
-                                $sinDepartamentoId,
+                                $sinUnidadId,
                                 $codigo['codigo'],
                                 0  // Cantidad de alumnos = 0
                             ]);
@@ -405,11 +401,11 @@ class AsignaturaController extends BaseController
                 } else {
                     // Para otros tipos de asignatura, procesar normalmente
                     foreach ($codigos as $codigo) {
-                        if (!empty($codigo['departamento_id']) && !empty($codigo['codigo'])) {
+                        if (!empty($codigo['id_unidad']) && !empty($codigo['codigo'])) {
                             error_log("[LOG] Insertando código: " . print_r($codigo, true));
                             $stmt->execute([
                                 $asignatura_id,
-                                $codigo['departamento_id'],
+                                $codigo['id_unidad'],
                                 $codigo['codigo'],
                                 $codigo['cantidad_alumnos'] ?? 0
                             ]);
@@ -476,22 +472,22 @@ class AsignaturaController extends BaseController
                     ->withStatus(302);
             }
 
-            // Obtener códigos de asignatura por departamento
+            // Obtener códigos de asignatura por unidad
             $stmt = $this->db->prepare("
-                SELECT ad.codigo_asignatura, ad.departamento_id, ad.cantidad_alumnos,
-                       COALESCE(d.nombre, 'Sin departamento') as departamento_nombre
+                SELECT ad.codigo_asignatura, ad.id_unidad, ad.cantidad_alumnos,
+                       COALESCE(u.nombre, 'Sin unidad') as unidad_nombre
                 FROM asignaturas_departamentos ad
-                LEFT JOIN departamentos d ON ad.departamento_id = d.id
+                LEFT JOIN unidades u ON ad.id_unidad = u.id
                 WHERE ad.asignatura_id = ?
-                ORDER BY COALESCE(d.nombre, 'Sin departamento')
+                ORDER BY COALESCE(u.nombre, 'Sin unidad')
             ");
             $stmt->execute([$id]);
-            $asignatura['departamentos'] = $stmt->fetchAll();
+            $asignatura['unidades'] = $stmt->fetchAll();
             
             // Log para depuración
             error_log("Asignatura ID: " . $id);
-            error_log("Departamentos encontrados: " . count($asignatura['departamentos']));
-            error_log("Datos de departamentos: " . print_r($asignatura['departamentos'], true));
+            error_log("Unidades encontradas: " . count($asignatura['unidades']));
+            error_log("Datos de unidades: " . print_r($asignatura['unidades'], true));
 
             // Obtener asignaturas vinculadas si es formación electiva
             if ($asignatura['tipo'] == 'FORMACION_ELECTIVA') {
@@ -506,19 +502,17 @@ class AsignaturaController extends BaseController
                 $asignatura['vinculadas'] = $stmt->fetchAll();
             }
 
-            // Obtener departamentos con su jerarquía
+            // Obtener unidades con su jerarquía
             $stmt = $this->db->prepare("
-                SELECT d.id, d.nombre as departamento_nombre,
-                       COALESCE(f.nombre, 'Sin facultad') as facultad_nombre,
+                SELECT u.id, u.nombre as unidad_nombre,
                        COALESCE(s.nombre, 'Sin sede') as sede_nombre
-                FROM departamentos d
-                LEFT JOIN facultades f ON d.facultad_id = f.id
-                LEFT JOIN sedes s ON f.sede_id = s.id
-                WHERE d.estado = 1
-                ORDER BY COALESCE(s.nombre, 'Sin sede') ASC, COALESCE(f.nombre, 'Sin facultad') ASC, d.nombre ASC
+                FROM unidades u
+                LEFT JOIN sedes s ON u.sede_id = s.id
+                WHERE u.estado = 1
+                ORDER BY COALESCE(s.nombre, 'Sin sede') ASC, u.nombre ASC
             ");
             $stmt->execute();
-            $departamentos = $stmt->fetchAll();
+            $unidades = $stmt->fetchAll();
 
             // Obtener datos del usuario
             $stmt = $this->db->prepare("SELECT * FROM usuarios WHERE id = ?");
@@ -528,7 +522,7 @@ class AsignaturaController extends BaseController
             // Renderizar la vista
             $html = $this->twig->render('asignaturas/edit.twig', [
                 'asignatura' => $asignatura,
-                'departamentos' => $departamentos,
+                'unidades' => $unidades,
                 'user' => $user,
                 'app_url' => Config::get('app_url'),
                 'session' => $_SESSION,
@@ -653,35 +647,35 @@ class AsignaturaController extends BaseController
                 // Procesar los códigos de asignatura
                 $stmt = $this->db->prepare("
                     INSERT INTO asignaturas_departamentos (
-                        asignatura_id, departamento_id, codigo_asignatura, cantidad_alumnos
+                        asignatura_id, id_unidad, codigo_asignatura, cantidad_alumnos
                     ) VALUES (?, ?, ?, ?)
                 ");
 
                 // Si es Formación Electiva, usar valores por defecto
                 if ($tipo === 'FORMACION_ELECTIVA') {
-                    // Obtener el ID del departamento "Sin departamento"
-                    $stmtDep = $this->db->prepare("
-                        SELECT id FROM departamentos WHERE nombre = 'Sin departamento' LIMIT 1
+                    // Obtener el ID de la unidad "Sin unidad"
+                    $stmtUnidad = $this->db->prepare("
+                        SELECT id FROM unidades WHERE nombre = 'Sin unidad' LIMIT 1
                     ");
-                    $stmtDep->execute();
-                    $sinDepartamento = $stmtDep->fetch(PDO::FETCH_ASSOC);
+                    $stmtUnidad->execute();
+                    $sinUnidad = $stmtUnidad->fetch(PDO::FETCH_ASSOC);
                     
-                    if (!$sinDepartamento) {
-                        // Si no existe "Sin departamento", crearlo
-                        $stmtCreateDep = $this->db->prepare("
-                            INSERT INTO departamentos (nombre, estado) VALUES ('Sin departamento', 1)
+                    if (!$sinUnidad) {
+                        // Si no existe "Sin unidad", crearla
+                        $stmtCreateUnidad = $this->db->prepare("
+                            INSERT INTO unidades (codigo, nombre, sede_id, estado) VALUES ('SIN_UNIDAD', 'Sin unidad', 1, 1)
                         ");
-                        $stmtCreateDep->execute();
-                        $sinDepartamentoId = $this->db->lastInsertId();
+                        $stmtCreateUnidad->execute();
+                        $sinUnidadId = $this->db->lastInsertId();
                     } else {
-                        $sinDepartamentoId = $sinDepartamento['id'];
+                        $sinUnidadId = $sinUnidad['id'];
                     }
 
                     // Insertar con valores por defecto para Formación Electiva
                     foreach ($codigos as $codigo) {
                         $stmt->execute([
                             $id,
-                            $sinDepartamentoId,
+                            $sinUnidadId,
                             $codigo['codigo'],
                             0  // Cantidad de alumnos = 0
                         ]);
@@ -691,7 +685,7 @@ class AsignaturaController extends BaseController
                     foreach ($codigos as $codigo) {
                         $stmt->execute([
                             $id,
-                            $codigo['departamento_id'],
+                            $codigo['id_unidad'],
                             $codigo['codigo'],
                             $codigo['cantidad_alumnos']
                         ]);
@@ -911,19 +905,17 @@ class AsignaturaController extends BaseController
                     ->withStatus(302);
             }
 
-            // Obtener departamentos con su jerarquía
+            // Obtener unidades con su jerarquía
             $stmt = $this->db->prepare("
-                SELECT d.id, d.nombre as departamento_nombre,
-                       COALESCE(f.nombre, 'Sin facultad') as facultad_nombre,
+                SELECT u.id, u.nombre as unidad_nombre,
                        COALESCE(s.nombre, 'Sin sede') as sede_nombre
-                FROM departamentos d
-                LEFT JOIN facultades f ON d.facultad_id = f.id
-                LEFT JOIN sedes s ON f.sede_id = s.id
-                WHERE d.estado = 1
-                ORDER BY COALESCE(s.nombre, 'Sin sede') ASC, COALESCE(f.nombre, 'Sin facultad') ASC, d.nombre ASC
+                FROM unidades u
+                LEFT JOIN sedes s ON u.sede_id = s.id
+                WHERE u.estado = 1
+                ORDER BY COALESCE(s.nombre, 'Sin sede') ASC, u.nombre ASC
             ");
             $stmt->execute();
-            $departamentos = $stmt->fetchAll();
+            $unidades = $stmt->fetchAll();
 
             // Obtener datos del usuario
             $usuarioModel = new Usuario();
@@ -931,7 +923,7 @@ class AsignaturaController extends BaseController
 
             // Renderizar la vista
             $html = $this->twig->render('asignaturas/create.twig', [
-                'departamentos' => $departamentos,
+                'unidades' => $unidades,
                 'user' => $user,
                 'app_url' => Config::get('app_url'),
                 'session' => $_SESSION,
@@ -1034,10 +1026,10 @@ class AsignaturaController extends BaseController
             $codigosDuplicados = [];
             
             foreach ($data['codigos'] as $index => $codigo) {
-                // Para Formación Electiva, no validar departamento ni cantidad de alumnos
+                // Para Formación Electiva, no validar unidad ni cantidad de alumnos
                 if ($data['tipo'] !== 'FORMACION_ELECTIVA') {
-                    if (empty($codigo['departamento_id'])) {
-                        $errors["codigos.{$index}.departamento_id"] = 'El departamento es requerido';
+                    if (empty($codigo['id_unidad'])) {
+                        $errors["codigos.{$index}.id_unidad"] = 'La unidad es requerida';
                     }
                     if (empty($codigo['cantidad_alumnos'])) {
                         $errors["codigos.{$index}.cantidad_alumnos"] = 'La cantidad de alumnos es requerida';
@@ -1069,7 +1061,7 @@ class AsignaturaController extends BaseController
                     if (!empty($codigo['codigo'])) {
                         $codigoDuplicado = $this->verificarCodigoDuplicado($codigo['codigo'], $asignaturaId);
                         if ($codigoDuplicado) {
-                            $errors["codigos.{$index}.codigo"] = "El código '{$codigo['codigo']}' ya existe en la asignatura '{$codigoDuplicado['nombre_asignatura']}' del departamento '{$codigoDuplicado['nombre_departamento']}'";
+                            $errors["codigos.{$index}.codigo"] = "El código '{$codigo['codigo']}' ya existe en la asignatura '{$codigoDuplicado['nombre_asignatura']}' de la unidad '{$codigoDuplicado['nombre_unidad']}'";
                         }
                     }
                 }
@@ -1093,11 +1085,11 @@ class AsignaturaController extends BaseController
                 $stmt = $this->db->prepare("
                     SELECT 
                         a.nombre as nombre_asignatura,
-                        d.nombre as nombre_departamento,
+                        u.nombre as nombre_unidad,
                         ad.codigo_asignatura
                     FROM asignaturas_departamentos ad
                     JOIN asignaturas a ON ad.asignatura_id = a.id
-                    JOIN departamentos d ON ad.departamento_id = d.id
+                    JOIN unidades u ON ad.id_unidad = u.id
                     WHERE ad.codigo_asignatura = ? 
                     AND ad.asignatura_id != ?
                     AND a.estado = 1
@@ -1109,11 +1101,11 @@ class AsignaturaController extends BaseController
                 $stmt = $this->db->prepare("
                     SELECT 
                         a.nombre as nombre_asignatura,
-                        d.nombre as nombre_departamento,
+                        u.nombre as nombre_unidad,
                         ad.codigo_asignatura
                     FROM asignaturas_departamentos ad
                     JOIN asignaturas a ON ad.asignatura_id = a.id
-                    JOIN departamentos d ON ad.departamento_id = d.id
+                    JOIN unidades u ON ad.id_unidad = u.id
                     WHERE ad.codigo_asignatura = ? 
                     AND a.estado = 1
                     LIMIT 1
@@ -1121,9 +1113,11 @@ class AsignaturaController extends BaseController
                 $stmt->execute([$codigo]);
             }
             
-            return $stmt->fetch();
+            $resultado = $stmt->fetch();
+            return $resultado ? $resultado : false;
+            
         } catch (\Exception $e) {
-            error_log("Error al verificar código duplicado: " . $e->getMessage());
+            error_log("Error en verificarCodigoDuplicado: " . $e->getMessage());
             return false;
         }
     }
@@ -1398,9 +1392,9 @@ class AsignaturaController extends BaseController
     }
 
     /**
-     * Obtiene las asignaturas por departamento (para AJAX).
+     * Obtiene las asignaturas por unidad (para AJAX).
      */
-    public function getAsignaturasByDepartamento(Request $request, ResponseInterface $response, array $args = [])
+    public function getAsignaturasByUnidad(Request $request, ResponseInterface $response, array $args = [])
     {
         try {
             // Verificar autenticación
@@ -1411,16 +1405,16 @@ class AsignaturaController extends BaseController
                     ->withStatus(401);
             }
 
-            $departamentoId = $args['departamentoId'] ?? null;
+            $unidadId = $args['unidadId'] ?? null;
             
-            if (!$departamentoId) {
-                $response->getBody()->write(json_encode(['error' => 'ID de departamento requerido'], JSON_UNESCAPED_UNICODE));
+            if (!$unidadId) {
+                $response->getBody()->write(json_encode(['error' => 'ID de unidad requerido'], JSON_UNESCAPED_UNICODE));
                 return $response
                     ->withHeader('Content-Type', 'application/json; charset=utf-8')
                     ->withStatus(400);
             }
 
-            // Obtener asignaturas del departamento
+            // Obtener asignaturas de la unidad
             $stmt = $this->db->prepare("
                 SELECT DISTINCT 
                     a.id,
@@ -1431,13 +1425,13 @@ class AsignaturaController extends BaseController
                     GROUP_CONCAT(ad.codigo_asignatura ORDER BY ad.codigo_asignatura ASC SEPARATOR ', ') as codigos
                 FROM asignaturas a
                 INNER JOIN asignaturas_departamentos ad ON a.id = ad.asignatura_id
-                WHERE ad.departamento_id = ?
+                WHERE ad.id_unidad = ?
                 AND a.estado = 1
                 AND a.tipo IN ('REGULAR', 'FORMACION_ELECTIVA')
                 GROUP BY a.id, a.nombre, a.tipo, a.periodicidad, a.estado
                 ORDER BY a.nombre
             ");
-            $stmt->execute([$departamentoId]);
+            $stmt->execute([$unidadId]);
             $asignaturas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             // Procesar los códigos para que sean arrays
@@ -1449,7 +1443,7 @@ class AsignaturaController extends BaseController
             return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
             
         } catch (\Exception $e) {
-            error_log("Error en AsignaturaController@getAsignaturasByDepartamento: " . $e->getMessage());
+            error_log("Error en AsignaturaController@getAsignaturasByUnidad: " . $e->getMessage());
             $response->getBody()->write(json_encode(['error' => 'Error al obtener asignaturas'], JSON_UNESCAPED_UNICODE));
             return $response
                 ->withHeader('Content-Type', 'application/json; charset=utf-8')

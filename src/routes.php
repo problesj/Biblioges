@@ -69,15 +69,18 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->post('/facultades/{id}/update', [FacultadController::class, 'update']);
     $group->get('/facultades/{id}', [FacultadController::class, 'show']);
 
-    // API para obtener facultades por sede (debe ir antes de las rutas CRUD de facultades)
-    $group->get('/api/facultades/sede/{sedeId}', [CarreraController::class, 'getFacultadesBySede']);
-    $group->get('/api/facultades', [CarreraController::class, 'getFacultadesBySede']);
+    // API para obtener unidades por sede
+    $group->get('/api/unidades/sede/{sedeId}', [ApiController::class, 'getUnidadesBySede']);
+    $group->get('/api/unidades', [ApiController::class, 'getUnidadesBySede']);
+    
+    // API para obtener unidades hijas
+    $group->get('/api/unidades/hijas/{unidadId}', [ApiController::class, 'getUnidadesHijas']);
     
     // API para obtener departamentos por sede y facultad
     $group->get('/api/departamentos/{sedeId}/{facultadId}', [DepartamentoController::class, 'getDepartamentosBySedeAndFacultad']);
     
-    // API para obtener asignaturas por departamento
-    $group->get('/api/asignaturas/departamento/{departamentoId}', [AsignaturaController::class, 'getAsignaturasByDepartamento']);
+    // API para obtener asignaturas por unidad
+    $group->get('/api/asignaturas/unidad/{unidadId}', [AsignaturaController::class, 'getAsignaturasByUnidad']);
 
     // API para actualizar mallas
     $group->post('/api/mallas/{id}', [MallaController::class, 'update']);

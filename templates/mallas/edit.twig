@@ -86,7 +86,7 @@
                             <th>Vigencia Desde</th>
                             <th>Vigencia Hasta</th>
                             <th>Sede</th>
-                            <th>Facultad</th>
+                            <th>Unidad</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -96,7 +96,7 @@
                             <td>{{ carrera.vigencias_desde[i] }}</td>
                             <td>{{ carrera.vigencias_hasta[i] }}</td>
                             <td>{{ carrera.sedes[i] }}</td>
-                            <td>{{ carrera.facultades[i] }}</td>
+                            <td>{{ carrera.unidades[i] }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -113,7 +113,7 @@
         <div class="card-body">
             <!-- Filtros de búsqueda -->
             <div class="row mb-4">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label for="sede" class="form-label">Seleccionar Sede</label>
                     <select class="form-select" id="sede">
                         <option value="">Seleccione una sede</option>
@@ -122,16 +122,10 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-4">
-                    <label for="facultad" class="form-label">Seleccionar Facultad</label>
-                    <select class="form-select" id="facultad" disabled>
+                <div class="col-md-6">
+                    <label for="unidad" class="form-label">Seleccionar Unidad</label>
+                    <select class="form-select" id="unidad" disabled>
                         <option value="">Primero seleccione una sede</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label for="departamento" class="form-label">Seleccionar Departamento</label>
-                    <select class="form-select" id="departamento" disabled>
-                        <option value="">Primero seleccione una facultad</option>
                     </select>
                 </div>
             </div>
@@ -158,7 +152,7 @@
                                     </thead>
                                     <tbody id="asignaturas-disponibles">
                                         <tr>
-                                            <td colspan="5" class="text-center">Seleccione una sede y facultad</td>
+                                            <td colspan="5" class="text-center">Seleccione una sede</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -259,8 +253,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const app_url = "{{ app_url }}";
     
     const sedeSelect = document.getElementById('sede');
-    const facultadSelect = document.getElementById('facultad');
-    const departamentoSelect = document.getElementById('departamento');
+    const unidadSelect = document.getElementById('unidad');
     const btnAgregar = document.getElementById('btn-agregar');
     const btnQuitar = document.getElementById('btn-quitar');
     const btnGuardar = document.getElementById('btn-guardar');
@@ -270,170 +263,157 @@ document.addEventListener('DOMContentLoaded', function() {
     let asignaturasSeleccionadas = new Set();
     let asignaturasVinculadasSeleccionadas = new Set();
 
-    // Función para resetear los selectores
-    function resetearSelectores() {
-        facultadSelect.disabled = true;
-        facultadSelect.innerHTML = '<option value="">Primero seleccione una sede</option>';
-        departamentoSelect.disabled = true;
-        departamentoSelect.innerHTML = '<option value="">Primero seleccione una facultad</option>';
-        asignaturasDisponibles.innerHTML = '<tr><td colspan="5" class="text-center">Seleccione una sede y facultad</td></tr>';
+    // Función para resetear la tabla de asignaturas
+    function resetearAsignaturas() {
+        asignaturasDisponibles.innerHTML = '<tr><td colspan="5" class="text-center">Seleccione una sede</td></tr>';
     }
 
     // Manejar cambio de sede
     sedeSelect.addEventListener('change', function() {
         const sedeId = this.value;
         
-        // Resetear los selectores dependientes
-        resetearSelectores();
+        // Resetear la tabla de asignaturas
+        resetearAsignaturas();
+        unidadSelect.value = ''; // Limpiar unidad seleccionada
+        unidadSelect.disabled = true; // Deshabilitar unidad hasta que se seleccione una sede
         
         if (sedeId) {
-            // Caso especial para "Sin Sede" (ID: 14)
-            if (sedeId === '14') {
-                // Cargar directamente "Sin Facultad" (ID: 9)
-                facultadSelect.innerHTML = '<option value="9">Sin Facultad</option>';
-            facultadSelect.disabled = false;
-            
-                // Cargar directamente "Sin Departamento" (ID: 7)
-                departamentoSelect.innerHTML = '<option value="7">Sin Departamento</option>';
-                departamentoSelect.disabled = false;
-                
-                // Cargar asignaturas del departamento "Sin Departamento"
-                cargarAsignaturasDepartamento('7');
+            // Caso especial: Sin sede (id 4)
+            if (sedeId === '4') {
+                unidadSelect.innerHTML = '<option value="55">Sin Unidad</option>';
+                unidadSelect.disabled = false;
+                cargarAsignaturasDeUnidad('55');
                 return;
             }
-
-            // Para otras sedes, cargar facultades normalmente
-            const apiUrl = `${app_url}api/facultades/sede/${sedeId}`;
-            
-            fetch(apiUrl, {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Error en la respuesta del servidor: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                facultadSelect.innerHTML = '<option value="">Seleccione una facultad</option>';
-                
-                if (Array.isArray(data) && data.length > 0) {
-                    data.forEach(facultad => {
-                        facultadSelect.innerHTML += `<option value="${facultad.id}">${facultad.nombre}</option>`;
-                    });
-                    facultadSelect.disabled = false;
-                } else {
-                    facultadSelect.innerHTML += '<option value="" disabled>No hay facultades disponibles para esta sede</option>';
-                    facultadSelect.disabled = true;
-                }
-            })
-            .catch(error => {
-                console.error('Error al cargar facultades:', error);
-                facultadSelect.innerHTML = '<option value="">Error al cargar facultades</option>';
-            facultadSelect.disabled = true;
-            });
+            // Habilitar unidad y cargar unidades de la sede seleccionada
+            unidadSelect.disabled = false;
+            cargarUnidadesDeSede(sedeId);
         }
     });
 
-    // Función para cargar asignaturas de un departamento
-    function cargarAsignaturasDepartamento(deptoId) {
-        fetch(`${app_url}api/asignaturas/departamento/${deptoId}`)
-            .then(response => response.json())
-            .then(data => {
-                asignaturasDisponibles.innerHTML = '';
-                if (Array.isArray(data) && data.length > 0) {
-                    data.forEach(asignatura => {
-                        // Verificar si la asignatura ya está vinculada
-                        const yaVinculada = Array.from(asignaturasVinculadas.querySelectorAll('tr[data-id]'))
-                            .some(row => row.dataset.id === asignatura.id.toString());
-                        
-                        if (!yaVinculada) {
-                            // Formatear los códigos con saltos de línea
-                            let codigos = '';
-                            if (asignatura.codigos) {
-                                if (Array.isArray(asignatura.codigos)) {
-                                    codigos = asignatura.codigos.join('<br>');
-                                } else if (typeof asignatura.codigos === 'string') {
-                                    codigos = asignatura.codigos.split(',').join('<br>');
-                                }
-                            }
-                            
-                            asignaturasDisponibles.innerHTML += `
-                                <tr data-id="${asignatura.id}">
-                                    <td>${codigos}</td>
-                                    <td>${asignatura.nombre}</td>
-                                    <td class="text-center">${asignatura.tipo}</td>
-                                    <td class="text-center">${asignatura.periodicidad}</td>
-                                    <td class="text-center">
-                                        <input type="checkbox" class="form-check-input btn-seleccionar">
-                                    </td>
-                                </tr>
-                            `;
-                        }
-                    });
-                } else {
-                    asignaturasDisponibles.innerHTML = '<tr><td colspan="5" class="text-center">No hay asignaturas disponibles</td></tr>';
+    // Manejar cambio de unidad
+    unidadSelect.addEventListener('change', function() {
+        const unidadId = this.value;
+        if (unidadId) {
+            // Cargar asignaturas de la unidad seleccionada
+            cargarAsignaturasDeUnidad(unidadId);
+        } else {
+            // Si se selecciona "Primero seleccione una sede", no cargar asignaturas
+            asignaturasDisponibles.innerHTML = '<tr><td colspan="5" class="text-center">Seleccione una unidad</td></tr>';
+        }
+    });
+
+    // Función para cargar unidades de una sede
+    function cargarUnidadesDeSede(sedeId) {
+        const apiUrl = `${app_url}api/unidades/sede/${sedeId}`;
+        
+        fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Error en la respuesta del servidor: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (Array.isArray(data) && data.length > 0) {
+                // Limpiar opciones existentes y agregar nuevas
+                unidadSelect.innerHTML = '<option value="">Seleccione una unidad</option>';
+                data.forEach(unidad => {
+                    const option = document.createElement('option');
+                    option.value = unidad.id;
+                    option.textContent = unidad.nombre;
+                    unidadSelect.appendChild(option);
+                });
+                // Si ya hay una unidad seleccionada, cargar asignaturas de esa unidad
+                if (unidadSelect.value) {
+                    cargarAsignaturasDeUnidad(unidadSelect.value);
                 }
-            })
-            .catch(error => {
-                console.error('Error al cargar asignaturas:', error);
-                asignaturasDisponibles.innerHTML = '<tr><td colspan="5" class="text-center">Error al cargar asignaturas</td></tr>';
-            });
+            } else {
+                unidadSelect.innerHTML = '<option value="">No hay unidades disponibles para esta sede</option>';
+                asignaturasDisponibles.innerHTML = '<tr><td colspan="5" class="text-center">No hay unidades disponibles para esta sede</td></tr>';
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar unidades:', error);
+            unidadSelect.innerHTML = '<option value="">Error al cargar unidades</option>';
+            asignaturasDisponibles.innerHTML = '<tr><td colspan="5" class="text-center">Error al cargar unidades</td></tr>';
+        });
     }
 
-    // Manejar cambio de facultad
-    facultadSelect.addEventListener('change', function() {
-        const sedeId = sedeSelect.value;
-        const facultadId = this.value;
+    // Función para cargar asignaturas de una unidad específica
+    function cargarAsignaturasDeUnidad(unidadId) {
+        const apiUrl = `${app_url}api/asignaturas/unidad/${unidadId}`;
         
-        if (facultadId) {
-            // Caso especial para "Sin Facultad" (ID: 9) - solo cuando viene de "Sin Sede"
-            if (facultadId === '9' && sedeId === '14') {
-                departamentoSelect.innerHTML = '<option value="7">Sin Departamento</option>';
-                departamentoSelect.disabled = false;
-                cargarAsignaturasDepartamento('7');
-                return;
+        fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Error en la respuesta del servidor: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (Array.isArray(data) && data.length > 0) {
+                mostrarAsignaturasDisponibles(data);
+            } else {
+                asignaturasDisponibles.innerHTML = '<tr><td colspan="5" class="text-center">No hay asignaturas disponibles para esta unidad</td></tr>';
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar asignaturas:', error);
+            asignaturasDisponibles.innerHTML = '<tr><td colspan="5" class="text-center">Error al cargar asignaturas</td></tr>';
+        });
+    }
 
-            // Para otras facultades, cargar departamentos normalmente
-            departamentoSelect.disabled = false;
-            
-            fetch(`${app_url}api/departamentos/${sedeId}/${facultadId}`)
-                .then(response => response.json())
-                .then(data => {
-                    departamentoSelect.innerHTML = '<option value="">Seleccione un departamento</option>';
-                    if (Array.isArray(data) && data.length > 0) {
-                        data.forEach(depto => {
-                            departamentoSelect.innerHTML += `<option value="${depto.id}">${depto.nombre}</option>`;
-                        });
-                    } else {
-                        departamentoSelect.innerHTML += '<option value="" disabled>No hay departamentos disponibles</option>';
+    // Función para mostrar asignaturas disponibles
+    function mostrarAsignaturasDisponibles(asignaturas) {
+        asignaturasDisponibles.innerHTML = '';
+        
+        if (asignaturas.length > 0) {
+            asignaturas.forEach(asignatura => {
+                // Verificar si la asignatura ya está vinculada
+                const yaVinculada = Array.from(asignaturasVinculadas.querySelectorAll('tr[data-id]'))
+                    .some(row => row.dataset.id === asignatura.id.toString());
+                
+                if (!yaVinculada) {
+                    // Formatear los códigos con saltos de línea
+                    let codigos = '';
+                    if (asignatura.codigos) {
+                        if (Array.isArray(asignatura.codigos)) {
+                            codigos = asignatura.codigos.join('<br>');
+                        } else if (typeof asignatura.codigos === 'string') {
+                            codigos = asignatura.codigos.split(',').join('<br>');
+                        }
                     }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    departamentoSelect.innerHTML = '<option value="">Error al cargar departamentos</option>';
-                });
+                    
+                    asignaturasDisponibles.innerHTML += `
+                        <tr data-id="${asignatura.id}">
+                            <td>${codigos}</td>
+                            <td>${asignatura.nombre}<br><small class="text-muted">${asignatura.unidad_nombre || ''}</small></td>
+                            <td class="text-center">${asignatura.tipo}</td>
+                            <td class="text-center">${asignatura.periodicidad}</td>
+                            <td class="text-center">
+                                <input type="checkbox" class="form-check-input btn-seleccionar">
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
         } else {
-            departamentoSelect.disabled = true;
-            departamentoSelect.innerHTML = '<option value="">Primero seleccione una facultad</option>';
-            asignaturasDisponibles.innerHTML = '<tr><td colspan="5" class="text-center">Seleccione una facultad</td></tr>';
+            asignaturasDisponibles.innerHTML = '<tr><td colspan="5" class="text-center">No hay asignaturas disponibles</td></tr>';
         }
-    });
-
-    // Manejar cambio de departamento
-    departamentoSelect.addEventListener('change', function() {
-        const deptoId = this.value;
-        if (deptoId) {
-            cargarAsignaturasDepartamento(deptoId);
-        } else {
-            asignaturasDisponibles.innerHTML = '<tr><td colspan="5" class="text-center">Seleccione un departamento</td></tr>';
-        }
-    });
+    }
 
     // Manejar selección de asignaturas disponibles
     asignaturasDisponibles.addEventListener('click', function(e) {

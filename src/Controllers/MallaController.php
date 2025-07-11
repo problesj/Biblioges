@@ -78,11 +78,11 @@ class MallaController
         $sql = "SELECT c.*, 
                 GROUP_CONCAT(DISTINCT ce.codigo_carrera) as codigos_carrera,
                 GROUP_CONCAT(DISTINCT s.nombre) as sedes,
-                GROUP_CONCAT(DISTINCT f.nombre) as facultades
+                GROUP_CONCAT(DISTINCT u.nombre) as unidades
                 FROM carreras c
                 LEFT JOIN carreras_espejos ce ON c.id = ce.carrera_id
                 LEFT JOIN sedes s ON ce.sede_id = s.id
-                LEFT JOIN facultades f ON ce.facultad_id = f.id
+                LEFT JOIN unidades u ON ce.id_unidad = u.id
                 WHERE 1=1";
 
         $params = [];
@@ -120,7 +120,7 @@ class MallaController
         foreach ($carreras as &$carrera) {
             // Asegurar que los campos sean arrays
             $carrera['sedes'] = $carrera['sedes'] ? explode(',', $carrera['sedes']) : [];
-            $carrera['facultades'] = $carrera['facultades'] ? explode(',', $carrera['facultades']) : [];
+            $carrera['unidades'] = $carrera['unidades'] ? explode(',', $carrera['unidades']) : [];
             $carrera['codigos_carrera'] = $carrera['codigos_carrera'] ? explode(',', $carrera['codigos_carrera']) : [];
         }
 
@@ -171,13 +171,13 @@ class MallaController
                         c.*,
                         GROUP_CONCAT(ce.codigo_carrera) as codigos_carrera,
                         GROUP_CONCAT(s.nombre) as sedes,
-                        GROUP_CONCAT(f.nombre) as facultades,
+                        GROUP_CONCAT(u.nombre) as unidades,
                         GROUP_CONCAT(ce.vigencia_desde) as vigencias_desde,
                         GROUP_CONCAT(ce.vigencia_hasta) as vigencias_hasta
                     FROM carreras c
                     LEFT JOIN carreras_espejos ce ON c.id = ce.carrera_id
                     LEFT JOIN sedes s ON ce.sede_id = s.id
-                    LEFT JOIN facultades f ON ce.facultad_id = f.id
+                    LEFT JOIN unidades u ON ce.id_unidad = u.id
                     WHERE c.id = ?
                     GROUP BY c.id";
 
@@ -198,7 +198,7 @@ class MallaController
 
             // Procesar los resultados para asegurar el formato correcto
             $carrera['sedes'] = $carrera['sedes'] ? explode(',', $carrera['sedes']) : [];
-            $carrera['facultades'] = $carrera['facultades'] ? explode(',', $carrera['facultades']) : [];
+            $carrera['unidades'] = $carrera['unidades'] ? explode(',', $carrera['unidades']) : [];
             $carrera['codigos_carrera'] = $carrera['codigos_carrera'] ? explode(',', $carrera['codigos_carrera']) : [];
             $carrera['vigencias_desde'] = $carrera['vigencias_desde'] ? explode(',', $carrera['vigencias_desde']) : [];
             $carrera['vigencias_hasta'] = $carrera['vigencias_hasta'] ? explode(',', $carrera['vigencias_hasta']) : [];
@@ -211,10 +211,10 @@ class MallaController
                                 a.periodicidad,
                                 a.estado,
                                 m.semestre,
-                                GROUP_CONCAT(DISTINCT ad.codigo_asignatura) as codigos
+                                GROUP_CONCAT(DISTINCT au.codigo_asignatura) as codigos
                             FROM asignaturas a
                             INNER JOIN mallas m ON a.id = m.asignatura_id
-                            LEFT JOIN asignaturas_departamentos ad ON a.id = ad.asignatura_id
+                            LEFT JOIN asignaturas_departamentos au ON a.id = au.asignatura_id
                             WHERE m.carrera_id = ?
                             GROUP BY a.id, a.nombre, a.tipo, a.periodicidad, a.estado, m.semestre
                             ORDER BY m.semestre, a.nombre";
@@ -282,13 +282,13 @@ class MallaController
                         c.*,
                         GROUP_CONCAT(ce.codigo_carrera) as codigos_carrera,
                         GROUP_CONCAT(s.nombre) as sedes,
-                        GROUP_CONCAT(f.nombre) as facultades,
+                        GROUP_CONCAT(u.nombre) as unidades,
                         GROUP_CONCAT(ce.vigencia_desde) as vigencias_desde,
                         GROUP_CONCAT(ce.vigencia_hasta) as vigencias_hasta
                     FROM carreras c
                     LEFT JOIN carreras_espejos ce ON c.id = ce.carrera_id
                     LEFT JOIN sedes s ON ce.sede_id = s.id
-                    LEFT JOIN facultades f ON ce.facultad_id = f.id
+                    LEFT JOIN unidades u ON ce.id_unidad = u.id
                     WHERE c.id = ?
                     GROUP BY c.id";
 
@@ -305,7 +305,7 @@ class MallaController
 
             // Procesar los resultados para asegurar el formato correcto
             $carrera['sedes'] = $carrera['sedes'] ? explode(',', $carrera['sedes']) : [];
-            $carrera['facultades'] = $carrera['facultades'] ? explode(',', $carrera['facultades']) : [];
+            $carrera['unidades'] = $carrera['unidades'] ? explode(',', $carrera['unidades']) : [];
             $carrera['codigos_carrera'] = $carrera['codigos_carrera'] ? explode(',', $carrera['codigos_carrera']) : [];
             $carrera['vigencias_desde'] = $carrera['vigencias_desde'] ? explode(',', $carrera['vigencias_desde']) : [];
             $carrera['vigencias_hasta'] = $carrera['vigencias_hasta'] ? explode(',', $carrera['vigencias_hasta']) : [];
@@ -318,10 +318,10 @@ class MallaController
                                 a.periodicidad,
                                 a.estado,
                                 m.semestre,
-                                GROUP_CONCAT(DISTINCT ad.codigo_asignatura) as codigos
+                                GROUP_CONCAT(DISTINCT au.codigo_asignatura) as codigos
                             FROM asignaturas a
                             INNER JOIN mallas m ON a.id = m.asignatura_id
-                            LEFT JOIN asignaturas_departamentos ad ON a.id = ad.asignatura_id
+                            LEFT JOIN asignaturas_departamentos au ON a.id = au.asignatura_id
                             WHERE m.carrera_id = ?
                             AND a.tipo IN ('REGULAR', 'FORMACION_ELECTIVA')
                             GROUP BY a.id, a.nombre, a.tipo, a.periodicidad, a.estado, m.semestre

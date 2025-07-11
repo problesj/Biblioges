@@ -6,6 +6,7 @@ use App\Core\BaseController;
 use src\Models\Carrera;
 use src\Models\Facultad;
 use src\Models\Sede;
+use App\Models\Unidad;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use App\Core\Session;
@@ -26,7 +27,7 @@ class CarreraController
         $dbConfig = [
             'host' => $_ENV['DB_HOST'] ?? 'localhost',
             'port' => $_ENV['DB_PORT'] ?? '3306',
-            'dbname' => $_ENV['DB_DATABASE'] ?? 'bibliografia',
+            'dbname' => $_ENV['DB_DATABASE'] ?? 'biblioges',
             'user' => $_ENV['DB_USERNAME'] ?? 'root',
             'password' => $_ENV['DB_PASSWORD'] ?? ''
         ];
@@ -58,15 +59,15 @@ class CarreraController
         }
 
         try {
-            // Obtener todas las carreras con sus sedes y facultades
+            // Obtener todas las carreras con sus sedes y unidades
             $sql = "SELECT c.*, 
                            GROUP_CONCAT(DISTINCT ce.codigo_carrera) as codigos_carrera,
                            GROUP_CONCAT(DISTINCT s.nombre) as sedes,
-                           GROUP_CONCAT(DISTINCT f.nombre) as facultades
+                           GROUP_CONCAT(DISTINCT u.nombre) as unidades
             FROM carreras c
                     LEFT JOIN carreras_espejos ce ON c.id = ce.carrera_id
                     LEFT JOIN sedes s ON ce.sede_id = s.id
-                    LEFT JOIN facultades f ON ce.facultad_id = f.id
+                    LEFT JOIN unidades u ON ce.id_unidad = u.id
                     WHERE 1=1";
 
             $params = [];
@@ -162,16 +163,15 @@ class CarreraController
                 ->withStatus(302);
         }
 
-        // Obtener sedes y facultades
+        // Obtener sedes y unidades
         $sql = "SELECT id, nombre FROM sedes ORDER BY nombre";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute();
         $sedes = $stmt->fetchAll();
 
-        $sql = "SELECT id, nombre FROM facultades ORDER BY nombre";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute();
-        $facultades = $stmt->fetchAll();
+        // Usar el modelo Unidad para obtener todas las unidades activas
+        $unidadModel = new Unidad($this->pdo);
+        $unidades = $unidadModel->getAll(1);
 
         // Obtener datos del usuario
         $user_id = $this->session->get('user_id');
@@ -183,7 +183,7 @@ class CarreraController
         // Renderizar la vista
         $html = $this->twig->render('carreras/create.twig', [
             'sedes' => $sedes,
-            'facultades' => $facultades,
+            'unidades' => $unidades,
             'app_url' => Config::get('app_url'),
             'user' => $user,
             'session' => $_SESSION,
@@ -219,7 +219,7 @@ class CarreraController
             $estado = $parsedBody['estado'] ?? 1;
             $codigos = $parsedBody['codigos'] ?? [];
             $sedes = $parsedBody['sedes'] ?? [];
-            $facultades = $parsedBody['facultades'] ?? [];
+            $unidades = $parsedBody['unidades'] ?? [];
             $vigencias_desde = $parsedBody['vigencias_desde'] ?? [];
             $vigencias_hasta = $parsedBody['vigencias_hasta'] ?? [];
 
@@ -233,16 +233,16 @@ class CarreraController
                 throw new \Exception('Debe ingresar al menos un código de carrera');
             }
 
-            // Validar que no haya códigos duplicados por sede y facultad
+            // Validar que no haya códigos duplicados por sede y unidad
             $codigosValidos = [];
             $duplicados = [];
             
             foreach ($codigos as $index => $codigo) {
-                if (empty($codigo) || empty($sedes[$index]) || empty($facultades[$index])) {
+                if (empty($codigo) || empty($sedes[$index]) || empty($unidades[$index])) {
                     continue;
                 }
 
-                $codigoKey = $codigo . '_' . $sedes[$index] . '_' . $facultades[$index];
+                $codigoKey = $codigo . '_' . $sedes[$index] . '_' . $unidades[$index];
                 
                 // Verificar duplicados en el formulario actual
                 if (in_array($codigoKey, $codigosValidos)) {
@@ -253,28 +253,28 @@ class CarreraController
             }
 
             if (!empty($duplicados)) {
-                throw new \Exception('No se permiten códigos duplicados por sede y facultad. Códigos duplicados: ' . implode(', ', array_unique($duplicados)));
+                throw new \Exception('No se permiten códigos duplicados por sede y unidad. Códigos duplicados: ' . implode(', ', array_unique($duplicados)));
             }
 
             // Verificar duplicados en la base de datos
             foreach ($codigos as $index => $codigo) {
-                if (empty($codigo) || empty($sedes[$index]) || empty($facultades[$index])) {
+                if (empty($codigo) || empty($sedes[$index]) || empty($unidades[$index])) {
                     continue;
                 }
 
-                // Verificar si ya existe un código con la misma sede y facultad
-                $sql = "SELECT ce.codigo_carrera, c.nombre as carrera_nombre, s.nombre as sede_nombre, f.nombre as facultad_nombre
+                // Verificar si ya existe un código con la misma sede y unidad
+                $sql = "SELECT ce.codigo_carrera, c.nombre as carrera_nombre, s.nombre as sede_nombre, u.nombre as unidad_nombre
                         FROM carreras_espejos ce
                         INNER JOIN carreras c ON ce.carrera_id = c.id
                         INNER JOIN sedes s ON ce.sede_id = s.id
-                        INNER JOIN facultades f ON ce.facultad_id = f.id
-                        WHERE ce.codigo_carrera = ? AND ce.sede_id = ? AND ce.facultad_id = ?";
+                        INNER JOIN unidades u ON ce.id_unidad = u.id
+                        WHERE ce.codigo_carrera = ? AND ce.sede_id = ? AND ce.id_unidad = ?";
                 $stmt = $this->pdo->prepare($sql);
-                $stmt->execute([$codigo, $sedes[$index], $facultades[$index]]);
+                $stmt->execute([$codigo, $sedes[$index], $unidades[$index]]);
                 $existe = $stmt->fetch();
 
                 if ($existe) {
-                    throw new \Exception("El código '{$codigo}' ya existe para la sede '{$existe['sede_nombre']}' y facultad '{$existe['facultad_nombre']}' en la carrera '{$existe['carrera_nombre']}'");
+                    throw new \Exception("El código '{$codigo}' ya existe para la sede '{$existe['sede_nombre']}' y unidad '{$existe['unidad_nombre']}' en la carrera '{$existe['carrera_nombre']}'");
                 }
             }
 
@@ -289,32 +289,36 @@ class CarreraController
             $carrera_id = $this->pdo->lastInsertId();
 
             // Insertar códigos de carrera
-            $sql = "INSERT INTO carreras_espejos (carrera_id, codigo_carrera, vigencia_desde, vigencia_hasta, facultad_id, sede_id, estado) 
+            $sql = "INSERT INTO carreras_espejos (carrera_id, codigo_carrera, sede_id, id_unidad, vigencia_desde, vigencia_hasta, estado) 
                     VALUES (?, ?, ?, ?, ?, ?, ?)";
             $stmt = $this->pdo->prepare($sql);
 
             $codigosInsertados = 0;
-            foreach ($codigos as $index => $codigo) {
-                if (empty($codigo) || empty($sedes[$index]) || empty($facultades[$index])) {
-                    continue;
-                }
+            for ($i = 0; $i < count($codigos); $i++) {
+                $codigo = $codigos[$i] ?? null;
+                $sede_id = $sedes[$i] ?? null;
+                $id_unidad = $unidades[$i] ?? null;
+                $vigencia_desde = $vigencias_desde[$i] ?? null;
+                $vigencia_hasta = $vigencias_hasta[$i] ?? null;
 
-                // Validar formato de vigencia_desde (6 dígitos)
-                if (!preg_match('/^\d{6}$/', $vigencias_desde[$index])) {
-                    throw new \Exception('El formato de vigencia desde debe ser de 6 dígitos (AAAAMM)');
-                }
+                if ($codigo && $sede_id && $id_unidad && $vigencia_desde) {
+                    // Validar formato de vigencia_desde (6 dígitos)
+                    if (!preg_match('/^\d{6}$/', $vigencia_desde)) {
+                        throw new \Exception('El formato de vigencia desde debe ser de 6 dígitos (AAAAMM)');
+                    }
 
-                $stmt->execute([
-                    $carrera_id,
-                    $codigo,
-                    $vigencias_desde[$index],
-                    $vigencias_hasta[$index] ?? '999999',
-                    $facultades[$index],
-                    $sedes[$index],
-                    1 // estado activo por defecto
-                ]);
-                
-                $codigosInsertados++;
+                    $stmt->execute([
+                        $carrera_id,
+                        $codigo,
+                        $sede_id,
+                        $id_unidad,
+                        $vigencia_desde,
+                        $vigencia_hasta ?? '999999',
+                        1 // estado activo por defecto
+                    ]);
+                    
+                    $codigosInsertados++;
+                }
             }
 
             if ($codigosInsertados === 0) {
@@ -339,16 +343,14 @@ class CarreraController
             $this->session->remove('success');
             $this->session->set('error', 'Error al crear la carrera: ' . $e->getMessage());
             
-            // Obtener sedes y facultades para el formulario
+            // Obtener sedes y unidades para el formulario
             $sql = "SELECT id, nombre FROM sedes ORDER BY nombre";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute();
             $sedes = $stmt->fetchAll();
 
-            $sql = "SELECT id, nombre FROM facultades ORDER BY nombre";
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute();
-            $facultades = $stmt->fetchAll();
+            $unidadModel = new Unidad($this->pdo);
+            $unidades = $unidadModel->getAll(1);
 
             // Obtener datos del usuario
             $user_id = $this->session->get('user_id');
@@ -360,7 +362,7 @@ class CarreraController
             // Renderizar la vista con los datos del formulario
             $html = $this->twig->render('carreras/create.twig', [
                 'sedes' => $sedes,
-                'facultades' => $facultades,
+                'unidades' => $unidades,
                 'app_url' => Config::get('app_url'),
                 'user' => $user,
                 'session' => $_SESSION,
@@ -415,10 +417,10 @@ class CarreraController
             $user = $stmt->fetch();
 
             // Obtener códigos de carrera con detalles
-            $sql = "SELECT ce.*, s.nombre as sede_nombre, f.nombre as facultad_nombre
+            $sql = "SELECT ce.*, s.nombre as sede_nombre, u.nombre as unidad_nombre
                     FROM carreras_espejos ce
                     LEFT JOIN sedes s ON ce.sede_id = s.id
-                    LEFT JOIN facultades f ON ce.facultad_id = f.id
+                    LEFT JOIN unidades u ON ce.id_unidad = u.id
                     WHERE ce.carrera_id = ?
                     ORDER BY ce.codigo_carrera";
             $stmt = $this->pdo->prepare($sql);
@@ -429,14 +431,14 @@ class CarreraController
             $codigos = [];
             $vigencias_desde = [];
             $vigencias_hasta = [];
-            $facultades = [];
+            $unidades = [];
             $sedes = [];
 
             foreach ($codigos_carrera as $codigo) {
                 $codigos[] = $codigo['codigo_carrera'];
                 $vigencias_desde[] = $codigo['vigencia_desde'];
                 $vigencias_hasta[] = $codigo['vigencia_hasta'];
-                $facultades[] = $codigo['facultad_nombre'];
+                $unidades[] = $codigo['unidad_nombre'];
                 $sedes[] = $codigo['sede_nombre'];
             }
 
@@ -444,7 +446,7 @@ class CarreraController
             $carrera['codigos_carrera'] = $codigos;
             $carrera['vigencias_desde'] = $vigencias_desde;
             $carrera['vigencias_hasta'] = $vigencias_hasta;
-            $carrera['facultades'] = $facultades;
+            $carrera['unidades'] = $unidades;
             $carrera['sedes'] = $sedes;
 
             // Obtener asignaturas vinculadas desde la tabla mallas
@@ -527,9 +529,9 @@ class CarreraController
                             SEPARATOR '|'
                         ) as sedes_ids,
                         GROUP_CONCAT(
-                            ce.facultad_id
+                            ce.id_unidad
                             SEPARATOR '|'
-                        ) as facultades_ids
+                        ) as unidades_ids
                     FROM carreras c 
                     LEFT JOIN carreras_espejos ce ON c.id = ce.carrera_id 
                     WHERE c.id = ? 
@@ -545,23 +547,18 @@ class CarreraController
                     ->withStatus(302);
             }
 
-            // Convertir los IDs de sedes y facultades a arrays
+            // Convertir los IDs de sedes y unidades a arrays
             $carrera['sedes_ids'] = $carrera['sedes_ids'] ? explode('|', $carrera['sedes_ids']) : [];
-            $carrera['facultades_ids'] = $carrera['facultades_ids'] ? explode('|', $carrera['facultades_ids']) : [];
+            $carrera['unidades_ids'] = $carrera['unidades_ids'] ? explode('|', $carrera['unidades_ids']) : [];
 
-            error_log('CarreraController edit: sedes_ids: ' . print_r($carrera['sedes_ids'], true));
-            error_log('CarreraController edit: facultades_ids: ' . print_r($carrera['facultades_ids'], true));
-
-            // Obtener sedes y facultades
+            // Obtener sedes y unidades
             $sql = "SELECT id, nombre FROM sedes ORDER BY nombre";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute();
             $sedes = $stmt->fetchAll();
 
-            $sql = "SELECT id, nombre FROM facultades ORDER BY nombre";
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute();
-            $facultades = $stmt->fetchAll();
+            $unidadModel = new Unidad($this->pdo);
+            $unidades = $unidadModel->getAll(1);
 
             // Obtener datos del usuario
             $user_id = $this->session->get('user_id');
@@ -573,7 +570,7 @@ class CarreraController
             $html = $this->twig->render('carreras/edit.twig', [
                 'carrera' => $carrera,
                 'sedes' => $sedes,
-                'facultades' => $facultades,
+                'unidades' => $unidades,
                 'app_url' => Config::get('app_url'),
                 'user' => $user,
                 'current_page' => 'carreras',
@@ -620,7 +617,7 @@ class CarreraController
             $url_libro = $parsedBody['url_libro'] ?? null;
             $codigos = $parsedBody['codigos'] ?? [];
             $sedes = $parsedBody['sedes'] ?? [];
-            $facultades = $parsedBody['facultades'] ?? [];
+            $unidades = $parsedBody['unidades'] ?? [];
             $vigencias_desde = $parsedBody['vigencias_desde'] ?? [];
             $vigencias_hasta = $parsedBody['vigencias_hasta'] ?? [];
 
@@ -644,42 +641,23 @@ class CarreraController
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([$id]);
 
-            // Insertar nuevos códigos
-            if (!empty($codigos) && is_array($codigos)) {
-                $sql = "INSERT INTO carreras_espejos (carrera_id, codigo_carrera, vigencia_desde, vigencia_hasta, facultad_id, sede_id, estado) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?)";
-                $stmt = $this->pdo->prepare($sql);
-
-                foreach ($codigos as $index => $codigo) {
-                    // Validar que existan todos los datos necesarios
-                    if (empty($codigo) || empty($sedes[$index]) || empty($facultades[$index])) {
-                        continue;
-                    }
-
-                    // Validar formato de vigencia_desde (6 dígitos)
-                    if (!preg_match('/^\d{6}$/', $vigencias_desde[$index])) {
-                        throw new \Exception('El formato de vigencia desde debe ser de 6 dígitos (AAAAMM)');
-                    }
-
-                    // Validar que la facultad pertenezca a la sede
-                    $sql_check = "SELECT COUNT(*) as count FROM facultades WHERE id = ? AND sede_id = ?";
-                    $check_stmt = $this->pdo->prepare($sql_check);
-                    $check_stmt->execute([$facultades[$index], $sedes[$index]]);
-                    $result = $check_stmt->fetch();
-
-                    if ($result['count'] == 0) {
-                        throw new \Exception('La facultad seleccionada no pertenece a la sede seleccionada');
-                    }
-
-                    // Insertar el registro
+            // Insertar los nuevos códigos de carrera
+            for ($i = 0; $i < count($codigos); $i++) {
+                $codigo = $codigos[$i] ?? null;
+                $sede_id = $sedes[$i] ?? null;
+                $id_unidad = $unidades[$i] ?? null;
+                $vigencia_desde = $vigencias_desde[$i] ?? null;
+                $vigencia_hasta = $vigencias_hasta[$i] ?? null;
+                if ($codigo && $sede_id && $id_unidad && $vigencia_desde) {
+                    $sql = "INSERT INTO carreras_espejos (carrera_id, codigo_carrera, sede_id, id_unidad, vigencia_desde, vigencia_hasta, estado) VALUES (?, ?, ?, ?, ?, ?, 1)";
+                    $stmt = $this->pdo->prepare($sql);
                     $stmt->execute([
                         $id,
                         $codigo,
-                        $vigencias_desde[$index],
-                        $vigencias_hasta[$index] ?? '999999',
-                        $facultades[$index],
-                        $sedes[$index],
-                        1 // estado activo por defecto
+                        $sede_id,
+                        $id_unidad,
+                        $vigencia_desde,
+                        $vigencia_hasta ?? '999999'
                     ]);
                 }
             }
@@ -842,41 +820,5 @@ class CarreraController
     {
         return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
                strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
-    }
-
-    public function getFacultadesBySede(Request $request, Response $response, array $args = [])
-    {
-        try {
-            // Obtener el sede_id de los argumentos de la ruta
-            $sede_id = $args['sedeId'] ?? null;
-            
-            // Si no está en los argumentos, intentar obtenerlo de los query parameters (para compatibilidad)
-            if (!$sede_id) {
-                $queryParams = $request->getQueryParams();
-                $sede_id = $queryParams['sede_id'] ?? null;
-            }
-            
-            if (!$sede_id) {
-                $response->getBody()->write(json_encode(['error' => 'ID de sede requerido'], JSON_UNESCAPED_UNICODE));
-                return $response
-                    ->withHeader('Content-Type', 'application/json; charset=utf-8')
-                    ->withStatus(400);
-            }
-            
-            $sql = "SELECT id, nombre FROM facultades WHERE sede_id = ? ORDER BY nombre";
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([$sede_id]);
-            $facultades = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            $response->getBody()->write(json_encode($facultades, JSON_UNESCAPED_UNICODE));
-            return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
-            
-        } catch (\Exception $e) {
-            error_log("Error en getFacultadesBySede: " . $e->getMessage());
-            $response->getBody()->write(json_encode(['error' => 'Error al obtener las facultades'], JSON_UNESCAPED_UNICODE));
-            return $response
-                ->withHeader('Content-Type', 'application/json; charset=utf-8')
-                ->withStatus(500);
-        }
     }
 } 

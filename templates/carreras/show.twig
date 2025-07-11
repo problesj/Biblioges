@@ -90,7 +90,7 @@
                         <tr>
                             <th>Código</th>
                             <th>Vigencia</th>
-                            <th>Facultad</th>
+                            <th>Unidad</th>
                             <th>Sede</th>
                             <th>Estado</th>
                         </tr>
@@ -103,7 +103,7 @@
                                     <td>
                                         {{ codigo.vigencia_desde }} - {{ codigo.vigencia_hasta }}
                                     </td>
-                                    <td>{{ codigo.facultad_nombre }}</td>
+                                    <td>{{ codigo.unidad_nombre }}</td>
                                     <td>{{ codigo.sede_nombre }}</td>
                                     <td>
                                         {% if codigo.estado == 1 %}
@@ -121,7 +121,7 @@
                                     <td>
                                         {{ carrera.vigencias_desde[i] }} - {{ carrera.vigencias_hasta[i] }}
                                     </td>
-                                    <td>{{ carrera.facultades[i] }}</td>
+                                    <td>{{ carrera.unidades[i] }}</td>
                                     <td>{{ carrera.sedes[i] }}</td>
                                     <td>
                                         <span class="badge bg-success">Activo</span>

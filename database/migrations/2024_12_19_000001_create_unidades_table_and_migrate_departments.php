@@ -23,10 +23,10 @@ class CreateUnidadesTableAndMigrateDepartments
     public function up()
     {
         try {
-            $this->pdo->beginTransaction();
-
-            // 1. Crear la tabla unidades
+            // 1. Crear la tabla unidades (fuera de la transacción)
             $this->createUnidadesTable();
+
+            $this->pdo->beginTransaction();
 
             // 2. Migrar departamentos a unidades
             $this->migrateDepartamentosToUnidades();
@@ -43,7 +43,9 @@ class CreateUnidadesTableAndMigrateDepartments
             $this->pdo->commit();
             echo "Migración completada exitosamente.\n";
         } catch (Exception $e) {
-            $this->pdo->rollBack();
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
             echo "Error en la migración: " . $e->getMessage() . "\n";
             throw $e;
         }
@@ -78,11 +80,12 @@ class CreateUnidadesTableAndMigrateDepartments
         SELECT 
             CONCAT('DEPT_', LPAD(d.id, 4, '0')) as codigo,
             d.nombre,
-            d.sede_id,
+            f.sede_id,
             d.estado,
             d.fecha_creacion,
             d.fecha_actualizacion
         FROM departamentos d
+        INNER JOIN facultades f ON d.facultad_id = f.id
         ON DUPLICATE KEY UPDATE
             nombre = VALUES(nombre),
             sede_id = VALUES(sede_id),
@@ -132,92 +135,144 @@ class CreateUnidadesTableAndMigrateDepartments
 
     private function updateAsignaturasDepartamentos()
     {
-        // Agregar la nueva columna id_unidad
-        $sql = "ALTER TABLE asignaturas_departamentos ADD COLUMN id_unidad INT NULL AFTER departamento_id";
-        $this->pdo->exec($sql);
+        // Verificar si la columna id_unidad ya existe
+        $stmt = $this->pdo->query("SHOW COLUMNS FROM asignaturas_departamentos LIKE 'id_unidad'");
+        if ($stmt->rowCount() == 0) {
+            // Agregar la nueva columna id_unidad
+            $sql = "ALTER TABLE asignaturas_departamentos ADD COLUMN id_unidad INT NULL AFTER departamento_id";
+            $this->pdo->exec($sql);
+        }
 
-        // Crear índice para la nueva columna
-        $sql = "ALTER TABLE asignaturas_departamentos ADD INDEX idx_id_unidad (id_unidad)";
-        $this->pdo->exec($sql);
+        // Verificar si el índice ya existe
+        $stmt = $this->pdo->query("SHOW INDEX FROM asignaturas_departamentos WHERE Key_name = 'idx_id_unidad'");
+        if ($stmt->rowCount() == 0) {
+            // Crear índice para la nueva columna
+            $sql = "ALTER TABLE asignaturas_departamentos ADD INDEX idx_id_unidad (id_unidad)";
+            $this->pdo->exec($sql);
+        }
 
-        // Migrar los datos de departamento_id a id_unidad
-        $sql = "
-        UPDATE asignaturas_departamentos ad
-        INNER JOIN departamentos d ON ad.departamento_id = d.id
-        INNER JOIN unidades u ON u.codigo = CONCAT('DEPT_', LPAD(d.id, 4, '0'))
-        SET ad.id_unidad = u.id
-        ";
-        $this->pdo->exec($sql);
+        // Migrar los datos de departamento_id a id_unidad solo si la columna existe
+        $stmt = $this->pdo->query("SHOW COLUMNS FROM asignaturas_departamentos LIKE 'departamento_id'");
+        if ($stmt->rowCount() > 0) {
+            $sql = "
+            UPDATE asignaturas_departamentos ad
+            INNER JOIN departamentos d ON ad.departamento_id = d.id
+            INNER JOIN unidades u ON u.codigo = CONCAT('DEPT_', LPAD(d.id, 4, '0'))
+            SET ad.id_unidad = u.id
+            ";
+            $this->pdo->exec($sql);
+            echo "Datos migrados de departamento_id a id_unidad en asignaturas_departamentos.\n";
+        } else {
+            echo "Columna departamento_id no existe, se omite migración de datos en asignaturas_departamentos.\n";
+        }
 
-        echo "Datos migrados de departamento_id a id_unidad en asignaturas_departamentos.\n";
+        // Agregar la foreign key para id_unidad solo si no existe
+        $stmt = $this->pdo->query("SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'asignaturas_departamentos' AND CONSTRAINT_NAME = 'fk_asignaturas_departamentos_unidad'");
+        if ($stmt->rowCount() == 0) {
+            $sql = "ALTER TABLE asignaturas_departamentos 
+            ADD CONSTRAINT fk_asignaturas_departamentos_unidad 
+            FOREIGN KEY (id_unidad) REFERENCES unidades(id) ON DELETE CASCADE";
+            $this->pdo->exec($sql);
+        }
 
-        // Agregar la foreign key para id_unidad
-        $sql = "
-        ALTER TABLE asignaturas_departamentos 
-        ADD CONSTRAINT fk_asignaturas_departamentos_unidad 
-        FOREIGN KEY (id_unidad) REFERENCES unidades(id) ON DELETE CASCADE
-        ";
-        $this->pdo->exec($sql);
+        // Eliminar cualquier foreign key que dependa del índice unique_asignatura_departamento
+        $stmt = $this->pdo->query("SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'asignaturas_departamentos' AND COLUMN_NAME = 'departamento_id' AND CONSTRAINT_NAME != 'PRIMARY'");
+        while ($row = $stmt->fetch()) {
+            $fk = $row['CONSTRAINT_NAME'];
+            if ($fk !== 'fk_asignaturas_departamentos_unidad') {
+                $sql = "ALTER TABLE asignaturas_departamentos DROP FOREIGN KEY `$fk`";
+                $this->pdo->exec($sql);
+            }
+        }
 
-        // Eliminar la columna departamento_id y su foreign key
-        $sql = "ALTER TABLE asignaturas_departamentos DROP FOREIGN KEY asignaturas_departamentos_ibfk_2";
-        $this->pdo->exec($sql);
+        // Verificar si el índice existe y si incluye departamento_id antes de eliminarlo
+        $stmt = $this->pdo->query("SHOW INDEX FROM asignaturas_departamentos WHERE Key_name = 'unique_asignatura_departamento' AND Column_name = 'departamento_id'");
+        if ($stmt->rowCount() > 0) {
+            // Ahora sí, eliminar el índice único
+            $sql = "ALTER TABLE asignaturas_departamentos DROP INDEX unique_asignatura_departamento";
+            $this->pdo->exec($sql);
+        }
 
-        $sql = "ALTER TABLE asignaturas_departamentos DROP COLUMN departamento_id";
-        $this->pdo->exec($sql);
-
-        // Actualizar el índice único
-        $sql = "ALTER TABLE asignaturas_departamentos DROP INDEX unique_asignatura_departamento";
-        $this->pdo->exec($sql);
-
-        $sql = "ALTER TABLE asignaturas_departamentos ADD UNIQUE KEY unique_asignatura_unidad (asignatura_id, id_unidad)";
-        $this->pdo->exec($sql);
+        // Verificar si el índice único ya existe antes de crearlo
+        $stmt = $this->pdo->query("SHOW INDEX FROM asignaturas_departamentos WHERE Key_name = 'unique_asignatura_unidad'");
+        if ($stmt->rowCount() == 0) {
+            $sql = "ALTER TABLE asignaturas_departamentos ADD UNIQUE KEY unique_asignatura_unidad (asignatura_id, id_unidad)";
+            $this->pdo->exec($sql);
+        }
 
         echo "Columna departamento_id eliminada y reemplazada por id_unidad.\n";
     }
 
     private function updateCarrerasEspejos()
     {
-        // Agregar la nueva columna id_unidad
-        $sql = "ALTER TABLE carreras_espejos ADD COLUMN id_unidad INT NULL AFTER facultad_id";
-        $this->pdo->exec($sql);
+        // Verificar si la columna id_unidad ya existe
+        $stmt = $this->pdo->query("SHOW COLUMNS FROM carreras_espejos LIKE 'id_unidad'");
+        if ($stmt->rowCount() == 0) {
+            // Agregar la nueva columna id_unidad
+            $sql = "ALTER TABLE carreras_espejos ADD COLUMN id_unidad INT NULL AFTER facultad_id";
+            $this->pdo->exec($sql);
+        }
 
-        // Crear índice para la nueva columna
-        $sql = "ALTER TABLE carreras_espejos ADD INDEX idx_id_unidad (id_unidad)";
-        $this->pdo->exec($sql);
+        // Verificar si el índice ya existe
+        $stmt = $this->pdo->query("SHOW INDEX FROM carreras_espejos WHERE Key_name = 'idx_id_unidad'");
+        if ($stmt->rowCount() == 0) {
+            // Crear índice para la nueva columna
+            $sql = "ALTER TABLE carreras_espejos ADD INDEX idx_id_unidad (id_unidad)";
+            $this->pdo->exec($sql);
+        }
 
-        // Migrar los datos de facultad_id a id_unidad
-        $sql = "
-        UPDATE carreras_espejos ce
-        INNER JOIN facultades f ON ce.facultad_id = f.id
-        INNER JOIN unidades u ON u.codigo = CONCAT('FAC_', LPAD(f.id, 4, '0'))
-        SET ce.id_unidad = u.id
-        ";
-        $this->pdo->exec($sql);
+        // Migrar los datos de facultad_id a id_unidad solo si la columna existe
+        $stmt = $this->pdo->query("SHOW COLUMNS FROM carreras_espejos LIKE 'facultad_id'");
+        if ($stmt->rowCount() > 0) {
+            $sql = "
+            UPDATE carreras_espejos ce
+            INNER JOIN facultades f ON ce.facultad_id = f.id
+            INNER JOIN unidades u ON u.codigo = CONCAT('FAC_', LPAD(f.id, 4, '0'))
+            SET ce.id_unidad = u.id
+            ";
+            $this->pdo->exec($sql);
+            echo "Datos migrados de facultad_id a id_unidad en carreras_espejos.\n";
+        } else {
+            echo "Columna facultad_id no existe, se omite migración de datos en carreras_espejos.\n";
+        }
 
-        echo "Datos migrados de facultad_id a id_unidad en carreras_espejos.\n";
+        // Agregar la foreign key para id_unidad solo si no existe
+        $stmt = $this->pdo->query("SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'carreras_espejos' AND CONSTRAINT_NAME = 'fk_carreras_espejos_unidad'");
+        if ($stmt->rowCount() == 0) {
+            $sql = "ALTER TABLE carreras_espejos 
+            ADD CONSTRAINT fk_carreras_espejos_unidad 
+            FOREIGN KEY (id_unidad) REFERENCES unidades(id) ON DELETE CASCADE";
+            $this->pdo->exec($sql);
+        }
 
-        // Agregar la foreign key para id_unidad
-        $sql = "
-        ALTER TABLE carreras_espejos 
-        ADD CONSTRAINT fk_carreras_espejos_unidad 
-        FOREIGN KEY (id_unidad) REFERENCES unidades(id) ON DELETE CASCADE
-        ";
-        $this->pdo->exec($sql);
+        // Verificar si la foreign key existe antes de eliminarla
+        $stmt = $this->pdo->query("SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'carreras_espejos' AND CONSTRAINT_NAME = 'carreras_espejos_ibfk_2'");
+        if ($stmt->rowCount() > 0) {
+            $sql = "ALTER TABLE carreras_espejos DROP FOREIGN KEY carreras_espejos_ibfk_2";
+            $this->pdo->exec($sql);
+        }
 
-        // Eliminar la columna facultad_id y su foreign key
-        $sql = "ALTER TABLE carreras_espejos DROP FOREIGN KEY carreras_espejos_ibfk_2";
-        $this->pdo->exec($sql);
+        // Verificar si la columna facultad_id existe antes de eliminarla
+        $stmt = $this->pdo->query("SHOW COLUMNS FROM carreras_espejos LIKE 'facultad_id'");
+        if ($stmt->rowCount() > 0) {
+            $sql = "ALTER TABLE carreras_espejos DROP COLUMN facultad_id";
+            $this->pdo->exec($sql);
+        }
 
-        $sql = "ALTER TABLE carreras_espejos DROP COLUMN facultad_id";
-        $this->pdo->exec($sql);
+        // Verificar si el índice existe y si incluye facultad_id antes de eliminarlo
+        $stmt = $this->pdo->query("SHOW INDEX FROM carreras_espejos WHERE Key_name = 'unique_carrera_espejo' AND Column_name = 'facultad_id'");
+        if ($stmt->rowCount() > 0) {
+            // Ahora sí, eliminar el índice único
+            $sql = "ALTER TABLE carreras_espejos DROP INDEX unique_carrera_espejo";
+            $this->pdo->exec($sql);
+        }
 
-        // Actualizar el índice único
-        $sql = "ALTER TABLE carreras_espejos DROP INDEX unique_carrera_espejo";
-        $this->pdo->exec($sql);
-
-        $sql = "ALTER TABLE carreras_espejos ADD UNIQUE KEY unique_carrera_espejo (carrera_id, codigo_carrera, id_unidad, sede_id)";
-        $this->pdo->exec($sql);
+        // Verificar si el índice único ya existe antes de crearlo
+        $stmt = $this->pdo->query("SHOW INDEX FROM carreras_espejos WHERE Key_name = 'unique_carrera_espejo'");
+        if ($stmt->rowCount() == 0) {
+            $sql = "ALTER TABLE carreras_espejos ADD UNIQUE KEY unique_carrera_espejo (carrera_id, codigo_carrera, id_unidad, sede_id)";
+            $this->pdo->exec($sql);
+        }
 
         echo "Columna facultad_id eliminada y reemplazada por id_unidad.\n";
     }

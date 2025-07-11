@@ -84,26 +84,25 @@
                     </div>
                 </div>
 
-                <!-- Datos por Departamento -->
-                <h5 class="mb-3 mt-4">Datos por Departamento</h5>
+                <!-- Datos por Unidad -->
+                <h5 class="mb-3 mt-4">Datos por Unidad</h5>
                 <div id="codigosContainer">
-                    {% if asignatura.departamentos %}
-                        {% for info in asignatura.departamentos %}
+                    {% if asignatura.unidades %}
+                        {% for info in asignatura.unidades %}
                         <div class="row mb-3 codigo-row">
                             <div class="col-md-4">
-                                <label for="departamento_id_{{ loop.index0 }}" class="form-label">Departamento</label>
-                                <select class="form-control select-departamento" 
-                                        name="codigos[{{ loop.index0 }}][departamento_id]" 
+                                <label for="unidad_id_{{ loop.index0 }}" class="form-label">Unidad</label>
+                                <select class="form-control select-unidad" 
+                                        name="codigos[{{ loop.index0 }}][id_unidad]" 
                                         data-index="{{ loop.index0 }}" required>
-                                    <option value="">Seleccione un departamento</option>
-                                    {% for departamento in departamentos %}
-                                    <option value="{{ departamento.id }}" 
-                                            {% if departamento.id == info.departamento_id %}selected{% endif %}>
-                                        {{ departamento.sede_nombre }} - {{ departamento.facultad_nombre }} - {{ departamento.departamento_nombre }}
+                                    <option value="">Seleccione una unidad</option>
+                                    {% for unidad in unidades %}
+                                    <option value="{{ unidad.id }}" {% if unidad.id == info.unidad_id %}selected{% endif %}>
+                                        {{ unidad.sede_nombre }} - {{ unidad.unidad_nombre }}
                                     </option>
                                     {% endfor %}
                                 </select>
-                                <div class="invalid-feedback" id="departamentoError_{{ loop.index0 }}"></div>
+                                <div class="invalid-feedback" id="unidadError_{{ loop.index0 }}"></div>
                             </div>
 
                             <div class="col-md-4">
@@ -136,7 +135,7 @@
                         {% endfor %}
                     {% else %}
                         <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i> No hay códigos de departamento vinculados a esta asignatura.
+                            <i class="fas fa-info-circle"></i> No hay códigos de unidad vinculados a esta asignatura.
                         </div>
                     {% endif %}
                 </div>
@@ -162,7 +161,7 @@
 
 {% block scripts %}
 <script>
-let codigoCount = {{ asignatura.departamentos ? asignatura.departamentos|length - 1 : -1 }};
+let codigoCount = {{ asignatura.unidades ? asignatura.unidades|length - 1 : -1 }};
 
 // Función para manejar el cambio en el tipo de asignatura
 function handleTipoChange() {
@@ -211,18 +210,18 @@ function addRow() {
     newRow.className = 'row mb-3 codigo-row';
     newRow.innerHTML = `
         <div class="col-md-4">
-            <label for="departamento_id_${codigoCount}" class="form-label">Departamento</label>
-            <select class="form-control select-departamento" 
-                    name="codigos[${codigoCount}][departamento_id]" 
+            <label for="unidad_id_${codigoCount}" class="form-label">Unidad</label>
+            <select class="form-control select-unidad" 
+                    name="codigos[${codigoCount}][id_unidad]" 
                     data-index="${codigoCount}" required>
-                <option value="">Seleccione un departamento</option>
-                {% for departamento in departamentos %}
-                <option value="{{ departamento.id }}">
-                    {{ departamento.sede_nombre }} - {{ departamento.facultad_nombre }} - {{ departamento.departamento_nombre }}
+                <option value="">Seleccione una unidad</option>
+                {% for unidad in unidades %}
+                <option value="{{ unidad.id }}">
+                    {{ unidad.sede_nombre }} - {{ unidad.unidad_nombre }}
                 </option>
                 {% endfor %}
             </select>
-            <div class="invalid-feedback" id="departamentoError_${codigoCount}"></div>
+            <div class="invalid-feedback" id="unidadError_${codigoCount}"></div>
         </div>
 
         <div class="col-md-4">
@@ -256,7 +255,7 @@ function addRow() {
         if (cantInput && depSelect) {
             cantInput.value = '0';
             cantInput.disabled = true;
-            depSelect.value = document.getElementById('departamento_id_0').value;
+            depSelect.value = document.getElementById('unidad_id_0').value;
             depSelect.disabled = true;
         }
     }
@@ -276,13 +275,13 @@ function reindexRows() {
         const cantInput = row.querySelector('input[name$="[cantidad_alumnos]"]');
         
         if (depSelect && codInput && cantInput) {
-            depSelect.name = `codigos[${index}][departamento_id]`;
-            depSelect.id = `departamento_id_${index}`;
+            depSelect.name = `codigos[${index}][id_unidad]`;
+            depSelect.id = `unidad_id_${index}`;
             codInput.name = `codigos[${index}][codigo]`;
             codInput.id = `codigo_${index}`;
             cantInput.name = `codigos[${index}][cantidad_alumnos]`;
             cantInput.id = `cantidad_alumnos_${index}`;
-            row.querySelector(`[id^="departamentoError"]`).id = `departamentoError_${index}`;
+            row.querySelector(`[id^="unidadError"]`).id = `unidadError_${index}`;
             row.querySelector(`[id^="codigoError"]`).id = `codigoError_${index}`;
             row.querySelector(`[id^="cantidadAlumnosError"]`).id = `cantidadAlumnosError_${index}`;
         }
@@ -350,24 +349,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (codigo) {
                     hasValidCodigo = true;
                     if (data.tipo === 'FORMACION_ELECTIVA') {
-                        // Para Formación Electiva, buscar el departamento "Sin departamento"
-                        let sinDepartamentoId = null;
+                        // Para Formación Electiva, buscar la unidad "Sin unidad"
+                        let sinUnidadId = null;
                         const options = depSelect.querySelectorAll('option');
                         options.forEach(option => {
-                            if (option.textContent.includes('Sin departamento')) {
-                                sinDepartamentoId = option.value;
+                            if (option.textContent.includes('Sin unidad')) {
+                                sinUnidadId = option.value;
                             }
                         });
-                        const departamentoId = sinDepartamentoId || depSelect.value;
+                        const unidadId = sinUnidadId || depSelect.value;
                         
                         data.codigos.push({
-                            departamento_id: departamentoId,
+                            id_unidad: unidadId,
                             codigo: codigo,
                             cantidad_alumnos: '0'
                         });
                     } else {
                         if (!depSelect.value) {
-                            errores[`departamento_${index}`] = 'El departamento es requerido';
+                            errores[`unidad_${index}`] = 'La unidad es requerida';
                             depSelect.classList.add('is-invalid');
                         }
                         if (!cantInput.value || cantInput.value < 1) {
@@ -375,7 +374,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             cantInput.classList.add('is-invalid');
                         }
                         data.codigos.push({
-                            departamento_id: depSelect.value,
+                            id_unidad: depSelect.value,
                             codigo: codigo,
                             cantidad_alumnos: cantInput.value
                         });
