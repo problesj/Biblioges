@@ -110,7 +110,7 @@ class SedeController
             return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
             
         } catch (\Exception $e) {
-            error_log("Error en SedeController@index: " . $e->getMessage());
+            // error_log("Error en SedeController@index: " . $e->getMessage());
             $this->session->set('swal', [
                 'icon' => 'error',
                 'title' => 'Error',
@@ -156,7 +156,7 @@ class SedeController
             return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
             
         } catch (\Exception $e) {
-            error_log("Error en SedeController@create: " . $e->getMessage());
+            // error_log("Error en SedeController@create: " . $e->getMessage());
             $this->session->set('swal', [
                 'icon' => 'error',
                 'title' => 'Error',
@@ -249,7 +249,7 @@ class SedeController
                 ->withStatus(302);
                 
         } catch (\PDOException $e) {
-            error_log("Error en SedeController@store: " . $e->getMessage());
+            // error_log("Error en SedeController@store: " . $e->getMessage());
             
             // Detectar errores específicos de base de datos
             if ($e->getCode() == 23000) {
@@ -286,7 +286,7 @@ class SedeController
                 ->withStatus(302);
                 
         } catch (\Exception $e) {
-            error_log("Error en SedeController@store: " . $e->getMessage());
+            // error_log("Error en SedeController@store: " . $e->getMessage());
             $this->session->set('swal', [
                 'icon' => 'error',
                 'title' => 'Error',
@@ -352,7 +352,7 @@ class SedeController
             return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
             
         } catch (\Exception $e) {
-            error_log("Error en SedeController@edit: " . $e->getMessage());
+            // error_log("Error en SedeController@edit: " . $e->getMessage());
             $this->session->set('swal', [
                 'icon' => 'error',
                 'title' => 'Error',
@@ -387,7 +387,7 @@ class SedeController
             $nombre = trim($parsedBody['nombre'] ?? '');
             $estado = isset($parsedBody['estado']) ? (int)$parsedBody['estado'] : 0;
 
-            error_log("Datos recibidos - Código: $codigo, Nombre: $nombre, Estado: $estado");
+            // error_log("Datos recibidos - Código: $codigo, Nombre: $nombre, Estado: $estado");
 
             if (empty($codigo) || empty($nombre)) {
                 $this->session->set('swal', [
@@ -451,14 +451,14 @@ class SedeController
                     ->withStatus(302);
             }
 
-            error_log("Sede encontrada - ID: {$sede['id']}, Código actual: {$sede['codigo']}, Nombre actual: {$sede['nombre']}, Estado actual: {$sede['estado']}");
+            // error_log("Sede encontrada - ID: {$sede['id']}, Código actual: {$sede['codigo']}, Nombre actual: {$sede['nombre']}, Estado actual: {$sede['estado']}");
 
             // Actualizar la sede
             $sql = "UPDATE sedes SET codigo = ?, nombre = ?, estado = ? WHERE id = ?";
             $stmt = $this->pdo->prepare($sql);
             $resultado = $stmt->execute([$codigo, $nombre, $estado, $id]);
 
-            error_log("Resultado del guardado: " . ($resultado ? "éxito" : "fallo"));
+            // error_log("Resultado del guardado: " . ($resultado ? "éxito" : "fallo"));
 
             if (!$resultado) {
                 throw new \Exception("Error al guardar los cambios");
@@ -474,8 +474,8 @@ class SedeController
                 ->withStatus(302);
 
         } catch (\PDOException $e) {
-            error_log("Error en SedeController@update: " . $e->getMessage());
-            error_log("Stack trace: " . $e->getTraceAsString());
+            // error_log("Error en SedeController@update: " . $e->getMessage());
+            // error_log("Stack trace: " . $e->getTraceAsString());
             
             // Detectar errores específicos de base de datos
             if ($e->getCode() == 23000) {
@@ -512,8 +512,8 @@ class SedeController
                 ->withStatus(302);
                 
         } catch (\Exception $e) {
-            error_log("Error en SedeController@update: " . $e->getMessage());
-            error_log("Stack trace: " . $e->getTraceAsString());
+            // error_log("Error en SedeController@update: " . $e->getMessage());
+            // error_log("Stack trace: " . $e->getTraceAsString());
             $this->session->set('swal', [
                 'icon' => 'error',
                 'title' => 'Error',
@@ -613,8 +613,8 @@ class SedeController
                 ->withStatus(302);
 
         } catch (\Exception $e) {
-            error_log("Error en SedeController@destroy: " . $e->getMessage());
-            error_log("Stack trace: " . $e->getTraceAsString());
+            // error_log("Error en SedeController@destroy: " . $e->getMessage());
+            // error_log("Stack trace: " . $e->getTraceAsString());
             $this->session->set('swal', [
                 'icon' => 'error',
                 'title' => 'Error',
@@ -698,7 +698,7 @@ class SedeController
             return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
             
         } catch (\Exception $e) {
-            error_log("Error en SedeController@show: " . $e->getMessage());
+            // error_log("Error en SedeController@show: " . $e->getMessage());
             $this->session->set('swal', [
                 'icon' => 'error',
                 'title' => 'Error',

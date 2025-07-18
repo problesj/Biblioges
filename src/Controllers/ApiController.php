@@ -67,7 +67,7 @@ class ApiController
             }
 
             // Log para depuración
-            error_log('Obteniendo unidades para sede ID: ' . $sedeId);
+            // error_log('Obteniendo unidades para sede ID: ' . $sedeId);
 
             // Consulta SQL para obtener todas las unidades de la sede
             $sql = "SELECT u.id, u.nombre 
@@ -82,9 +82,9 @@ class ApiController
             $unidades = $stmt->fetchAll();
 
             // Log para depuración
-            error_log('SQL ejecutada: ' . $sql);
-            error_log('Parámetros: sede_id = ' . $sedeId);
-            error_log('Unidades encontradas: ' . print_r($unidades, true));
+            // error_log('SQL ejecutada: ' . $sql);
+            // error_log('Parámetros: sede_id = ' . $sedeId);
+            // error_log('Unidades encontradas: ' . print_r($unidades, true));
 
             $response->getBody()->write(json_encode($unidades));
             return $response->withHeader('Content-Type', 'application/json');
@@ -110,7 +110,7 @@ class ApiController
 
         try {
             // Log para depuración
-            error_log('Obteniendo facultades para sede ID: ' . $sedeId);
+            // error_log('Obteniendo facultades para sede ID: ' . $sedeId);
 
             // Consulta SQL modificada para obtener todas las facultades de la sede
             $sql = "SELECT f.id, f.nombre 
@@ -125,9 +125,9 @@ class ApiController
             $facultades = $stmt->fetchAll();
 
             // Log para depuración
-            error_log('SQL ejecutada: ' . $sql);
-            error_log('Parámetros: sede_id = ' . $sedeId);
-            error_log('Facultades encontradas: ' . print_r($facultades, true));
+            // error_log('SQL ejecutada: ' . $sql);
+            // error_log('Parámetros: sede_id = ' . $sedeId);
+            // error_log('Facultades encontradas: ' . print_r($facultades, true));
 
             header('Content-Type: application/json');
             echo json_encode($facultades);
@@ -346,7 +346,7 @@ class ApiController
             }
 
             // Log para depuración
-            error_log('Obteniendo unidades hijas para unidad ID: ' . $unidadId);
+            // error_log('Obteniendo unidades hijas para unidad ID: ' . $unidadId);
 
             // Consulta SQL para obtener las unidades hijas
             $sql = "SELECT u.id, u.nombre 
@@ -361,9 +361,9 @@ class ApiController
             $unidadesHijas = $stmt->fetchAll();
 
             // Log para depuración
-            error_log('SQL ejecutada: ' . $sql);
-            error_log('Parámetros: unidad_id = ' . $unidadId);
-            error_log('Unidades hijas encontradas: ' . print_r($unidadesHijas, true));
+            // error_log('SQL ejecutada: ' . $sql);
+            // error_log('Parámetros: unidad_id = ' . $unidadId);
+            // error_log('Unidades hijas encontradas: ' . print_r($unidadesHijas, true));
 
             $response->getBody()->write(json_encode($unidadesHijas));
             return $response->withHeader('Content-Type', 'application/json');

@@ -300,20 +300,24 @@ function verificarFiltrosIniciales() {
     const asignaturasDisponibles = document.querySelectorAll('.asignatura-disponible');
     const botonesAccion = document.getElementById('botonesAccion');
     
+    // Si hay filtros seleccionados, ocultar el mensaje y mostrar asignaturas y botones
     if (hayFiltrosSeleccionados) {
-        // Ocultar mensaje y mostrar asignaturas
         mensajeSinFiltros.style.display = 'none';
         asignaturasDisponibles.forEach(asignatura => {
             asignatura.style.display = 'table-row';
         });
+        if (botonesAccion) {
         botonesAccion.style.display = 'flex';
+        }
     } else {
-        // Mostrar mensaje y ocultar asignaturas
+        // Si no hay filtros, mostrar el mensaje y ocultar asignaturas y botones
         mensajeSinFiltros.style.display = 'table-row';
         asignaturasDisponibles.forEach(asignatura => {
             asignatura.style.display = 'none';
         });
+        if (botonesAccion) {
         botonesAccion.style.display = 'none';
+        }
     }
 }
 
@@ -321,30 +325,6 @@ function verificarFiltrosIniciales() {
 function aplicarFiltros() {
     const unidad = document.getElementById('ubicacion').value;
     const tipoAsignatura = document.getElementById('tipo_asignatura').value;
-    
-    // Verificar si se ha seleccionado al menos un filtro
-    const hayFiltrosSeleccionados = unidad || tipoAsignatura;
-    
-    // Controlar visibilidad del mensaje y las asignaturas
-    const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
-    const asignaturasDisponibles = document.querySelectorAll('.asignatura-disponible');
-    const botonesAccion = document.getElementById('botonesAccion');
-    
-    if (hayFiltrosSeleccionados) {
-        // Ocultar mensaje y mostrar asignaturas
-        mensajeSinFiltros.style.display = 'none';
-        asignaturasDisponibles.forEach(asignatura => {
-            asignatura.style.display = 'table-row';
-        });
-        botonesAccion.style.display = 'flex';
-    } else {
-        // Mostrar mensaje y ocultar asignaturas
-        mensajeSinFiltros.style.display = 'table-row';
-        asignaturasDisponibles.forEach(asignatura => {
-            asignatura.style.display = 'none';
-        });
-        botonesAccion.style.display = 'none';
-    }
     
     // Construir la URL con los filtros
     let url = `{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/vincular?`;

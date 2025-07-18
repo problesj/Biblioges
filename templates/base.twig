@@ -256,6 +256,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link {% if current_page == 'unidades' %}active{% endif %}" href="{{ app_url }}unidades">
+                            <i class="fas fa-sitemap"></i> Unidades
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {% if current_page == 'usuarios' %}active{% endif %}" href="{{ app_url }}usuarios">
                             <i class="fas fa-users"></i> Usuarios
                         </a>
@@ -325,29 +330,29 @@
     <!-- Custom JavaScript -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, initializing sidebar toggle...');
+            // console.log('DOM loaded, initializing sidebar toggle...');
             
             // Toggle del sidebar
             const sidebarToggle = document.getElementById('sidebarToggle');
             const sidebar = document.getElementById('sidebar');
             const content = document.getElementById('content');
             
-            console.log('Elements found:', {
-                sidebarToggle: !!sidebarToggle,
-                sidebar: !!sidebar,
-                content: !!content
-            });
+            // console.log('Elements found:', {
+            //     sidebarToggle: !!sidebarToggle,
+            //     sidebar: !!sidebar,
+            //     content: !!content
+            // });
             
             if (sidebarToggle && sidebar && content) {
-                console.log('All elements found, adding event listener...');
+                // console.log('All elements found, adding event listener...');
                 
                 sidebarToggle.addEventListener('click', function(e) {
                     e.preventDefault();
-                    console.log('Toggle sidebar clicked');
+                    // console.log('Toggle sidebar clicked');
                     
                     // Verificar estado actual
                     const isCollapsed = sidebar.classList.contains('collapsed');
-                    console.log('Current state - collapsed:', isCollapsed);
+                    // console.log('Current state - collapsed:', isCollapsed);
                     
                     // Toggle classes
                     sidebar.classList.toggle('collapsed');
@@ -356,18 +361,18 @@
                     // Verificar estado después del toggle
                     const newCollapsed = sidebar.classList.contains('collapsed');
                     const newExpanded = content.classList.contains('expanded');
-                    console.log('New state - collapsed:', newCollapsed, 'expanded:', newExpanded);
+                    // console.log('New state - collapsed:', newCollapsed, 'expanded:', newExpanded);
                     
                     // Toggle icon
                     const toggleIcon = sidebarToggle.querySelector('i');
                     if (toggleIcon) {
                         toggleIcon.classList.toggle('fa-chevron-left');
                         toggleIcon.classList.toggle('fa-chevron-right');
-                        console.log('Icon toggled');
+                        // console.log('Icon toggled');
                     }
                 });
                 
-                console.log('Event listener added successfully');
+                // console.log('Event listener added successfully');
             } else {
                 console.error('Some elements not found:', {
                     sidebarToggle: !!sidebarToggle,

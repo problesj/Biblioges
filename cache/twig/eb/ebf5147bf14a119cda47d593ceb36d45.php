@@ -393,6 +393,18 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
                 // line 259
+                if ((($context["current_page"] ?? null) == "unidades")) {
+                    yield "active";
+                }
+                yield "\" href=\"";
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
+                yield "unidades\">
+                            <i class=\"fas fa-sitemap\"></i> Unidades
+                        </a>
+                    </li>
+                    <li class=\"nav-item\">
+                        <a class=\"nav-link ";
+                // line 264
                 if ((($context["current_page"] ?? null) == "usuarios")) {
                     yield "active";
                 }
@@ -404,7 +416,7 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                     </li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-                // line 264
+                // line 269
                 if ((($context["current_page"] ?? null) == "tareas_programadas")) {
                     yield "active";
                 }
@@ -416,13 +428,13 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                     </li>
                     ";
             }
-            // line 269
+            // line 274
             yield "                    ";
-            if (((CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_rol", [], "any", false, false, false, 269) == "admin") || (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_rol", [], "any", false, false, false, 269) == "admin_bidoc"))) {
-                // line 270
+            if (((CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_rol", [], "any", false, false, false, 274) == "admin") || (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_rol", [], "any", false, false, false, 274) == "admin_bidoc"))) {
+                // line 275
                 yield "                    <li class=\"nav-item\">
                         <a class=\"nav-link ";
-                // line 271
+                // line 276
                 if ((($context["current_page"] ?? null) == "autores")) {
                     yield "active";
                 }
@@ -434,13 +446,13 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                     </li>
                     ";
             }
-            // line 276
+            // line 281
             yield "
                     <!-- Perfil y Cerrar Sesión -->
                     <li class=\"menu-divider\"></li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-            // line 280
+            // line 285
             if ((($context["current_page"] ?? null) == "perfil")) {
                 yield "active";
             }
@@ -452,7 +464,7 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                     </li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link\" href=\"";
-            // line 285
+            // line 290
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
             yield "logout\">
                             <i class=\"fas fa-sign-out-alt\"></i> Cerrar Sesión
@@ -472,21 +484,21 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
             <!-- Main Content -->
             <main class=\"container-fluid py-4\">
                 ";
-            // line 302
+            // line 307
             yield from $this->unwrap()->yieldBlock('content', $context, $blocks);
-            // line 303
+            // line 308
             yield "            </main>
         </div>
     </div>
     ";
         } else {
-            // line 307
+            // line 312
             yield "        ";
             yield from $this->unwrap()->yieldBlock('unauthenticated_content', $context, $blocks);
-            // line 308
+            // line 313
             yield "    ";
         }
-        // line 309
+        // line 314
         yield "
     <!-- jQuery -->
     <script src=\"https://code.jquery.com/jquery-3.7.0.min.js\"></script>
@@ -506,29 +518,29 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
     <!-- Custom JavaScript -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, initializing sidebar toggle...');
+            // console.log('DOM loaded, initializing sidebar toggle...');
             
             // Toggle del sidebar
             const sidebarToggle = document.getElementById('sidebarToggle');
             const sidebar = document.getElementById('sidebar');
             const content = document.getElementById('content');
             
-            console.log('Elements found:', {
-                sidebarToggle: !!sidebarToggle,
-                sidebar: !!sidebar,
-                content: !!content
-            });
+            // console.log('Elements found:', {
+            //     sidebarToggle: !!sidebarToggle,
+            //     sidebar: !!sidebar,
+            //     content: !!content
+            // });
             
             if (sidebarToggle && sidebar && content) {
-                console.log('All elements found, adding event listener...');
+                // console.log('All elements found, adding event listener...');
                 
                 sidebarToggle.addEventListener('click', function(e) {
                     e.preventDefault();
-                    console.log('Toggle sidebar clicked');
+                    // console.log('Toggle sidebar clicked');
                     
                     // Verificar estado actual
                     const isCollapsed = sidebar.classList.contains('collapsed');
-                    console.log('Current state - collapsed:', isCollapsed);
+                    // console.log('Current state - collapsed:', isCollapsed);
                     
                     // Toggle classes
                     sidebar.classList.toggle('collapsed');
@@ -537,18 +549,18 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                     // Verificar estado después del toggle
                     const newCollapsed = sidebar.classList.contains('collapsed');
                     const newExpanded = content.classList.contains('expanded');
-                    console.log('New state - collapsed:', newCollapsed, 'expanded:', newExpanded);
+                    // console.log('New state - collapsed:', newCollapsed, 'expanded:', newExpanded);
                     
                     // Toggle icon
                     const toggleIcon = sidebarToggle.querySelector('i');
                     if (toggleIcon) {
                         toggleIcon.classList.toggle('fa-chevron-left');
                         toggleIcon.classList.toggle('fa-chevron-right');
-                        console.log('Icon toggled');
+                        // console.log('Icon toggled');
                     }
                 });
                 
-                console.log('Event listener added successfully');
+                // console.log('Event listener added successfully');
             } else {
                 console.error('Some elements not found:', {
                     sidebarToggle: !!sidebarToggle,
@@ -559,19 +571,19 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
 
             // Verificar si la sesión está activa
             ";
-        // line 380
-        if ( !CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_id", [], "any", false, false, false, 380)) {
-            // line 381
+        // line 385
+        if ( !CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_id", [], "any", false, false, false, 385)) {
+            // line 386
             yield "                // Si no hay sesión activa y no estamos en la página de login, redirigir
                 if (!window.location.href.includes('login')) {
                     window.location.href = '";
-            // line 383
+            // line 388
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
             yield "login';
                 }
             ";
         }
-        // line 386
+        // line 391
         yield "
             // Ocultar automáticamente los mensajes de alerta después de 5 segundos
             const alerts = document.querySelectorAll('.alert');
@@ -582,7 +594,7 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                     
                     // Limpiar las variables de sesión después de cerrar la alerta
                     fetch('";
-        // line 395
+        // line 400
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "clear-session-messages', {
                         method: 'POST',
@@ -596,54 +608,54 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
 
             // Mostrar alertas de SweetAlert2 si existen
             ";
-        // line 406
+        // line 411
         if ((array_key_exists("swal", $context) && ($context["swal"] ?? null))) {
-            // line 407
+            // line 412
             yield "                Swal.fire({
                     icon: '";
-            // line 408
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "icon", [], "any", false, false, false, 408), "html", null, true);
+            // line 413
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "icon", [], "any", false, false, false, 413), "html", null, true);
             yield "',
                     title: '";
-            // line 409
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "title", [], "any", false, false, false, 409), "html", null, true);
+            // line 414
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "title", [], "any", false, false, false, 414), "html", null, true);
             yield "',
                     text: '";
-            // line 410
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "text", [], "any", false, false, false, 410), "html", null, true);
+            // line 415
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "text", [], "any", false, false, false, 415), "html", null, true);
             yield "',
                     confirmButtonText: 'Aceptar'
                 });
             ";
         }
-        // line 414
+        // line 419
         yield "        });
     </script>
 
     ";
-        // line 417
+        // line 422
         yield from $this->unwrap()->yieldBlock('scripts', $context, $blocks);
-        // line 430
+        // line 435
         yield "
     <!-- SweetAlert2 Notifications -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             ";
-        // line 434
-        if (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "swal", [], "any", false, false, false, 434)) {
-            // line 435
+        // line 439
+        if (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "swal", [], "any", false, false, false, 439)) {
+            // line 440
             yield "                Swal.fire({
                     icon: '";
-            // line 436
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "swal", [], "any", false, false, false, 436), "icon", [], "any", false, false, false, 436), "html", null, true);
+            // line 441
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "swal", [], "any", false, false, false, 441), "icon", [], "any", false, false, false, 441), "html", null, true);
             yield "',
                     title: '";
-            // line 437
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "swal", [], "any", false, false, false, 437), "title", [], "any", false, false, false, 437), "html", null, true);
+            // line 442
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "swal", [], "any", false, false, false, 442), "title", [], "any", false, false, false, 442), "html", null, true);
             yield "',
                     text: '";
-            // line 438
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "swal", [], "any", false, false, false, 438), "text", [], "any", false, false, false, 438), "html", null, true);
+            // line 443
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "swal", [], "any", false, false, false, 443), "text", [], "any", false, false, false, 443), "html", null, true);
             yield "',
                     confirmButtonText: 'Aceptar',
                     confirmButtonColor: '#4e73df',
@@ -653,7 +665,7 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                 });
             ";
         }
-        // line 446
+        // line 451
         yield "        });
 
         function mostrarNotificacion(mensaje, tipo = 'success') {
@@ -695,7 +707,7 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
         yield from [];
     }
 
-    // line 302
+    // line 307
     /**
      * @return iterable<null|scalar|\Stringable>
      */
@@ -705,7 +717,7 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
         yield from [];
     }
 
-    // line 307
+    // line 312
     /**
      * @return iterable<null|scalar|\Stringable>
      */
@@ -715,14 +727,14 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
         yield from [];
     }
 
-    // line 417
+    // line 422
     /**
      * @return iterable<null|scalar|\Stringable>
      */
     public function block_scripts(array $context, array $blocks = []): iterable
     {
         $macros = $this->macros;
-        // line 418
+        // line 423
         yield "    <!-- Bootstrap Bundle with Popper -->
     <script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js\"></script>
 
@@ -759,7 +771,7 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
      */
     public function getDebugInfo(): array
     {
-        return array (  726 => 418,  719 => 417,  709 => 307,  699 => 302,  689 => 183,  678 => 7,  657 => 446,  646 => 438,  642 => 437,  638 => 436,  635 => 435,  633 => 434,  627 => 430,  625 => 417,  620 => 414,  613 => 410,  609 => 409,  605 => 408,  602 => 407,  600 => 406,  586 => 395,  575 => 386,  569 => 383,  565 => 381,  563 => 380,  490 => 309,  487 => 308,  484 => 307,  478 => 303,  476 => 302,  456 => 285,  444 => 280,  438 => 276,  426 => 271,  423 => 270,  420 => 269,  408 => 264,  396 => 259,  384 => 254,  379 => 251,  377 => 250,  363 => 243,  351 => 238,  344 => 233,  332 => 228,  320 => 223,  317 => 222,  314 => 221,  302 => 216,  290 => 211,  278 => 206,  275 => 205,  273 => 204,  262 => 200,  248 => 188,  245 => 187,  243 => 186,  239 => 184,  237 => 183,  61 => 10,  55 => 7,  47 => 1,);
+        return array (  738 => 423,  731 => 422,  721 => 312,  711 => 307,  701 => 183,  690 => 7,  669 => 451,  658 => 443,  654 => 442,  650 => 441,  647 => 440,  645 => 439,  639 => 435,  637 => 422,  632 => 419,  625 => 415,  621 => 414,  617 => 413,  614 => 412,  612 => 411,  598 => 400,  587 => 391,  581 => 388,  577 => 386,  575 => 385,  502 => 314,  499 => 313,  496 => 312,  490 => 308,  488 => 307,  468 => 290,  456 => 285,  450 => 281,  438 => 276,  435 => 275,  432 => 274,  420 => 269,  408 => 264,  396 => 259,  384 => 254,  379 => 251,  377 => 250,  363 => 243,  351 => 238,  344 => 233,  332 => 228,  320 => 223,  317 => 222,  314 => 221,  302 => 216,  290 => 211,  278 => 206,  275 => 205,  273 => 204,  262 => 200,  248 => 188,  245 => 187,  243 => 186,  239 => 184,  237 => 183,  61 => 10,  55 => 7,  47 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -1022,6 +1034,11 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                         </a>
                     </li>
                     <li class=\"nav-item\">
+                        <a class=\"nav-link {% if current_page == 'unidades' %}active{% endif %}\" href=\"{{ app_url }}unidades\">
+                            <i class=\"fas fa-sitemap\"></i> Unidades
+                        </a>
+                    </li>
+                    <li class=\"nav-item\">
                         <a class=\"nav-link {% if current_page == 'usuarios' %}active{% endif %}\" href=\"{{ app_url }}usuarios\">
                             <i class=\"fas fa-users\"></i> Usuarios
                         </a>
@@ -1091,29 +1108,29 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
     <!-- Custom JavaScript -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, initializing sidebar toggle...');
+            // console.log('DOM loaded, initializing sidebar toggle...');
             
             // Toggle del sidebar
             const sidebarToggle = document.getElementById('sidebarToggle');
             const sidebar = document.getElementById('sidebar');
             const content = document.getElementById('content');
             
-            console.log('Elements found:', {
-                sidebarToggle: !!sidebarToggle,
-                sidebar: !!sidebar,
-                content: !!content
-            });
+            // console.log('Elements found:', {
+            //     sidebarToggle: !!sidebarToggle,
+            //     sidebar: !!sidebar,
+            //     content: !!content
+            // });
             
             if (sidebarToggle && sidebar && content) {
-                console.log('All elements found, adding event listener...');
+                // console.log('All elements found, adding event listener...');
                 
                 sidebarToggle.addEventListener('click', function(e) {
                     e.preventDefault();
-                    console.log('Toggle sidebar clicked');
+                    // console.log('Toggle sidebar clicked');
                     
                     // Verificar estado actual
                     const isCollapsed = sidebar.classList.contains('collapsed');
-                    console.log('Current state - collapsed:', isCollapsed);
+                    // console.log('Current state - collapsed:', isCollapsed);
                     
                     // Toggle classes
                     sidebar.classList.toggle('collapsed');
@@ -1122,18 +1139,18 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                     // Verificar estado después del toggle
                     const newCollapsed = sidebar.classList.contains('collapsed');
                     const newExpanded = content.classList.contains('expanded');
-                    console.log('New state - collapsed:', newCollapsed, 'expanded:', newExpanded);
+                    // console.log('New state - collapsed:', newCollapsed, 'expanded:', newExpanded);
                     
                     // Toggle icon
                     const toggleIcon = sidebarToggle.querySelector('i');
                     if (toggleIcon) {
                         toggleIcon.classList.toggle('fa-chevron-left');
                         toggleIcon.classList.toggle('fa-chevron-right');
-                        console.log('Icon toggled');
+                        // console.log('Icon toggled');
                     }
                 });
                 
-                console.log('Event listener added successfully');
+                // console.log('Event listener added successfully');
             } else {
                 console.error('Some elements not found:', {
                     sidebarToggle: !!sidebarToggle,

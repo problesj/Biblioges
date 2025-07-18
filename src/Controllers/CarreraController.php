@@ -222,6 +222,45 @@ class CarreraController
             $unidades = $parsedBody['unidades'] ?? [];
             $vigencias_desde = $parsedBody['vigencias_desde'] ?? [];
             $vigencias_hasta = $parsedBody['vigencias_hasta'] ?? [];
+            
+            // Procesar archivo PDF del libro de carrera
+            $url_libro = null;
+            $uploadedFiles = $request->getUploadedFiles();
+            if (isset($uploadedFiles['libro_carrera']) && $uploadedFiles['libro_carrera']->getError() === UPLOAD_ERR_OK) {
+                $file = $uploadedFiles['libro_carrera'];
+                
+                // Validar tipo de archivo
+                $allowedTypes = ['application/pdf'];
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                $mimeType = finfo_file($finfo, $file->getStream()->getMetadata('uri'));
+                finfo_close($finfo);
+                
+                if (!in_array($mimeType, $allowedTypes)) {
+                    throw new \Exception('Solo se permiten archivos PDF');
+                }
+                
+                // Validar tamaño (máximo 10MB)
+                if ($file->getSize() > 10 * 1024 * 1024) {
+                    throw new \Exception('El archivo no puede superar los 10MB');
+                }
+                
+                // Crear directorio si no existe
+                $uploadDir = __DIR__ . '/../../public/uploads/libros_carrera/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+                
+                // Generar nombre único para el archivo
+                $extension = pathinfo($file->getClientFilename(), PATHINFO_EXTENSION);
+                $filename = 'libro_carrera_' . time() . '_' . uniqid() . '.' . $extension;
+                $filepath = $uploadDir . $filename;
+                
+                // Mover archivo
+                $file->moveTo($filepath);
+                
+                // Guardar URL relativa
+                $url_libro = 'uploads/libros_carrera/' . $filename;
+            }
 
             // Validar datos básicos
             if (empty($nombre) || empty($tipo_programa)) {
@@ -282,10 +321,10 @@ class CarreraController
             $this->pdo->beginTransaction();
 
             // Insertar carrera
-            $sql = "INSERT INTO carreras (nombre, tipo_programa, estado) 
-                    VALUES (?, ?, ?)";
+            $sql = "INSERT INTO carreras (nombre, tipo_programa, estado, url_libro) 
+                    VALUES (?, ?, ?, ?)";
             $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([$nombre, $tipo_programa, $estado]);
+            $stmt->execute([$nombre, $tipo_programa, $estado, $url_libro]);
             $carrera_id = $this->pdo->lastInsertId();
 
             // Insertar códigos de carrera
@@ -531,7 +570,11 @@ class CarreraController
                         GROUP_CONCAT(
                             ce.id_unidad
                             SEPARATOR '|'
-                        ) as unidades_ids
+                        ) as unidades_ids,
+                        GROUP_CONCAT(
+                            ce.id
+                            SEPARATOR '|'
+                        ) as codigos_ids
                     FROM carreras c 
                     LEFT JOIN carreras_espejos ce ON c.id = ce.carrera_id 
                     WHERE c.id = ? 
@@ -547,9 +590,10 @@ class CarreraController
                     ->withStatus(302);
             }
 
-            // Convertir los IDs de sedes y unidades a arrays
+            // Convertir los IDs de sedes, unidades y códigos a arrays
             $carrera['sedes_ids'] = $carrera['sedes_ids'] ? explode('|', $carrera['sedes_ids']) : [];
             $carrera['unidades_ids'] = $carrera['unidades_ids'] ? explode('|', $carrera['unidades_ids']) : [];
+            $carrera['codigos_ids'] = $carrera['codigos_ids'] ? explode('|', $carrera['codigos_ids']) : [];
 
             // Obtener sedes y unidades
             $sql = "SELECT id, nombre FROM sedes ORDER BY nombre";
@@ -620,10 +664,85 @@ class CarreraController
             $unidades = $parsedBody['unidades'] ?? [];
             $vigencias_desde = $parsedBody['vigencias_desde'] ?? [];
             $vigencias_hasta = $parsedBody['vigencias_hasta'] ?? [];
+            
+            // Procesar archivo PDF del libro de carrera
+            $uploadedFiles = $request->getUploadedFiles();
+            if (isset($uploadedFiles['libro_carrera']) && $uploadedFiles['libro_carrera']->getError() === UPLOAD_ERR_OK) {
+                $file = $uploadedFiles['libro_carrera'];
+                
+                // Validar tipo de archivo
+                $allowedTypes = ['application/pdf'];
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                $mimeType = finfo_file($finfo, $file->getStream()->getMetadata('uri'));
+                finfo_close($finfo);
+                
+                if (!in_array($mimeType, $allowedTypes)) {
+                    throw new \Exception('Solo se permiten archivos PDF');
+                }
+                
+                // Validar tamaño (máximo 10MB)
+                if ($file->getSize() > 10 * 1024 * 1024) {
+                    throw new \Exception('El archivo no puede superar los 10MB');
+                }
+                
+                // Crear directorio si no existe
+                $uploadDir = __DIR__ . '/../../public/uploads/libros_carrera/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+                
+                // Generar nombre único para el archivo
+                $extension = pathinfo($file->getClientFilename(), PATHINFO_EXTENSION);
+                $filename = 'libro_carrera_' . time() . '_' . uniqid() . '.' . $extension;
+                $filepath = $uploadDir . $filename;
+                
+                // Mover archivo
+                $file->moveTo($filepath);
+                
+                // Guardar URL relativa
+                $url_libro = 'uploads/libros_carrera/' . $filename;
+            }
+            
+            // Verificar si se debe eliminar el archivo existente
+            $eliminar_libro = $parsedBody['eliminar_libro'] ?? false;
+            if ($eliminar_libro) {
+                // Obtener la URL del archivo actual para eliminarlo
+                $sql = "SELECT url_libro FROM carreras WHERE id = ?";
+                $stmt = $this->pdo->prepare($sql);
+                $stmt->execute([$id]);
+                $carrera_actual = $stmt->fetch();
+                
+                if ($carrera_actual && $carrera_actual['url_libro']) {
+                    $archivo_actual = __DIR__ . '/../../public/' . $carrera_actual['url_libro'];
+                    if (file_exists($archivo_actual)) {
+                        unlink($archivo_actual);
+                    }
+                }
+                
+                $url_libro = null;
+            }
 
             // Validar datos básicos
             if (empty($nombre) || empty($tipo_programa)) {
                 throw new \Exception('El nombre y tipo de programa son obligatorios');
+            }
+
+            // Validar que al menos un código esté completo
+            $codigosCompletos = false;
+            for ($i = 0; $i < count($codigos); $i++) {
+                $codigo = $codigos[$i] ?? null;
+                $sede_id = $sedes[$i] ?? null;
+                $id_unidad = $unidades[$i] ?? null;
+                $vigencia_desde = $vigencias_desde[$i] ?? null;
+                
+                if ($codigo && $sede_id && $id_unidad && $vigencia_desde) {
+                    $codigosCompletos = true;
+                    break;
+                }
+            }
+            
+            if (!$codigosCompletos) {
+                throw new \Exception('Debe completar al menos un código de carrera con todos sus datos');
             }
 
             // Iniciar transacción
@@ -684,6 +803,154 @@ class CarreraController
             // Redirigir al formulario de edición
             return $response
                 ->withHeader('Location', Config::get('app_url') . 'carreras/' . $id . '/edit')
+                ->withStatus(302);
+        }
+    }
+
+    /**
+     * Elimina un código específico de carrera.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
+     * @return Response
+     */
+    public function deleteCodigo(Request $request, Response $response, array $args = [])
+    {
+        $carreraId = $args['carrera_id'] ?? null;
+        $codigoId = $args['codigo_id'] ?? null;
+        
+        // Verificar autenticación
+        if (!$this->session->get('user_id')) {
+            if ($this->isAjaxRequest()) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'No autorizado']));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+            $this->session->set('error', 'Por favor inicie sesión para acceder a las carreras');
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'login')
+                ->withStatus(302);
+        }
+
+        try {
+            // Verificar si el código existe y pertenece a la carrera
+            $sql = "SELECT ce.codigo_carrera, c.nombre as carrera_nombre 
+                    FROM carreras_espejos ce 
+                    INNER JOIN carreras c ON ce.carrera_id = c.id 
+                    WHERE ce.id = ? AND ce.carrera_id = ?";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$codigoId, $carreraId]);
+            $codigo = $stmt->fetch();
+
+            if (!$codigo) {
+                $mensaje = 'El código de carrera no existe o no pertenece a esta carrera.';
+                if ($this->isAjaxRequest()) {
+                    $response->getBody()->write(json_encode(['success' => false, 'message' => $mensaje]));
+                    return $response->withHeader('Content-Type', 'application/json');
+                }
+                $this->session->set('error', $mensaje);
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'carreras/' . $carreraId . '/edit')
+                    ->withStatus(302);
+            }
+
+            // NOTA: Las mallas se vinculan con el id de carreras, no con códigos específicos
+            // Por lo tanto, no es necesario verificar mallas para eliminar códigos de carrera
+            // Solo se verifica que el código no esté en reportes de cobertura
+
+            // Verificar que no esté vinculado a reporte_coberturas_carreras_basicas
+            // Primero obtener el código de carrera para verificar en los reportes
+            $sql = "SELECT codigo_carrera FROM carreras_espejos WHERE id = ?";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$codigoId]);
+            $codigoCarrera = $stmt->fetchColumn();
+
+            if ($codigoCarrera) {
+                // Verificar reportes de cobertura básica
+                $sql = "SELECT COUNT(*) as total FROM reporte_coberturas_carreras_basicas 
+                        WHERE codigo_carrera = ?";
+                $stmt = $this->pdo->prepare($sql);
+                $stmt->execute([$codigoCarrera]);
+                $result = $stmt->fetch();
+
+                if ($result['total'] > 0) {
+                    $mensaje = 'No se puede eliminar el código porque está vinculado a reportes de cobertura básica.';
+                    if ($this->isAjaxRequest()) {
+                        $response->getBody()->write(json_encode(['success' => false, 'message' => $mensaje]));
+                        return $response->withHeader('Content-Type', 'application/json');
+                    }
+                    $this->session->set('error', $mensaje);
+                    return $response
+                        ->withHeader('Location', Config::get('app_url') . 'carreras/' . $carreraId . '/edit')
+                        ->withStatus(302);
+                }
+
+                // Verificar reportes de cobertura complementaria
+                $sql = "SELECT COUNT(*) as total FROM reporte_coberturas_carreras_complementarias 
+                        WHERE codigo_carrera = ?";
+                $stmt = $this->pdo->prepare($sql);
+                $stmt->execute([$codigoCarrera]);
+                $result = $stmt->fetch();
+
+                if ($result['total'] > 0) {
+                    $mensaje = 'No se puede eliminar el código porque está vinculado a reportes de cobertura complementaria.';
+                    if ($this->isAjaxRequest()) {
+                        $response->getBody()->write(json_encode(['success' => false, 'message' => $mensaje]));
+                        return $response->withHeader('Content-Type', 'application/json');
+                    }
+                    $this->session->set('error', $mensaje);
+                    return $response
+                        ->withHeader('Location', Config::get('app_url') . 'carreras/' . $carreraId . '/edit')
+                        ->withStatus(302);
+                }
+            }
+
+            // Verificar que exista al menos un código adicional después de la eliminación
+            $sql = "SELECT COUNT(*) as total FROM carreras_espejos WHERE carrera_id = ?";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$carreraId]);
+            $result = $stmt->fetch();
+
+            if ($result['total'] <= 1) {
+                $mensaje = 'No se puede eliminar el código porque debe existir al menos un código de carrera.';
+                if ($this->isAjaxRequest()) {
+                    $response->getBody()->write(json_encode(['success' => false, 'message' => $mensaje]));
+                    return $response->withHeader('Content-Type', 'application/json');
+                }
+                $this->session->set('error', $mensaje);
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'carreras/' . $carreraId . '/edit')
+                    ->withStatus(302);
+            }
+
+            // Eliminar el código
+            $sql = "DELETE FROM carreras_espejos WHERE id = ? AND carrera_id = ?";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$codigoId, $carreraId]);
+
+            $mensaje = 'Código "' . $codigo['codigo_carrera'] . '" eliminado exitosamente de la carrera "' . $codigo['carrera_nombre'] . '"';
+            
+            if ($this->isAjaxRequest()) {
+                $response->getBody()->write(json_encode(['success' => true, 'message' => $mensaje]));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            $this->session->set('success', $mensaje);
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'carreras/' . $carreraId . '/edit')
+                ->withStatus(302);
+
+        } catch (\Exception $e) {
+            $mensaje = 'Error al eliminar el código de carrera: ' . $e->getMessage();
+            
+            if ($this->isAjaxRequest()) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => $mensaje]));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+            
+            $this->session->set('error', $mensaje);
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'carreras/' . $carreraId . '/edit')
                 ->withStatus(302);
         }
     }

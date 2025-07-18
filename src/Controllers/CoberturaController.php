@@ -32,11 +32,11 @@ class CoberturaController extends BaseController
         $carreras = Carrera::getAll();
         
         // Log para depuración
-        error_log('Carreras obtenidas: ' . print_r($carreras->toArray(), true));
+        // error_log('Carreras obtenidas: ' . print_r($carreras->toArray(), true));
         
         // Verificar si hay carreras
         if ($carreras->isEmpty()) {
-            error_log('No se encontraron carreras');
+            // error_log('No se encontraron carreras');
         }
 
         // Renderizar la vista

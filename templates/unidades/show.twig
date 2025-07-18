@@ -1,0 +1,220 @@
+{% extends "base.twig" %}
+
+{% block title %}Detalles de Unidad - Sistema de Bibliografía{% endblock %}
+
+{% block current_page %}unidades{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="card-title">Detalles de la Unidad</h3>
+                        <div>
+                            <a href="{{ app_url }}unidades/{{ unidad.id }}/edit" class="btn btn-primary">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            <a href="{{ app_url }}unidades" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Volver al Listado
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">Código:</label>
+                                        <p class="form-control-plaintext">{{ unidad.codigo }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">Nombre:</label>
+                                        <p class="form-control-plaintext">{{ unidad.nombre }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">Sede:</label>
+                                        <p class="form-control-plaintext">{{ unidad.sede_nombre }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">Unidad Padre:</label>
+                                        <p class="form-control-plaintext">
+                                            {% if unidad.unidad_padre_nombre %}
+                                                <span class="badge bg-info">{{ unidad.unidad_padre_nombre }}</span>
+                                            {% else %}
+                                                <span class="text-muted">Sin unidad padre</span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">Estado:</label>
+                                        <p class="form-control-plaintext">
+                                            {% if unidad.estado == '1' %}
+                                                <span class="badge bg-success">Activo</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Inactivo</span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">Fecha de Creación:</label>
+                                        <p class="form-control-plaintext">{{ unidad.fecha_creacion|date('d/m/Y H:i') }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% if unidad.descripcion %}
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">Descripción:</label>
+                                        <p class="form-control-plaintext">{{ unidad.descripcion }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-info-circle"></i> Información Adicional
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row text-center">
+                                        <div class="col-6">
+                                            <div class="border-right">
+                                                <h4 class="text-primary">{{ unidades_hijas|length }}</h4>
+                                                <small class="text-muted">Unidades Hijas</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <h4 class="text-success">{{ jerarquia|length }}</h4>
+                                            <small class="text-muted">Nivel Jerárquico</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Jerarquía de la unidad -->
+                    {% if jerarquia|length > 0 %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5><i class="fas fa-sitemap"></i> Jerarquía Organizacional</h5>
+                            <div class="breadcrumb">
+                                {% for nivel in jerarquia %}
+                                    {% if loop.last %}
+                                        <span class="breadcrumb-item active">{{ nivel.codigo }} - {{ nivel.nombre }}</span>
+                                    {% else %}
+                                        <a href="{{ app_url }}unidades/{{ nivel.id }}" class="breadcrumb-item">{{ nivel.codigo }} - {{ nivel.nombre }}</a>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Unidades hijas -->
+                    {% if unidades_hijas|length > 0 %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5><i class="fas fa-network-wired"></i> Unidades Hijas</h5>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Código</th>
+                                            <th>Nombre</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for unidad_hija in unidades_hijas %}
+                                            <tr>
+                                                <td>{{ unidad_hija.codigo }}</td>
+                                                <td>{{ unidad_hija.nombre }}</td>
+                                                <td>
+                                                    {% if unidad_hija.estado == '1' %}
+                                                        <span class="badge bg-success">Activo</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger">Inactivo</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <a href="{{ app_url }}unidades/{{ unidad_hija.id }}" class="btn btn-sm btn-info" title="Ver detalles">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{{ app_url }}unidades/{{ unidad_hija.id }}/edit" class="btn btn-sm btn-primary" title="Editar">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    $(document).ready(function() {
+        // Mostrar alertas de SweetAlert2 si existen en la sesión
+        {% if session.swal %}
+            Swal.fire({
+                icon: '{{ session.swal.icon }}',
+                title: '{{ session.swal.title|raw }}',
+                text: '{{ session.swal.text|raw }}',
+                confirmButtonText: 'Aceptar',
+                confirmButtonColor: '#4e73df',
+                timer: null,
+                timerProgressBar: false,
+                allowOutsideClick: false
+            });
+
+            // Limpiar la alerta de la sesión después de mostrarla
+            fetch('{{ app_url }}clear-session-messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+        {% endif %}
+    });
+</script>
+{% endblock %} 

@@ -154,7 +154,7 @@ class __TwigTemplate_ed3e3da13d7985b417858c2bf3734227 extends Template
         yield "                            </select>
                         </div>
                     </div>
-                    <div class=\"col-md-2\">
+                    <div class=\"col-md-3\">
                         <div class=\"form-group\">
                             <label for=\"estado\">Estado</label>
                             <select class=\"form-control\" id=\"estado\" name=\"estado\">
@@ -174,15 +174,17 @@ class __TwigTemplate_ed3e3da13d7985b417858c2bf3734227 extends Template
                             </select>
                         </div>
                     </div>
-                    <div class=\"col-md-2 d-flex align-items-end gap-2\">
-                        <button type=\"submit\" class=\"btn btn-primary flex-grow-1\">
-                            <i class=\"fas fa-search\"></i>
+                </div>
+                <div class=\"row mt-3\">
+                    <div class=\"col-12 d-flex gap-2\" style=\"padding-left: 2rem; padding-right: 2rem; padding-bottom: 2rem;\">
+                        <button type=\"submit\" class=\"btn btn-primary\">
+                            <i class=\"fas fa-filter\"></i> Aplicar Filtros
                         </button>
                         <a href=\"";
-        // line 64
+        // line 66
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
-        yield "carreras\" class=\"btn btn-secondary flex-grow-1\">
-                            <i class=\"fas fa-broom\"></i>
+        yield "carreras\" class=\"btn btn-secondary\">
+                            <i class=\"fas fa-times\"></i> Limpiar Filtros
                         </a>
                     </div>
                 </div>
@@ -210,55 +212,55 @@ class __TwigTemplate_ed3e3da13d7985b417858c2bf3734227 extends Template
                     </thead>
                     <tbody>
                         ";
-        // line 92
+        // line 94
         $context['_parent'] = $context;
         $context['_seq'] = CoreExtension::ensureTraversable(($context["carreras"] ?? null));
         $context['_iterated'] = false;
         foreach ($context['_seq'] as $context["_key"] => $context["carrera"]) {
-            // line 93
+            // line 95
             yield "                        <tr>
                             <td>";
-            // line 94
-            yield Twig\Extension\CoreExtension::replace(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "codigos_carrera", [], "any", false, false, false, 94), ["," => "<br>"]);
+            // line 96
+            yield Twig\Extension\CoreExtension::replace(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "codigos_carrera", [], "any", false, false, false, 96), ["," => "<br>"]);
             yield "</td>
                             <td>";
-            // line 95
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "nombre", [], "any", false, false, false, 95), "html", null, true);
+            // line 97
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "nombre", [], "any", false, false, false, 97), "html", null, true);
             yield "</td>
                             <td>
                                 ";
-            // line 97
-            if ((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "tipo_programa", [], "any", false, false, false, 97) == "P")) {
-                // line 98
+            // line 99
+            if ((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "tipo_programa", [], "any", false, false, false, 99) == "P")) {
+                // line 100
                 yield "                                    Pregrado
                                 ";
-            } elseif ((CoreExtension::getAttribute($this->env, $this->source,             // line 99
-$context["carrera"], "tipo_programa", [], "any", false, false, false, 99) == "G")) {
-                // line 100
+            } elseif ((CoreExtension::getAttribute($this->env, $this->source,             // line 101
+$context["carrera"], "tipo_programa", [], "any", false, false, false, 101) == "G")) {
+                // line 102
                 yield "                                    Postgrado
                                 ";
-            } elseif ((CoreExtension::getAttribute($this->env, $this->source,             // line 101
-$context["carrera"], "tipo_programa", [], "any", false, false, false, 101) == "O")) {
-                // line 102
+            } elseif ((CoreExtension::getAttribute($this->env, $this->source,             // line 103
+$context["carrera"], "tipo_programa", [], "any", false, false, false, 103) == "O")) {
+                // line 104
                 yield "                                    Otro
                                 ";
             } else {
-                // line 104
+                // line 106
                 yield "                                    ";
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "tipo_programa", [], "any", false, false, false, 104), "html", null, true);
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "tipo_programa", [], "any", false, false, false, 106), "html", null, true);
                 yield "
                                 ";
             }
-            // line 106
+            // line 108
             yield "                            </td>
                             <td>
                                 ";
-            // line 108
-            $context["sedes"] = Twig\Extension\CoreExtension::split($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sedes", [], "any", false, false, false, 108), ",");
-            // line 109
-            yield "                                ";
-            $context["unidades"] = Twig\Extension\CoreExtension::split($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "unidades", [], "any", false, false, false, 109), ",");
             // line 110
+            $context["sedes"] = Twig\Extension\CoreExtension::split($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sedes", [], "any", false, false, false, 110), ",");
+            // line 111
+            yield "                                ";
+            $context["unidades"] = Twig\Extension\CoreExtension::split($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "unidades", [], "any", false, false, false, 111), ",");
+            // line 112
             yield "                                ";
             $context['_parent'] = $context;
             $context['_seq'] = CoreExtension::ensureTraversable(range(0, (Twig\Extension\CoreExtension::length($this->env->getCharset(), ($context["sedes"] ?? null)) - 1)));
@@ -276,15 +278,15 @@ $context["carrera"], "tipo_programa", [], "any", false, false, false, 101) == "O
                 $context['loop']['last'] = 1 === $length;
             }
             foreach ($context['_seq'] as $context["_key"] => $context["i"]) {
-                // line 111
+                // line 113
                 yield "                                    ";
                 yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v0 = ($context["sedes"] ?? null)) && is_array($_v0) || $_v0 instanceof ArrayAccess ? ($_v0[$context["i"]] ?? null) : null), "html", null, true);
                 yield " - ";
                 yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v1 = ($context["unidades"] ?? null)) && is_array($_v1) || $_v1 instanceof ArrayAccess ? ($_v1[$context["i"]] ?? null) : null), "html", null, true);
-                if ( !CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "last", [], "any", false, false, false, 111)) {
+                if ( !CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "last", [], "any", false, false, false, 113)) {
                     yield "<br>";
                 }
-                // line 112
+                // line 114
                 yield "                                ";
                 ++$context['loop']['index0'];
                 ++$context['loop']['index'];
@@ -298,45 +300,45 @@ $context["carrera"], "tipo_programa", [], "any", false, false, false, 101) == "O
             $_parent = $context['_parent'];
             unset($context['_seq'], $context['_key'], $context['i'], $context['_parent'], $context['loop']);
             $context = array_intersect_key($context, $_parent) + $_parent;
-            // line 113
+            // line 115
             yield "                            </td>
                             <td class=\"text-center\">
                                 ";
-            // line 115
-            if ((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "estado", [], "any", false, false, false, 115) == 1)) {
-                // line 116
+            // line 117
+            if ((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "estado", [], "any", false, false, false, 117) == 1)) {
+                // line 118
                 yield "                                    <span class=\"badge bg-success\">Activo</span>
                                 ";
             } else {
-                // line 118
+                // line 120
                 yield "                                    <span class=\"badge bg-danger\">Inactivo</span>
                                 ";
             }
-            // line 120
+            // line 122
             yield "                            </td>
                             <td>
                                 <div class=\"d-flex gap-2\">
                                     <a href=\"";
-            // line 123
+            // line 125
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
             yield "carreras/";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "id", [], "any", false, false, false, 123), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "id", [], "any", false, false, false, 125), "html", null, true);
             yield "\" class=\"btn btn-sm btn-info\">
                                         <i class=\"fas fa-eye\"></i>
                                     </a>
                                     <a href=\"";
-            // line 126
+            // line 128
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
             yield "carreras/";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "id", [], "any", false, false, false, 126), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "id", [], "any", false, false, false, 128), "html", null, true);
             yield "/edit\" class=\"btn btn-sm btn-warning\">
                                         <i class=\"fas fa-edit\"></i>
                                     </a>
                                     <form action=\"";
-            // line 129
+            // line 131
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
             yield "carreras/";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "id", [], "any", false, false, false, 129), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "id", [], "any", false, false, false, 131), "html", null, true);
             yield "/delete\" method=\"POST\" class=\"d-inline delete-form\">
                                         <button type=\"submit\" class=\"btn btn-danger btn-sm\" title=\"Eliminar\">
                                             <i class=\"fas fa-trash\"></i>
@@ -348,9 +350,9 @@ $context["carrera"], "tipo_programa", [], "any", false, false, false, 101) == "O
                         ";
             $context['_iterated'] = true;
         }
-        // line 137
+        // line 139
         if (!$context['_iterated']) {
-            // line 138
+            // line 140
             yield "                        <tr>
                             <td colspan=\"6\" class=\"text-center\">No se encontraron carreras</td>
                         </tr>
@@ -359,7 +361,7 @@ $context["carrera"], "tipo_programa", [], "any", false, false, false, 101) == "O
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_key'], $context['carrera'], $context['_parent'], $context['_iterated']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 142
+        // line 144
         yield "                    </tbody>
                 </table>
             </div>
@@ -370,14 +372,14 @@ $context["carrera"], "tipo_programa", [], "any", false, false, false, 101) == "O
         yield from [];
     }
 
-    // line 150
+    // line 152
     /**
      * @return iterable<null|scalar|\Stringable>
      */
     public function block_scripts(array $context, array $blocks = []): iterable
     {
         $macros = $this->macros;
-        // line 151
+        // line 153
         yield "<script>
     // Función para mostrar alertas
     function showAlert(title, text, icon) {
@@ -391,15 +393,15 @@ $context["carrera"], "tipo_programa", [], "any", false, false, false, 101) == "O
 
     // Mostrar alertas de sesión si existen
     ";
-        // line 163
-        if (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "success", [], "any", false, false, false, 163)) {
-            // line 164
+        // line 165
+        if (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "success", [], "any", false, false, false, 165)) {
+            // line 166
             yield "        showAlert('¡Éxito!', '";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "success", [], "any", false, false, false, 164), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "success", [], "any", false, false, false, 166), "html", null, true);
             yield "', 'success');
         // Limpiar el mensaje de sesión después de mostrarlo
         fetch('";
-            // line 166
+            // line 168
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
             yield "clear-session-messages', {
             method: 'POST',
@@ -410,18 +412,18 @@ $context["carrera"], "tipo_programa", [], "any", false, false, false, 101) == "O
         });
     ";
         }
-        // line 174
+        // line 176
         yield "
     ";
-        // line 175
-        if (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "error", [], "any", false, false, false, 175)) {
-            // line 176
+        // line 177
+        if (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "error", [], "any", false, false, false, 177)) {
+            // line 178
             yield "        showAlert('Error', '";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "error", [], "any", false, false, false, 176), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "error", [], "any", false, false, false, 178), "html", null, true);
             yield "', 'error');
         // Limpiar el mensaje de sesión después de mostrarlo
         fetch('";
-            // line 178
+            // line 180
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
             yield "clear-session-messages', {
             method: 'POST',
@@ -432,7 +434,7 @@ $context["carrera"], "tipo_programa", [], "any", false, false, false, 101) == "O
         });
     ";
         }
-        // line 186
+        // line 188
         yield "
     // Confirmación de eliminación con AJAX
     document.querySelectorAll('.delete-form').forEach(form => {
@@ -503,7 +505,7 @@ $context["carrera"], "tipo_programa", [], "any", false, false, false, 101) == "O
      */
     public function getDebugInfo(): array
     {
-        return array (  436 => 186,  425 => 178,  419 => 176,  417 => 175,  414 => 174,  403 => 166,  397 => 164,  395 => 163,  381 => 151,  374 => 150,  363 => 142,  354 => 138,  352 => 137,  337 => 129,  329 => 126,  321 => 123,  316 => 120,  312 => 118,  308 => 116,  306 => 115,  302 => 113,  288 => 112,  280 => 111,  262 => 110,  259 => 109,  257 => 108,  253 => 106,  247 => 104,  243 => 102,  241 => 101,  238 => 100,  236 => 99,  233 => 98,  231 => 97,  226 => 95,  222 => 94,  219 => 93,  214 => 92,  183 => 64,  170 => 56,  164 => 55,  154 => 47,  139 => 45,  135 => 44,  121 => 35,  115 => 34,  109 => 33,  98 => 25,  90 => 20,  76 => 9,  71 => 6,  64 => 5,  53 => 3,  42 => 1,);
+        return array (  438 => 188,  427 => 180,  421 => 178,  419 => 177,  416 => 176,  405 => 168,  399 => 166,  397 => 165,  383 => 153,  376 => 152,  365 => 144,  356 => 140,  354 => 139,  339 => 131,  331 => 128,  323 => 125,  318 => 122,  314 => 120,  310 => 118,  308 => 117,  304 => 115,  290 => 114,  282 => 113,  264 => 112,  261 => 111,  259 => 110,  255 => 108,  249 => 106,  245 => 104,  243 => 103,  240 => 102,  238 => 101,  235 => 100,  233 => 99,  228 => 97,  224 => 96,  221 => 95,  216 => 94,  185 => 66,  170 => 56,  164 => 55,  154 => 47,  139 => 45,  135 => 44,  121 => 35,  115 => 34,  109 => 33,  98 => 25,  90 => 20,  76 => 9,  71 => 6,  64 => 5,  53 => 3,  42 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -557,7 +559,7 @@ $context["carrera"], "tipo_programa", [], "any", false, false, false, 101) == "O
                             </select>
                         </div>
                     </div>
-                    <div class=\"col-md-2\">
+                    <div class=\"col-md-3\">
                         <div class=\"form-group\">
                             <label for=\"estado\">Estado</label>
                             <select class=\"form-control\" id=\"estado\" name=\"estado\">
@@ -567,12 +569,14 @@ $context["carrera"], "tipo_programa", [], "any", false, false, false, 101) == "O
                             </select>
                         </div>
                     </div>
-                    <div class=\"col-md-2 d-flex align-items-end gap-2\">
-                        <button type=\"submit\" class=\"btn btn-primary flex-grow-1\">
-                            <i class=\"fas fa-search\"></i>
+                </div>
+                <div class=\"row mt-3\">
+                    <div class=\"col-12 d-flex gap-2\" style=\"padding-left: 2rem; padding-right: 2rem; padding-bottom: 2rem;\">
+                        <button type=\"submit\" class=\"btn btn-primary\">
+                            <i class=\"fas fa-filter\"></i> Aplicar Filtros
                         </button>
-                        <a href=\"{{ app_url }}carreras\" class=\"btn btn-secondary flex-grow-1\">
-                            <i class=\"fas fa-broom\"></i>
+                        <a href=\"{{ app_url }}carreras\" class=\"btn btn-secondary\">
+                            <i class=\"fas fa-times\"></i> Limpiar Filtros
                         </a>
                     </div>
                 </div>

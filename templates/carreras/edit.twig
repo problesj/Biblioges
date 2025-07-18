@@ -18,7 +18,7 @@
             <h6 class="m-0 font-weight-bold text-primary">Datos de la Carrera</h6>
         </div>
         <div class="card-body">
-            <form method="POST" action="{{ app_url }}carreras/{{ carrera.id }}/update" id="form-carrera">
+            <form method="POST" action="{{ app_url }}carreras/{{ carrera.id }}/update" id="form-carrera" enctype="multipart/form-data">
                 <input type="hidden" name="_method" value="PUT">
                 
                 <!-- Sección 1: Datos básicos -->
@@ -51,6 +51,40 @@
                     </div>
                 </div>
 
+                <!-- Sección 1.5: Libro de Carrera -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="libro_carrera" class="form-label">Libro de Carrera (PDF)</label>
+                            <input type="file" class="form-control" id="libro_carrera" name="libro_carrera" 
+                                   accept=".pdf" max="10485760">
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle"></i> 
+                                Solo archivos PDF. Tamaño máximo: 10MB
+                            </small>
+                            {% if carrera.url_libro %}
+                            <div class="mt-2">
+                                <div class="d-flex align-items-center gap-3">
+                                    <small class="text-success">
+                                        <i class="fas fa-check-circle"></i> 
+                                        Archivo actual: 
+                                        <a href="{{ app_url }}{{ carrera.url_libro }}" target="_blank" class="text-decoration-none">
+                                            <i class="fas fa-file-pdf"></i> Ver PDF actual
+                                        </a>
+                                    </small>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="eliminar_libro" name="eliminar_libro" value="1">
+                                        <label class="form-check-label text-danger" for="eliminar_libro">
+                                            <i class="fas fa-trash"></i> Eliminar archivo actual
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Sección 2: Códigos de carrera -->
                 <div class="row mb-4">
                     <div class="col-12">
@@ -61,9 +95,10 @@
                             {% set vigencias_hasta = carrera.vigencias_hasta|split('|') %}
                             {% set sedes_ids = carrera.sedes_ids %}
                             {% set unidades_ids = carrera.unidades_ids %}
+                            {% set codigos_ids = carrera.codigos_ids %}
                             
                             {% for i in 0..(codigos|length - 1) %}
-                            <div class="row mb-3 codigo-row">
+                            <div class="row mb-3 codigo-row" {% if codigos_ids[i] is defined %}data-codigo-id="{{ codigos_ids[i] }}"{% endif %}>
                                 <div class="col-md-2">
                                     <div class="form-group">
                                         <label for="codigos[]" class="form-label">Código *</label>
@@ -88,7 +123,7 @@
                                         <div class="invalid-feedback">El formato debe ser AAAAMM (ej: 202412)</div>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="form-group">
                                         <label for="sedes[]" class="form-label">Sede *</label>
                                         <select class="form-select" name="sedes[]" required>
@@ -99,7 +134,7 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="form-group">
                                         <label class="form-label">Unidad *</label>
                                         <select class="form-select" name="unidades[]" required>
@@ -111,6 +146,13 @@
                                             </option>
                                             {% endfor %}
                                         </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-1 d-flex align-items-end">
+                                    <div class="form-group mb-0">
+                                        <button type="button" class="btn btn-danger btn-sm eliminar-codigo" title="Eliminar código">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -214,6 +256,124 @@
             row.find('input[name^="vigencias_"]').on('input', function() {
                 validarVigencia(this);
             });
+            
+            // Agregar evento de eliminación a la nueva fila
+            row.find('.eliminar-codigo').click(function() {
+                eliminarCodigo($(this));
+            });
+        });
+
+        // Eliminar código de carrera
+        function eliminarCodigo(button) {
+            var row = button.closest('.codigo-row');
+            var codigoId = row.data('codigo-id');
+            
+            if (!codigoId) {
+                // Es una fila nueva, solo eliminar del DOM
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: '¿Está seguro?',
+                        text: '¿Está seguro de que desea eliminar este código de carrera?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Sí, eliminar',
+                        cancelButtonText: 'Cancelar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            row.remove();
+                        }
+                    });
+                } else {
+                    if (confirm('¿Está seguro de que desea eliminar este código de carrera?')) {
+                        row.remove();
+                    }
+                }
+                return;
+            }
+            
+            // Es un código existente, eliminar del backend
+            var carreraId = {{ carrera.id }};
+            
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: '¿Está seguro?',
+                    text: '¿Está seguro de que desea eliminar este código de carrera?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Mostrar loading
+                        Swal.fire({
+                            title: 'Eliminando...',
+                            text: 'Por favor espere',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+                        
+                        $.ajax({
+                            url: '{{ app_url }}carreras/' + carreraId + '/codigos/' + codigoId + '/delete',
+                            method: 'POST',
+                            success: function(response) {
+                                if (response.success) {
+                                    row.remove();
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Éxito',
+                                        text: response.message
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: response.message
+                                    });
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                console.error('Error al eliminar código:', error);
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Error al eliminar el código de carrera'
+                                });
+                            }
+                        });
+                    }
+                });
+            } else {
+                // Fallback para navegadores sin SweetAlert2
+                if (confirm('¿Está seguro de que desea eliminar este código de carrera?')) {
+                    $.ajax({
+                        url: '{{ app_url }}carreras/' + carreraId + '/codigos/' + codigoId + '/delete',
+                        method: 'POST',
+                        success: function(response) {
+                            if (response.success) {
+                                row.remove();
+                                alert(response.message);
+                            } else {
+                                alert('Error: ' + response.message);
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error al eliminar código:', error);
+                            alert('Error al eliminar el código de carrera');
+                        }
+                    });
+                }
+            }
+        }
+
+        // Agregar evento de eliminación a todas las filas existentes
+        $('.eliminar-codigo').click(function() {
+            eliminarCodigo($(this));
         });
 
         // Agregar validación a los campos de vigencia existentes
@@ -244,8 +404,60 @@
             }
         });
 
+        // Manejar la eliminación del archivo PDF
+        $('#eliminar_libro').change(function() {
+            var isChecked = $(this).is(':checked');
+            var fileInput = $('#libro_carrera');
+            
+            if (isChecked) {
+                // Deshabilitar el campo de archivo
+                fileInput.prop('disabled', true);
+                fileInput.val('');
+            } else {
+                // Habilitar el campo de archivo
+                fileInput.prop('disabled', false);
+            }
+        });
+
         // Manejar el envío del formulario
         $('#form-carrera').on('submit', function(e) {
+            // Validar eliminación de archivo
+            var eliminarLibro = $('#eliminar_libro').is(':checked');
+            if (eliminarLibro) {
+                e.preventDefault();
+                
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: '¿Eliminar archivo?',
+                        text: '¿Está seguro de que desea eliminar el archivo PDF actual?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Sí, eliminar',
+                        cancelButtonText: 'Cancelar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Si confirma, enviar el formulario
+                            $('#form-carrera')[0].submit();
+                        } else {
+                            // Si cancela, desmarcar el checkbox y habilitar el campo
+                            $('#eliminar_libro').prop('checked', false);
+                            $('#libro_carrera').prop('disabled', false);
+                        }
+                    });
+                    return false;
+                } else {
+                    // Fallback para navegadores sin SweetAlert2
+                    var confirmacion = confirm('¿Está seguro de que desea eliminar el archivo PDF actual?');
+                    if (!confirmacion) {
+                        $('#eliminar_libro').prop('checked', false);
+                        $('#libro_carrera').prop('disabled', false);
+                        return false;
+                    }
+                }
+            }
+            
             // Validar que al menos un código esté completo
             var codigosCompletos = false;
             var vigenciasValidas = true;

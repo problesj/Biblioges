@@ -1,0 +1,351 @@
+{% extends "base.twig" %}
+
+{% block title %}Unidades - Sistema de Bibliografía{% endblock %}
+
+{% block current_page %}unidades{% endblock %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap4.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Unidades</h1>
+        <a href="{{ app_url }}unidades/create" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nueva Unidad
+        </a>
+    </div>
+
+    {% if session.swal %}
+    <script>
+        Swal.fire({
+            icon: '{{ session.swal.icon }}',
+            title: '{{ session.swal.title|raw }}',
+            text: '{{ session.swal.text|raw }}',
+            confirmButtonText: 'Aceptar'
+        });
+    </script>
+    {% endif %}
+
+    <!-- Filtros -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Filtros de Búsqueda</h6>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ app_url }}unidades" class="row g-3">
+                <div class="col-md-3">
+                    <label for="sede" class="form-label">Sede</label>
+                    <select class="form-select" id="sede" name="sede">
+                        <option value="">Todas las sedes</option>
+                        {% for sede in sedes %}
+                            <option value="{{ sede.id }}" {% if filtros.sede == sede.id %}selected{% endif %}>{{ sede.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="estado" class="form-label">Estado</label>
+                    <select class="form-select" id="estado" name="estado">
+                        <option value="">Todos</option>
+                        <option value="1" {% if filtros.estado == '1' %}selected{% endif %}>Activo</option>
+                        <option value="0" {% if filtros.estado == '0' %}selected{% endif %}>Inactivo</option>
+                    </select>
+                </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12 d-flex gap-2" style="padding-left: 2rem; padding-right: 2rem; padding-bottom: 2rem;">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter"></i> Aplicar Filtros
+                        </button>
+                        <a href="{{ app_url }}unidades" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Limpiar Filtros
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de unidades -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Listado de Unidades</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover" id="unidades-table">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Nombre</th>
+                                    <th>Sede</th>
+                                    <th>Unidad Padre</th>
+                                    <th>Unidades Hijas</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for unidad in unidades %}
+                                <tr>
+                                    <td>{{ unidad.codigo }}</td>
+                                    <td>{{ unidad.nombre }}</td>
+                                    <td>{{ unidad.sede_nombre }}</td>
+                                    <td>
+                                        {% if unidad.unidad_padre_nombre %}
+                                            <span class="badge bg-info">{{ unidad.unidad_padre_nombre }}</span>
+                                        {% else %}
+                                            <span class="text-muted">Sin unidad padre</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if unidad.cantidad_hijas > 0 %}
+                                            <span class="badge bg-warning" title="Ver unidades hijas" onclick="mostrarUnidadesHijas({{ unidad.id }}, '{{ unidad.nombre }}')" style="cursor: pointer;">
+                                                {{ unidad.cantidad_hijas }} unidad(es)
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">Sin unidades hijas</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if unidad.estado == '1' %}
+                                            <span class="badge bg-success">Activo</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactivo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ app_url }}unidades/{{ unidad.id }}" class="btn btn-sm btn-info" title="Ver detalles">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ app_url }}unidades/{{ unidad.id }}/edit" class="btn btn-sm btn-primary" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="deleteUnidad({{ unidad.id }}, '{{ unidad.nombre }}')" title="Eliminar">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center">No hay unidades registradas</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    $(document).ready(function() {
+        // Inicializar DataTable
+        $('#unidades-table').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
+            },
+            "order": [[0, "asc"]],
+            "pageLength": 10,
+            "columnDefs": [
+                {
+                    "targets": [6], // Columna de acciones
+                    "orderable": false,
+                    "searchable": false
+                },
+                {
+                    "targets": [4], // Columna de unidades hijas
+                    "orderable": false,
+                    "searchable": false
+                }
+            ]
+        });
+
+        // Mostrar alertas de SweetAlert2 si existen en la sesión
+        {% if session.swal %}
+            Swal.fire({
+                icon: '{{ session.swal.icon }}',
+                title: '{{ session.swal.title|raw }}',
+                text: '{{ session.swal.text|raw }}',
+                confirmButtonText: 'Aceptar',
+                confirmButtonColor: '#4e73df',
+                timer: null,
+                timerProgressBar: false,
+                allowOutsideClick: false
+            });
+
+            // Limpiar la alerta de la sesión después de mostrarla
+            fetch('{{ app_url }}clear-session-messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+        {% endif %}
+    });
+
+    // Función para eliminar unidad
+    function deleteUnidad(id, nombre) {
+        // Primero verificar las relaciones
+        fetch('{{ app_url }}unidades/' + id + '/verificar-relaciones')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const relaciones = data.data.relaciones;
+                    const puedeEliminar = data.data.puede_eliminar;
+                    
+                    if (!puedeEliminar) {
+                        // Construir mensaje detallado
+                        let mensaje = `No se puede eliminar la unidad "${nombre}" porque tiene las siguientes relaciones:\n\n`;
+                        
+                        if (relaciones.unidades_hijas && relaciones.unidades_hijas.length > 0) {
+                            mensaje += `• ${relaciones.unidades_hijas.length} unidad(es) hija(s):\n`;
+                            relaciones.unidades_hijas.forEach(hija => {
+                                mensaje += `  - ${hija.nombre} (${hija.codigo})\n`;
+                            });
+                            mensaje += '\n';
+                        }
+                        
+                        if (relaciones.asignaturas && relaciones.asignaturas.length > 0) {
+                            mensaje += `• ${relaciones.asignaturas.length} asignatura(s) asociada(s):\n`;
+                            relaciones.asignaturas.forEach(asignatura => {
+                                mensaje += `  - ${asignatura.asignatura_nombre} (${asignatura.codigo_asignatura})\n`;
+                            });
+                            mensaje += '\n';
+                        }
+                        
+                        if (relaciones.carreras && relaciones.carreras.length > 0) {
+                            mensaje += `• ${relaciones.carreras.length} carrera(s) asociada(s):\n`;
+                            relaciones.carreras.forEach(carrera => {
+                                mensaje += `  - ${carrera.carrera_nombre} (${carrera.codigo_carrera})\n`;
+                            });
+                            mensaje += '\n';
+                        }
+                        
+                        mensaje += 'Primero debe eliminar o reasignar estas relaciones antes de eliminar la unidad.';
+                        
+                        Swal.fire({
+                            title: 'No se puede eliminar',
+                            text: mensaje,
+                            icon: 'warning',
+                            confirmButtonText: 'Entendido'
+                        });
+                    } else {
+                        // Si no hay relaciones, proceder con la eliminación
+                        confirmarEliminacion(id, nombre);
+                    }
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al verificar las relaciones de la unidad',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al verificar las relaciones de la unidad',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            });
+    }
+    
+    function confirmarEliminacion(id, nombre) {
+        Swal.fire({
+            title: '¿Está seguro?',
+            text: `¿Está seguro de eliminar la unidad "${nombre}"?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Crear un formulario temporal para enviar la petición POST
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ app_url }}unidades/' + id + '/delete';
+                
+                // Agregar token CSRF si es necesario
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_token';
+                csrfInput.value = '';
+                form.appendChild(csrfInput);
+                
+                // Agregar el formulario al DOM y enviarlo
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+    
+    function mostrarUnidadesHijas(unidadId, nombreUnidad) {
+        // Obtener las unidades hijas mediante AJAX
+        fetch('{{ app_url }}unidades/' + unidadId + '/verificar-relaciones')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const unidadesHijas = data.data.relaciones.unidades_hijas;
+                    
+                    if (unidadesHijas && unidadesHijas.length > 0) {
+                        let mensaje = `<strong>Unidades hijas de "${nombreUnidad}":</strong><br><br>`;
+                        unidadesHijas.forEach(hija => {
+                            mensaje += `• <strong>${hija.nombre}</strong> (${hija.codigo})<br>`;
+                        });
+                        
+                        Swal.fire({
+                            title: 'Unidades Hijas',
+                            html: mensaje,
+                            icon: 'info',
+                            confirmButtonText: 'Cerrar',
+                            confirmButtonColor: '#4e73df'
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Sin unidades hijas',
+                            text: `La unidad "${nombreUnidad}" no tiene unidades hijas.`,
+                            icon: 'info',
+                            confirmButtonText: 'Cerrar',
+                            confirmButtonColor: '#4e73df'
+                        });
+                    }
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al obtener las unidades hijas',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al obtener las unidades hijas',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            });
+    }
+</script>
+{% endblock %} 

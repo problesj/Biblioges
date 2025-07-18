@@ -8,77 +8,98 @@
 
 {% block content %}
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h3 class="card-title">Listado de Sedes</h3>
-                        <a href="{{ app_url }}sedes/create" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Nueva Sede
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Sedes</h1>
+        <a href="{{ app_url }}sedes/create" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nueva Sede
+        </a>
+    </div>
+
+    {% if session.swal %}
+    <script>
+        Swal.fire({
+            icon: '{{ session.swal.icon }}',
+            title: '{{ session.swal.title|raw }}',
+            text: '{{ session.swal.text|raw }}',
+            confirmButtonText: 'Aceptar'
+        });
+    </script>
+    {% endif %}
+
+    <!-- Filtros -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Filtros de Búsqueda</h6>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ app_url }}sedes" class="row g-3">
+                <div class="col-md-3">
+                    <label for="estado" class="form-label">Estado</label>
+                    <select class="form-select" id="estado" name="estado">
+                        <option value="">Todos</option>
+                        <option value="1" {% if filtros.estado == '1' %}selected{% endif %}>Activo</option>
+                        <option value="0" {% if filtros.estado == '0' %}selected{% endif %}>Inactivo</option>
+                    </select>
+                </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12 d-flex gap-2" style="padding-left: 2rem; padding-right: 2rem; padding-bottom: 2rem;">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter"></i> Aplicar Filtros
+                        </button>
+                        <a href="{{ app_url }}sedes" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Limpiar Filtros
                         </a>
                     </div>
                 </div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <form method="get" class="form-inline">
-                                <div class="form-group mr-2">
-                                    <label for="estado" class="mr-2">Estado:</label>
-                                    <select class="form-control" id="estado" name="estado">
-                                        <option value="">Todos</option>
-                                        <option value="1" {{ filtros.estado == '1' ? 'selected' : '' }}>Activo</option>
-                                        <option value="0" {{ filtros.estado == '0' ? 'selected' : '' }}>Inactivo</option>
-                                    </select>
-                                </div>
-                                <button type="submit" class="btn btn-primary mr-2">
-                                    <i class="fas fa-filter"></i> Filtrar
-                                </button>
-                                <a href="{{ app_url }}sedes" class="btn btn-secondary">
-                                    <i class="fas fa-times"></i> Limpiar
-                                </a>
-                            </form>
-                        </div>
-                    </div>
+            </form>
+        </div>
+    </div>
 
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped" id="sedes-table">
-                            <thead>
+    <!-- Tabla de sedes -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Listado de Sedes</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover" id="sedes-table">
+                            <thead class="table-primary">
                                 <tr>
-                                    <th style="text-align: center;">Código</th>
+                                    <th>Código</th>
                                     <th>Nombre</th>
-                                    <th style="text-align: center;">Estado</th>
-                                    <th style="text-align: center;">Acciones</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% if sedes|length > 0 %}
-                                    {% for sede in sedes %}
-                                        <tr>
-                                            <td style="text-align: center;">{{ sede.codigo }}</td>
-                                            <td>{{ sede.nombre }}</td>
-                                            <td style="text-align: center;">
-                                                {% if sede.estado == '1' %}
-                                                    <span class="badge bg-success">Activo</span>
-                                                {% else %}
-                                                    <span class="badge bg-danger">Inactivo</span>
-                                                {% endif %}
-                                            </td>
-                                            <td style="text-align: center;">
-                                                <a href="{{ app_url }}sedes/{{ sede.id }}/edit" class="btn btn-sm btn-primary">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <button type="button" class="btn btn-sm btn-danger" onclick="deleteSede({{ sede.id }}, '{{ sede.nombre }}')">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
+                                {% for sede in sedes %}
+                                <tr>
+                                    <td>{{ sede.codigo }}</td>
+                                    <td>{{ sede.nombre }}</td>
+                                    <td>
+                                        {% if sede.estado == '1' %}
+                                            <span class="badge bg-success">Activo</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactivo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ app_url }}sedes/{{ sede.id }}/edit" class="btn btn-sm btn-primary" title="Editar Sede">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="deleteSede({{ sede.id }}, '{{ sede.nombre }}')" title="Eliminar Sede">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
                                 {% else %}
-                                    <tr>
-                                        <td colspan="4" class="text-center">No hay sedes registradas</td>
-                                    </tr>
-                                {% endif %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No hay sedes registradas</td>
+                                </tr>
+                                {% endfor %}
                             </tbody>
                         </table>
                     </div>

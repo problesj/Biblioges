@@ -98,7 +98,7 @@
         const loginForm = document.getElementById('loginForm');
         
         if (loginForm) {
-            console.log('Formulario de login encontrado');
+            // console.log('Formulario de login encontrado');
             
             loginForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
@@ -106,7 +106,7 @@
                 const email = document.getElementById('email').value.trim();
                 const password = document.getElementById('password').value.trim();
                 
-                console.log('Datos del formulario:', { email, password });
+                // console.log('Datos del formulario:', { email, password });
                 
                 if (!email || !password) {
                     showNotification('Por favor complete todos los campos', 'error');
@@ -114,7 +114,7 @@
                 }
                 
                 try {
-                    console.log('Enviando datos de login...');
+                    // console.log('Enviando datos de login...');
                     
                     const formData = new FormData();
                     formData.append('email', email);
@@ -129,8 +129,8 @@
                         }
                     });
                     
-                    console.log('Status de la respuesta:', response.status);
-                    console.log('Content-Type:', response.headers.get('Content-Type'));
+                                    // console.log('Status de la respuesta:', response.status);
+                // console.log('Content-Type:', response.headers.get('Content-Type'));
                     
                     const contentType = response.headers.get('Content-Type');
                     if (!contentType || !contentType.includes('application/json')) {
@@ -140,7 +140,7 @@
                     }
                     
                     const result = await response.json();
-                    console.log('Respuesta del servidor:', result);
+                    // console.log('Respuesta del servidor:', result);
                     
                     if (result.success) {
                         window.location.href = result.redirect;

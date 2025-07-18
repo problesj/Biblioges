@@ -76,13 +76,16 @@
                         <option value="0" {% if filtros.estado == '0' %}selected{% endif %}>Inactivo</option>
                     </select>
                 </div>
-                <div class="col-12 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-filter"></i> Filtrar
-                    </button>
-                    <a href="{{ app_url }}mallas" class="btn btn-secondary">
-                        <i class="fas fa-broom"></i> Limpiar
-                    </a>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12 d-flex gap-2" style="padding-left: 2rem; padding-right: 2rem; padding-bottom: 2rem;">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter"></i> Aplicar Filtros
+                        </button>
+                        <a href="{{ app_url }}mallas" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Limpiar Filtros
+                        </a>
+                    </div>
                 </div>
             </form>
         </div>

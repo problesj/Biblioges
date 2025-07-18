@@ -14,6 +14,19 @@ CREATE TABLE IF NOT EXISTS sedes (
     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
+-- Tabla de unidades
+CREATE TABLE IF NOT EXISTS unidades (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    codigo VARCHAR(10) NOT NULL UNIQUE,
+    nombre VARCHAR(250) NOT NULL,
+    sede_id INT NOT NULL,
+    id_unidad_padre VARCHAR(255) NULL,
+    estado TINYINT(1) DEFAULT 1,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 -- Tabla de carreras
 CREATE TABLE IF NOT EXISTS carreras (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -27,20 +40,22 @@ CREATE TABLE IF NOT EXISTS carreras (
 
 -- Crear tabla CARRERAS_ESPEJOS
 CREATE TABLE carreras_espejos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id INT AUTO_INCREMENT,
     carrera_id INT NOT NULL,
     codigo_carrera VARCHAR(20) NOT NULL,
     vigencia_desde CHAR(6) NOT NULL,
     vigencia_hasta CHAR(6) NOT NULL DEFAULT '999999',
-    facultad_id INT NOT NULL,
     sede_id INT NOT NULL,
-    estado BOOLEAN DEFAULT TRUE,
+    id_unidad INT NULL,
+    estado TINYINT(1) DEFAULT 1,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (carrera_id) REFERENCES carreras(id) ON DELETE CASCADE,
-    FOREIGN KEY (facultad_id) REFERENCES facultades(id) ON DELETE CASCADE,
+    PRIMARY KEY (id, carrera_id, codigo_carrera, vigencia_desde, vigencia_hasta, sede_id),
+    FOREIGN KEY (carrera_id) REFERENCES carreras(id),
     FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_carrera_espejo (carrera_id, codigo_carrera, facultad_id, sede_id)
+    FOREIGN KEY (id_unidad) REFERENCES unidades(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_carrera_espejo (carrera_id, codigo_carrera, sede_id),
+    KEY idx_id_unidad (id_unidad)
 );
 
 -- Tabla de asignaturas
@@ -97,18 +112,18 @@ CREATE TABLE IF NOT EXISTS mallas (
     UNIQUE KEY unique_carrera_asignatura_semestre (carrera_id, asignatura_id, semestre)
 ) ENGINE=InnoDB;
 
--- Tabla de relación asignaturas-departamentos
+-- Tabla de asignaturas-departamentos
 CREATE TABLE IF NOT EXISTS asignaturas_departamentos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     asignatura_id INT NOT NULL,
-    departamento_id INT NOT NULL,
+    id_unidad INT NOT NULL,
     codigo_asignatura VARCHAR(20) NOT NULL,
     cantidad_alumnos INT NOT NULL DEFAULT 0,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (asignatura_id) REFERENCES asignaturas(id) ON DELETE CASCADE,
-    FOREIGN KEY (departamento_id) REFERENCES departamentos(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_asignatura_departamento (asignatura_id, departamento_id)
+    FOREIGN KEY (id_unidad) REFERENCES unidades(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_asignatura_unidad (asignatura_id, id_unidad)
 ) ENGINE=InnoDB;
 
 -- Tabla de usuarios
@@ -410,7 +425,7 @@ INSERT INTO asignaturas (nombre, tipo, vigencia_desde, vigencia_hasta, periodici
 ('Formación General en Idiomas', 'FORMACION_ELECTIVA', '201910', '999999', 'semestral'),
 ('Formación en Valores', 'FORMACION_ELECTIVA', '201910', '999999', 'semestral');
 
-INSERT INTO asignaturas_departamentos (asignatura_id, departamento_id, cantidad_alumnos, codigo_asignatura) VALUES 
+INSERT INTO asignaturas_departamentos (asignatura_id, id_unidad, cantidad_alumnos, codigo_asignatura) VALUES 
 (1, 1, 50, 'PROG-00123'),
 (1, 2, 30, 'PROG-00124'),
 (2, 1, 45, 'BD-00123'),
@@ -588,58 +603,76 @@ CREATE TABLE IF NOT EXISTS reporte_coberturas_carreras_complementarias (
 
 -- Vista actualizada de mallas basada en unidades
 CREATE OR REPLACE VIEW vw_mallas AS
+-- Asignaturas regulares
 SELECT
   sedes.id AS id_sede,
   sedes.nombre AS sede,
   unidades.id AS id_unidad,
   unidades.nombre AS unidad,
-  carreras_espejos.codigo_carrera AS codigo_carrera,
+  codigo_carrera AS codigo_carrera,
   carreras.id AS id_carrera,
   carreras.nombre AS carrera,
-  asignaturas_departamentos.codigo_asignatura AS codigo_asignatura,
+  codigo_asignatura AS codigo_asignatura,
   asignaturas.id AS id_asignatura,
   asignaturas.nombre AS asignatura,
-  asignaturas.tipo AS tipo_asignatura,
+  tipo AS tipo_asignatura,
   NULL AS codigo_asignatura_formacion,
   NULL AS id_asignatura_formacion,
   NULL AS asignatura_formacion
 FROM mallas
-JOIN asignaturas ON mallas.asignatura_id = asignaturas.id
-JOIN carreras_espejos ON mallas.carrera_id = carreras_espejos.carrera_id
-JOIN carreras ON mallas.carrera_id = carreras.id
-JOIN asignaturas_departamentos ON asignaturas_departamentos.asignatura_id = asignaturas.id
-JOIN sedes ON carreras_espejos.sede_id = sedes.id
-JOIN unidades ON asignaturas_departamentos.id_unidad = unidades.id
+  INNER JOIN asignaturas
+    ON mallas.asignatura_id = asignaturas.id
+  INNER JOIN carreras_espejos
+    ON mallas.carrera_id = carreras_espejos.carrera_id
+  INNER JOIN carreras
+    ON mallas.carrera_id = carreras.id
+  INNER JOIN asignaturas_departamentos
+    ON asignaturas_departamentos.asignatura_id = asignaturas.id
+  INNER JOIN sedes
+    ON carreras_espejos.sede_id = sedes.id
+  INNER JOIN unidades
+    ON asignaturas_departamentos.id_unidad = unidades.id
+    AND unidades.sede_id = sedes.id
 
 UNION
 
-SELECT DISTINCT
+SELECT
   sedes.id AS id_sede,
   sedes.nombre AS sede,
   unidades.id AS id_unidad,
   unidades.nombre AS unidad,
-  carreras_espejos.codigo_carrera AS codigo_carrera,
-  mallas.carrera_id AS id_carrera,
+  codigo_carrera AS codigo_carrera,
+  carreras_espejos.carrera_id AS id_carrera,
   carreras.nombre AS carrera,
   asignaturas_departamentos.codigo_asignatura AS codigo_asignatura,
   asignaturas_departamentos.asignatura_id AS id_asignatura,
   asignaturas.nombre AS asignatura,
-  asignaturas_formacion.tipo AS tipo_asignatura,
-  asignaturas_departamentos_formacion.codigo_asignatura AS codigo_asignatura_formacion,
-  asignaturas_formacion.id AS id_asignatura_formacion,
-  asignaturas_formacion.nombre AS asignatura_formacion
-FROM asignaturas
-JOIN asignaturas_formacion ON asignaturas_formacion.asignatura_formacion_id = asignaturas.id
-JOIN asignaturas AS asignaturas_formacion ON asignaturas_formacion.id = asignaturas_formacion.asignatura_regular_id
-JOIN mallas ON asignaturas.id = mallas.asignatura_id
-JOIN asignaturas_departamentos ON mallas.asignatura_id = asignaturas_departamentos.asignatura_id
-JOIN unidades ON asignaturas_departamentos.id_unidad = unidades.id
-JOIN sedes ON unidades.sede_id = sedes.id
-JOIN carreras_espejos ON mallas.carrera_id = carreras_espejos.carrera_id
-JOIN carreras ON mallas.carrera_id = carreras.id
-JOIN asignaturas_departamentos AS asignaturas_departamentos_formacion ON asignaturas_formacion.id = asignaturas_departamentos_formacion.asignatura_id
-WHERE (sedes.id = 0)
-ORDER BY codigo_carrera, sede, asignatura;
+  asignaturas_1.tipo AS tipo_asignatura,
+  asignaturas_departamentos_1.codigo_asignatura AS codigo_asignatura_formacion,
+  asignaturas_1.id AS id_asignatura_formacion,
+  asignaturas_1.nombre AS asignatura_formacion
+FROM unidades
+  INNER JOIN sedes
+    ON unidades.sede_id = sedes.id
+  CROSS JOIN asignaturas_departamentos
+  INNER JOIN asignaturas
+    ON asignaturas.id = asignaturas_departamentos.asignatura_id
+  INNER JOIN asignaturas_formacion
+    ON asignaturas_formacion.asignatura_formacion_id = asignaturas.id
+  INNER JOIN asignaturas_departamentos asignaturas_departamentos_1
+    ON asignaturas_formacion.asignatura_regular_id = asignaturas_departamentos_1.asignatura_id
+    AND asignaturas_departamentos_1.id_unidad = unidades.id
+  INNER JOIN asignaturas asignaturas_1
+    ON asignaturas_departamentos_1.asignatura_id = asignaturas_1.id
+  CROSS JOIN carreras_espejos
+  INNER JOIN carreras
+    ON carreras_espejos.carrera_id = carreras.id
+    AND carreras_espejos.sede_id = sedes.id
+  INNER JOIN mallas
+    ON mallas.carrera_id = carreras.id
+    AND mallas.asignatura_id = asignaturas_departamentos.asignatura_id
+
+ORDER BY codigo_carrera, sede, asignatura ;
 
 -- Vista de asignaturas con bibliografías declaradas
 CREATE OR REPLACE VIEW vw_asig_bib_declarada AS
@@ -736,51 +769,9 @@ INSERT INTO reportes (nombre, descripcion) VALUES
 -- TABLAS DE COMPATIBILIDAD (ESTRUCTURA ANTERIOR)
 -- =====================================================
 
--- Tabla de tipos de asignaturas (para compatibilidad)
-CREATE TABLE IF NOT EXISTS tipos_asignaturas (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL UNIQUE,
-    descripcion TEXT,
-    estado TINYINT(1) DEFAULT 1,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Tabla de relación carrera-asignatura (para compatibilidad)
-CREATE TABLE IF NOT EXISTS carrera_asignatura (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    carrera_id INT NOT NULL,
-    asignatura_codigo VARCHAR(20) NOT NULL,
-    estado TINYINT(1) DEFAULT 1,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (carrera_id) REFERENCES carreras(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_carrera_asignatura (carrera_id, asignatura_codigo)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Insertar tipos de asignaturas básicos
-INSERT INTO tipos_asignaturas (nombre, descripcion) VALUES 
-('REGULAR', 'Asignatura regular del plan de estudios'),
-('FORMACION_BASICA', 'Asignatura de formación básica'),
-('FORMACION_GENERAL', 'Asignatura de formación general'),
-('FORMACION_IDIOMAS', 'Asignatura de formación en idiomas'),
-('FORMACION_PROFESIONAL', 'Asignatura de formación profesional'),
-('FORMACION_VALORES', 'Asignatura de formación en valores'),
-('FORMACION_ESPECIALIDAD', 'Asignatura de formación en especialidad'),
-('FORMACION_ELECTIVA', 'Asignatura de formación electiva'),
-('FORMACION_ESPECIAL', 'Asignatura de formación especial');
-
--- Insertar algunas relaciones carrera-asignatura de ejemplo
-INSERT INTO carrera_asignatura (carrera_id, asignatura_codigo) VALUES 
-(1, 'PROG-00123'),
-(1, 'PROG-00124'),
-(1, 'BD-00123'),
-(2, 'PROG-00123'),
-(2, 'BD-00123'); 
-
 -- Tabla para almacenar filtros de formación por carrera
 CREATE TABLE IF NOT EXISTS filtros_formaciones (
-    codigo_carrera VARCHAR(20) NOT NULL,
+    id_carrera_espejo INT NOT NULL,
     basica INT NOT NULL DEFAULT 0,
     general INT NOT NULL DEFAULT 0,
     idioma INT NOT NULL DEFAULT 0,
@@ -790,6 +781,29 @@ CREATE TABLE IF NOT EXISTS filtros_formaciones (
     especial INT NOT NULL DEFAULT 0,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (codigo_carrera),
-    FOREIGN KEY (codigo_carrera) REFERENCES carreras_espejos(codigo_carrera) ON DELETE CASCADE
+    PRIMARY KEY (id_carrera_espejo),
+    FOREIGN KEY (id_carrera_espejo) REFERENCES carreras_espejos(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci; 
+
+CREATE TABLE IF NOT EXISTS tareas_programadas (
+  id INT NOT NULL AUTO_INCREMENT,
+  nombre VARCHAR(255) NOT NULL,
+  tipo_reporte ENUM('cobertura_basica_expandido','cobertura_complementaria_expandido') NOT NULL,
+  sede_id INT NOT NULL,
+  carrera_id INT NOT NULL,
+  fecha_programada DATETIME NOT NULL,
+  estado ENUM('pendiente','en_proceso','completada','error','cancelada') DEFAULT 'pendiente',
+  filtros_formacion JSON DEFAULT NULL,
+  resultado TEXT,
+  error_mensaje TEXT,
+  fecha_creacion TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  fecha_ejecucion TIMESTAMP NULL DEFAULT NULL,
+  fecha_actualizacion TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_fecha_programada (fecha_programada),
+  KEY idx_estado (estado),
+  KEY idx_tipo_reporte (tipo_reporte),
+  KEY idx_sede_carrera (sede_id, carrera_id),
+  FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
+  FOREIGN KEY (carrera_id) REFERENCES carreras(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci; 

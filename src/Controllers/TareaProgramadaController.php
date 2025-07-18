@@ -620,8 +620,15 @@ class TareaProgramadaController extends BaseController
             
         $tiposFormacionFiltro = [];
         if ($carreraTemp) {
-            $filtrosGuardados = DB::table('filtros_formaciones')
+            // Obtener el id_carrera_espejo para la carrera y sede específica
+            $carreraEspejo = DB::table('carreras_espejos')
                 ->where('codigo_carrera', $carreraTemp->codigo)
+                ->where('sede_id', $sedeId)
+                ->first();
+            
+            if ($carreraEspejo) {
+                $filtrosGuardados = DB::table('filtros_formaciones')
+                    ->where('id_carrera_espejo', $carreraEspejo->id)
                 ->first();
                 
             if ($filtrosGuardados) {
@@ -632,6 +639,7 @@ class TareaProgramadaController extends BaseController
                 if ($filtrosGuardados->valores) $tiposFormacionFiltro[] = 'FORMACION_VALORES';
                 if ($filtrosGuardados->especialidad) $tiposFormacionFiltro[] = 'FORMACION_ESPECIALIDAD';
                 if ($filtrosGuardados->especial) $tiposFormacionFiltro[] = 'FORMACION_ESPECIAL';
+                }
             }
         }
 

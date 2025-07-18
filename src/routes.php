@@ -19,6 +19,7 @@ use App\Controllers\AuthController;
 use App\Controllers\SessionController;
 use App\Controllers\UsuarioController;
 use App\Controllers\TareaProgramadaController;
+use App\Controllers\UnidadController;
 use App\Middleware\AuthMiddleware;
 use App\Controllers\MallaController;
 
@@ -60,12 +61,25 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->post('/sedes/{id}/update', [SedeController::class, 'update']);
     $group->post('/sedes/{id}/delete', [SedeController::class, 'destroy']);
 
+    // Unidades
+    $group->get('/unidades', [UnidadController::class, 'index']);
+    $group->get('/unidades/create', [UnidadController::class, 'create']);
+    $group->post('/unidades/store', [UnidadController::class, 'store']);
+    $group->get('/unidades/{id}', [UnidadController::class, 'show']);
+    $group->get('/unidades/{id}/edit', [UnidadController::class, 'edit']);
+    $group->post('/unidades/{id}/update', [UnidadController::class, 'update']);
+    $group->post('/unidades/{id}/delete', [UnidadController::class, 'destroy']);
+    $group->get('/unidades/{id}/verificar-relaciones', [UnidadController::class, 'verificarRelaciones']);
+
     // API para obtener unidades por sede
     $group->get('/api/unidades/sede/{sedeId}', [ApiController::class, 'getUnidadesBySede']);
     $group->get('/api/unidades', [ApiController::class, 'getUnidadesBySede']);
     
     // API para obtener unidades hijas
     $group->get('/api/unidades/hijas/{unidadId}', [ApiController::class, 'getUnidadesHijas']);
+    
+    // API para obtener unidades padre por sede
+    $group->get('/api/unidades/padre/{sedeId}', [UnidadController::class, 'getUnidadesPadre']);
     
     // API para obtener departamentos por sede y facultad
     $group->get('/api/departamentos/{sedeId}/{facultadId}', [DepartamentoController::class, 'getDepartamentosBySedeAndFacultad']);
@@ -84,6 +98,8 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->post('/carreras/{id}/update', [CarreraController::class, 'update']);
     $group->delete('/carreras/{id}', [CarreraController::class, 'delete']);
     $group->post('/carreras/{id}/delete', [CarreraController::class, 'delete']);
+    $group->delete('/carreras/{carrera_id}/codigos/{codigo_id}', [CarreraController::class, 'deleteCodigo']);
+    $group->post('/carreras/{carrera_id}/codigos/{codigo_id}/delete', [CarreraController::class, 'deleteCodigo']);
     // Rutas con parámetros al final
     $group->get('/carreras/{id}', [CarreraController::class, 'show']);
 

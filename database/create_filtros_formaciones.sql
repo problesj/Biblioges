@@ -5,7 +5,7 @@ USE bibliografia;
 
 -- Tabla para almacenar filtros de formación por carrera
 CREATE TABLE IF NOT EXISTS filtros_formaciones (
-    codigo_carrera VARCHAR(20) NOT NULL,
+    id_carrera_espejo INT NOT NULL,
     basica INT NOT NULL DEFAULT 0,
     general INT NOT NULL DEFAULT 0,
     idioma INT NOT NULL DEFAULT 0,
@@ -15,8 +15,8 @@ CREATE TABLE IF NOT EXISTS filtros_formaciones (
     especial INT NOT NULL DEFAULT 0,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (codigo_carrera),
-    FOREIGN KEY (codigo_carrera) REFERENCES carreras_espejos(codigo_carrera) ON DELETE CASCADE
+    PRIMARY KEY (id_carrera_espejo),
+    FOREIGN KEY (id_carrera_espejo) REFERENCES carreras_espejos(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Verificar que la tabla se creó correctamente

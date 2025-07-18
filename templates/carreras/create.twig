@@ -18,7 +18,7 @@
             <h6 class="m-0 font-weight-bold text-primary">Datos de la Carrera</h6>
         </div>
         <div class="card-body">
-            <form method="POST" action="{{ app_url }}carreras/store" id="form-carrera">
+            <form method="POST" action="{{ app_url }}carreras/store" id="form-carrera" enctype="multipart/form-data">
                 <!-- Sección 1: Datos básicos -->
                 <div class="row mb-4">
                     <div class="col-md-6">
@@ -46,6 +46,21 @@
                                 <option value="1" {{ form_data.estado|default('1') == '1' ? 'selected' : '' }}>Activo</option>
                                 <option value="0" {{ form_data.estado|default('1') == '0' ? 'selected' : '' }}>Inactivo</option>
                             </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección 1.5: Libro de Carrera -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="libro_carrera" class="form-label">Libro de Carrera (PDF)</label>
+                            <input type="file" class="form-control" id="libro_carrera" name="libro_carrera" 
+                                   accept=".pdf" max="10485760">
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle"></i> 
+                                Solo archivos PDF. Tamaño máximo: 10MB
+                            </small>
                         </div>
                     </div>
                 </div>

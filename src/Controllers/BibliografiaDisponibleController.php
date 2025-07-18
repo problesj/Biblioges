@@ -135,21 +135,21 @@ class BibliografiaDisponibleController extends BaseController
                                  ->take($porPagina)
                                  ->get();
 
-            error_log('Renderizando plantilla: bibliografias_disponibles/index.twig');
-            error_log('Datos pasados a la plantilla: ' . print_r([
-                'bibliografias' => $bibliografias,
-                'filtros' => [
-                    'busqueda' => $busqueda,
-                    'disponibilidad' => $disponibilidad,
-                    'estado' => $estado,
-                    'anio_edicion' => $anioEdicion,
-                    'orden' => $orden,
-                    'direccion' => $direccion,
-                    'pagina' => $pagina,
-                    'total_paginas' => $totalPaginas,
-                    'total_registros' => $total
-                ]
-            ], true));
+            // error_log('Renderizando plantilla: bibliografias_disponibles/index.twig');
+            // error_log('Datos pasados a la plantilla: ' . print_r([
+            //     'bibliografias' => $bibliografias,
+            //     'filtros' => [
+            //         'busqueda' => $busqueda,
+            //         'disponibilidad' => $disponibilidad,
+            //         'estado' => $estado,
+            //         'anio_edicion' => $anioEdicion,
+            //         'orden' => $orden,
+            //         'direccion' => $direccion,
+            //         'pagina' => $pagina,
+            //         'total_paginas' => $totalPaginas,
+            //         'total_registros' => $total
+            //     ]
+            // ], true));
             
             // Agregar variables globales a la plantilla
             $data = [
@@ -180,7 +180,7 @@ class BibliografiaDisponibleController extends BaseController
             
             // Renderizar la plantilla
             $content = $this->twig->render('bibliografias_disponibles/index.twig', $data);
-            error_log('Plantilla renderizada correctamente');
+            // error_log('Plantilla renderizada correctamente');
             
             // Establecer el contenido en la respuesta
             header('Content-Type: text/html; charset=utf-8');
@@ -223,7 +223,7 @@ class BibliografiaDisponibleController extends BaseController
         $editoriales[] = 'Otra';
         
         try {
-            error_log('Renderizando plantilla: bibliografias_disponibles/form.twig');
+            // error_log('Renderizando plantilla: bibliografias_disponibles/form.twig');
             
             $data = [
                 'bibliografiasDeclaradas' => $bibliografiasDeclaradas,
@@ -236,7 +236,7 @@ class BibliografiaDisponibleController extends BaseController
             ];
             
             $content = $this->twig->render('bibliografias_disponibles/form.twig', $data);
-            error_log('Plantilla renderizada correctamente');
+            // error_log('Plantilla renderizada correctamente');
             
             header('Content-Type: text/html; charset=utf-8');
             echo $content;
@@ -254,11 +254,11 @@ class BibliografiaDisponibleController extends BaseController
      */
     public function store(Request $request, Response $response): Response
     {
-        error_log('Iniciando método store()');
+        // error_log('Iniciando método store()');
         
         try {
             $data = $_POST;
-            error_log('Datos recibidos: ' . print_r($data, true));
+            // error_log('Datos recibidos: ' . print_r($data, true));
             
             // Validar datos básicos
             if (empty($data['titulo'])) {
@@ -501,7 +501,6 @@ class BibliografiaDisponibleController extends BaseController
             $bibliografia->sedes = $sedesConEjemplares;
             
             $bibliografiasDeclaradas = BibliografiaDeclarada::where('estado', true)->get();
-        $sedes = Sede::where('estado', true)->get();
             $autores = Autor::all();
 
             // Obtener editoriales únicas de ambas tablas
@@ -523,13 +522,13 @@ class BibliografiaDisponibleController extends BaseController
             // Agregar la opción "Otra" al final
             $editoriales[] = 'Otra';
 
-            error_log('Renderizando plantilla: bibliografias_disponibles/form.twig');
-            error_log('Datos de sedes: ' . print_r($sedesConEjemplares, true));
+            // error_log('Renderizando plantilla: bibliografias_disponibles/form.twig');
+            // error_log('Datos de sedes: ' . print_r($sedesConEjemplares, true));
             
             $data = [
-            'bibliografia' => $bibliografia,
+                'bibliografia' => $bibliografia,
                 'bibliografiasDeclaradas' => $bibliografiasDeclaradas,
-                'sedes' => $sedes,
+                'sedes' => Sede::where('estado', true)->get(),
                 'autores' => $autores,
                 'editoriales' => $editoriales,
                 'isEdit' => true,
@@ -539,7 +538,7 @@ class BibliografiaDisponibleController extends BaseController
             ];
             
             $content = $this->twig->render('bibliografias_disponibles/form.twig', $data);
-            error_log('Plantilla renderizada correctamente');
+            // error_log('Plantilla renderizada correctamente');
             
             header('Content-Type: text/html; charset=utf-8');
             echo $content;
@@ -575,7 +574,7 @@ class BibliografiaDisponibleController extends BaseController
                 $data = $_POST;
             }
             
-            error_log('Datos recibidos en update: ' . print_r($data, true));
+            // error_log('Datos recibidos en update: ' . print_r($data, true));
             
             // Validar datos básicos
             if (empty($data['titulo'])) {
@@ -860,7 +859,7 @@ class BibliografiaDisponibleController extends BaseController
                 }
             ])->findOrFail($args['id']);
             
-            error_log('Bibliografía encontrada: ' . print_r($bibliografia->toArray(), true));
+            // error_log('Bibliografía encontrada: ' . print_r($bibliografia->toArray(), true));
             
             // Obtener los ejemplares por sede
             $stmt = $this->pdo->prepare("
@@ -871,7 +870,7 @@ class BibliografiaDisponibleController extends BaseController
             $stmt->execute([':id' => $args['id']]);
             $ejemplaresPorSede = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
             
-            error_log('Ejemplares por sede: ' . print_r($ejemplaresPorSede, true));
+            // error_log('Ejemplares por sede: ' . print_r($ejemplaresPorSede, true));
             
             // Crear un array asociativo de sedes con sus ejemplares
             $sedesConEjemplares = [];
@@ -883,7 +882,7 @@ class BibliografiaDisponibleController extends BaseController
                 ];
             }
             
-            error_log('Sedes con ejemplares: ' . print_r($sedesConEjemplares, true));
+            // error_log('Sedes con ejemplares: ' . print_r($sedesConEjemplares, true));
             
             // Asignar el array de sedes con ejemplares a la bibliografía
             $bibliografia->sedes = $sedesConEjemplares;
@@ -891,7 +890,7 @@ class BibliografiaDisponibleController extends BaseController
             // Convertir a array para asegurar que los datos se pasen correctamente
             $bibliografiaArray = $bibliografia->toArray();
             
-            error_log('Bibliografía array final: ' . print_r($bibliografiaArray, true));
+            // error_log('Bibliografía array final: ' . print_r($bibliografiaArray, true));
             
             $data = [
                 'bibliografia' => $bibliografiaArray,

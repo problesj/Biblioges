@@ -97,7 +97,7 @@
                                         data-index="{{ loop.index0 }}" required>
                                     <option value="">Seleccione una unidad</option>
                                     {% for unidad in unidades %}
-                                    <option value="{{ unidad.id }}" {% if unidad.id == info.unidad_id %}selected{% endif %}>
+                                    <option value="{{ unidad.id }}" {% if unidad.id == info.id_unidad %}selected{% endif %}>
                                         {{ unidad.sede_nombre }} - {{ unidad.unidad_nombre }}
                                     </option>
                                     {% endfor %}

@@ -217,7 +217,7 @@ class Unidad
         $result = $stmt->fetch();
 
         if ($result['count'] > 0) {
-            throw new \Exception("No se puede eliminar la unidad porque está asociada a asignaturas.");
+            throw new \Exception("No se puede eliminar la unidad porque está asociada a " . $result['count'] . " asignatura(s).");
         }
 
         // Verificar en carreras_espejos
@@ -227,7 +227,7 @@ class Unidad
         $result = $stmt->fetch();
 
         if ($result['count'] > 0) {
-            throw new \Exception("No se puede eliminar la unidad porque está asociada a carreras.");
+            throw new \Exception("No se puede eliminar la unidad porque está asociada a " . $result['count'] . " carrera(s).");
         }
     }
 
@@ -326,5 +326,54 @@ class Unidad
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute();
         return $stmt->fetch();
+    }
+
+    /**
+     * Obtener información detallada de las relaciones de una unidad
+     */
+    public function getRelacionesDetalladas($unidadId)
+    {
+        $relaciones = [];
+
+        // Obtener unidades hijas
+        $sql = "SELECT id, codigo, nombre FROM {$this->table} WHERE id_unidad_padre = (SELECT codigo FROM {$this->table} WHERE id = ?)";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$unidadId]);
+        $relaciones['unidades_hijas'] = $stmt->fetchAll();
+
+        // Obtener asignaturas asociadas
+        $sql = "
+        SELECT 
+            ad.id,
+            a.nombre as asignatura_nombre,
+            ad.codigo_asignatura,
+            ad.cantidad_alumnos
+        FROM asignaturas_departamentos ad
+        JOIN asignaturas a ON ad.asignatura_id = a.id
+        WHERE ad.id_unidad = ?
+        ORDER BY a.nombre
+        ";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$unidadId]);
+        $relaciones['asignaturas'] = $stmt->fetchAll();
+
+        // Obtener carreras asociadas
+        $sql = "
+        SELECT 
+            ce.id,
+            c.nombre as carrera_nombre,
+            ce.codigo_carrera,
+            ce.vigencia_desde,
+            ce.vigencia_hasta
+        FROM carreras_espejos ce
+        JOIN carreras c ON ce.carrera_id = c.id
+        WHERE ce.id_unidad = ?
+        ORDER BY c.nombre
+        ";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$unidadId]);
+        $relaciones['carreras'] = $stmt->fetchAll();
+
+        return $relaciones;
     }
 } 

@@ -57,7 +57,7 @@ class UsuarioController extends BaseController
                 ]
             ]);
         } catch (\Exception $e) {
-            error_log("Error en UsuarioController@index: " . $e->getMessage());
+            // error_log("Error en UsuarioController@index: " . $e->getMessage());
             return $this->errorResponse($response, "Error al cargar el listado de usuarios", 500);
         }
     }
@@ -82,7 +82,7 @@ class UsuarioController extends BaseController
                 ]
             ]);
         } catch (\Exception $e) {
-            error_log("Error en UsuarioController@create: " . $e->getMessage());
+            // error_log("Error en UsuarioController@create: " . $e->getMessage());
             return $this->errorResponse($response, "Error al cargar el formulario", 500);
         }
     }
@@ -137,7 +137,7 @@ class UsuarioController extends BaseController
                 'redirect' => $GLOBALS['twig']->getGlobals()['app_url'] . 'usuarios'
             ]);
         } catch (\Exception $e) {
-            error_log("Error en UsuarioController@store: " . $e->getMessage());
+            // error_log("Error en UsuarioController@store: " . $e->getMessage());
             return $this->jsonResponse($response, [
                 'success' => false,
                 'message' => 'Error al crear el usuario'
@@ -173,7 +173,7 @@ class UsuarioController extends BaseController
                 ]
             ]);
         } catch (\Exception $e) {
-            error_log("Error en UsuarioController@show: " . $e->getMessage());
+            // error_log("Error en UsuarioController@show: " . $e->getMessage());
             return $this->errorResponse($response, "Error al cargar el usuario", 500);
         }
     }
@@ -206,7 +206,7 @@ class UsuarioController extends BaseController
                 ]
             ]);
         } catch (\Exception $e) {
-            error_log("Error en UsuarioController@edit: " . $e->getMessage());
+            // error_log("Error en UsuarioController@edit: " . $e->getMessage());
             return $this->errorResponse($response, "Error al cargar el formulario", 500);
         }
     }

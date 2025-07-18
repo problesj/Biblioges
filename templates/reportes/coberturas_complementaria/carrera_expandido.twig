@@ -107,6 +107,9 @@
                                         <button type="submit" class="btn btn-primary btn-sm mt-2">
                                             <i class="fas fa-filter"></i> Aplicar Filtros
                                         </button>
+                                        <button type="button" class="btn btn-success btn-sm mt-2" onclick="guardarFiltros()">
+                                            <i class="fas fa-save"></i> Guardar Filtros
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -205,8 +208,7 @@
                         {% endif %}
                     </div>
 
-                    <!-- Tarjetas de totales -->
-                    {% if cobertura_complementaria_total %}
+                    <!-- Totales de la Carrera -->
                     <div class="row mt-4">
                         <div class="col-12">
                             <div class="card">
@@ -217,44 +219,35 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="row">
-                                        <div class="col-md-2">
+                                        <div class="col-md-3">
                                             <div class="text-center">
-                                                <h4 class="text-primary">{{ cobertura_complementaria_total.total_titulos_declarados }}</h4>
+                                                <h4 class="text-primary">{{ totales_carrera.titulos_declarados }}</h4>
                                                 <p class="text-muted mb-0">Total Títulos Declarados</p>
                                             </div>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-md-3">
                                             <div class="text-center">
-                                                <h4 class="text-info">{{ cobertura_complementaria_total.total_titulos_disponibles }}</h4>
-                                                <p class="text-muted mb-0">Total Títulos Disponibles</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-2">
-                                            <div class="text-center">
-                                                <h4 class="text-success">{{ cobertura_complementaria_total.total_ejemplares_impresos }}</h4>
+                                                <h4 class="text-success">{{ totales_carrera.ejemplares_impresos }}</h4>
                                                 <p class="text-muted mb-0">Total Ejemplares Impresos</p>
                                             </div>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-md-3">
                                             <div class="text-center">
-                                                <h4 class="text-info">
-                                                    {% if cobertura_complementaria_total.total_titulos_disponibles > 0 and cobertura_complementaria_total.total_ejemplares_digitales == 0 %}
-                                                        Ilimitado
-                                                    {% elseif cobertura_complementaria_total.total_ejemplares_digitales == 0 %}
-                                                        Sin información
-                                                    {% else %}
-                                                        {{ cobertura_complementaria_total.total_ejemplares_digitales }}
-                                                    {% endif %}
-                                                </h4>
+                                                <h4 class="text-info">{{ totales_carrera.ejemplares_digitales }}</h4>
                                                 <p class="text-muted mb-0">Total Ejemplares Digitales</p>
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="text-center">
-                                                <h4 class="{% if cobertura_complementaria_total.cobertura_complementaria_total >= 80 %}text-success{% elseif cobertura_complementaria_total.cobertura_complementaria_total >= 60 %}text-warning{% else %}text-danger{% endif %}">
-                                                    {{ cobertura_complementaria_total.cobertura_complementaria_total }}%
-                                                </h4>
-                                                <p class="text-muted mb-0">Cobertura Complementaria de la Carrera</p>
+                                                <h4 class="text-warning">{{ totales_carrera.titulos_disponibles }}</h4>
+                                                <p class="text-muted mb-0">Total Títulos Disponibles</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col-12">
+                                            <div class="text-center">
+                                                <h4 class="text-danger">Cobertura Complementaria Total: {{ cobertura_complementaria_total }}%</h4>
                                             </div>
                                         </div>
                                     </div>
@@ -262,7 +255,6 @@
                             </div>
                         </div>
                     </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
@@ -493,6 +485,55 @@ function guardarReporte() {
                 });
             });
         }
+    });
+}
+
+// Función para guardar filtros de formación
+function guardarFiltros() {
+    const form = document.getElementById('filtroFormacionForm');
+    const checkboxes = form.querySelectorAll('input[type="checkbox"]:checked');
+    const tiposFormacion = Array.from(checkboxes).map(cb => cb.value);
+    
+    const datos = {
+        codigo_carrera: '{{ carrera.codigo }}',
+        basica: tiposFormacion.includes('FORMACION_BASICA'),
+        general: tiposFormacion.includes('FORMACION_GENERAL'),
+        idioma: tiposFormacion.includes('FORMACION_IDIOMAS'),
+        profesional: tiposFormacion.includes('FORMACION_PROFESIONAL'),
+        valores: tiposFormacion.includes('FORMACION_VALORES'),
+        especialidad: tiposFormacion.includes('FORMACION_ESPECIALIDAD'),
+        especial: tiposFormacion.includes('FORMACION_ESPECIAL')
+    };
+    
+    fetch('/biblioges/reportes/guardar-filtros-formacion/{{ carrera.sede_id }}/{{ carrera.carrera_id }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(datos)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Filtros guardados',
+                text: 'Los filtros se han guardado correctamente',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        } else {
+            throw new Error(data.error || 'Error al guardar filtros');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudieron guardar los filtros: ' + error.message
+        });
     });
 }
 </script>

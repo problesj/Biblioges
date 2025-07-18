@@ -23,10 +23,6 @@
                                    class="btn btn-success">
                                     <i class="fas fa-expand-alt"></i> Reporte Expandido
                                 </a>
-                                <a href="/biblioges/reportes/coberturas-fusionado/{{ carrera.sede_id }}/{{ carrera.carrera_id }}?{{ app.request.queryString }}" 
-                                   class="btn btn-info">
-                                    <i class="fas fa-object-group"></i> Fusión de Reportes
-                                </a>
                                 <button type="button" class="btn btn-excel" id="btnExportarExcel">
                                     <i class="fas fa-file-excel"></i> Exportar Excel
                                 </button>
@@ -296,22 +292,22 @@
 </style>
 
 <script>
-console.log('Script de cobertura complementaria cargado');
+        // console.log('Script de cobertura complementaria cargado');
 
 // Verificar que jQuery esté disponible antes de ejecutar cualquier código
 if (typeof $ === 'undefined') {
-    console.log('jQuery no está disponible - esperando a que se cargue...');
+                // console.log('jQuery no está disponible - esperando a que se cargue...');
     // Esperar a que jQuery se cargue
     window.addEventListener('load', function() {
         if (typeof $ !== 'undefined') {
-            console.log('jQuery cargado después del evento load');
+            // console.log('jQuery cargado después del evento load');
             initializeExportButton();
         } else {
             console.error('jQuery aún no está disponible después del evento load');
         }
     });
 } else {
-    console.log('jQuery ya está disponible');
+            // console.log('jQuery ya está disponible');
     // jQuery ya está disponible, ejecutar inmediatamente
     $(document).ready(function() {
         initializeExportButton();
@@ -319,14 +315,14 @@ if (typeof $ === 'undefined') {
 }
 
 function initializeExportButton() {
-    console.log('Inicializando botón de exportación...');
+            // console.log('Inicializando botón de exportación...');
     
     // Verificar que jQuery esté disponible
     if (typeof $ === 'undefined') {
         console.error('jQuery no está disponible en initializeExportButton');
         return;
     } else {
-        console.log('jQuery está disponible, versión:', $.fn.jquery);
+        // console.log('jQuery está disponible, versión:', $.fn.jquery);
     }
     
     // Actualizar contador de asignaturas
@@ -338,31 +334,31 @@ function initializeExportButton() {
     
     // Verificar que el botón existe con jQuery
     if ($('#btnExportarExcel').length > 0) {
-        console.log('Botón exportar Excel encontrado con jQuery');
+        // console.log('Botón exportar Excel encontrado con jQuery');
         
         // Agregar el evento de clic al botón
         $('#btnExportarExcel').click(function() {
-            console.log('Botón exportar Excel clickeado');
+            // console.log('Botón exportar Excel clickeado');
             
             var url = '/biblioges/reportes/coberturas-complementaria-excel/{{ carrera.sede_id }}/{{ carrera.carrera_id }}';
             var btn = $(this);
-            console.log('URL a llamar:', url);
+            // console.log('URL a llamar:', url);
             btn.prop('disabled', true).text('Generando...');
             
             // Agregar parámetros de filtro si existen
             var queryString = window.location.search;
             if (queryString) {
                 url += queryString;
-                console.log('URL con parámetros:', url);
+                // console.log('URL con parámetros:', url);
             }
             
-            console.log('Iniciando llamada AJAX...');
+            // console.log('Iniciando llamada AJAX...');
             $.ajax({
                 url: url,
                 method: 'GET',
                 dataType: 'json',
                 success: function(data) {
-                    console.log('Respuesta exitosa recibida:', data);
+                    // console.log('Respuesta exitosa recibida:', data);
                     if (data.url) {
                         $('#enlaceDescargaExcel').removeClass('d-none').attr('href', data.url).text('Descargar Excel generado');
                         window.open(data.url, '_blank');

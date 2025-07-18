@@ -40,11 +40,15 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label>&nbsp;</label>
-                                    <button type="submit" class="btn btn-primary btn-block">Filtrar</button>
-                                </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12 d-flex gap-2" style="padding-left: 2rem; padding-right: 2rem; padding-bottom: 2rem;">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-filter"></i> Aplicar Filtros
+                                </button>
+                                <a href="{{ app_url }}facultades" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Limpiar Filtros
+                                </a>
                             </div>
                         </div>
                     </form>

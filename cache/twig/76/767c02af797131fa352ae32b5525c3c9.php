@@ -212,16 +212,19 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
         yield ">Inactivo</option>
                     </select>
                 </div>
-                <div class=\"col-md-4 d-flex align-items-end gap-2\">
-                    <button type=\"submit\" class=\"btn btn-primary\">
-                        <i class=\"fas fa-filter\"></i> Filtrar
-                    </button>
-                    <a href=\"";
-        // line 68
+                </div>
+                <div class=\"row mt-3\">
+                    <div class=\"col-12 d-flex gap-2\" style=\"padding-left: 2rem; padding-right: 2rem; padding-bottom: 2rem;\">
+                        <button type=\"submit\" class=\"btn btn-primary\">
+                            <i class=\"fas fa-filter\"></i> Aplicar Filtros
+                        </button>
+                        <a href=\"";
+        // line 70
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "asignaturas\" class=\"btn btn-secondary\">
-                        <i class=\"fas fa-broom\"></i> Limpiar
-                    </a>
+                            <i class=\"fas fa-times\"></i> Limpiar Filtros
+                        </a>
+                    </div>
                 </div>
             </form>
         </div>
@@ -245,69 +248,69 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
                     </thead>
                     <tbody>
                         ";
-        // line 93
+        // line 96
         $context['_parent'] = $context;
         $context['_seq'] = CoreExtension::ensureTraversable(($context["asignaturas"] ?? null));
         $context['_iterated'] = false;
         foreach ($context['_seq'] as $context["_key"] => $context["asignatura"]) {
-            // line 94
+            // line 97
             yield "                        <tr>
                             <td>";
-            // line 95
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "nombre", [], "any", false, false, false, 95), "html", null, true);
-            yield "</td>
-                            <td>";
-            // line 96
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "tipo", [], "any", false, false, false, 96), "html", null, true);
-            yield "</td>
-                            <td>";
-            // line 97
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "vigencia_desde", [], "any", false, false, false, 97), "html", null, true);
-            yield " - ";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "vigencia_hasta", [], "any", false, false, false, 97), "html", null, true);
-            yield "</td>
-                            <td>";
             // line 98
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "periodicidad", [], "any", false, false, false, 98), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "nombre", [], "any", false, false, false, 98), "html", null, true);
+            yield "</td>
+                            <td>";
+            // line 99
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "tipo", [], "any", false, false, false, 99), "html", null, true);
+            yield "</td>
+                            <td>";
+            // line 100
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "vigencia_desde", [], "any", false, false, false, 100), "html", null, true);
+            yield " - ";
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "vigencia_hasta", [], "any", false, false, false, 100), "html", null, true);
+            yield "</td>
+                            <td>";
+            // line 101
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "periodicidad", [], "any", false, false, false, 101), "html", null, true);
             yield "</td>
                             <td>
                                 <span class=\"badge bg-";
-            // line 100
-            yield (((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "estado", [], "any", false, false, false, 100) == "1")) ? ("success") : ("danger"));
+            // line 103
+            yield (((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "estado", [], "any", false, false, false, 103) == "1")) ? ("success") : ("danger"));
             yield "\">
                                     ";
-            // line 101
-            yield (((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "estado", [], "any", false, false, false, 101) == "1")) ? ("Activo") : ("Inactivo"));
+            // line 104
+            yield (((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "estado", [], "any", false, false, false, 104) == "1")) ? ("Activo") : ("Inactivo"));
             yield "
                                 </span>
                             </td>
                             <td style=\"white-space: pre-line\">";
-            // line 104
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "unidades", [], "any", true, true, false, 104)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "unidades", [], "any", false, false, false, 104), "Sin unidad")) : ("Sin unidad")), "html", null, true);
+            // line 107
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "unidades", [], "any", true, true, false, 107)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "unidades", [], "any", false, false, false, 107), "Sin unidad")) : ("Sin unidad")), "html", null, true);
             yield "</td>
                             <td>
                                 <div class=\"btn-group\">
-                                    <a href=\"";
-            // line 107
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
-            yield "asignaturas/";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 107), "html", null, true);
-            yield "\" class=\"btn btn-sm btn-primary\" title=\"Ver\">
-                                        <i class=\"fas fa-eye\"></i>
-                                    </a>
                                     <a href=\"";
             // line 110
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
             yield "asignaturas/";
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 110), "html", null, true);
-            yield "/edit\" class=\"btn btn-sm btn-warning\" title=\"Editar\">
-                                        <i class=\"fas fa-edit\"></i>
+            yield "\" class=\"btn btn-sm btn-primary\" title=\"Ver\">
+                                        <i class=\"fas fa-eye\"></i>
                                     </a>
-                                    <form action=\"";
+                                    <a href=\"";
             // line 113
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
             yield "asignaturas/";
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 113), "html", null, true);
+            yield "/edit\" class=\"btn btn-sm btn-warning\" title=\"Editar\">
+                                        <i class=\"fas fa-edit\"></i>
+                                    </a>
+                                    <form action=\"";
+            // line 116
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
+            yield "asignaturas/";
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 116), "html", null, true);
             yield "/delete\" method=\"POST\" class=\"d-inline delete-form\">
                                         <button type=\"submit\" class=\"btn btn-sm btn-danger\" title=\"Eliminar\">
                                             <i class=\"fas fa-trash\"></i>
@@ -319,9 +322,9 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
                         ";
             $context['_iterated'] = true;
         }
-        // line 121
+        // line 124
         if (!$context['_iterated']) {
-            // line 122
+            // line 125
             yield "                        <tr>
                             <td colspan=\"7\" class=\"text-center\">No se encontraron asignaturas</td>
                         </tr>
@@ -330,7 +333,7 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_key'], $context['asignatura'], $context['_parent'], $context['_iterated']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 126
+        // line 129
         yield "                    </tbody>
                 </table>
             </div>
@@ -341,14 +344,14 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
         yield from [];
     }
 
-    // line 134
+    // line 137
     /**
      * @return iterable<null|scalar|\Stringable>
      */
     public function block_scripts(array $context, array $blocks = []): iterable
     {
         $macros = $this->macros;
-        // line 135
+        // line 138
         yield "<script>
 document.addEventListener('DOMContentLoaded', function() {
     // Manejar el envío del formulario de eliminación
@@ -447,14 +450,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Mostrar mensajes de éxito o error si existen y limpiarlos
     ";
-        // line 232
-        if (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "success", [], "any", false, false, false, 232)) {
-            // line 233
+        // line 235
+        if (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "success", [], "any", false, false, false, 235)) {
+            // line 236
             yield "        Swal.fire({
             title: '¡Éxito!',
             text: '";
-            // line 235
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "success", [], "any", false, false, false, 235), "html", null, true);
+            // line 238
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "success", [], "any", false, false, false, 238), "html", null, true);
             yield "',
             icon: 'success',
             confirmButtonColor: '#28a745',
@@ -462,7 +465,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }).then(() => {
             // Limpiar el mensaje de sesión
             fetch('";
-            // line 241
+            // line 244
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
             yield "clear-session-messages', {
                 method: 'POST',
@@ -473,17 +476,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     ";
         }
-        // line 249
+        // line 252
         yield "
     ";
-        // line 250
-        if (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "error", [], "any", false, false, false, 250)) {
-            // line 251
+        // line 253
+        if (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "error", [], "any", false, false, false, 253)) {
+            // line 254
             yield "        Swal.fire({
             title: 'Error',
             text: '";
-            // line 253
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "error", [], "any", false, false, false, 253), "html", null, true);
+            // line 256
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "error", [], "any", false, false, false, 256), "html", null, true);
             yield "',
             icon: 'error',
             confirmButtonColor: '#d33',
@@ -491,7 +494,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }).then(() => {
             // Limpiar el mensaje de sesión
             fetch('";
-            // line 259
+            // line 262
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
             yield "clear-session-messages', {
                 method: 'POST',
@@ -502,7 +505,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     ";
         }
-        // line 267
+        // line 270
         yield "});
 </script>
 ";
@@ -530,7 +533,7 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     public function getDebugInfo(): array
     {
-        return array (  506 => 267,  495 => 259,  486 => 253,  482 => 251,  480 => 250,  477 => 249,  466 => 241,  457 => 235,  453 => 233,  451 => 232,  352 => 135,  345 => 134,  334 => 126,  325 => 122,  323 => 121,  308 => 113,  300 => 110,  292 => 107,  286 => 104,  280 => 101,  276 => 100,  271 => 98,  265 => 97,  261 => 96,  257 => 95,  254 => 94,  249 => 93,  221 => 68,  209 => 61,  203 => 60,  195 => 54,  186 => 51,  177 => 50,  173 => 49,  161 => 42,  155 => 41,  149 => 40,  143 => 39,  137 => 38,  131 => 37,  125 => 36,  119 => 35,  113 => 34,  104 => 28,  98 => 25,  83 => 13,  77 => 10,  71 => 6,  64 => 5,  53 => 3,  42 => 1,);
+        return array (  509 => 270,  498 => 262,  489 => 256,  485 => 254,  483 => 253,  480 => 252,  469 => 244,  460 => 238,  456 => 236,  454 => 235,  355 => 138,  348 => 137,  337 => 129,  328 => 125,  326 => 124,  311 => 116,  303 => 113,  295 => 110,  289 => 107,  283 => 104,  279 => 103,  274 => 101,  268 => 100,  264 => 99,  260 => 98,  257 => 97,  252 => 96,  223 => 70,  209 => 61,  203 => 60,  195 => 54,  186 => 51,  177 => 50,  173 => 49,  161 => 42,  155 => 41,  149 => 40,  143 => 39,  137 => 38,  131 => 37,  125 => 36,  119 => 35,  113 => 34,  104 => 28,  98 => 25,  83 => 13,  77 => 10,  71 => 6,  64 => 5,  53 => 3,  42 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -598,13 +601,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         <option value=\"0\" {% if filtros.estado == '0' %}selected{% endif %}>Inactivo</option>
                     </select>
                 </div>
-                <div class=\"col-md-4 d-flex align-items-end gap-2\">
-                    <button type=\"submit\" class=\"btn btn-primary\">
-                        <i class=\"fas fa-filter\"></i> Filtrar
-                    </button>
-                    <a href=\"{{ app_url }}asignaturas\" class=\"btn btn-secondary\">
-                        <i class=\"fas fa-broom\"></i> Limpiar
-                    </a>
+                </div>
+                <div class=\"row mt-3\">
+                    <div class=\"col-12 d-flex gap-2\" style=\"padding-left: 2rem; padding-right: 2rem; padding-bottom: 2rem;\">
+                        <button type=\"submit\" class=\"btn btn-primary\">
+                            <i class=\"fas fa-filter\"></i> Aplicar Filtros
+                        </button>
+                        <a href=\"{{ app_url }}asignaturas\" class=\"btn btn-secondary\">
+                            <i class=\"fas fa-times\"></i> Limpiar Filtros
+                        </a>
+                    </div>
                 </div>
             </form>
         </div>

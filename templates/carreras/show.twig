@@ -65,12 +65,21 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="form-group">
-                        <label class="font-weight-bold">URL del Libro:</label>
+                        <label class="font-weight-bold">Libro de Carrera:</label>
                         <p>
                             {% if carrera.url_libro %}
-                                <a href="{{ carrera.url_libro }}" target="_blank">{{ carrera.url_libro }}</a>
+                                <a href="{{ app_url }}{{ carrera.url_libro }}" target="_blank" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-file-pdf"></i> Ver Libro de Carrera
+                                </a>
+                                <small class="text-muted d-block mt-1">
+                                    <i class="fas fa-info-circle"></i> 
+                                    Archivo PDF disponible para descarga
+                                </small>
                             {% else %}
-                                Sin información
+                                <span class="text-muted">
+                                    <i class="fas fa-times-circle"></i> 
+                                    No hay libro de carrera disponible
+                                </span>
                             {% endif %}
                         </p>
                     </div>

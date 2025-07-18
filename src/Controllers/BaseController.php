@@ -42,11 +42,11 @@ class BaseController
     {
         global $twig;
         try {
-            error_log('Renderizando plantilla: ' . $template);
-            error_log('Datos pasados a la plantilla: ' . print_r($data, true));
+            // error_log('Renderizando plantilla: ' . $template);
+            // error_log('Datos pasados a la plantilla: ' . print_r($data, true));
             
             $content = $twig->render($template, $data);
-            error_log('Plantilla renderizada correctamente');
+            // error_log('Plantilla renderizada correctamente');
             
             $response->getBody()->write($content);
             return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');

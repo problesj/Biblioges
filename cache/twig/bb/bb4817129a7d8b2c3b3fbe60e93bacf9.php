@@ -538,6 +538,13 @@ document.addEventListener('DOMContentLoaded', function() {
         idMms.required = false;
         ejemplaresDigitales.required = false;
         
+        // Mostrar/ocultar sección de sedes según disponibilidad
+        if (valor === 'impreso' || valor === 'ambos') {
+            seccionSedes.style.display = 'block';
+        } else {
+            seccionSedes.style.display = 'none';
+        }
+        
         // Aplicar validaciones según disponibilidad
         switch(valor) {
             case 'impreso':
@@ -579,6 +586,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     disponibilidadSelect.addEventListener('change', actualizarValidaciones);
     actualizarValidaciones();
+
+    // Inicializar la sección de sedes al cargar la página
+    if (disponibilidadSelect.value === 'impreso' || disponibilidadSelect.value === 'ambos') {
+        seccionSedes.style.display = 'block';
+    }
 
     // Inicializar el estado del campo de nueva editorial
     toggleEditorialInput();
@@ -1242,6 +1254,13 @@ document.addEventListener('DOMContentLoaded', function() {
         idMms.required = false;
         ejemplaresDigitales.required = false;
         
+        // Mostrar/ocultar sección de sedes según disponibilidad
+        if (valor === 'impreso' || valor === 'ambos') {
+            seccionSedes.style.display = 'block';
+        } else {
+            seccionSedes.style.display = 'none';
+        }
+        
         // Aplicar validaciones según disponibilidad
         switch(valor) {
             case 'impreso':
@@ -1283,6 +1302,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     disponibilidadSelect.addEventListener('change', actualizarValidaciones);
     actualizarValidaciones();
+
+    // Inicializar la sección de sedes al cargar la página
+    if (disponibilidadSelect.value === 'impreso' || disponibilidadSelect.value === 'ambos') {
+        seccionSedes.style.display = 'block';
+    }
 
     // Inicializar el estado del campo de nueva editorial
     toggleEditorialInput();
