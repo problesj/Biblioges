@@ -109,11 +109,14 @@ class FrontendController
                 ad.codigo_asignatura
             FROM mallas m
             INNER JOIN asignaturas a ON m.asignatura_id = a.id
-            INNER JOIN asignaturas_departamentos ad ON a.id = ad.asignatura_id
-            INNER JOIN unidades u ON ad.id_unidad = u.id
+            LEFT JOIN asignaturas_departamentos ad ON a.id = ad.asignatura_id
+            LEFT JOIN unidades u ON ad.id_unidad = u.id
             WHERE m.carrera_id = :carrera_id 
-            AND u.sede_id = :sede_id
             AND a.estado = 1
+            AND (
+                (u.sede_id = :sede_id) OR 
+                (a.tipo = 'FORMACION_ELECTIVA')
+            )
             ORDER BY m.semestre, a.nombre
         ");
         $stmt->execute([
@@ -219,30 +222,63 @@ class FrontendController
      */
     private function getBibliografiasAsignatura($asignaturaId)
     {
-        $stmt = $this->pdo->prepare("
-            SELECT 
-                bd.id,
-                bd.titulo,
-                bd.tipo,
-                bd.anio_publicacion,
-                bd.editorial,
-                bd.edicion,
-                bd.url,
-                bd.formato,
-                ab.tipo_bibliografia,
-                GROUP_CONCAT(CONCAT(a.apellidos, ', ', a.nombres) SEPARATOR '; ') as autores
-            FROM asignaturas_bibliografias ab
-            INNER JOIN bibliografias_declaradas bd ON ab.bibliografia_id = bd.id
-            LEFT JOIN bibliografias_autores ba ON bd.id = ba.bibliografia_id
-            LEFT JOIN autores a ON ba.autor_id = a.id
-            WHERE ab.asignatura_id = :asignatura_id
-            AND ab.estado = 'activa'
-            AND bd.estado = 1
-            GROUP BY bd.id, ab.tipo_bibliografia
-            ORDER BY ab.tipo_bibliografia, bd.titulo
-        ");
-        $stmt->execute([':asignatura_id' => $asignaturaId]);
+        // Primero verificar si es una asignatura electiva
+        $stmt = $this->pdo->prepare("SELECT tipo FROM asignaturas WHERE id = ?");
+        $stmt->execute([$asignaturaId]);
+        $asignatura = $stmt->fetch(PDO::FETCH_ASSOC);
         
+        if ($asignatura && $asignatura['tipo'] === 'FORMACION_ELECTIVA') {
+            // Para asignaturas electivas, obtener bibliografías de las asignaturas vinculadas
+            $stmt = $this->pdo->prepare("
+                SELECT 
+                    bd.id,
+                    bd.titulo,
+                    bd.tipo,
+                    bd.anio_publicacion,
+                    bd.editorial,
+                    bd.edicion,
+                    bd.url,
+                    bd.formato,
+                    ab.tipo_bibliografia,
+                    GROUP_CONCAT(CONCAT(a.apellidos, ', ', a.nombres) SEPARATOR '; ') as autores
+                FROM asignaturas_formacion af
+                INNER JOIN asignaturas_bibliografias ab ON af.asignatura_regular_id = ab.asignatura_id
+                INNER JOIN bibliografias_declaradas bd ON ab.bibliografia_id = bd.id
+                LEFT JOIN bibliografias_autores ba ON bd.id = ba.bibliografia_id
+                LEFT JOIN autores a ON ba.autor_id = a.id
+                WHERE af.asignatura_formacion_id = :asignatura_id
+                AND ab.estado = 'activa'
+                AND bd.estado = 1
+                GROUP BY bd.id, ab.tipo_bibliografia
+                ORDER BY ab.tipo_bibliografia, bd.titulo
+            ");
+        } else {
+            // Para asignaturas regulares, obtener bibliografías directamente
+            $stmt = $this->pdo->prepare("
+                SELECT 
+                    bd.id,
+                    bd.titulo,
+                    bd.tipo,
+                    bd.anio_publicacion,
+                    bd.editorial,
+                    bd.edicion,
+                    bd.url,
+                    bd.formato,
+                    ab.tipo_bibliografia,
+                    GROUP_CONCAT(CONCAT(a.apellidos, ', ', a.nombres) SEPARATOR '; ') as autores
+                FROM asignaturas_bibliografias ab
+                INNER JOIN bibliografias_declaradas bd ON ab.bibliografia_id = bd.id
+                LEFT JOIN bibliografias_autores ba ON bd.id = ba.bibliografia_id
+                LEFT JOIN autores a ON ba.autor_id = a.id
+                WHERE ab.asignatura_id = :asignatura_id
+                AND ab.estado = 'activa'
+                AND bd.estado = 1
+                GROUP BY bd.id, ab.tipo_bibliografia
+                ORDER BY ab.tipo_bibliografia, bd.titulo
+            ");
+        }
+        
+        $stmt->execute([':asignatura_id' => $asignaturaId]);
         $bibliografias = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         // Obtener información específica según el tipo
