@@ -32,8 +32,10 @@ CREATE TABLE IF NOT EXISTS carreras (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(250) NOT NULL,
     tipo_programa ENUM('P', 'G', 'O') NOT NULL,
+    cantidad_semestres int DEFAULT 10,
     estado TINYINT(1) DEFAULT 1,
-    url_libro VARCHAR(500),
+    url_libro VARCHAR(500) DEFAULT NULL,
+    url_imagen VARCHAR(500) DEFAULT NULL,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;

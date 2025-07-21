@@ -11,3 +11,5 @@ storage/logs/*
 .idea/
 *.log
 *.sqlite
+.vscode/launch.json
+biblioges-installer.tar.gz
