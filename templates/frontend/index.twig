@@ -1,0 +1,126 @@
+{% extends 'frontend/base.twig' %}
+
+{% block title %}Bibliografía UCN - Carreras de Pregrado{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold mb-3">
+                    <i class="fas fa-book-open me-3"></i>
+                    Bibliografía UCN
+                </h1>
+                <p class="lead mb-4">
+                    Consulta las bibliografías disponibles para las carreras de pregrado de la Universidad Católica del Norte.
+                    Encuentra libros, artículos, tesis y otros recursos académicos organizados por programa.
+                </p>
+            </div>
+            <div class="col-lg-4 text-center">
+                <i class="fas fa-university" style="font-size: 8rem; opacity: 0.8;"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Sección de Carreras -->
+<section id="carreras" class="container">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="text-center mb-5">
+                <i class="fas fa-graduation-cap me-2"></i>
+                Carreras de Pregrado
+            </h2>
+        </div>
+    </div>
+
+    <div class="row">
+        {% if carreras|length > 0 %}
+            {% for carrera in carreras %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 carrera-card">
+                    <div class="carrera-image">
+                        {% if carrera.imagen_url %}
+                            <img src="/biblioges/{{ carrera.imagen_url }}" alt="{{ carrera.nombre }}" class="card-img-top" style="object-fit:cover; width:100%; height:200px;">
+                        {% else %}
+                            <img src="{{ assets_url }}/images/carreras/default.svg" alt="Imagen no disponible" class="card-img-top" style="object-fit:cover; width:100%; height:200px;">
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ carrera.nombre }}</h5>
+                        <p class="card-text">{{ carrera.descripcion|default('Forma profesionales capaces de optimizar procesos productivos y de servicios.') }}</p>
+                        <div class="carrera-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-clock"></i>
+                                <span>{{ carrera.cantidad_semestres|default(10) }} semestres</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>Antofagasta</span>
+                            </div>
+                        </div>
+                        {% if carrera.sede_id %}
+                        <a href="{{ app_url }}/carrera/{{ carrera.sede_id }}/{{ carrera.id }}" 
+                           class="btn btn-primary btn-ver-bibliografia">
+                            <i class="fas fa-book me-1"></i>
+                            Ver Bibliografía
+                        </a>
+                        {% else %}
+                        <button class="btn btn-secondary btn-ver-bibliografia" disabled>
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            No disponible
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No hay carreras de pregrado disponibles en este momento.
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Información Adicional -->
+<section class="container mb-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Información del Sistema
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-book me-2 text-primary"></i>Tipos de Bibliografía</h5>
+                            <ul class="list-unstyled">
+                                <li><span class="badge badge-basica me-2">Básica</span> Bibliografía fundamental del curso</li>
+                                <li><span class="badge badge-complementaria me-2">Complementaria</span> Bibliografía adicional recomendada</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-file-alt me-2 text-success"></i>Tipos de Material</h5>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-book me-2"></i>Libros</li>
+                                <li><i class="fas fa-newspaper me-2"></i>Artículos</li>
+                                <li><i class="fas fa-file-pdf me-2"></i>Tesis</li>
+                                <li><i class="fas fa-laptop me-2"></i>Software</li>
+                                <li><i class="fas fa-globe me-2"></i>Sitios Web</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %} 

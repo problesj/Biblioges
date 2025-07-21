@@ -65,6 +65,25 @@
                     </div>
                 </div>
 
+                <!-- Sección 1.6: Imagen de la Carrera -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="imagen_carrera" class="form-label">Imagen de la Carrera</label>
+                            <input type="file" class="form-control" id="imagen_carrera" name="imagen_carrera" accept="image/*">
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle"></i> Solo imágenes JPG, PNG o GIF. Tamaño recomendado: 1440x700px
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="cantidad_semestres" class="form-label">Cantidad de Semestres *</label>
+                            <input type="number" class="form-control" id="cantidad_semestres" name="cantidad_semestres" min="1" max="20" value="{{ form_data.cantidad_semestres|default(10) }}" required>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Sección 2: Códigos de carrera -->
                 <div class="row mb-4">
                     <div class="col-12">

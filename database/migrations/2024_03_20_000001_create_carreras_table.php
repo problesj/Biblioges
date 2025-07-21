@@ -12,6 +12,8 @@ return new class extends Migration
             $table->id();
             $table->string('nombre');
             $table->string('url_libro')->nullable();
+            $table->string('imagen_url')->nullable();
+            $table->integer('cantidad_semestres')->default(10);
             $table->enum('estado', ['A', 'I'])->default('A');
             $table->timestamps();
         });

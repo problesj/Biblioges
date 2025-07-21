@@ -21,7 +21,9 @@ class Carrera extends Model
     protected $fillable = [
         'nombre',
         'estado',
-        'url_libro'
+        'url_libro',
+        'imagen_url',
+        'cantidad_semestres'
     ];
 
     /**

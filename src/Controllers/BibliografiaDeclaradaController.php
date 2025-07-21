@@ -2579,7 +2579,7 @@ class BibliografiaDeclaradaController
             
             // Obtener datos del POST
             $json = file_get_contents('php://input');
-            //error_log('Datos recibidos: ' . $json);
+            error_log('Datos recibidos: ' . $json);
             
             $data = json_decode($json, true);
             if (!$data || !isset($data['bibliografias'])) {
@@ -2587,23 +2587,23 @@ class BibliografiaDeclaradaController
             }
             
             $bibliografias = $data['bibliografias'];
-            //error_log('Número de bibliografías a procesar: ' . count($bibliografias));
+            error_log('Número de bibliografías a procesar: ' . count($bibliografias));
             
             // Obtener ID de la bibliografía declarada de la URL
             $url = $_SERVER['REQUEST_URI'];
             preg_match('/\/bibliografias-declaradas\/(\d+)\/guardar-seleccionadas/', $url, $matches);
             $bibliografiaDeclaradaId = $matches[1] ?? null;
             
-            //error_log('URL: ' . $url);
-            //error_log('Valor de $bibliografiaDeclaradaId: ' . var_export($bibliografiaDeclaradaId, true));
+            error_log('URL: ' . $url);
+            error_log('Valor de $bibliografiaDeclaradaId: ' . var_export($bibliografiaDeclaradaId, true));
             
             if (!$bibliografiaDeclaradaId) {
                 throw new \Exception('ID de bibliografía declarada no encontrado en la URL');
             }
             
-            //error_log('Tipo de $this->pdo: ' . (is_object($this->pdo) ? get_class($this->pdo) : gettype($this->pdo)));
+            error_log('Tipo de $this->pdo: ' . (is_object($this->pdo) ? get_class($this->pdo) : gettype($this->pdo)));
             
-            //error_log('Estructura de bibliografías: ' . json_encode($bibliografias, JSON_PRETTY_PRINT));
+            error_log('Estructura de bibliografías: ' . json_encode($bibliografias, JSON_PRETTY_PRINT));
             
             // Verificar conexión a la base de datos
             if (!$this->pdo) {
@@ -2612,20 +2612,20 @@ class BibliografiaDeclaradaController
             }
             
             // Iniciar transacción
-            //error_log('Iniciando transacción...');
+            error_log('Iniciando transacción...');
             $this->pdo->beginTransaction();
-            //error_log('Transacción iniciada correctamente');
+            error_log('Transacción iniciada correctamente');
             
-            //error_log('Entrando al foreach de bibliografías...');
+            error_log('Entrando al foreach de bibliografías...');
             $cont_duplicados = 0;
             $cont_procesados = 0;
             $cont_bibguardadas = 0;
             foreach ($bibliografias as $bibliografia) {
-                //error_log('Iniciando procesamiento de bibliografía: ' . json_encode($bibliografia));
+                error_log('Iniciando procesamiento de bibliografía: ' . json_encode($bibliografia));
                 
                 // Obtener ID MMS para registro local
                 $idMms = $bibliografia['catalogo_id'];
-                //error_log('ID MMS para registro local: ' . $idMms);
+                error_log('ID MMS para registro local: ' . $idMms);
 
                 $stmt = $this->pdo->prepare("SELECT id_mms FROM bibliografias_disponibles WHERE id_mms = ?");
                 $stmt->execute([$idMms]);
@@ -2633,7 +2633,7 @@ class BibliografiaDeclaradaController
 
                 $cont_procesados++;
                 if ($idMms_duplicado) {
-                    //error_log('Error: El ID MMS ya existe en la base de datos');
+                    error_log('Error: El ID MMS ya existe en la base de datos');
                     $cont_duplicados++;
                     continue;
                 }
@@ -2671,7 +2671,7 @@ class BibliografiaDeclaradaController
                     $editorial = trim($bibliografia['editorial'] ?? '');
                     
                     if (empty($titulo)) {
-                        //error_log('Error: Título vacío en la bibliografía');
+                        error_log('Error: Título vacío en la bibliografía');
                         continue;
                     }
                     
@@ -2679,31 +2679,31 @@ class BibliografiaDeclaradaController
                     if ($context === 'L' && $adaptor === 'Local Search Engine') {
                         try {
                             // Obtener ejemplares
-                            //error_log('Llamando a obtenerEjemplares...');
+                            error_log('Llamando a obtenerEjemplares...');
                             $ejemplares = $this->obtenerEjemplares($idMms);
-                            //error_log('Ejemplares obtenidos: ' . json_encode($ejemplares));
+                            error_log('Ejemplares obtenidos: ' . json_encode($ejemplares));
                             
                             // Verificar portafolios
                             $portfoliosUrl = "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/{$idMms}/portfolios?limit=10&offset=0&apikey=" . ($_ENV['ALMA_API_KEY'] ?? '');
-                            //error_log('Consultando portafolios: ' . $portfoliosUrl);
+                            error_log('Consultando portafolios: ' . $portfoliosUrl);
                             $portfoliosResponse = @file_get_contents($portfoliosUrl);
                             if ($portfoliosResponse !== false) {
                                 $xml = @simplexml_load_string($portfoliosResponse);
                                 if ($xml !== false) {
                                     $tienePortafolios = isset($xml['total_record_count']) && (int)$xml['total_record_count'] > 0;
-                                    //error_log('Tiene portafolios: ' . ($tienePortafolios ? 'Sí' : 'No'));
+                                    error_log('Tiene portafolios: ' . ($tienePortafolios ? 'Sí' : 'No'));
                                 }
                             }
                             
                             // Verificar representaciones digitales
                             $representationsUrl = "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/{$idMms}/representations?limit=10&offset=0&use_updated_terminology=false&apikey=" . ($_ENV['ALMA_API_KEY'] ?? '');
-                            //error_log('Consultando representaciones: ' . $representationsUrl);
+                            error_log('Consultando representaciones: ' . $representationsUrl);
                             $representationsResponse = @file_get_contents($representationsUrl);
                             if ($representationsResponse !== false) {
                                 $xml = @simplexml_load_string($representationsResponse);
                                 if ($xml !== false) {
                                     $tieneRepresentaciones = isset($xml['total_record_count']) && (int)$xml['total_record_count'] > 0;
-                                    //error_log('Tiene representaciones: ' . ($tieneRepresentaciones ? 'Sí' : 'No'));
+                                    error_log('Tiene representaciones: ' . ($tieneRepresentaciones ? 'Sí' : 'No'));
                                 }
                             }
                             
@@ -2726,7 +2726,7 @@ class BibliografiaDeclaradaController
                             }
 
                         } catch (\Exception $e) {
-                            //error_log('Error al procesar registro local: ' . $e->getMessage());
+                            error_log('Error al procesar registro local: ' . $e->getMessage());
                             // Mantener valores por defecto en caso de error
                         }
                     } else if ($context === 'PC' && $adaptor === 'Primo Central') {
@@ -2735,10 +2735,10 @@ class BibliografiaDeclaradaController
                         $url_catalogo = '';
                     }
                     
-                    //error_log('Disponibilidad determinada: ' . $disponibilidad);
+                    error_log('Disponibilidad determinada: ' . $disponibilidad);
                     
                     // Insertar bibliografía
-                    //error_log('Preparando inserción de bibliografía...');
+                    error_log('Preparando inserción de bibliografía...');
                     $stmt = $this->pdo->prepare("
                         INSERT INTO bibliografias_disponibles (
                             bibliografia_declarada_id, titulo, anio_edicion, editorial,
@@ -2761,24 +2761,24 @@ class BibliografiaDeclaradaController
                     //error_log('Parámetros para insertar bibliografía: ' . json_encode($params));
                     $stmt->execute($params);
                     $bibliografiaId = $this->pdo->lastInsertId();
-                    //error_log('ID de bibliografía guardada: ' . $bibliografiaId);
+                    error_log('ID de bibliografía guardada: ' . $bibliografiaId);
                     
                     // Procesar autores
                     if (!empty($bibliografia['autores'])) {
-                        //error_log('Procesando autores: ' . $bibliografia['autores']);
+                        error_log('Procesando autores: ' . $bibliografia['autores']);
                         $autores = explode(';', $bibliografia['autores']);
                         $autoresInsertados = [];
                         foreach ($autores as $autor) {
                             $autor = trim($autor);
                             if ($autor === '') continue;
-                            //error_log('Procesando autor individual: ' . $autor);
+                            error_log('Procesando autor individual: ' . $autor);
                             $autorData = $this->procesarAutor($autor, $bibliografia['context'], $bibliografia['adaptor']);
                             if ($autorData) {
-                                //error_log('Datos del autor procesados: ' . json_encode($autorData));
+                                error_log('Datos del autor procesados: ' . json_encode($autorData));
                                 // Evitar duplicados en la misma bibliografía
                                 $key = $bibliografiaId . '-' . $autorData['id'];
                                 if (isset($autoresInsertados[$key])) {
-                                    //error_log('Relación autor-bibliografía ya insertada en esta transacción: ' . $key);
+                                    error_log('Relación autor-bibliografía ya insertada en esta transacción: ' . $key);
                                     continue;
                                 }
                                 $autoresInsertados[$key] = true;
@@ -2789,9 +2789,9 @@ class BibliografiaDeclaradaController
                                     VALUES (?, ?)
                                 ");
                                 $stmt->execute([$bibliografiaId, $autorData['id']]);
-                                //error_log('Relación autor-bibliografía guardada: ' . $autorData['id'] . ' -> ' . $bibliografiaId);
+                                error_log('Relación autor-bibliografía guardada: ' . $autorData['id'] . ' -> ' . $bibliografiaId);
                             } else {
-                                //error_log('No se pudo procesar el autor: ' . $autor);
+                                error_log('No se pudo procesar el autor: ' . $autor);
                             }
                         }
                     }
@@ -2799,7 +2799,7 @@ class BibliografiaDeclaradaController
                     // Procesar ejemplares de un registro local
                     if ($context === 'L' && $adaptor === 'Local Search Engine') {
                         // Procesar ejemplares
-                        //error_log('Procesando ejemplares de un registro local...');
+                        error_log('Procesando ejemplares de un registro local...');
                         $ejemplaresPorSede = [];
                         
                         // Mapeo de bibliotecas a sedes
@@ -2810,7 +2810,7 @@ class BibliografiaDeclaradaController
                         ];
                         
                         foreach ($ejemplares as $ejemplar) {
-                            //error_log('Procesando ejemplar: ' . json_encode($ejemplar));
+                            error_log('Procesando ejemplar: ' . json_encode($ejemplar));
                             
                             
                             // Obtener ID de la sede correspondiente
@@ -2865,9 +2865,9 @@ class BibliografiaDeclaradaController
             }
             
             // Commit de la transacción
-            //error_log('Commit de la transacción...');
+            error_log('Commit de la transacción...');
             $this->pdo->commit();
-            //error_log('Transacción completada exitosamente');
+            error_log('Transacción completada exitosamente');
             
             // Preparar respuesta exitosa
             $cont_bibguardadas = $cont_procesados - $cont_duplicados;
@@ -2888,7 +2888,7 @@ class BibliografiaDeclaradaController
                 $this->pdo->rollBack();
             }
             
-            //error_log('Error al guardar bibliografías: ' . $e->getMessage());
+            error_log('Error al guardar bibliografías: ' . $e->getMessage());
             
             // Preparar respuesta de error
             $response = [

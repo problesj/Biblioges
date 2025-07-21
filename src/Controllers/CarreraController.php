@@ -222,42 +222,84 @@ class CarreraController
             $unidades = $parsedBody['unidades'] ?? [];
             $vigencias_desde = $parsedBody['vigencias_desde'] ?? [];
             $vigencias_hasta = $parsedBody['vigencias_hasta'] ?? [];
-            
+            $cantidad_semestres = $parsedBody['cantidad_semestres'] ?? 10;
+            $imagen_url = null;
+            // Procesar imagen de la carrera
+            // LOG: Inicio procesamiento de imagen
+            error_log('[CARRERA] Procesando imagen_carrera...');
+            if (isset($_FILES['imagen_carrera'])) {
+                error_log('[CARRERA] imagen_carrera recibido. Error code: ' . $_FILES['imagen_carrera']['error']);
+            } else {
+                error_log('[CARRERA] imagen_carrera NO recibido.');
+            }
+            if (isset($_FILES['imagen_carrera']) && $_FILES['imagen_carrera']['error'] === UPLOAD_ERR_OK) {
+                $imgFile = $_FILES['imagen_carrera'];
+                $allowedImgTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                $imgMimeType = finfo_file($finfo, $imgFile['tmp_name']);
+                finfo_close($finfo);
+                error_log('[CARRERA] Tipo MIME imagen: ' . $imgMimeType);
+                if (!in_array($imgMimeType, $allowedImgTypes)) {
+                    error_log('[CARRERA] Tipo de imagen no permitido: ' . $imgMimeType);
+                    throw new \Exception('Solo se permiten imágenes JPG, PNG o GIF');
+                }
+                $imgSize = getimagesize($imgFile['tmp_name']);
+                error_log('[CARRERA] Dimensiones imagen: ' . print_r($imgSize, true));
+                if (!$imgSize || $imgSize[0] != 1440 || $imgSize[1] != 700) {
+                    error_log('[CARRERA] Dimensiones incorrectas: ' . print_r($imgSize, true));
+                    throw new \Exception('La imagen debe tener exactamente 1440x700 píxeles');
+                }
+                $imgDir = __DIR__ . '/../../public/uploads/imagenes_carreras/';
+                if (!is_dir($imgDir)) {
+                    mkdir($imgDir, 0755, true);
+                    error_log('[CARRERA] Carpeta creada: ' . $imgDir);
+                }
+                $imgExt = pathinfo($imgFile['name'], PATHINFO_EXTENSION);
+                $imgName = 'carrera_' . time() . '_' . uniqid() . '.' . $imgExt;
+                $imgPath = $imgDir . $imgName;
+                move_uploaded_file($imgFile['tmp_name'], $imgPath);
+                error_log('[CARRERA] Imagen guardada en: ' . $imgPath);
+                $imagen_url = 'uploads/imagenes_carreras/' . $imgName;
+            }
+
             // Procesar archivo PDF del libro de carrera
             $url_libro = null;
-            $uploadedFiles = $request->getUploadedFiles();
-            if (isset($uploadedFiles['libro_carrera']) && $uploadedFiles['libro_carrera']->getError() === UPLOAD_ERR_OK) {
-                $file = $uploadedFiles['libro_carrera'];
-                
+            error_log('[CARRERA] Procesando libro_carrera...');
+            if (isset($_FILES['libro_carrera'])) {
+                error_log('[CARRERA] libro_carrera recibido. Error code: ' . $_FILES['libro_carrera']['error']);
+            } else {
+                error_log('[CARRERA] libro_carrera NO recibido.');
+            }
+            if (isset($_FILES['libro_carrera']) && $_FILES['libro_carrera']['error'] === UPLOAD_ERR_OK) {
+                $file = $_FILES['libro_carrera'];
                 // Validar tipo de archivo
                 $allowedTypes = ['application/pdf'];
                 $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                $mimeType = finfo_file($finfo, $file->getStream()->getMetadata('uri'));
+                $mimeType = finfo_file($finfo, $file['tmp_name']);
                 finfo_close($finfo);
-                
+                error_log('[CARRERA] Tipo MIME libro: ' . $mimeType);
                 if (!in_array($mimeType, $allowedTypes)) {
+                    error_log('[CARRERA] Tipo de libro no permitido: ' . $mimeType);
                     throw new \Exception('Solo se permiten archivos PDF');
                 }
-                
                 // Validar tamaño (máximo 10MB)
-                if ($file->getSize() > 10 * 1024 * 1024) {
+                if ($file['size'] > 10 * 1024 * 1024) {
+                    error_log('[CARRERA] El archivo PDF supera el tamaño permitido.');
                     throw new \Exception('El archivo no puede superar los 10MB');
                 }
-                
                 // Crear directorio si no existe
                 $uploadDir = __DIR__ . '/../../public/uploads/libros_carrera/';
                 if (!is_dir($uploadDir)) {
                     mkdir($uploadDir, 0755, true);
+                    error_log('[CARRERA] Carpeta creada: ' . $uploadDir);
                 }
-                
                 // Generar nombre único para el archivo
-                $extension = pathinfo($file->getClientFilename(), PATHINFO_EXTENSION);
+                $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
                 $filename = 'libro_carrera_' . time() . '_' . uniqid() . '.' . $extension;
                 $filepath = $uploadDir . $filename;
-                
                 // Mover archivo
-                $file->moveTo($filepath);
-                
+                move_uploaded_file($file['tmp_name'], $filepath);
+                error_log('[CARRERA] PDF guardado en: ' . $filepath);
                 // Guardar URL relativa
                 $url_libro = 'uploads/libros_carrera/' . $filename;
             }
@@ -321,10 +363,10 @@ class CarreraController
             $this->pdo->beginTransaction();
 
             // Insertar carrera
-            $sql = "INSERT INTO carreras (nombre, tipo_programa, estado, url_libro) 
-                    VALUES (?, ?, ?, ?)";
+            $sql = "INSERT INTO carreras (nombre, tipo_programa, estado, url_libro, imagen_url, cantidad_semestres) 
+                    VALUES (?, ?, ?, ?, ?, ?)";
             $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([$nombre, $tipo_programa, $estado, $url_libro]);
+            $stmt->execute([$nombre, $tipo_programa, $estado, $url_libro, $imagen_url, $cantidad_semestres]);
             $carrera_id = $this->pdo->lastInsertId();
 
             // Insertar códigos de carrera
@@ -551,6 +593,8 @@ class CarreraController
                         c.tipo_programa,
                         c.estado,
                         c.url_libro,
+                        c.imagen_url,
+                        c.cantidad_semestres,
                         GROUP_CONCAT(
                             ce.codigo_carrera
                             SEPARATOR '|'
@@ -642,6 +686,9 @@ class CarreraController
      */
     public function update(Request $request, Response $response, array $args = [])
     {
+        error_log('[CARRERA] Método HTTP: ' . ($_SERVER['REQUEST_METHOD'] ?? 'N/A'));
+        error_log('[CARRERA] _POST: ' . print_r($_POST, true));
+        error_log('[CARRERA] _FILES: ' . print_r($_FILES, true));
         $id = $args['id'] ?? null;
         
         // Verificar autenticación
@@ -658,68 +705,123 @@ class CarreraController
             $nombre = $parsedBody['nombre'] ?? '';
             $tipo_programa = $parsedBody['tipo_programa'] ?? '';
             $estado = $parsedBody['estado'] ?? 1;
-            $url_libro = $parsedBody['url_libro'] ?? null;
             $codigos = $parsedBody['codigos'] ?? [];
             $sedes = $parsedBody['sedes'] ?? [];
             $unidades = $parsedBody['unidades'] ?? [];
             $vigencias_desde = $parsedBody['vigencias_desde'] ?? [];
             $vigencias_hasta = $parsedBody['vigencias_hasta'] ?? [];
+            $cantidad_semestres = $parsedBody['cantidad_semestres'] ?? 10;
+            $imagen_url = null;
+            // Procesar imagen de la carrera
+            // LOG: Inicio procesamiento de imagen
+            error_log('[CARRERA] Procesando imagen_carrera...');
+            if (isset($_FILES['imagen_carrera'])) {
+                error_log('[CARRERA] imagen_carrera recibido. Error code: ' . $_FILES['imagen_carrera']['error']);
+            } else {
+                error_log('[CARRERA] imagen_carrera NO recibido.');
+            }
+            if (isset($_FILES['imagen_carrera']) && $_FILES['imagen_carrera']['error'] === UPLOAD_ERR_OK) {
+                $imgFile = $_FILES['imagen_carrera'];
+                $allowedImgTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                $imgMimeType = finfo_file($finfo, $imgFile['tmp_name']);
+                finfo_close($finfo);
+                error_log('[CARRERA] Tipo MIME imagen: ' . $imgMimeType);
+                if (!in_array($imgMimeType, $allowedImgTypes)) {
+                    error_log('[CARRERA] Tipo de imagen no permitido: ' . $imgMimeType);
+                    throw new \Exception('Solo se permiten imágenes JPG, PNG o GIF');
+                }
+                $imgSize = getimagesize($imgFile['tmp_name']);
+                error_log('[CARRERA] Dimensiones imagen: ' . print_r($imgSize, true));
+                if (!$imgSize || $imgSize[0] != 1440 || $imgSize[1] != 700) {
+                    error_log('[CARRERA] Dimensiones incorrectas: ' . print_r($imgSize, true));
+                    throw new \Exception('La imagen debe tener exactamente 1440x700 píxeles');
+                }
+                $imgDir = __DIR__ . '/../../public/uploads/imagenes_carreras/';
+                if (!is_dir($imgDir)) {
+                    mkdir($imgDir, 0755, true);
+                    error_log('[CARRERA] Carpeta creada: ' . $imgDir);
+                }
+                $imgExt = pathinfo($imgFile['name'], PATHINFO_EXTENSION);
+                $imgName = 'carrera_' . time() . '_' . uniqid() . '.' . $imgExt;
+                $imgPath = $imgDir . $imgName;
+                move_uploaded_file($imgFile['tmp_name'], $imgPath);
+                error_log('[CARRERA] Imagen guardada en: ' . $imgPath);
+                $imagen_url = 'uploads/imagenes_carreras/' . $imgName;
+            } else {
+                // Si no se sube nueva imagen, mantener la actual
+                $sql = "SELECT imagen_url FROM carreras WHERE id = ?";
+                $stmt = $this->pdo->prepare($sql);
+                $stmt->execute([$id]);
+                $row = $stmt->fetch();
+                $imagen_url = $row['imagen_url'] ?? null;
+            }
             
-            // Procesar archivo PDF del libro de carrera
-            $uploadedFiles = $request->getUploadedFiles();
-            if (isset($uploadedFiles['libro_carrera']) && $uploadedFiles['libro_carrera']->getError() === UPLOAD_ERR_OK) {
-                $file = $uploadedFiles['libro_carrera'];
-                
-                // Validar tipo de archivo
+            // En el UPDATE de la carrera, asegúrate de usar $url_libro
+            error_log('[CARRERA] INICIO procesamiento PDF en update');
+            $url_libro = null;
+            if (isset($_FILES['libro_carrera'])) {
+                error_log('[CARRERA] libro_carrera recibido. Error code: ' . $_FILES['libro_carrera']['error']);
+            } else {
+                error_log('[CARRERA] libro_carrera NO recibido.');
+            }
+            if (isset($_FILES['libro_carrera']) && $_FILES['libro_carrera']['error'] === UPLOAD_ERR_OK) {
+                $file = $_FILES['libro_carrera'];
                 $allowedTypes = ['application/pdf'];
                 $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                $mimeType = finfo_file($finfo, $file->getStream()->getMetadata('uri'));
+                $mimeType = finfo_file($finfo, $file['tmp_name']);
                 finfo_close($finfo);
-                
+                error_log('[CARRERA] Tipo MIME libro: ' . $mimeType);
                 if (!in_array($mimeType, $allowedTypes)) {
+                    error_log('[CARRERA] Tipo de libro no permitido: ' . $mimeType);
                     throw new \Exception('Solo se permiten archivos PDF');
                 }
-                
-                // Validar tamaño (máximo 10MB)
-                if ($file->getSize() > 10 * 1024 * 1024) {
+                if ($file['size'] > 10 * 1024 * 1024) {
+                    error_log('[CARRERA] El archivo PDF supera el tamaño permitido.');
                     throw new \Exception('El archivo no puede superar los 10MB');
                 }
-                
-                // Crear directorio si no existe
                 $uploadDir = __DIR__ . '/../../public/uploads/libros_carrera/';
                 if (!is_dir($uploadDir)) {
                     mkdir($uploadDir, 0755, true);
+                    error_log('[CARRERA] Carpeta creada: ' . $uploadDir);
                 }
-                
-                // Generar nombre único para el archivo
-                $extension = pathinfo($file->getClientFilename(), PATHINFO_EXTENSION);
+                $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
                 $filename = 'libro_carrera_' . time() . '_' . uniqid() . '.' . $extension;
                 $filepath = $uploadDir . $filename;
-                
-                // Mover archivo
-                $file->moveTo($filepath);
-                
-                // Guardar URL relativa
-                $url_libro = 'uploads/libros_carrera/' . $filename;
+                if (move_uploaded_file($file['tmp_name'], $filepath)) {
+                    error_log('[CARRERA] PDF guardado en: ' . $filepath);
+                    $url_libro = 'uploads/libros_carrera/' . $filename;
+                } else {
+                    error_log('[CARRERA] ERROR al guardar el PDF en: ' . $filepath);
+                }
+            } else {
+                // Si no se sube nuevo PDF, mantener el actual
+                if (isset($id)) {
+                    $sql = "SELECT url_libro FROM carreras WHERE id = ?";
+                    $stmt = $this->pdo->prepare($sql);
+                    $stmt->execute([$id]);
+                    $row = $stmt->fetch();
+                    $url_libro = $row['url_libro'] ?? null;
+                }
             }
-            
-            // Verificar si se debe eliminar el archivo existente
-            $eliminar_libro = $parsedBody['eliminar_libro'] ?? false;
-            if ($eliminar_libro) {
+            error_log('[CARRERA] FIN procesamiento PDF en update');
+
+            // Verificar si se debe eliminar la imagen actual
+            $eliminar_imagen = $parsedBody['eliminar_imagen'] ?? false;
+            if ($eliminar_imagen) {
                 // Obtener la URL del archivo actual para eliminarlo
-                $sql = "SELECT url_libro FROM carreras WHERE id = ?";
+                $sql = "SELECT imagen_url FROM carreras WHERE id = ?";
                 $stmt = $this->pdo->prepare($sql);
                 $stmt->execute([$id]);
                 $carrera_actual = $stmt->fetch();
-                
-                if ($carrera_actual && $carrera_actual['url_libro']) {
-                    $archivo_actual = __DIR__ . '/../../public/' . $carrera_actual['url_libro'];
+                if ($carrera_actual && $carrera_actual['imagen_url']) {
+                    $archivo_actual = __DIR__ . '/../../public/' . $carrera_actual['imagen_url'];
                     if (file_exists($archivo_actual)) {
                         unlink($archivo_actual);
+                        error_log('[CARRERA] Imagen eliminada: ' . $archivo_actual);
                     }
                 }
-                
-                $url_libro = null;
+                $imagen_url = null;
             }
 
             // Validar datos básicos
@@ -750,10 +852,10 @@ class CarreraController
 
             // Actualizar carrera
             $sql = "UPDATE carreras 
-                    SET nombre = ?, tipo_programa = ?, estado = ?, url_libro = ? 
+                    SET nombre = ?, tipo_programa = ?, estado = ?, url_libro = ?, imagen_url = ?, cantidad_semestres = ? 
                     WHERE id = ?";
             $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([$nombre, $tipo_programa, $estado, $url_libro, $id]);
+            $stmt->execute([$nombre, $tipo_programa, $estado, $url_libro, $imagen_url, $cantidad_semestres, $id]);
 
             // Eliminar códigos existentes
             $sql = "DELETE FROM carreras_espejos WHERE carrera_id = ?";

@@ -40,7 +40,11 @@ $tables = Capsule::connection()->select('SHOW TABLES');
 foreach ($tables as $table) {
     $tableName = array_values((array)$table)[0];
     echo "Eliminando tabla: $tableName\n";
-    Capsule::schema()->drop($tableName);
+    try {
+        Capsule::schema()->drop($tableName);
+    } catch (Exception $e) {
+        echo "No se pudo eliminar $tableName (puede que no exista o sea una vista): " . $e->getMessage() . "\n";
+    }
 }
 
 // Reactivar restricciones de clave foránea

@@ -19,7 +19,7 @@
         </div>
         <div class="card-body">
             <form method="POST" action="{{ app_url }}carreras/{{ carrera.id }}/update" id="form-carrera" enctype="multipart/form-data">
-                <input type="hidden" name="_method" value="PUT">
+                <!-- <input type="hidden" name="_method" value="PUT"> -->
                 
                 <!-- Sección 1: Datos básicos -->
                 <div class="row mb-4">
@@ -81,6 +81,37 @@
                                 </div>
                             </div>
                             {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección 1.6: Imagen de la Carrera -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="imagen_carrera" class="form-label">Imagen de la Carrera</label>
+                            <input type="file" class="form-control" id="imagen_carrera" name="imagen_carrera" accept="image/*">
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle"></i> Solo imágenes JPG, PNG o GIF. Tamaño recomendado: 1440x700px
+                            </small>
+                            {% if carrera.imagen_url %}
+                            <div class="mt-2">
+                                <img src="{{ app_url }}{{ carrera.imagen_url }}" alt="Imagen actual" style="max-width: 120px; max-height: 120px; border-radius: 8px; border: 1px solid #ccc;">
+                                <small class="d-block text-muted">Imagen actual</small>
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" id="eliminar_imagen" name="eliminar_imagen" value="1">
+                                    <label class="form-check-label text-danger" for="eliminar_imagen">
+                                        <i class="fas fa-trash"></i> Eliminar imagen actual
+                                    </label>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="cantidad_semestres" class="form-label">Cantidad de Semestres *</label>
+                            <input type="number" class="form-control" id="cantidad_semestres" name="cantidad_semestres" min="1" max="20" value="{{ carrera.cantidad_semestres|default(10) }}" required>
                         </div>
                     </div>
                 </div>
@@ -419,10 +450,27 @@
             }
         });
 
+        // Manejar la eliminación de la imagen
+        $('#eliminar_imagen').change(function() {
+            var isChecked = $(this).is(':checked');
+            var fileInput = $('#imagen_carrera');
+            
+            if (isChecked) {
+                // Deshabilitar el campo de archivo
+                fileInput.prop('disabled', true);
+                fileInput.val('');
+            } else {
+                // Habilitar el campo de archivo
+                fileInput.prop('disabled', false);
+            }
+        });
+
         // Manejar el envío del formulario
         $('#form-carrera').on('submit', function(e) {
             // Validar eliminación de archivo
             var eliminarLibro = $('#eliminar_libro').is(':checked');
+            var eliminarImagen = $('#eliminar_imagen').is(':checked');
+
             if (eliminarLibro) {
                 e.preventDefault();
                 
@@ -453,6 +501,41 @@
                     if (!confirmacion) {
                         $('#eliminar_libro').prop('checked', false);
                         $('#libro_carrera').prop('disabled', false);
+                        return false;
+                    }
+                }
+            }
+
+            if (eliminarImagen) {
+                e.preventDefault();
+                
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: '¿Eliminar imagen?',
+                        text: '¿Está seguro de que desea eliminar la imagen actual de la carrera?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Sí, eliminar',
+                        cancelButtonText: 'Cancelar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Si confirma, enviar el formulario
+                            $('#form-carrera')[0].submit();
+                        } else {
+                            // Si cancela, desmarcar el checkbox y habilitar el campo
+                            $('#eliminar_imagen').prop('checked', false);
+                            $('#imagen_carrera').prop('disabled', false);
+                        }
+                    });
+                    return false;
+                } else {
+                    // Fallback para navegadores sin SweetAlert2
+                    var confirmacion = confirm('¿Está seguro de que desea eliminar la imagen actual de la carrera?');
+                    if (!confirmacion) {
+                        $('#eliminar_imagen').prop('checked', false);
+                        $('#imagen_carrera').prop('disabled', false);
                         return false;
                     }
                 }

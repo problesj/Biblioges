@@ -1,0 +1,509 @@
+{% extends 'frontend/base.twig' %}
+
+{% block title %}{{ asignatura.asignatura_nombre }} - Bibliografías{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="container mt-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ app_url }}">
+                <i class="fas fa-home me-1"></i>
+                Inicio
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ app_url }}/carrera/{{ asignatura.sede_id }}/{{ asignatura.carrera_id }}">
+                {{ asignatura.carrera_nombre }}
+            </a>
+        </li>
+        <li class="breadcrumb-item active">{{ asignatura.asignatura_nombre }}</li>
+    </ol>
+</nav>
+
+<!-- Header de la Asignatura -->
+<section class="container mb-5">
+    <div class="card">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="display-5 fw-bold mb-3">
+                        <i class="fas fa-book me-3 text-primary"></i>
+                        {{ asignatura.asignatura_nombre }}
+                    </h1>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <i class="fas fa-map-marker-alt me-2"></i>
+                                <strong>Sede:</strong> {{ asignatura.sede_nombre }}
+                            </p>
+                            <p class="mb-2">
+                                <i class="fas fa-graduation-cap me-2"></i>
+                                <strong>Carrera:</strong> {{ asignatura.carrera_nombre }}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <i class="fas fa-hashtag me-2"></i>
+                                <strong>Código:</strong> {{ asignatura.codigo_asignatura }}
+                            </p>
+                            <p class="mb-2">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                <strong>Semestre:</strong> {{ asignatura.semestre }}
+                            </p>
+                        </div>
+                    </div>
+                    <p class="mb-0">
+                        <span class="badge bg-info fs-6">{{ asignatura.tipo_asignatura|replace('_', ' ')|title }}</span>
+                    </p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="stats-card">
+                        <div class="stats-number">{{ bibliografias|length }}</div>
+                        <div class="stats-label">Bibliografías</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Bibliografías -->
+<section class="container">
+    {% if bibliografias|length > 0 %}
+        <!-- Bibliografía Básica -->
+        {% set bibliografiasBasicas = bibliografias|filter(b => b.tipo_bibliografia == 'basica') %}
+        {% if bibliografiasBasicas|length > 0 %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-star me-2 text-primary"></i>
+                    Bibliografía Básica
+                    <span class="badge bg-primary ms-2">{{ bibliografiasBasicas|length }}</span>
+                </h3>
+            </div>
+            <div class="card-body">
+                {% for bibliografia in bibliografiasBasicas %}
+                <div class="bibliografia-detalle mb-4 p-4 border rounded">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h4 class="mb-3">{{ bibliografia.titulo }}</h4>
+                            
+                            <div class="row mb-3">
+                                {% if bibliografia.autores %}
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Autor(es):</strong></p>
+                                    <p class="text-muted">{{ bibliografia.autores }}</p>
+                                </div>
+                                {% endif %}
+                                
+                                {% if bibliografia.anio_publicacion %}
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Año de Publicación:</strong></p>
+                                    <p class="text-muted">{{ bibliografia.anio_publicacion }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="row mb-3">
+                                {% if bibliografia.editorial %}
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Editorial:</strong></p>
+                                    <p class="text-muted">{{ bibliografia.editorial }}</p>
+                                </div>
+                                {% endif %}
+                                
+                                {% if bibliografia.edicion %}
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Edición:</strong></p>
+                                    <p class="text-muted">{{ bibliografia.edicion }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            {% if bibliografia.detalles %}
+                                {% if bibliografia.tipo == 'libro' and bibliografia.detalles.isbn %}
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>ISBN:</strong></p>
+                                        <p class="text-muted">{{ bibliografia.detalles.isbn }}</p>
+                                    </div>
+                                </div>
+                                {% elseif bibliografia.tipo == 'articulo' %}
+                                <div class="row mb-3">
+                                    {% if bibliografia.detalles.issn %}
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>ISSN:</strong></p>
+                                        <p class="text-muted">{{ bibliografia.detalles.issn }}</p>
+                                    </div>
+                                    {% endif %}
+                                    {% if bibliografia.detalles.titulo_revista %}
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Revista:</strong></p>
+                                        <p class="text-muted">{{ bibliografia.detalles.titulo_revista }}</p>
+                                    </div>
+                                    {% endif %}
+                                    {% if bibliografia.detalles.cronologia %}
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Cronología:</strong></p>
+                                        <p class="text-muted">{{ bibliografia.detalles.cronologia }}</p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% elseif bibliografia.tipo == 'tesis' and bibliografia.detalles.carrera_nombre %}
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Carrera de la Tesis:</strong></p>
+                                        <p class="text-muted">{{ bibliografia.detalles.carrera_nombre }}</p>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            {% endif %}
+                            
+                            {% if bibliografia.url %}
+                            <div class="mb-3">
+                                <p class="mb-1"><strong>Enlace:</strong></p>
+                                <a href="{{ bibliografia.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-external-link-alt me-1"></i>
+                                    Ver Recurso
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <span class="badge badge-basica fs-6 mb-3">{{ bibliografia.tipo|title }}</span>
+                                {% if bibliografia.formato %}
+                                <p class="mb-2">
+                                    <strong>Formato:</strong><br>
+                                    <span class="badge bg-secondary">{{ bibliografia.formato|title }}</span>
+                                </p>
+                                {% endif %}
+                                
+                                {% if bibliografia.disponibles|length > 0 %}
+                                <div class="mt-3">
+                                    <h6 class="text-success">
+                                        <i class="fas fa-check-circle me-1"></i>
+                                        Disponible en Biblioteca
+                                    </h6>
+                                    <p class="text-muted small">{{ bibliografia.disponibles|length }} ejemplar{{ bibliografia.disponibles|length != 1 ? 'es' : '' }}</p>
+                                    <button type="button" class="btn btn-primary btn-sm mt-2" 
+                                            onclick="mostrarBibliografiasDisponibles({{ bibliografia.id }}, '{{ bibliografia.titulo|e('js') }}')">
+                                        <i class="fas fa-list me-1"></i>
+                                        Ver Disponibles
+                                    </button>
+                                </div>
+                                {% else %}
+                                <div class="mt-3">
+                                    <h6 class="text-warning">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        No disponible en Biblioteca
+                                    </h6>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Bibliografía Complementaria -->
+        {% set bibliografiasComplementarias = bibliografias|filter(b => b.tipo_bibliografia == 'complementaria') %}
+        {% if bibliografiasComplementarias|length > 0 %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-plus-circle me-2 text-warning"></i>
+                    Bibliografía Complementaria
+                    <span class="badge bg-warning ms-2">{{ bibliografiasComplementarias|length }}</span>
+                </h3>
+            </div>
+            <div class="card-body">
+                {% for bibliografia in bibliografiasComplementarias %}
+                <div class="bibliografia-detalle mb-4 p-4 border rounded">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h4 class="mb-3">{{ bibliografia.titulo }}</h4>
+                            
+                            <div class="row mb-3">
+                                {% if bibliografia.autores %}
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Autor(es):</strong></p>
+                                    <p class="text-muted">{{ bibliografia.autores }}</p>
+                                </div>
+                                {% endif %}
+                                
+                                {% if bibliografia.anio_publicacion %}
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Año de Publicación:</strong></p>
+                                    <p class="text-muted">{{ bibliografia.anio_publicacion }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="row mb-3">
+                                {% if bibliografia.editorial %}
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Editorial:</strong></p>
+                                    <p class="text-muted">{{ bibliografia.editorial }}</p>
+                                </div>
+                                {% endif %}
+                                
+                                {% if bibliografia.edicion %}
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Edición:</strong></p>
+                                    <p class="text-muted">{{ bibliografia.edicion }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            {% if bibliografia.detalles %}
+                                {% if bibliografia.tipo == 'libro' and bibliografia.detalles.isbn %}
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>ISBN:</strong></p>
+                                        <p class="text-muted">{{ bibliografia.detalles.isbn }}</p>
+                                    </div>
+                                </div>
+                                {% elseif bibliografia.tipo == 'articulo' %}
+                                <div class="row mb-3">
+                                    {% if bibliografia.detalles.issn %}
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>ISSN:</strong></p>
+                                        <p class="text-muted">{{ bibliografia.detalles.issn }}</p>
+                                    </div>
+                                    {% endif %}
+                                    {% if bibliografia.detalles.titulo_revista %}
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Revista:</strong></p>
+                                        <p class="text-muted">{{ bibliografia.detalles.titulo_revista }}</p>
+                                    </div>
+                                    {% endif %}
+                                    {% if bibliografia.detalles.cronologia %}
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Cronología:</strong></p>
+                                        <p class="text-muted">{{ bibliografia.detalles.cronologia }}</p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% elseif bibliografia.tipo == 'tesis' and bibliografia.detalles.carrera_nombre %}
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Carrera de la Tesis:</strong></p>
+                                        <p class="text-muted">{{ bibliografia.detalles.carrera_nombre }}</p>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            {% endif %}
+                            
+                            {% if bibliografia.url %}
+                            <div class="mb-3">
+                                <p class="mb-1"><strong>Enlace:</strong></p>
+                                <a href="{{ bibliografia.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-external-link-alt me-1"></i>
+                                    Ver Recurso
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <span class="badge badge-complementaria fs-6 mb-3">{{ bibliografia.tipo|title }}</span>
+                                {% if bibliografia.formato %}
+                                <p class="mb-2">
+                                    <strong>Formato:</strong><br>
+                                    <span class="badge bg-secondary">{{ bibliografia.formato|title }}</span>
+                                </p>
+                                {% endif %}
+                                
+                                {% if bibliografia.disponibles|length > 0 %}
+                                <div class="mt-3">
+                                    <h6 class="text-success">
+                                        <i class="fas fa-check-circle me-1"></i>
+                                        Disponible en Biblioteca
+                                    </h6>
+                                    <p class="text-muted small">{{ bibliografia.disponibles|length }} ejemplar{{ bibliografia.disponibles|length != 1 ? 'es' : '' }}</p>
+                                    <button type="button" class="btn btn-primary btn-sm mt-2" 
+                                            onclick="mostrarBibliografiasDisponibles({{ bibliografia.id }}, '{{ bibliografia.titulo|e('js') }}')">
+                                        <i class="fas fa-list me-1"></i>
+                                        Ver Disponibles
+                                    </button>
+                                </div>
+                                {% else %}
+                                <div class="mt-3">
+                                    <h6 class="text-warning">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        No disponible en Biblioteca
+                                    </h6>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle me-2"></i>
+            No hay bibliografías registradas para esta asignatura.
+        </div>
+    {% endif %}
+</section>
+
+<!-- Botones de Navegación -->
+<section class="container mb-5">
+    <div class="row">
+        <div class="col-md-6">
+                            <a href="{{ app_url }}/carrera/{{ asignatura.sede_id }}/{{ asignatura.carrera_id }}" 
+               class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>
+                Volver a la Carrera
+            </a>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <a href="{{ app_url }}" class="btn btn-outline-secondary">
+                <i class="fas fa-home me-2"></i>
+                Volver al Inicio
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Modal de Bibliografías Disponibles -->
+<div class="modal fade" id="modalBibliografiasDisponibles" tabindex="-1" aria-labelledby="modalBibliografiasDisponiblesLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalBibliografiasDisponiblesLabel">
+                    <i class="fas fa-book me-2"></i>
+                    Bibliografías Disponibles
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modalContent">
+                    <!-- El contenido se cargará dinámicamente -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript para el modal -->
+<script>
+function mostrarBibliografiasDisponibles(bibliografiaId, titulo) {
+    // Mostrar loading
+    document.getElementById('modalContent').innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2">Cargando bibliografías disponibles...</p>
+        </div>
+    `;
+    
+    // Actualizar título del modal
+    document.getElementById('modalBibliografiasDisponiblesLabel').innerHTML = `
+        <i class="fas fa-book me-2"></i>
+        Bibliografías Disponibles: ${titulo}
+    `;
+    
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('modalBibliografiasDisponibles'));
+    modal.show();
+    
+    // Cargar datos
+    fetch(`${window.location.origin}/api/bibliografias-disponibles/${bibliografiaId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                mostrarBibliografiasEnModal(data.bibliografias);
+            } else {
+                document.getElementById('modalContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error al cargar las bibliografías: ${data.message}
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            document.getElementById('modalContent').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error de conexión: ${error.message}
+                </div>
+            `;
+        });
+}
+
+function mostrarBibliografiasEnModal(bibliografias) {
+    if (bibliografias.length === 0) {
+        document.getElementById('modalContent').innerHTML = `
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                No hay bibliografías disponibles para mostrar.
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '<div class="row">';
+    
+    bibliografias.forEach(bib => {
+        html += `
+            <div class="col-12 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">${bib.titulo}</h6>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <p class="mb-1"><strong>Autor(es):</strong> ${bib.autores || 'No especificado'}</p>
+                                <p class="mb-1"><strong>Año:</strong> ${bib.anio_edicion}</p>
+                                <p class="mb-1"><strong>Editorial:</strong> ${bib.editorial || 'No especificada'}</p>
+                                <p class="mb-1"><strong>Disponibilidad:</strong> 
+                                    <span class="badge bg-${bib.disponibilidad === 'electronico' ? 'success' : bib.disponibilidad === 'impreso' ? 'primary' : 'info'}">
+                                        ${bib.disponibilidad}
+                                    </span>
+                                </p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                ${bib.url_acceso ? `
+                                    <a href="${bib.url_acceso}" target="_blank" class="btn btn-success btn-sm mb-1 w-100">
+                                        <i class="fas fa-external-link-alt me-1"></i>
+                                        Acceso Directo
+                                    </a>
+                                ` : ''}
+                                ${bib.url_catalogo ? `
+                                    <a href="${bib.url_catalogo}" target="_blank" class="btn btn-primary btn-sm w-100">
+                                        <i class="fas fa-search me-1"></i>
+                                        Ver en Catálogo
+                                    </a>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    document.getElementById('modalContent').innerHTML = html;
+}
+</script>
+{% endblock %} 
