@@ -94,9 +94,10 @@ cd Biblioges
 # Instalar dependencias PHP
 composer install --no-dev --optimize-autoloader
 
-# Configurar variables de entorno
+# Configurar variables de entorno (OBLIGATORIO)
 cp .env.example .env
 # Editar .env con la configuración de tu servidor
+# ⚠️ IMPORTANTE: Este archivo es requerido por init_db.php
 ```
 
 ### 3. Configuración de Base de Datos
@@ -109,7 +110,8 @@ GRANT ALL PRIVILEGES ON bibliografia.* TO 'biblioges'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
-#### Configurar archivo .env:
+#### Configurar archivo .env (OBLIGATORIO):
+**⚠️ IMPORTANTE:** El archivo `.env` debe estar configurado ANTES de ejecutar `init_db.php`
 ```env
 # Configuración de base de datos
 DB_HOST=localhost
@@ -143,6 +145,12 @@ PRIMO_VID=tu_vid_primo
 
 #### Inicializar la base de datos:
 ```bash
+# Verificar que el archivo .env existe y está configurado
+ls -la .env
+cat .env | grep DB_
+
+# El script init_db.php lee automáticamente la configuración del archivo .env
+# Asegúrate de que el archivo .env esté configurado correctamente antes de ejecutar
 php database/init_db.php
 ```
 
@@ -289,7 +297,36 @@ sudo crontab -e
 # Agregar: 0 12 * * * /usr/bin/certbot renew --quiet
 ```
 
-### 7. Verificación de la Instalación
+### 7. Configuración de Tareas Programadas (Cron)
+
+#### Configurar crontab para tareas automáticas:
+```bash
+# Editar el crontab del usuario www-data
+sudo crontab -u www-data -e
+
+# Agregar la siguiente línea para ejecutar tareas cada 5 minutos:
+*/5 * * * * /usr/bin/php /var/www/html/biblioges/cron_ejecutar_tareas.php >> /var/log/cron_tareas.log 2>&1
+```
+
+#### Verificar configuración de cron:
+```bash
+# Verificar que el servicio cron está activo
+sudo systemctl status cron
+
+# Verificar las tareas programadas
+sudo crontab -u www-data -l
+
+# Verificar logs de tareas programadas
+tail -f /var/log/cron_tareas.log
+```
+
+#### Tareas que se ejecutan automáticamente:
+- **Generación de reportes** periódicos
+- **Limpieza de archivos** temporales
+- **Sincronización de datos** con APIs externas
+- **Backups automáticos** de configuración
+
+### 8. Verificación de la Instalación
 
 #### Verificar módulos Apache:
 ```bash
@@ -432,11 +469,27 @@ sudo systemctl restart apache2
 
 #### Error de base de datos:
 ```bash
-# Verificar conexión
-php database/init_db.php
-
-# Verificar configuración en .env
+# Verificar que el archivo .env existe y está configurado
+ls -la .env
 cat .env | grep DB_
+
+# Verificar conexión (usa configuración del archivo .env)
+php database/init_db.php
+```
+
+#### Error de tareas programadas:
+```bash
+# Verificar que el servicio cron está activo
+sudo systemctl status cron
+
+# Verificar que el crontab está configurado
+sudo crontab -u www-data -l
+
+# Verificar logs de tareas programadas
+tail -f /var/log/cron_tareas.log
+
+# Probar ejecución manual del script
+sudo -u www-data php /var/www/html/biblioges/cron_ejecutar_tareas.php
 ```
 
 ## Contacto y Soporte

@@ -179,6 +179,24 @@ sudo mv composer.phar /usr/local/bin/composer
 - **Propósito:** Control de versiones
 - **Instalación:** `sudo apt install git -y`
 
+## Servicios del Sistema
+
+### Cron
+- **Propósito:** Ejecución de tareas programadas
+- **Verificación:** `sudo systemctl status cron`
+- **Configuración:** `sudo crontab -u www-data -e`
+- **Logs:** `/var/log/cron_tareas.log`
+
+### MySQL/MariaDB
+- **Propósito:** Servicio de base de datos
+- **Verificación:** `sudo systemctl status mysql`
+- **Configuración:** `/etc/mysql/my.cnf`
+
+### Apache
+- **Propósito:** Servidor web
+- **Verificación:** `sudo systemctl status apache2`
+- **Configuración:** `/etc/apache2/sites-enabled/`
+
 ## Estructura de Directorios y Permisos
 
 ### Directorios de Escritura (775)
@@ -253,6 +271,10 @@ composer --version || echo "❌ Composer no está instalado"
 echo -e "\n5. Verificando permisos de directorios..."
 ls -la storage/framework/sessions/ | head -1 | grep "drwx------" || echo "❌ Permisos incorrectos en sessions"
 ls -la public/uploads/ | head -1 | grep "drwxrwxr-x" || echo "❌ Permisos incorrectos en uploads"
+
+echo -e "\n6. Verificando tareas programadas..."
+sudo systemctl status cron | grep "active (running)" || echo "❌ Servicio cron no está activo"
+sudo crontab -u www-data -l | grep "cron_ejecutar_tareas.php" || echo "❌ Crontab no configurado"
 
 echo -e "\n=== VERIFICACIÓN COMPLETADA ==="
 ```
@@ -342,6 +364,89 @@ innodb_log_file_size = 256M
 }
 ```
 
+## Script de Inicialización de Base de Datos
+
+### Archivo init_db.php
+
+El archivo `database/init_db.php` es responsable de crear la base de datos y configurar las tablas iniciales del sistema.
+
+#### Características:
+- **Lee automáticamente** la configuración del archivo `.env`
+- **Crea la base de datos** si no existe
+- **Crea el usuario** de la base de datos si no existe
+- **Ejecuta el esquema SQL** (`database/schema.sql`)
+- **Inserta datos iniciales** (usuarios administradores, etc.)
+
+#### Requisitos previos:
+1. **Archivo `.env` configurado** con las credenciales de base de datos
+2. **Usuario root de MySQL** con permisos para crear bases de datos y usuarios
+3. **PHP con extensión PDO** habilitada
+
+#### Ejecución:
+```bash
+# Asegúrate de que el archivo .env esté configurado
+cat .env | grep DB_
+
+# Ejecutar el script de inicialización
+php database/init_db.php
+```
+
+#### Verificación de funcionamiento:
+```bash
+# Verificar que la base de datos se creó
+mysql -u root -p -e "SHOW DATABASES;" | grep bibliografia
+
+# Verificar que el usuario se creó
+mysql -u root -p -e "SELECT User, Host FROM mysql.user WHERE User='biblioges';"
+
+# Verificar que las tablas se crearon
+mysql -u biblioges -p -e "USE bibliografia; SHOW TABLES;"
+```
+
+## Configuración de Tareas Programadas
+
+### Archivo cron_ejecutar_tareas.php
+
+El archivo `cron_ejecutar_tareas.php` es responsable de ejecutar tareas automáticas del sistema.
+
+#### Características:
+- **Ejecuta tareas** programadas automáticamente
+- **Genera reportes** periódicos
+- **Limpia archivos** temporales
+- **Sincroniza datos** con APIs externas
+- **Realiza backups** automáticos
+
+#### Configuración del crontab:
+```bash
+# Editar el crontab del usuario www-data
+sudo crontab -u www-data -e
+
+# Agregar la siguiente línea para ejecutar tareas cada 5 minutos:
+*/5 * * * * /usr/bin/php /var/www/html/biblioges/cron_ejecutar_tareas.php >> /var/log/cron_tareas.log 2>&1
+```
+
+#### Verificación de configuración:
+```bash
+# Verificar que el servicio cron está activo
+sudo systemctl status cron
+
+# Verificar las tareas programadas
+sudo crontab -u www-data -l
+
+# Verificar logs de tareas programadas
+tail -f /var/log/cron_tareas.log
+
+# Probar ejecución manual
+sudo -u www-data php /var/www/html/biblioges/cron_ejecutar_tareas.php
+```
+
+#### Tareas que se ejecutan automáticamente:
+- **Generación de reportes** de cobertura
+- **Limpieza de archivos** Excel temporales
+- **Sincronización** con APIs de Alma y Primo
+- **Backups automáticos** de configuración
+- **Mantenimiento** de la base de datos
+
 ## Verificación de Funcionamiento
 
 ### Comandos de Verificación
@@ -395,11 +500,32 @@ sudo chmod -R 775 storage/ public/uploads/ public/reportes/ public/exports/
 # Verificar servicio MySQL
 sudo systemctl status mysql
 
+# Verificar que el archivo .env existe
+ls -la .env
+
 # Verificar credenciales en .env
 cat .env | grep DB_
 
-# Probar conexión
+# Probar conexión (usa configuración del archivo .env)
 php database/init_db.php
+```
+
+### Error: "Tareas programadas no se ejecutan"
+```bash
+# Verificar que el servicio cron está activo
+sudo systemctl status cron
+
+# Verificar que el crontab está configurado
+sudo crontab -u www-data -l
+
+# Verificar logs de tareas programadas
+tail -f /var/log/cron_tareas.log
+
+# Probar ejecución manual del script
+sudo -u www-data php /var/www/html/biblioges/cron_ejecutar_tareas.php
+
+# Verificar permisos del archivo
+ls -la /var/www/html/biblioges/cron_ejecutar_tareas.php
 ```
 
 ## Notas Importantes
