@@ -36,7 +36,7 @@ if (!function_exists('env')) {
  */
 if (!function_exists('app_url')) {
     function app_url() {
-        return env('APP_URL', 'http://192.168.72.5/biblioges/');
+        return env('APP_URL', 'https://biblioges.ucn.cl/biblioges/');
     }
 }
 

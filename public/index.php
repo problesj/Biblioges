@@ -67,7 +67,7 @@ if (file_exists($envFile)) {
     $_ENV['DB_DATABASE'] = 'bibliografia';
     $_ENV['DB_USERNAME'] = 'biblioges';
     $_ENV['DB_PASSWORD'] = 'joyal2025$';
-    $_ENV['APP_URL'] = 'http://192.168.72.5/biblioges/';
+    $_ENV['APP_URL'] = 'https://biblioges.ucn.cl/biblioges/';
     $_ENV['APP_DEBUG'] = 'true';
 }
 

@@ -20,7 +20,7 @@ if (file_exists($envFile)) {
     $_ENV['DB_DATABASE'] = 'bibliografia';
     $_ENV['DB_USERNAME'] = 'biblioges';
     $_ENV['DB_PASSWORD'] = 'joyal2025$';
-    $_ENV['APP_URL'] = 'http://192.168.72.5';
+    $_ENV['APP_URL'] = 'https://biblioges.ucn.cl';
 }
 
 // Inicializar Eloquent
@@ -43,7 +43,7 @@ $twig = new \Twig\Environment($loader, [
 ]);
 
 // Variables globales para Twig
-$baseUrl = rtrim($_ENV['APP_URL'] ?? 'http://192.168.72.5', '/');
+$baseUrl = rtrim($_ENV['APP_URL'] ?? 'https://biblioges.ucn.cl', '/');
 $twig->addGlobal('app_url', $baseUrl);
 $twig->addGlobal('admin_url', $baseUrl . '/biblioges');
 

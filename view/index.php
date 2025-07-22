@@ -46,7 +46,7 @@ if (file_exists($envFile)) {
     $_ENV['DB_DATABASE'] = 'bibliografia';
     $_ENV['DB_USERNAME'] = 'biblioges';
     $_ENV['DB_PASSWORD'] = 'joyal2025$';
-    $_ENV['APP_URL'] = 'http://192.168.72.5/';
+    $_ENV['APP_URL'] = 'https://biblioges.ucn.cl/';
     $_ENV['APP_DEBUG'] = 'true';
 }
 
@@ -98,9 +98,9 @@ $twig->addExtension(new \Twig\Extension\DebugExtension());
 global $twig;
 
 // Variables globales para Twig
-$baseUrl = rtrim($_ENV['APP_URL'] ?? 'http://192.168.72.5', '/');
+$baseUrl = rtrim($_ENV['APP_URL'] ?? 'https://biblioges.ucn.cl', '/');
 // Para el frontend, siempre usar la URL base sin /biblioges
-$frontendUrl = 'http://192.168.72.5';
+$frontendUrl = 'https://biblioges.ucn.cl';
 $twig->addGlobal('app_url', $frontendUrl);
 $twig->addGlobal('admin_url', $frontendUrl . '/biblioges');
 $twig->addGlobal('assets_url', $frontendUrl . '/assets');
