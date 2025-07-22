@@ -2,21 +2,32 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-// Cargar configuración de la base de datos de producción
-$prodConfig = require __DIR__ . '/config/database.php';
+// Cargar variables de entorno
+$envFile = __DIR__ . '/../.env';
+if (file_exists($envFile)) {
+    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
+    $dotenv->load();
+} else {
+    // Configuración por defecto si no existe .env
+    $_ENV['DB_HOST'] = 'localhost';
+    $_ENV['DB_PORT'] = '3306';
+    $_ENV['DB_DATABASE'] = 'bibliografia';
+    $_ENV['DB_USERNAME'] = 'biblioges';
+    $_ENV['DB_PASSWORD'] = 'joyal2025$';
+}
 
 // Configuración de la base de datos ROOT (para crear usuario y base de datos)
 $rootConfig = [
-    'host' => $prodConfig['host'],
-    'port' => $prodConfig['port'],
+    'host' => $_ENV['DB_HOST'] ?? 'localhost',
+    'port' => $_ENV['DB_PORT'] ?? '3306',
     'user' => 'root',
-    'password' => $prodConfig['password'] // Se asume que el root usa la misma contraseña, ajustar si es necesario
+    'password' => $_ENV['DB_PASSWORD'] ?? 'joyal2025$' // Se asume que el root usa la misma contraseña, ajustar si es necesario
 ];
 
 // Datos de producción
-$prodDbName = $prodConfig['database'];
-$prodUser = $prodConfig['username'];
-$prodPassword = $prodConfig['password'];
+$prodDbName = $_ENV['DB_DATABASE'] ?? 'bibliografia';
+$prodUser = $_ENV['DB_USERNAME'] ?? 'biblioges';
+$prodPassword = $_ENV['DB_PASSWORD'] ?? 'joyal2025$';
 
 try {
     // Conectar a MySQL como root sin seleccionar base de datos
@@ -28,6 +39,9 @@ try {
     );
 
     echo "Conectado como root. Creando base de datos de producción...\n";
+    echo "Host: {$rootConfig['host']}:{$rootConfig['port']}\n";
+    echo "Base de datos: {$prodDbName}\n";
+    echo "Usuario: {$prodUser}\n";
 
     // Crear base de datos de producción si no existe
     $pdo->exec("CREATE DATABASE IF NOT EXISTS {$prodDbName} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
