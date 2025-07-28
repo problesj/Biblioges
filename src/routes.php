@@ -158,6 +158,7 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
 
     // Rutas para vincular asignaturas
     $group->get('/bibliografias-declaradas/{id}/vincular', [BibliografiaDeclaradaController::class, 'vincular'])->setName('bibliografias-declaradas.vincular');
+    $group->get('/bibliografias-declaradas/{id}/vincular/ajax', [BibliografiaDeclaradaController::class, 'vincularAjax'])->setName('bibliografias-declaradas.vincularAjax');
     $group->post('/bibliografias-declaradas/{id}/vincularMultiple', [BibliografiaDeclaradaController::class, 'vincularMultiple'])->setName('bibliografias-declaradas.vincularMultiple');
     $group->post('/bibliografias-declaradas/{id}/desvincularMultiple', [BibliografiaDeclaradaController::class, 'desvincularMultiple'])->setName('bibliografias-declaradas.desvincularMultiple');
     $group->post('/bibliografias-declaradas/{id}/vincularSingle', [BibliografiaDeclaradaController::class, 'vincularSingle'])->setName('bibliografias-declaradas.vincularSingle');
@@ -213,6 +214,7 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->get('/reportes/cobertura/asignatura/{codigo}', [ReporteController::class, 'coberturaAsignatura']);
     $group->get('/reportes/cobertura/carrera/{id}', [ReporteController::class, 'coberturaCarrera']);
     $group->get('/reportes/coberturas', [ReporteController::class, 'coberturaBasica']);
+    $group->get('/reportes/coberturas-excel', [ReporteController::class, 'exportarCoberturasExcel']);
     $group->get('/reportes/coberturas/{sede_id}/{carrera_id}', [ReporteController::class, 'reporteBibliografiaBasica']);
     $group->get('/reportes/coberturas/{sede_id}/{carrera_id}/{asignatura_codigo}', [ReporteController::class, 'reporteTitulosBibliografiaBasica']);
     $group->get('/reportes/coberturas-expandido/{sede_id}/{carrera_id}', [ReporteController::class, 'reporteBibliografiaBasicaExpandido']);

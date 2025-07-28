@@ -54,7 +54,7 @@
                         {% for info in asignatura.unidades %}
                             <tr>
                                 <td>{{ info.codigo_asignatura }}</td>
-                                <td>{{ info.sede_nombre }} - {{ info.unidad_nombre }}</td>
+                                <td>{{ info.unidad_completa }}</td>
                                 <td>{{ info.cantidad_alumnos }}</td>
                             </tr>
                         {% endfor %}

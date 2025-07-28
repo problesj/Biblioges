@@ -14,8 +14,8 @@ use Twig\Source;
 use Twig\Template;
 use Twig\TemplateWrapper;
 
-/* sedes/index.twig */
-class __TwigTemplate_059be6476ad0e5d3597f9a76ee60846d extends Template
+/* sedes/index_new.twig */
+class __TwigTemplate_0d5687c6f06e2ed0ad6ef49a69bf714a extends Template
 {
     private Source $source;
     /**
@@ -46,7 +46,7 @@ class __TwigTemplate_059be6476ad0e5d3597f9a76ee60846d extends Template
     protected function doDisplay(array $context, array $blocks = []): iterable
     {
         $macros = $this->macros;
-        $this->parent = $this->loadTemplate("base.twig", "sedes/index.twig", 1);
+        $this->parent = $this->loadTemplate("base.twig", "sedes/index_new.twig", 1);
         yield from $this->parent->unwrap()->yield($context, array_merge($this->blocks, $blocks));
     }
 
@@ -887,7 +887,7 @@ class __TwigTemplate_059be6476ad0e5d3597f9a76ee60846d extends Template
      */
     public function getTemplateName(): string
     {
-        return "sedes/index.twig";
+        return "sedes/index_new.twig";
     }
 
     /**
@@ -1506,6 +1506,6 @@ class __TwigTemplate_059be6476ad0e5d3597f9a76ee60846d extends Template
         });
     }
 </script>
-{% endblock %} ", "sedes/index.twig", "/var/www/html/biblioges/templates/sedes/index.twig");
+{% endblock %} ", "sedes/index_new.twig", "/var/www/html/biblioges/templates/sedes/index_new.twig");
     }
 }

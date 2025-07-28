@@ -3,6 +3,42 @@
 ## Descripción General
 Sistema web para la gestión de bibliografías universitarias, permitiendo la administración de usuarios, asignaturas, carreras, bibliografías declaradas y disponibles, reportes y autenticación integrada con Active Directory (LDAP).
 
+## Características Principales
+
+### Gestión de Datos
+- **CRUD completo** para usuarios, carreras, asignaturas y bibliografías
+- **Paginación avanzada** con navegación intuitiva y preservación de filtros
+- **Ordenamiento dinámico** por múltiples columnas (ascendente/descendente)
+- **Filtros de búsqueda** con múltiples criterios
+- **Validación de datos** en tiempo real
+
+### Autenticación y Seguridad
+- **Integración con Active Directory** (LDAP)
+- **Fallback a autenticación local**
+- **Sesiones seguras** con configuración personalizable
+- **Protección CSRF** en formularios
+- **Control de acceso** basado en roles
+
+### Reportes y Exportación
+- **Reportes de cobertura** por carrera y asignatura
+- **Exportación a Excel** con formato profesional
+- **Estadísticas en tiempo real**
+- **Generación de listados** personalizables
+
+### Interfaz de Usuario
+- **Diseño responsive** compatible con móviles y tablets
+- **Navegación intuitiva** con breadcrumbs
+- **Notificaciones en tiempo real** con SweetAlert2
+- **Iconografía FontAwesome** para mejor UX
+- **Temas personalizables** con Bootstrap 5
+
+### Rendimiento y Optimización
+- **Caché de consultas** para mejorar tiempos de respuesta
+- **Compresión gzip** para archivos estáticos
+- **Optimización de imágenes** automática
+- **Lazy loading** para contenido pesado
+- **Consultas SQL optimizadas** con índices apropiados
+
 ## Requerimientos del Sistema
 
 ### Servidor Web (Apache)

@@ -335,35 +335,35 @@ class ApiController
         }
 
         try {
-            // Obtener el unidad_id de los argumentos de la ruta
-            $unidadId = $args['unidadId'] ?? null;
+            // Obtener el código de la unidad de los argumentos de la ruta
+            $codigoUnidad = $args['unidadId'] ?? null;
             
-            if (!$unidadId) {
-                $response->getBody()->write(json_encode(['error' => 'ID de unidad requerido']));
+            if (!$codigoUnidad) {
+                $response->getBody()->write(json_encode(['error' => 'Código de unidad requerido']));
                 return $response
                     ->withHeader('Content-Type', 'application/json')
                     ->withStatus(400);
             }
 
             // Log para depuración
-            // error_log('Obteniendo unidades hijas para unidad ID: ' . $unidadId);
+            error_log('Obteniendo unidades hijas para código de unidad: ' . $codigoUnidad);
 
-            // Consulta SQL para obtener las unidades hijas
-            $sql = "SELECT u.id, u.nombre 
+            // Consulta SQL para obtener las unidades hijas con código y estado
+            $sql = "SELECT u.id, u.codigo, u.nombre, u.estado 
                     FROM unidades u
-                    WHERE u.id_unidad_padre = :unidad_id AND u.estado = 1
+                    WHERE u.id_unidad_padre = :codigo_unidad
                     ORDER BY u.nombre";
             
             $stmt = $this->pdo->prepare($sql);
-            $stmt->bindParam(':unidad_id', $unidadId, PDO::PARAM_INT);
+            $stmt->bindParam(':codigo_unidad', $codigoUnidad, PDO::PARAM_STR);
             $stmt->execute();
             
             $unidadesHijas = $stmt->fetchAll();
 
             // Log para depuración
-            // error_log('SQL ejecutada: ' . $sql);
-            // error_log('Parámetros: unidad_id = ' . $unidadId);
-            // error_log('Unidades hijas encontradas: ' . print_r($unidadesHijas, true));
+            error_log('SQL ejecutada: ' . $sql);
+            error_log('Parámetros: codigo_unidad = ' . $codigoUnidad);
+            error_log('Unidades hijas encontradas: ' . print_r($unidadesHijas, true));
 
             $response->getBody()->write(json_encode($unidadesHijas));
             return $response->withHeader('Content-Type', 'application/json');

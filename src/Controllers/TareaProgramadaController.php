@@ -9,55 +9,198 @@ use src\Controllers\BaseController;
 
 class TareaProgramadaController extends BaseController
 {
+    protected $pdo;
+
     public function __construct()
     {
         global $twig;
         parent::__construct($twig, new \Slim\Psr7\Response());
+        
+        // Configuración de la base de datos
+        $dbConfig = [
+            'host' => $_ENV['DB_HOST'] ?? 'localhost',
+            'port' => $_ENV['DB_PORT'] ?? '3306',
+            'dbname' => $_ENV['DB_DATABASE'] ?? 'biblioges',
+            'user' => $_ENV['DB_USERNAME'] ?? 'root',
+            'password' => $_ENV['DB_PASSWORD'] ?? ''
+        ];
+
+        try {
+            $dsn = "mysql:host={$dbConfig['host']};port={$dbConfig['port']};dbname={$dbConfig['dbname']};charset=utf8mb4";
+            $this->pdo = new \PDO($dsn, $dbConfig['user'], $dbConfig['password'], [
+                \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+                \PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
+            ]);
+        } catch (\PDOException $e) {
+            die("Error de conexión: " . $e->getMessage());
+        }
     }
 
     /**
-     * Mostrar la vista de programación de tareas
+     * Mostrar la vista de programación de tareas con paginación y ordenamiento
      */
     public function index(Request $request, Response $response, array $args): Response
     {
-        // Obtener sedes y carreras para el formulario usando la vista vw_mallas
-        $sedes = DB::table('vw_mallas')
-            ->select('id_sede as id', 'sede')
-            ->distinct()
-            ->orderBy('sede')
-            ->get();
-        // Obtener carreras con su sede asociada para el filtrado dinámico
-        $carreras = DB::table('vw_mallas')
-            ->select('id_carrera as id', 'carrera', 'codigo_carrera', 'id_sede')
-            ->distinct()
-            ->orderBy('carrera')
-            ->get();
-        
-        // Obtener tareas programadas existentes
-        $tareas = DB::table('tareas_programadas')
-            ->join('sedes', 'tareas_programadas.sede_id', '=', 'sedes.id')
-            ->join('carreras', 'tareas_programadas.carrera_id', '=', 'carreras.id')
-            ->select(
-                'tareas_programadas.*',
-                'sedes.nombre as sede_nombre',
-                'carreras.nombre as carrera_nombre'
-            )
-            ->orderBy('fecha_programada', 'desc')
-            ->get();
+        try {
+            // Parámetros de paginación y ordenamiento
+            $page = max(1, intval($_GET['page'] ?? 1));
+            $perPage = intval($_GET['per_page'] ?? 10);
+            
+            // Validar opciones de registros por página
+            $allowedPerPage = [5, 10, 15, 20];
+            if (!in_array($perPage, $allowedPerPage)) {
+                $perPage = 10;
+            }
+            
+            $offset = ($page - 1) * $perPage;
+            
+            // Parámetros de ordenamiento
+            $sortColumn = $_GET['sort'] ?? 'fecha_programada';
+            $sortDirection = strtoupper($_GET['direction'] ?? 'DESC');
+            
+            // Validar columnas permitidas para ordenamiento
+            $allowedColumns = ['id', 'nombre', 'tipo_reporte', 'sede_nombre', 'carrera_nombre', 'fecha_programada', 'estado', 'fecha_creacion'];
+            if (!in_array($sortColumn, $allowedColumns)) {
+                $sortColumn = 'fecha_programada';
+            }
+            
+            // Validar dirección de ordenamiento
+            if (!in_array($sortDirection, ['ASC', 'DESC'])) {
+                $sortDirection = 'DESC';
+            }
 
-        $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
-        $template = $view->load('tareas_programadas/index.twig');
-        
-        $response->getBody()->write($template->render([
-            'sedes' => $sedes,
-            'carreras' => $carreras,
-            'tareas' => $tareas,
-            'session' => $_SESSION ?? [],
-            'app_url' => app_url(),
-            'current_page' => 'tareas_programadas'
-        ]));
-        
-        return $response->withHeader('Content-Type', 'text/html');
+            // Filtros
+            $search = $_GET['search'] ?? '';
+            $tipoReporte = $_GET['tipo_reporte'] ?? '';
+            $estado = $_GET['estado'] ?? '';
+
+            // Construir la consulta base para contar total de registros
+            $countSql = "SELECT COUNT(*) as total
+            FROM tareas_programadas tp
+            LEFT JOIN sedes s ON tp.sede_id = s.id
+            LEFT JOIN carreras c ON tp.carrera_id = c.id
+            WHERE 1=1";
+            
+            $countParams = [];
+
+            // Construir la consulta principal
+            $sql = "SELECT tp.*, 
+                           s.nombre as sede_nombre,
+                           c.nombre as carrera_nombre
+                    FROM tareas_programadas tp
+                    LEFT JOIN sedes s ON tp.sede_id = s.id
+                    LEFT JOIN carreras c ON tp.carrera_id = c.id
+                    WHERE 1=1";
+
+            $params = [];
+
+            // Aplicar filtros
+            if (!empty($search)) {
+                $searchCondition = " AND (tp.nombre LIKE :search OR s.nombre LIKE :search OR c.nombre LIKE :search)";
+                $countSql .= $searchCondition;
+                $sql .= $searchCondition;
+                $searchParam = '%' . $search . '%';
+                $countParams['search'] = $searchParam;
+                $params['search'] = $searchParam;
+            }
+
+            if (!empty($tipoReporte)) {
+                $tipoCondition = " AND tp.tipo_reporte = :tipo_reporte";
+                $countSql .= $tipoCondition;
+                $sql .= $tipoCondition;
+                $countParams['tipo_reporte'] = $tipoReporte;
+                $params['tipo_reporte'] = $tipoReporte;
+            }
+
+            if (!empty($estado)) {
+                $estadoCondition = " AND tp.estado = :estado";
+                $countSql .= $estadoCondition;
+                $sql .= $estadoCondition;
+                $countParams['estado'] = $estado;
+                $params['estado'] = $estado;
+            }
+
+            // Ejecutar consulta de conteo
+            $stmt = $this->pdo->prepare($countSql);
+            $stmt->execute($countParams);
+            $totalRecords = $stmt->fetch()['total'];
+
+            // Calcular información de paginación
+            $totalPages = ceil($totalRecords / $perPage);
+            $currentPage = $page;
+            
+            // Agregar ORDER BY y LIMIT a la consulta principal
+            $sql .= " ORDER BY {$sortColumn} {$sortDirection} LIMIT {$perPage} OFFSET {$offset}";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            $tareas = $stmt->fetchAll(\PDO::FETCH_OBJ);
+
+            // Obtener sedes y carreras para el formulario usando la vista vw_mallas
+            $sedes = DB::table('vw_mallas')
+                ->select('id_sede as id', 'sede')
+                ->distinct()
+                ->orderBy('sede')
+                ->get();
+            
+            // Obtener carreras con su sede asociada para el filtrado dinámico
+            $carreras = DB::table('vw_mallas')
+                ->select('id_carrera as id', 'carrera', 'codigo_carrera', 'id_sede')
+                ->distinct()
+                ->orderBy('carrera')
+                ->get();
+
+            // Obtener tipos de reporte y estados para los filtros
+            $tiposReporte = [
+                'cobertura_basica_expandido' => 'Cobertura Básica Expandido',
+                'cobertura_complementaria_expandido' => 'Cobertura Complementaria Expandido'
+            ];
+
+            $estados = [
+                'pendiente' => 'Pendiente',
+                'en_proceso' => 'En Proceso',
+                'completada' => 'Completada',
+                'error' => 'Error',
+                'cancelada' => 'Cancelada'
+            ];
+
+            // Renderizar la vista
+            return $this->render($response, 'tareas_programadas/index.twig', [
+                'tareas' => $tareas,
+                'sedes' => $sedes,
+                'carreras' => $carreras,
+                'tiposReporte' => $tiposReporte,
+                'estados' => $estados,
+                'session' => $_SESSION ?? [],
+                'app_url' => app_url(),
+                'current_page' => 'tareas_programadas',
+                'filtros' => [
+                    'search' => $search,
+                    'tipo_reporte' => $tipoReporte,
+                    'estado' => $estado
+                ],
+                'paginacion' => [
+                    'current_page' => $currentPage,
+                    'per_page' => $perPage,
+                    'total_records' => $totalRecords,
+                    'total_pages' => $totalPages,
+                    'has_previous' => $currentPage > 1,
+                    'has_next' => $currentPage < $totalPages,
+                    'previous_page' => $currentPage - 1,
+                    'next_page' => $currentPage + 1,
+                    'allowed_per_page' => $allowedPerPage
+                ],
+                'ordenamiento' => [
+                    'column' => $sortColumn,
+                    'direction' => $sortDirection
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            error_log("Error en TareaProgramadaController@index: " . $e->getMessage());
+            return $this->errorResponse($response, "Error al cargar el listado de tareas programadas", 500);
+        }
     }
 
     /**

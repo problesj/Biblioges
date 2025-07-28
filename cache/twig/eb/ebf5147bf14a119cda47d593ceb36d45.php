@@ -33,6 +33,7 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
 
         $this->blocks = [
             'title' => [$this, 'block_title'],
+            'head' => [$this, 'block_head'],
             'styles' => [$this, 'block_styles'],
             'content' => [$this, 'block_content'],
             'unauthenticated_content' => [$this, 'block_unauthenticated_content'],
@@ -75,7 +76,11 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
     <link href=\"https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css\" rel=\"stylesheet\">
     
     <!-- Custom CSS -->
-    <style>
+    ";
+        // line 26
+        yield from $this->unwrap()->yieldBlock('head', $context, $blocks);
+        // line 27
+        yield "    <style>
         body {
             min-height: 100vh;
             display: flex;
@@ -233,18 +238,18 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
     </style>
     
     ";
-        // line 183
-        yield from $this->unwrap()->yieldBlock('styles', $context, $blocks);
         // line 184
+        yield from $this->unwrap()->yieldBlock('styles', $context, $blocks);
+        // line 185
         yield "</head>
 <body>
 ";
-        // line 186
-        $context["current_page"] = ((        $this->unwrap()->hasBlock("current_page", $context, $blocks)) ? (        $this->unwrap()->renderBlock("current_page", $context, $blocks)) : (((array_key_exists("current_page", $context)) ? (Twig\Extension\CoreExtension::default(($context["current_page"] ?? null), "")) : (""))));
         // line 187
+        $context["current_page"] = ((        $this->unwrap()->hasBlock("current_page", $context, $blocks)) ? (        $this->unwrap()->renderBlock("current_page", $context, $blocks)) : (((array_key_exists("current_page", $context)) ? (Twig\Extension\CoreExtension::default(($context["current_page"] ?? null), "")) : (""))));
+        // line 188
         yield "    ";
-        if (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_id", [], "any", false, false, false, 187)) {
-            // line 188
+        if (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_id", [], "any", false, false, false, 188)) {
+            // line 189
             yield "    <div class=\"d-flex\">
         <!-- Sidebar -->
         <div class=\"sidebar\" id=\"sidebar\">
@@ -258,7 +263,7 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                     <li class=\"menu-group\">PRINCIPAL</li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-            // line 200
+            // line 201
             if (((($context["current_page"] ?? null) == "dashboard") ||  !($context["current_page"] ?? null))) {
                 yield "active";
             }
@@ -269,12 +274,12 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                         </a>
                     </li>
                     ";
-            // line 204
-            if (((CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_rol", [], "any", false, false, false, 204) == "admin") || (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_rol", [], "any", false, false, false, 204) == "admin_bidoc"))) {
-                // line 205
+            // line 205
+            if (((CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_rol", [], "any", false, false, false, 205) == "admin") || (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_rol", [], "any", false, false, false, 205) == "admin_bidoc"))) {
+                // line 206
                 yield "                    <li class=\"nav-item\">
                         <a class=\"nav-link ";
-                // line 206
+                // line 207
                 if ((($context["current_page"] ?? null) == "carreras")) {
                     yield "active";
                 }
@@ -286,7 +291,7 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                     </li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-                // line 211
+                // line 212
                 if ((($context["current_page"] ?? null) == "asignaturas")) {
                     yield "active";
                 }
@@ -298,7 +303,7 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                     </li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-                // line 216
+                // line 217
                 if ((($context["current_page"] ?? null) == "mallas")) {
                     yield "active";
                 }
@@ -310,13 +315,13 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                     </li>
                     ";
             }
-            // line 221
+            // line 222
             yield "                    ";
-            if (((CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_rol", [], "any", false, false, false, 221) == "admin") || (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_rol", [], "any", false, false, false, 221) == "admin_bidoc"))) {
-                // line 222
+            if (((CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_rol", [], "any", false, false, false, 222) == "admin") || (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_rol", [], "any", false, false, false, 222) == "admin_bidoc"))) {
+                // line 223
                 yield "                    <li class=\"nav-item\">
                         <a class=\"nav-link ";
-                // line 223
+                // line 224
                 if ((($context["current_page"] ?? null) == "bibliografias-declaradas")) {
                     yield "active";
                 }
@@ -328,7 +333,7 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                     </li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-                // line 228
+                // line 229
                 if ((($context["current_page"] ?? null) == "bibliografias-disponibles")) {
                     yield "active";
                 }
@@ -340,14 +345,14 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                     </li>
                     ";
             }
-            // line 233
+            // line 234
             yield "
                     <!-- REPORTES -->
                     <li class=\"menu-divider\"></li>
                     <li class=\"menu-group\">REPORTES</li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-            // line 238
+            // line 239
             if ((($context["current_page"] ?? null) == "coberturas")) {
                 yield "active";
             }
@@ -359,7 +364,7 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                     </li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-            // line 243
+            // line 244
             if ((($context["current_page"] ?? null) == "listado-bibliografias")) {
                 yield "active";
             }
@@ -373,14 +378,14 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
 
                     <!-- ADMINISTRACIÓN -->
                     ";
-            // line 250
-            if ((CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_rol", [], "any", false, false, false, 250) == "admin")) {
-                // line 251
+            // line 251
+            if ((CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_rol", [], "any", false, false, false, 251) == "admin")) {
+                // line 252
                 yield "                    <li class=\"menu-divider\"></li>
                     <li class=\"menu-group\">ADMINISTRACIÓN</li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-                // line 254
+                // line 255
                 if ((($context["current_page"] ?? null) == "sedes")) {
                     yield "active";
                 }
@@ -392,7 +397,7 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                     </li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-                // line 259
+                // line 260
                 if ((($context["current_page"] ?? null) == "unidades")) {
                     yield "active";
                 }
@@ -404,7 +409,7 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                     </li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-                // line 264
+                // line 265
                 if ((($context["current_page"] ?? null) == "usuarios")) {
                     yield "active";
                 }
@@ -416,7 +421,7 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                     </li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-                // line 269
+                // line 270
                 if ((($context["current_page"] ?? null) == "tareas_programadas")) {
                     yield "active";
                 }
@@ -428,13 +433,13 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                     </li>
                     ";
             }
-            // line 274
+            // line 275
             yield "                    ";
-            if (((CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_rol", [], "any", false, false, false, 274) == "admin") || (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_rol", [], "any", false, false, false, 274) == "admin_bidoc"))) {
-                // line 275
+            if (((CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_rol", [], "any", false, false, false, 275) == "admin") || (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_rol", [], "any", false, false, false, 275) == "admin_bidoc"))) {
+                // line 276
                 yield "                    <li class=\"nav-item\">
                         <a class=\"nav-link ";
-                // line 276
+                // line 277
                 if ((($context["current_page"] ?? null) == "autores")) {
                     yield "active";
                 }
@@ -446,13 +451,13 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                     </li>
                     ";
             }
-            // line 281
+            // line 282
             yield "
                     <!-- Perfil y Cerrar Sesión -->
                     <li class=\"menu-divider\"></li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link ";
-            // line 285
+            // line 286
             if ((($context["current_page"] ?? null) == "perfil")) {
                 yield "active";
             }
@@ -464,7 +469,7 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                     </li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link\" href=\"";
-            // line 290
+            // line 291
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
             yield "logout\">
                             <i class=\"fas fa-sign-out-alt\"></i> Cerrar Sesión
@@ -484,21 +489,21 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
             <!-- Main Content -->
             <main class=\"container-fluid py-4\">
                 ";
-            // line 307
-            yield from $this->unwrap()->yieldBlock('content', $context, $blocks);
             // line 308
+            yield from $this->unwrap()->yieldBlock('content', $context, $blocks);
+            // line 309
             yield "            </main>
         </div>
     </div>
     ";
         } else {
-            // line 312
+            // line 313
             yield "        ";
             yield from $this->unwrap()->yieldBlock('unauthenticated_content', $context, $blocks);
-            // line 313
+            // line 314
             yield "    ";
         }
-        // line 314
+        // line 315
         yield "
     <!-- jQuery -->
     <script src=\"https://code.jquery.com/jquery-3.7.0.min.js\"></script>
@@ -571,19 +576,19 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
 
             // Verificar si la sesión está activa
             ";
-        // line 385
-        if ( !CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_id", [], "any", false, false, false, 385)) {
-            // line 386
+        // line 386
+        if ( !CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "user_id", [], "any", false, false, false, 386)) {
+            // line 387
             yield "                // Si no hay sesión activa y no estamos en la página de login, redirigir
                 if (!window.location.href.includes('login')) {
                     window.location.href = '";
-            // line 388
+            // line 389
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
             yield "login';
                 }
             ";
         }
-        // line 391
+        // line 392
         yield "
             // Ocultar automáticamente los mensajes de alerta después de 5 segundos
             const alerts = document.querySelectorAll('.alert');
@@ -594,7 +599,7 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                     
                     // Limpiar las variables de sesión después de cerrar la alerta
                     fetch('";
-        // line 400
+        // line 401
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "clear-session-messages', {
                         method: 'POST',
@@ -608,54 +613,54 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
 
             // Mostrar alertas de SweetAlert2 si existen
             ";
-        // line 411
+        // line 412
         if ((array_key_exists("swal", $context) && ($context["swal"] ?? null))) {
-            // line 412
+            // line 413
             yield "                Swal.fire({
                     icon: '";
-            // line 413
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "icon", [], "any", false, false, false, 413), "html", null, true);
+            // line 414
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "icon", [], "any", false, false, false, 414), "html", null, true);
             yield "',
                     title: '";
-            // line 414
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "title", [], "any", false, false, false, 414), "html", null, true);
+            // line 415
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "title", [], "any", false, false, false, 415), "html", null, true);
             yield "',
                     text: '";
-            // line 415
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "text", [], "any", false, false, false, 415), "html", null, true);
+            // line 416
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "text", [], "any", false, false, false, 416), "html", null, true);
             yield "',
                     confirmButtonText: 'Aceptar'
                 });
             ";
         }
-        // line 419
+        // line 420
         yield "        });
     </script>
 
     ";
-        // line 422
+        // line 423
         yield from $this->unwrap()->yieldBlock('scripts', $context, $blocks);
-        // line 435
+        // line 436
         yield "
     <!-- SweetAlert2 Notifications -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             ";
-        // line 439
-        if (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "swal", [], "any", false, false, false, 439)) {
-            // line 440
+        // line 440
+        if (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "swal", [], "any", false, false, false, 440)) {
+            // line 441
             yield "                Swal.fire({
                     icon: '";
-            // line 441
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "swal", [], "any", false, false, false, 441), "icon", [], "any", false, false, false, 441), "html", null, true);
+            // line 442
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "swal", [], "any", false, false, false, 442), "icon", [], "any", false, false, false, 442), "html", null, true);
             yield "',
                     title: '";
-            // line 442
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "swal", [], "any", false, false, false, 442), "title", [], "any", false, false, false, 442), "html", null, true);
+            // line 443
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "swal", [], "any", false, false, false, 443), "title", [], "any", false, false, false, 443), "html", null, true);
             yield "',
                     text: '";
-            // line 443
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "swal", [], "any", false, false, false, 443), "text", [], "any", false, false, false, 443), "html", null, true);
+            // line 444
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "swal", [], "any", false, false, false, 444), "text", [], "any", false, false, false, 444), "html", null, true);
             yield "',
                     confirmButtonText: 'Aceptar',
                     confirmButtonColor: '#4e73df',
@@ -665,7 +670,7 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
                 });
             ";
         }
-        // line 451
+        // line 452
         yield "        });
 
         function mostrarNotificacion(mensaje, tipo = 'success') {
@@ -697,7 +702,17 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
         yield from [];
     }
 
-    // line 183
+    // line 26
+    /**
+     * @return iterable<null|scalar|\Stringable>
+     */
+    public function block_head(array $context, array $blocks = []): iterable
+    {
+        $macros = $this->macros;
+        yield from [];
+    }
+
+    // line 184
     /**
      * @return iterable<null|scalar|\Stringable>
      */
@@ -707,7 +722,7 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
         yield from [];
     }
 
-    // line 307
+    // line 308
     /**
      * @return iterable<null|scalar|\Stringable>
      */
@@ -717,7 +732,7 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
         yield from [];
     }
 
-    // line 312
+    // line 313
     /**
      * @return iterable<null|scalar|\Stringable>
      */
@@ -727,14 +742,14 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
         yield from [];
     }
 
-    // line 422
+    // line 423
     /**
      * @return iterable<null|scalar|\Stringable>
      */
     public function block_scripts(array $context, array $blocks = []): iterable
     {
         $macros = $this->macros;
-        // line 423
+        // line 424
         yield "    <!-- Bootstrap Bundle with Popper -->
     <script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js\"></script>
 
@@ -771,7 +786,7 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
      */
     public function getDebugInfo(): array
     {
-        return array (  738 => 423,  731 => 422,  721 => 312,  711 => 307,  701 => 183,  690 => 7,  669 => 451,  658 => 443,  654 => 442,  650 => 441,  647 => 440,  645 => 439,  639 => 435,  637 => 422,  632 => 419,  625 => 415,  621 => 414,  617 => 413,  614 => 412,  612 => 411,  598 => 400,  587 => 391,  581 => 388,  577 => 386,  575 => 385,  502 => 314,  499 => 313,  496 => 312,  490 => 308,  488 => 307,  468 => 290,  456 => 285,  450 => 281,  438 => 276,  435 => 275,  432 => 274,  420 => 269,  408 => 264,  396 => 259,  384 => 254,  379 => 251,  377 => 250,  363 => 243,  351 => 238,  344 => 233,  332 => 228,  320 => 223,  317 => 222,  314 => 221,  302 => 216,  290 => 211,  278 => 206,  275 => 205,  273 => 204,  262 => 200,  248 => 188,  245 => 187,  243 => 186,  239 => 184,  237 => 183,  61 => 10,  55 => 7,  47 => 1,);
+        return array (  753 => 424,  746 => 423,  736 => 313,  726 => 308,  716 => 184,  706 => 26,  695 => 7,  674 => 452,  663 => 444,  659 => 443,  655 => 442,  652 => 441,  650 => 440,  644 => 436,  642 => 423,  637 => 420,  630 => 416,  626 => 415,  622 => 414,  619 => 413,  617 => 412,  603 => 401,  592 => 392,  586 => 389,  582 => 387,  580 => 386,  507 => 315,  504 => 314,  501 => 313,  495 => 309,  493 => 308,  473 => 291,  461 => 286,  455 => 282,  443 => 277,  440 => 276,  437 => 275,  425 => 270,  413 => 265,  401 => 260,  389 => 255,  384 => 252,  382 => 251,  368 => 244,  356 => 239,  349 => 234,  337 => 229,  325 => 224,  322 => 223,  319 => 222,  307 => 217,  295 => 212,  283 => 207,  280 => 206,  278 => 205,  267 => 201,  253 => 189,  250 => 188,  248 => 187,  244 => 185,  242 => 184,  83 => 27,  81 => 26,  62 => 10,  56 => 7,  48 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -801,6 +816,7 @@ class __TwigTemplate_0abc41e98917abe7a9f18caa74c99c1a extends Template
     <link href=\"https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css\" rel=\"stylesheet\">
     
     <!-- Custom CSS -->
+    {% block head %}{% endblock %}
     <style>
         body {
             min-height: 100vh;

@@ -44,6 +44,82 @@ class MallaController
             'debug' => true
         ]);
 
+        // Agregar funciones helper para ordenamiento y paginación
+        $baseUrl = Config::get('app_url') . 'mallas';
+        
+        $this->twig->addFunction(new \Twig\TwigFunction('build_sort_url', function ($column, $current_sort = '', $current_direction = 'ASC', $filters = [], $page = 1, $perPage = 10) use ($baseUrl) {
+            $direction = ($current_sort === $column && $current_direction === 'ASC') ? 'DESC' : 'ASC';
+
+            $params = array_merge($filters, [
+                'sort' => $column,
+                'direction' => $direction
+            ]);
+
+            if ($page > 1) {
+                $params['page'] = $page;
+            }
+
+            if ($perPage != 10) { // Solo agregar si no es el valor por defecto
+                $params['per_page'] = $perPage;
+            }
+
+            $query = http_build_query($params);
+            return $baseUrl . ($query ? '?' . $query : '');
+        }));
+
+        $this->twig->addFunction(new \Twig\TwigFunction('build_page_url', function ($page, $sort = '', $direction = 'ASC', $filters = [], $perPage = 10) use ($baseUrl) {
+            $params = $filters;
+
+            if ($sort) {
+                $params['sort'] = $sort;
+            }
+
+            if ($direction) {
+                $params['direction'] = $direction;
+            }
+
+            if ($page > 1) {
+                $params['page'] = $page;
+            }
+
+            if ($perPage != 10) { // Solo agregar si no es el valor por defecto
+                $params['per_page'] = $perPage;
+            }
+
+            $query = http_build_query($params);
+            return $baseUrl . ($query ? '?' . $query : '');
+        }));
+
+        $this->twig->addFunction(new \Twig\TwigFunction('get_sort_icon', function ($column, $current_sort, $current_direction) {
+            if ($current_sort === $column) {
+                return $current_direction === 'ASC' ? 'fa-sort-up' : 'fa-sort-down';
+            }
+            return 'fa-sort';
+        }));
+
+        $this->twig->addFunction(new \Twig\TwigFunction('build_per_page_url', function ($perPage, $sort = '', $direction = 'ASC', $filters = [], $page = 1) use ($baseUrl) {
+            $params = $filters;
+
+            if ($sort) {
+                $params['sort'] = $sort;
+            }
+
+            if ($direction) {
+                $params['direction'] = $direction;
+            }
+
+            if ($perPage != 10) { // Solo agregar si no es el valor por defecto
+                $params['per_page'] = $perPage;
+            }
+
+            if ($page > 1) {
+                $params['page'] = $page;
+            }
+
+            $query = http_build_query($params);
+            return $baseUrl . ($query ? '?' . $query : '');
+        }));
+
         $this->session = new Session();
         $this->app_url = Config::get('app_url');
     }
@@ -66,6 +142,33 @@ class MallaController
         $swal = $this->session->get('swal');
         $this->session->remove('swal');
 
+        // Parámetros de paginación y ordenamiento
+        $page = max(1, intval($_GET['page'] ?? 1));
+        $perPage = intval($_GET['per_page'] ?? 10);
+
+        // Validar opciones de registros por página
+        $allowedPerPage = [5, 10, 15, 20];
+        if (!in_array($perPage, $allowedPerPage)) {
+            $perPage = 10;
+        }
+
+        $offset = ($page - 1) * $perPage;
+
+        // Parámetros de ordenamiento
+        $sortColumn = $_GET['sort'] ?? 'nombre';
+        $sortDirection = strtoupper($_GET['direction'] ?? 'ASC');
+
+        // Validar columnas permitidas para ordenamiento
+        $allowedColumns = ['nombre', 'tipo_programa', 'estado', 'sede'];
+        if (!in_array($sortColumn, $allowedColumns)) {
+            $sortColumn = 'nombre';
+        }
+
+        // Validar dirección de ordenamiento
+        if (!in_array($sortDirection, ['ASC', 'DESC'])) {
+            $sortDirection = 'ASC';
+        }
+
         // Obtener filtros
         $filtros = [
             'tipo_programa' => $_GET['tipo_programa'] ?? '',
@@ -74,7 +177,15 @@ class MallaController
             'busqueda' => $_GET['busqueda'] ?? ''
         ];
 
-        // Construir la consulta base
+        // Construir la consulta base para contar total de registros
+        $countSql = "SELECT COUNT(DISTINCT c.id) as total
+        FROM carreras c
+                LEFT JOIN carreras_espejos ce ON c.id = ce.carrera_id
+                LEFT JOIN sedes s ON ce.sede_id = s.id
+                LEFT JOIN unidades u ON ce.id_unidad = u.id
+                WHERE 1=1";
+
+        // Construir la consulta principal
         $sql = "SELECT c.*, 
                 GROUP_CONCAT(DISTINCT ce.codigo_carrera) as codigos_carrera,
                 GROUP_CONCAT(DISTINCT s.nombre) as sedes,
@@ -87,31 +198,50 @@ class MallaController
 
         $params = [];
 
-        // Aplicar filtros
+        // Aplicar filtros (aplicados tanto a countSql como a sql)
         if (!empty($filtros['tipo_programa'])) {
             $sql .= " AND c.tipo_programa = ?";
+            $countSql .= " AND c.tipo_programa = ?";
             $params[] = $filtros['tipo_programa'];
         }
 
         if (!empty($filtros['sede'])) {
             $sql .= " AND ce.sede_id = ?";
+            $countSql .= " AND ce.sede_id = ?";
             $params[] = $filtros['sede'];
         }
 
         if ($filtros['estado'] !== '') {
             $sql .= " AND c.estado = ?";
+            $countSql .= " AND c.estado = ?";
             $params[] = $filtros['estado'];
         }
 
         if (!empty($filtros['busqueda'])) {
             $sql .= " AND (c.nombre LIKE ? OR ce.codigo_carrera LIKE ?)";
+            $countSql .= " AND (c.nombre LIKE ? OR ce.codigo_carrera LIKE ?)";
             $params[] = "%{$filtros['busqueda']}%";
             $params[] = "%{$filtros['busqueda']}%";
         }
 
-        $sql .= " GROUP BY c.id ORDER BY c.nombre";
+        // Obtener total de registros
+        $stmt = $this->pdo->prepare($countSql);
+        $stmt->execute($params);
+        $totalRecords = $stmt->fetch()['total'];
 
-        // Ejecutar la consulta
+        // Calcular información de paginación
+        $totalPages = ceil($totalRecords / $perPage);
+        $currentPage = $page;
+
+        // Agregar GROUP BY y ORDER BY a la consulta principal
+        if ($sortColumn === 'sede') {
+            // Para ordenar por sede, usamos MIN() para obtener la primera sede de cada carrera
+            $sql .= " GROUP BY c.id ORDER BY MIN(s.nombre) {$sortDirection} LIMIT {$perPage} OFFSET {$offset}";
+        } else {
+            $sql .= " GROUP BY c.id ORDER BY c.{$sortColumn} {$sortDirection} LIMIT {$perPage} OFFSET {$offset}";
+        }
+
+        // Ejecutar la consulta principal
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
         $carreras = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -133,17 +263,35 @@ class MallaController
         $stmt->execute([$this->session->get('user_id')]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // Renderizar la vista
-        $html = $this->twig->render('mallas/index.twig', [
+        // Preparar datos para la vista
+        $viewData = [
             'carreras' => $carreras,
             'sedes' => $sedes,
-            'filtros' => $filtros,
             'user' => $user,
-            'app_url' => Config::get('app_url'),
             'current_page' => 'mallas',
+            'app_url' => Config::get('app_url'),
             'session' => $_SESSION,
-            'swal' => $swal
-        ]);
+            'swal' => $swal,
+            'filtros' => $filtros,
+            'paginacion' => [
+                'current_page' => $currentPage,
+                'per_page' => $perPage,
+                'total_records' => $totalRecords,
+                'total_pages' => $totalPages,
+                'has_previous' => $currentPage > 1,
+                'has_next' => $currentPage < $totalPages,
+                'previous_page' => $currentPage - 1,
+                'next_page' => $currentPage + 1,
+                'allowed_per_page' => $allowedPerPage
+            ],
+            'ordenamiento' => [
+                'column' => $sortColumn,
+                'direction' => $sortDirection
+            ]
+        ];
+
+        // Renderizar la vista
+        $html = $this->twig->render('mallas/index.twig', $viewData);
         
         $response->getBody()->write($html);
         return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');

@@ -88,11 +88,11 @@
                     <div class="row mb-3 codigo-row">
                         <div class="col-md-4">
                             <label for="id_unidad_0" class="form-label">Unidad</label>
-                            <select class="form-select" id="id_unidad_0" name="codigos[0][id_unidad]" required>
+                            <select class="form-select" id="id_unidad_0" name="codigos[0][id_unidad]" required style="font-size: 0.85rem;">
                                 <option value="">Seleccione una unidad</option>
                                 {% for unidad in unidades %}
-                                <option value="{{ unidad.id }}">
-                                    {{ unidad.sede_nombre }} - {{ unidad.unidad_nombre }}
+                                <option value="{{ unidad.id }}" style="font-size: 0.85rem;">
+                                    {{ unidad.unidad_completa }}
                                 </option>
                                 {% endfor %}
                             </select>
@@ -207,11 +207,11 @@ function addRow() {
     newRow.innerHTML = `
         <div class="col-md-4">
             <label for="id_unidad_${codigoCount}" class="form-label">Unidad</label>
-            <select class="form-select" id="id_unidad_${codigoCount}" name="codigos[${codigoCount}][id_unidad]" required>
+            <select class="form-select" id="id_unidad_${codigoCount}" name="codigos[${codigoCount}][id_unidad]" required style="font-size: 0.85rem;">
                 <option value="">Seleccione una unidad</option>
                 {% for unidad in unidades %}
-                <option value="{{ unidad.id }}">
-                    {{ unidad.sede_nombre }} - {{ unidad.unidad_nombre }}
+                <option value="{{ unidad.id }}" style="font-size: 0.85rem;">
+                    {{ unidad.unidad_completa }}
                 </option>
                 {% endfor %}
             </select>

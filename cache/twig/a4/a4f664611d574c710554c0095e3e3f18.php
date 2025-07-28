@@ -244,10 +244,10 @@ class __TwigTemplate_6b4959f1ae57c18788a9dcecd85387ae extends Template
         </div>
         <div class=\"card-body\">
             <form id=\"filtroForm\" class=\"row g-3\">
-                <div class=\"col-md-6\">
+                <div class=\"col-md-4\">
                     <label for=\"ubicacion\" class=\"form-label\">Ubicación</label>
-                    <select name=\"ubicacion\" id=\"ubicacion\" class=\"form-select\">
-                        <option value=\"\">Seleccione Ubicación</option>
+                    <select name=\"ubicacion\" id=\"ubicacion\" class=\"form-select\" style=\"font-size: 0.9rem;\">
+                        <option value=\"\" style=\"font-size: 0.9rem;\">Seleccione Ubicación</option>
                         ";
         // line 98
         $context['_parent'] = $context;
@@ -261,9 +261,11 @@ class __TwigTemplate_6b4959f1ae57c18788a9dcecd85387ae extends Template
                 // line 100
                 yield "                                <option value=\"u_";
                 yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "id", [], "any", false, false, false, 100), "html", null, true);
-                yield "\">";
+                yield "\" style=\"font-size: 0.9rem;\">";
                 yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["sede"], "nombre", [], "any", false, false, false, 100), "html", null, true);
                 yield " - ";
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "codigo", [], "any", false, false, false, 100), "html", null, true);
+                yield " ";
                 yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "nombre", [], "any", false, false, false, 100), "html", null, true);
                 yield "</option>
                             ";
@@ -280,7 +282,7 @@ class __TwigTemplate_6b4959f1ae57c18788a9dcecd85387ae extends Template
         // line 103
         yield "                    </select>
                 </div>
-                <div class=\"col-md-6\">
+                <div class=\"col-md-4\">
                     <label for=\"tipo_asignatura\" class=\"form-label\">Tipo de Asignatura</label>
                     <select name=\"tipo_asignatura\" id=\"tipo_asignatura\" class=\"form-select\">
                         <option value=\"\">Seleccione Tipo de Asignatura</option>
@@ -294,7 +296,23 @@ class __TwigTemplate_6b4959f1ae57c18788a9dcecd85387ae extends Template
                         <option value=\"FORMACION_ESPECIAL\">Formación Especial</option>
                     </select>
                 </div>
+                <div class=\"col-md-4\">
+                    <label for=\"busqueda\" class=\"form-label\">Buscar por Nombre o Código</label>
+                    <div class=\"input-group\">
+                        <input type=\"text\" name=\"busqueda\" id=\"busqueda\" class=\"form-control\" placeholder=\"Ingrese nombre o código de asignatura\">
+                        <button type=\"button\" class=\"btn btn-outline-primary\" id=\"btnBuscar\" onclick=\"realizarBusqueda()\">
+                            <i class=\"fas fa-search\"></i>
+                        </button>
+                    </div>
+                </div>
             </form>
+            <div class=\"row mt-3\">
+                <div class=\"col-12\">
+                    <button type=\"button\" class=\"btn btn-outline-secondary btn-sm\" onclick=\"limpiarFiltros()\">
+                        <i class=\"fas fa-times\"></i> Limpiar Filtros
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -327,46 +345,46 @@ class __TwigTemplate_6b4959f1ae57c18788a9dcecd85387ae extends Template
                                     </td>
                                 </tr>
                                 ";
-        // line 151
+        // line 167
         $context['_parent'] = $context;
         $context['_seq'] = CoreExtension::ensureTraversable(($context["asignaturas_disponibles"] ?? null));
         foreach ($context['_seq'] as $context["_key"] => $context["asignatura"]) {
-            // line 152
+            // line 168
             yield "                                <tr class=\"asignatura-disponible\" style=\"display: none;\">
                                     <td class=\"align-top\">
                                         <input type=\"checkbox\" class=\"form-check-input\" name=\"asignaturas[]\" value=\"";
-            // line 154
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 154), "html", null, true);
+            // line 170
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 170), "html", null, true);
             yield "\" data-nombre=\"";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "nombre", [], "any", false, false, false, 154), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "nombre", [], "any", false, false, false, 170), "html", null, true);
             yield "\" data-tipo=\"";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "tipo", [], "any", false, false, false, 154), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "tipo", [], "any", false, false, false, 170), "html", null, true);
             yield "\">
                                     </td>
                                     <td class=\"align-top\">
                                         <div style=\"font-size: 0.9em; word-break: break-all;\">
                                             ";
-            // line 158
-            yield Twig\Extension\CoreExtension::nl2br($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::trim(Twig\Extension\CoreExtension::replace(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "codigos", [], "any", false, false, false, 158), [", " => "
+            // line 174
+            yield Twig\Extension\CoreExtension::nl2br($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::trim(Twig\Extension\CoreExtension::replace(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "codigos", [], "any", false, false, false, 174), [", " => "
 "])), "html", null, true));
             yield "
                                         </div>
                                     </td>
                                     <td class=\"align-top\">";
-            // line 161
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "nombre", [], "any", false, false, false, 161), "html", null, true);
+            // line 177
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "nombre", [], "any", false, false, false, 177), "html", null, true);
             yield "</td>
                                     <td class=\"align-top\">
                                         <div class=\"form-check\">
                                             <input class=\"form-check-input tipo-bibliografia\" type=\"radio\" 
                                                    name=\"tipo_bibliografia_";
-            // line 165
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 165), "html", null, true);
+            // line 181
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 181), "html", null, true);
             yield "\" 
                                                    value=\"basica\" 
                                                    data-asignatura-id=\"";
-            // line 167
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 167), "html", null, true);
+            // line 183
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 183), "html", null, true);
             yield "\"
                                                    checked>
                                             <label class=\"form-check-label\">Básica</label>
@@ -374,26 +392,26 @@ class __TwigTemplate_6b4959f1ae57c18788a9dcecd85387ae extends Template
                                         <div class=\"form-check\">
                                             <input class=\"form-check-input tipo-bibliografia\" type=\"radio\" 
                                                    name=\"tipo_bibliografia_";
-            // line 173
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 173), "html", null, true);
+            // line 189
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 189), "html", null, true);
             yield "\" 
                                                    value=\"complementaria\" 
                                                    data-asignatura-id=\"";
-            // line 175
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 175), "html", null, true);
+            // line 191
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 191), "html", null, true);
             yield "\">
                                             <label class=\"form-check-label\">Complementaria</label>
                                         </div>
                                         <div class=\"form-check\">
                                             <input class=\"form-check-input tipo-bibliografia\" type=\"radio\" 
                                                    name=\"tipo_bibliografia_";
-            // line 180
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 180), "html", null, true);
+            // line 196
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 196), "html", null, true);
             yield "\" 
                                                    value=\"otro\" 
                                                    data-asignatura-id=\"";
-            // line 182
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 182), "html", null, true);
+            // line 198
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 198), "html", null, true);
             yield "\">
                                             <label class=\"form-check-label\">Otro</label>
                                         </div>
@@ -404,7 +422,7 @@ class __TwigTemplate_6b4959f1ae57c18788a9dcecd85387ae extends Template
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_key'], $context['asignatura'], $context['_parent']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 188
+        // line 204
         yield "                            </tbody>
                         </table>
                     </div>
@@ -447,52 +465,52 @@ class __TwigTemplate_6b4959f1ae57c18788a9dcecd85387ae extends Template
                             </thead>
                             <tbody>
                                 ";
-        // line 229
+        // line 245
         $context['_parent'] = $context;
         $context['_seq'] = CoreExtension::ensureTraversable(($context["asignaturas_vinculadas"] ?? null));
         $context['_iterated'] = false;
         foreach ($context['_seq'] as $context["_key"] => $context["asignatura"]) {
-            // line 230
+            // line 246
             yield "                                <tr>
                                     <td>
                                         <input type=\"checkbox\" class=\"form-check-input\" name=\"vinculaciones[]\" value=\"";
-            // line 232
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "vinculacion_id", [], "any", false, false, false, 232), "html", null, true);
+            // line 248
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "vinculacion_id", [], "any", false, false, false, 248), "html", null, true);
             yield "\">
                                     </td>
                                     <td>
                                         <div style=\"font-size: 0.9em;\">
                                             ";
-            // line 236
-            if (CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "codigos", [], "any", false, false, false, 236)) {
-                // line 237
+            // line 252
+            if (CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "codigos", [], "any", false, false, false, 252)) {
+                // line 253
                 yield "                                                ";
-                yield Twig\Extension\CoreExtension::nl2br($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::trim(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "codigos", [], "any", false, false, false, 237)), "html", null, true));
+                yield Twig\Extension\CoreExtension::nl2br($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::trim(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "codigos", [], "any", false, false, false, 253)), "html", null, true));
                 yield "
                                             ";
             } else {
-                // line 239
+                // line 255
                 yield "                                                Sin código
                                             ";
             }
-            // line 241
+            // line 257
             yield "                                        </div>
                                     </td>
                                     <td>";
-            // line 243
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "nombre", [], "any", false, false, false, 243), "html", null, true);
+            // line 259
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "nombre", [], "any", false, false, false, 259), "html", null, true);
             yield "</td>
                                     <td>";
-            // line 244
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "tipo_bibliografia", [], "any", false, false, false, 244), "html", null, true);
+            // line 260
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "tipo_bibliografia", [], "any", false, false, false, 260), "html", null, true);
             yield "</td>
                                 </tr>
                                 ";
             $context['_iterated'] = true;
         }
-        // line 246
+        // line 262
         if (!$context['_iterated']) {
-            // line 247
+            // line 263
             yield "                                <tr>
                                     <td colspan=\"4\" class=\"text-center\">No hay asignaturas vinculadas</td>
                                 </tr>
@@ -501,7 +519,7 @@ class __TwigTemplate_6b4959f1ae57c18788a9dcecd85387ae extends Template
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_key'], $context['asignatura'], $context['_parent'], $context['_iterated']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 251
+        // line 267
         yield "                            </tbody>
                         </table>
                     </div>
@@ -514,14 +532,14 @@ class __TwigTemplate_6b4959f1ae57c18788a9dcecd85387ae extends Template
         yield from [];
     }
 
-    // line 261
+    // line 277
     /**
      * @return iterable<null|scalar|\Stringable>
      */
     public function block_scripts(array $context, array $blocks = []): iterable
     {
         $macros = $this->macros;
-        // line 262
+        // line 278
         yield from $this->yieldParentBlock("scripts", $context, $blocks);
         yield "
 <script src=\"https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js\"></script>
@@ -536,6 +554,7 @@ function getUrlParameter(name) {
 function establecerFiltrosDesdeURL() {
     const unidad = getUrlParameter('unidad');
     const tipoAsignatura = getUrlParameter('tipo_asignatura');
+    const busqueda = getUrlParameter('busqueda');
     
     // Establecer valor del filtro de ubicación
     if (unidad) {
@@ -546,6 +565,11 @@ function establecerFiltrosDesdeURL() {
     if (tipoAsignatura) {
         document.getElementById('tipo_asignatura').value = tipoAsignatura;
     }
+    
+    // Establecer valor del filtro de búsqueda
+    if (busqueda) {
+        document.getElementById('busqueda').value = busqueda;
+    }
 }
 
 // Función para verificar filtros al cargar la página
@@ -555,9 +579,10 @@ function verificarFiltrosIniciales() {
     
     const unidad = document.getElementById('ubicacion').value;
     const tipoAsignatura = document.getElementById('tipo_asignatura').value;
+    const busqueda = document.getElementById('busqueda').value;
     
     // Verificar si se ha seleccionado al menos un filtro
-    const hayFiltrosSeleccionados = unidad || tipoAsignatura;
+    const hayFiltrosSeleccionados = unidad || tipoAsignatura || busqueda;
     
     // Controlar visibilidad del mensaje y las asignaturas
     const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
@@ -589,13 +614,20 @@ function verificarFiltrosIniciales() {
 function aplicarFiltros() {
     const unidad = document.getElementById('ubicacion').value;
     const tipoAsignatura = document.getElementById('tipo_asignatura').value;
+    const busqueda = document.getElementById('busqueda').value;
+    
+    // Mostrar indicador de carga
+    const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
+    if (mensajeSinFiltros) {
+        mensajeSinFiltros.innerHTML = '<td colspan=\"4\" class=\"text-center text-muted py-4\"><i class=\"fas fa-spinner fa-spin fa-2x mb-2\"></i><br>Cargando asignaturas...</td>';
+    }
     
     // Construir la URL con los filtros
     let url = `";
-        // line 330
+        // line 360
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "bibliografias-declaradas/";
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 330), "html", null, true);
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 360), "html", null, true);
         yield "/vincular?`;
     const params = new URLSearchParams();
     
@@ -609,6 +641,10 @@ function aplicarFiltros() {
         params.append('tipo_asignatura', tipoAsignatura);
     }
     
+    if (busqueda) {
+        params.append('busqueda', busqueda);
+    }
+    
     url += params.toString();
     
     // Recargar la página con los filtros
@@ -616,8 +652,296 @@ function aplicarFiltros() {
 }
 
 // Agregar eventos a los selectores de filtros
-document.getElementById('ubicacion').addEventListener('change', aplicarFiltros);
-document.getElementById('tipo_asignatura').addEventListener('change', aplicarFiltros);
+document.getElementById('ubicacion').addEventListener('change', function() {
+    // Para ubicación y tipo, usar recarga de página para mantener la funcionalidad completa
+    aplicarFiltros();
+});
+document.getElementById('tipo_asignatura').addEventListener('change', function() {
+    // Para ubicación y tipo, usar recarga de página para mantener la funcionalidad completa
+    aplicarFiltros();
+});
+
+// Agregar evento para el campo de búsqueda (Enter key)
+document.getElementById('busqueda').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        realizarBusqueda();
+    }
+});
+
+// Función para realizar búsqueda manual
+function realizarBusqueda() {
+    const busqueda = document.getElementById('busqueda').value.trim();
+    
+    if (!busqueda) {
+        // Si no hay texto de búsqueda, mostrar mensaje inicial
+        const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
+        if (mensajeSinFiltros) {
+            mensajeSinFiltros.innerHTML = '<td colspan=\"4\" class=\"text-center text-muted py-4\"><i class=\"fas fa-info-circle fa-2x mb-2\"></i><br>Seleccione una ubicación o un tipo de asignatura para ver las asignaturas disponibles</td>';
+            mensajeSinFiltros.style.display = 'table-row';
+        }
+        const botonesAccion = document.getElementById('botonesAccion');
+        if (botonesAccion) {
+            botonesAccion.style.display = 'none';
+        }
+        return;
+    }
+    
+    // Mostrar indicador de carga
+    const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
+    const botonesAccion = document.getElementById('botonesAccion');
+    const btnBuscar = document.getElementById('btnBuscar');
+    
+    // Deshabilitar botón de búsqueda y mostrar estado de carga
+    if (btnBuscar) {
+        btnBuscar.disabled = true;
+        btnBuscar.innerHTML = '<i class=\"fas fa-spinner fa-spin\"></i>';
+    }
+    
+    if (mensajeSinFiltros) {
+        mensajeSinFiltros.innerHTML = '<td colspan=\"4\" class=\"text-center text-muted py-4\"><i class=\"fas fa-spinner fa-spin fa-2x mb-2\"></i><br>Buscando asignaturas...</td>';
+        mensajeSinFiltros.style.display = 'table-row';
+    }
+    
+    // Ocultar asignaturas existentes
+    document.querySelectorAll('.asignatura-disponible').forEach(row => {
+        row.style.display = 'none';
+    });
+    
+    // Construir parámetros para la petición AJAX
+    const params = new URLSearchParams();
+    params.append('busqueda', busqueda);
+    
+    // Realizar petición AJAX
+    const url = `";
+        // line 445
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
+        yield "bibliografias-declaradas/";
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 445), "html", null, true);
+        yield "/vincular/ajax?\${params.toString()}`;
+    
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            actualizarTablaAsignaturas(data.asignaturas);
+        } else {
+            console.error('Error al cargar asignaturas:', data.message);
+            if (mensajeSinFiltros) {
+                mensajeSinFiltros.innerHTML = '<td colspan=\"4\" class=\"text-center text-muted py-4\"><i class=\"fas fa-exclamation-triangle fa-2x mb-2\"></i><br>Error al cargar las asignaturas</td>';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        if (mensajeSinFiltros) {
+            mensajeSinFiltros.innerHTML = '<td colspan=\"4\" class=\"text-center text-muted py-4\"><i class=\"fas fa-exclamation-triangle fa-2x mb-2\"></i><br>Error al cargar las asignaturas<br><small>Intente nuevamente</small></td>';
+        }
+        // Ocultar botones de acción en caso de error
+        if (botonesAccion) {
+            botonesAccion.style.display = 'none';
+        }
+    });
+}
+
+// Función para aplicar filtros con AJAX (mantenida para compatibilidad)
+function aplicarFiltrosAjax() {
+    const unidad = document.getElementById('ubicacion').value;
+    const tipoAsignatura = document.getElementById('tipo_asignatura').value;
+    const busqueda = document.getElementById('busqueda').value;
+    
+    // Si hay filtros de ubicación o tipo, usar recarga de página para mantener consistencia
+    if (unidad || tipoAsignatura) {
+        aplicarFiltros();
+        return;
+    }
+    
+    // Solo usar AJAX para búsqueda cuando no hay otros filtros
+    if (!busqueda) {
+        // Si no hay búsqueda, mostrar mensaje inicial
+        const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
+        if (mensajeSinFiltros) {
+            mensajeSinFiltros.innerHTML = '<td colspan=\"4\" class=\"text-center text-muted py-4\"><i class=\"fas fa-info-circle fa-2x mb-2\"></i><br>Seleccione una ubicación o un tipo de asignatura para ver las asignaturas disponibles</td>';
+            mensajeSinFiltros.style.display = 'table-row';
+        }
+        const botonesAccion = document.getElementById('botonesAccion');
+        if (botonesAccion) {
+            botonesAccion.style.display = 'none';
+        }
+        return;
+    }
+    
+    // Mostrar indicador de carga
+    const tbodyAsignaturas = document.getElementById('tbodyAsignaturas');
+    const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
+    const botonesAccion = document.getElementById('botonesAccion');
+    
+    if (mensajeSinFiltros) {
+        mensajeSinFiltros.innerHTML = '<td colspan=\"4\" class=\"text-center text-muted py-4\"><i class=\"fas fa-spinner fa-spin fa-2x mb-2\"></i><br>Cargando asignaturas...</td>';
+        mensajeSinFiltros.style.display = 'table-row';
+    }
+    
+    // Ocultar asignaturas existentes
+    document.querySelectorAll('.asignatura-disponible').forEach(row => {
+        row.style.display = 'none';
+    });
+    
+    // Construir parámetros para la petición AJAX
+    const params = new URLSearchParams();
+    
+    // Solo enviar búsqueda ya que los otros filtros no están activos
+    params.append('busqueda', busqueda);
+    
+    // Realizar petición AJAX
+    const url = `";
+        // line 525
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
+        yield "bibliografias-declaradas/";
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 525), "html", null, true);
+        yield "/vincular/ajax?\${params.toString()}`;
+    
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            actualizarTablaAsignaturas(data.asignaturas);
+        } else {
+            console.error('Error al cargar asignaturas:', data.message);
+            if (mensajeSinFiltros) {
+                mensajeSinFiltros.innerHTML = '<td colspan=\"4\" class=\"text-center text-muted py-4\"><i class=\"fas fa-exclamation-triangle fa-2x mb-2\"></i><br>Error al cargar las asignaturas</td>';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        if (mensajeSinFiltros) {
+            mensajeSinFiltros.innerHTML = '<td colspan=\"4\" class=\"text-center text-muted py-4\"><i class=\"fas fa-exclamation-triangle fa-2x mb-2\"></i><br>Error al cargar las asignaturas<br><small>Intente nuevamente</small></td>';
+        }
+        // Ocultar botones de acción en caso de error
+        if (botonesAccion) {
+            botonesAccion.style.display = 'none';
+        }
+    });
+}
+
+// Función para actualizar la tabla de asignaturas
+function actualizarTablaAsignaturas(asignaturas) {
+    // Restaurar botón de búsqueda
+    const btnBuscar = document.getElementById('btnBuscar');
+    if (btnBuscar) {
+        btnBuscar.disabled = false;
+        btnBuscar.innerHTML = '<i class=\"fas fa-search\"></i>';
+    }
+    
+    const tbodyAsignaturas = document.getElementById('tbodyAsignaturas');
+    const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
+    const botonesAccion = document.getElementById('botonesAccion');
+    
+    // Limpiar tabla existente
+    document.querySelectorAll('.asignatura-disponible').forEach(row => {
+        row.remove();
+    });
+    
+    if (asignaturas.length === 0) {
+        if (mensajeSinFiltros) {
+            mensajeSinFiltros.innerHTML = '<td colspan=\"4\" class=\"text-center text-muted py-4\"><i class=\"fas fa-search fa-2x mb-2\"></i><br>No se encontraron asignaturas con los filtros aplicados</td>';
+            mensajeSinFiltros.style.display = 'table-row';
+        }
+        if (botonesAccion) {
+            botonesAccion.style.display = 'none';
+        }
+        return;
+    }
+    
+    // Ocultar mensaje sin filtros
+    if (mensajeSinFiltros) {
+        mensajeSinFiltros.style.display = 'none';
+    }
+    
+    // Mostrar botones de acción
+    if (botonesAccion) {
+        botonesAccion.style.display = 'flex';
+    }
+    
+    // Agregar nuevas filas
+    asignaturas.forEach((asignatura, index) => {
+        const newRow = document.createElement('tr');
+        newRow.className = 'asignatura-disponible';
+        newRow.style.display = 'table-row';
+        
+        newRow.innerHTML = `
+            <td class=\"align-top\">
+                <input type=\"checkbox\" class=\"form-check-input\" name=\"asignaturas[]\" value=\"\${asignatura.id}\" data-nombre=\"\${asignatura.nombre}\" data-tipo=\"\${asignatura.tipo}\">
+            </td>
+            <td class=\"align-top\">
+                <div style=\"font-size: 0.9em; word-break: break-all;\">
+                    \${asignatura.codigos ? asignatura.codigos.replace(/, /g, '\\n') : ''}
+                </div>
+            </td>
+            <td class=\"align-top\">\${asignatura.nombre}</td>
+            <td class=\"align-top\">
+                <div class=\"form-check\">
+                    <input class=\"form-check-input tipo-bibliografia\" type=\"radio\" 
+                           name=\"tipo_bibliografia_\${asignatura.id}\" 
+                           value=\"basica\" 
+                           data-asignatura-id=\"\${asignatura.id}\"
+                           checked>
+                    <label class=\"form-check-label\">Básica</label>
+                </div>
+                <div class=\"form-check\">
+                    <input class=\"form-check-input tipo-bibliografia\" type=\"radio\" 
+                           name=\"tipo_bibliografia_\${asignatura.id}\" 
+                           value=\"complementaria\" 
+                           data-asignatura-id=\"\${asignatura.id}\">
+                    <label class=\"form-check-label\">Complementaria</label>
+                </div>
+                <div class=\"form-check\">
+                    <input class=\"form-check-input tipo-bibliografia\" type=\"radio\" 
+                           name=\"tipo_bibliografia_\${asignatura.id}\" 
+                           value=\"otro\" 
+                           data-asignatura-id=\"\${asignatura.id}\">
+                    <label class=\"form-check-label\">Otro</label>
+                </div>
+            </td>
+        `;
+        
+        tbodyAsignaturas.appendChild(newRow);
+    });
+}
+
+// Función para limpiar filtros
+function limpiarFiltros() {
+    document.getElementById('ubicacion').value = '';
+    document.getElementById('tipo_asignatura').value = '';
+    document.getElementById('busqueda').value = '';
+    
+    // Mostrar mensaje inicial
+    const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
+    if (mensajeSinFiltros) {
+        mensajeSinFiltros.innerHTML = '<td colspan=\"4\" class=\"text-center text-muted py-4\"><i class=\"fas fa-info-circle fa-2x mb-2\"></i><br>Seleccione una ubicación o un tipo de asignatura para ver las asignaturas disponibles</td>';
+        mensajeSinFiltros.style.display = 'table-row';
+    }
+    
+    // Ocultar asignaturas existentes y botones de acción
+    document.querySelectorAll('.asignatura-disponible').forEach(row => {
+        row.style.display = 'none';
+    });
+    
+    const botonesAccion = document.getElementById('botonesAccion');
+    if (botonesAccion) {
+        botonesAccion.style.display = 'none';
+    }
+}
 
 // Verificar filtros iniciales al cargar la página
 document.addEventListener('DOMContentLoaded', function() {
@@ -654,10 +978,10 @@ function agregarSeleccionadas() {
     
     // Realizar la petición AJAX
     const url = '";
-        // line 387
+        // line 699
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "bibliografias-declaradas/";
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 387), "html", null, true);
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 699), "html", null, true);
         yield "/vincularMultiple'.replace(/([^:]\\/)\\/+/g, \"\$1\");
     fetch(url, {
         method: 'POST',
@@ -734,10 +1058,10 @@ function quitarSeleccionadas() {
             }
 
             const url = `";
-        // line 462
+        // line 774
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "bibliografias-declaradas/";
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 462), "html", null, true);
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 774), "html", null, true);
         yield "/desvincularMultiple`;
             
             fetch(url, {
@@ -797,10 +1121,10 @@ function agregarAsignatura(asignaturaId) {
 
     // Realizar la petición AJAX
     const url = '";
-        // line 520
+        // line 832
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "bibliografias-declaradas/";
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 520), "html", null, true);
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 832), "html", null, true);
         yield "/vincularMultiple'.replace(/([^:]\\/)\\/+/g, \"\$1\");
     fetch(url, {
         method: 'POST',
@@ -870,8 +1194,8 @@ function quitarAsignatura(vinculacionId) {
     }
 
     const url = `";
-        // line 588
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((((($context["app_url"] ?? null) . "bibliografias-declaradas/") . CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 588)) . "/desvincularSingle/"), "html", null, true);
+        // line 900
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((((($context["app_url"] ?? null) . "bibliografias-declaradas/") . CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 900)) . "/desvincularSingle/"), "html", null, true);
         yield "\${vinculacionId}`;
     
     fetch(url, {
@@ -939,10 +1263,10 @@ function vincularAsignaturas() {
 
     // Realizar la petición AJAX
     const url = '";
-        // line 654
+        // line 966
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "bibliografias-declaradas/";
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 654), "html", null, true);
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 966), "html", null, true);
         yield "/vincularMultiple'.replace(/([^:]\\/)\\/+/g, \"\$1\");
     fetch(url, {
         method: 'POST',
@@ -1028,7 +1352,7 @@ function vincularAsignaturas() {
      */
     public function getDebugInfo(): array
     {
-        return array (  943 => 654,  874 => 588,  801 => 520,  738 => 462,  658 => 387,  596 => 330,  525 => 262,  518 => 261,  505 => 251,  496 => 247,  494 => 246,  487 => 244,  483 => 243,  479 => 241,  475 => 239,  469 => 237,  467 => 236,  460 => 232,  456 => 230,  451 => 229,  408 => 188,  396 => 182,  391 => 180,  383 => 175,  378 => 173,  369 => 167,  364 => 165,  357 => 161,  350 => 158,  339 => 154,  335 => 152,  331 => 151,  281 => 103,  275 => 102,  262 => 100,  257 => 99,  253 => 98,  235 => 82,  229 => 80,  227 => 79,  222 => 78,  220 => 77,  215 => 76,  213 => 75,  209 => 74,  205 => 73,  200 => 72,  198 => 71,  193 => 70,  191 => 69,  186 => 68,  184 => 67,  177 => 62,  173 => 60,  167 => 58,  165 => 57,  158 => 52,  154 => 50,  146 => 48,  144 => 47,  135 => 41,  129 => 38,  121 => 33,  115 => 30,  109 => 27,  93 => 14,  88 => 11,  81 => 10,  73 => 6,  66 => 5,  54 => 3,  43 => 1,);
+        return array (  1267 => 966,  1198 => 900,  1125 => 832,  1062 => 774,  982 => 699,  803 => 525,  718 => 445,  628 => 360,  543 => 278,  536 => 277,  523 => 267,  514 => 263,  512 => 262,  505 => 260,  501 => 259,  497 => 257,  493 => 255,  487 => 253,  485 => 252,  478 => 248,  474 => 246,  469 => 245,  426 => 204,  414 => 198,  409 => 196,  401 => 191,  396 => 189,  387 => 183,  382 => 181,  375 => 177,  368 => 174,  357 => 170,  353 => 168,  349 => 167,  283 => 103,  277 => 102,  262 => 100,  257 => 99,  253 => 98,  235 => 82,  229 => 80,  227 => 79,  222 => 78,  220 => 77,  215 => 76,  213 => 75,  209 => 74,  205 => 73,  200 => 72,  198 => 71,  193 => 70,  191 => 69,  186 => 68,  184 => 67,  177 => 62,  173 => 60,  167 => 58,  165 => 57,  158 => 52,  154 => 50,  146 => 48,  144 => 47,  135 => 41,  129 => 38,  121 => 33,  115 => 30,  109 => 27,  93 => 14,  88 => 11,  81 => 10,  73 => 6,  66 => 5,  54 => 3,  43 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -1126,18 +1450,18 @@ function vincularAsignaturas() {
         </div>
         <div class=\"card-body\">
             <form id=\"filtroForm\" class=\"row g-3\">
-                <div class=\"col-md-6\">
+                <div class=\"col-md-4\">
                     <label for=\"ubicacion\" class=\"form-label\">Ubicación</label>
-                    <select name=\"ubicacion\" id=\"ubicacion\" class=\"form-select\">
-                        <option value=\"\">Seleccione Ubicación</option>
+                    <select name=\"ubicacion\" id=\"ubicacion\" class=\"form-select\" style=\"font-size: 0.9rem;\">
+                        <option value=\"\" style=\"font-size: 0.9rem;\">Seleccione Ubicación</option>
                         {% for sede in sedes %}
                             {% for unidad in sede.unidades %}
-                                <option value=\"u_{{ unidad.id }}\">{{ sede.nombre }} - {{ unidad.nombre }}</option>
+                                <option value=\"u_{{ unidad.id }}\" style=\"font-size: 0.9rem;\">{{ sede.nombre }} - {{ unidad.codigo }} {{ unidad.nombre }}</option>
                             {% endfor %}
                         {% endfor %}
                     </select>
                 </div>
-                <div class=\"col-md-6\">
+                <div class=\"col-md-4\">
                     <label for=\"tipo_asignatura\" class=\"form-label\">Tipo de Asignatura</label>
                     <select name=\"tipo_asignatura\" id=\"tipo_asignatura\" class=\"form-select\">
                         <option value=\"\">Seleccione Tipo de Asignatura</option>
@@ -1151,7 +1475,23 @@ function vincularAsignaturas() {
                         <option value=\"FORMACION_ESPECIAL\">Formación Especial</option>
                     </select>
                 </div>
+                <div class=\"col-md-4\">
+                    <label for=\"busqueda\" class=\"form-label\">Buscar por Nombre o Código</label>
+                    <div class=\"input-group\">
+                        <input type=\"text\" name=\"busqueda\" id=\"busqueda\" class=\"form-control\" placeholder=\"Ingrese nombre o código de asignatura\">
+                        <button type=\"button\" class=\"btn btn-outline-primary\" id=\"btnBuscar\" onclick=\"realizarBusqueda()\">
+                            <i class=\"fas fa-search\"></i>
+                        </button>
+                    </div>
+                </div>
             </form>
+            <div class=\"row mt-3\">
+                <div class=\"col-12\">
+                    <button type=\"button\" class=\"btn btn-outline-secondary btn-sm\" onclick=\"limpiarFiltros()\">
+                        <i class=\"fas fa-times\"></i> Limpiar Filtros
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1307,6 +1647,7 @@ function getUrlParameter(name) {
 function establecerFiltrosDesdeURL() {
     const unidad = getUrlParameter('unidad');
     const tipoAsignatura = getUrlParameter('tipo_asignatura');
+    const busqueda = getUrlParameter('busqueda');
     
     // Establecer valor del filtro de ubicación
     if (unidad) {
@@ -1317,6 +1658,11 @@ function establecerFiltrosDesdeURL() {
     if (tipoAsignatura) {
         document.getElementById('tipo_asignatura').value = tipoAsignatura;
     }
+    
+    // Establecer valor del filtro de búsqueda
+    if (busqueda) {
+        document.getElementById('busqueda').value = busqueda;
+    }
 }
 
 // Función para verificar filtros al cargar la página
@@ -1326,9 +1672,10 @@ function verificarFiltrosIniciales() {
     
     const unidad = document.getElementById('ubicacion').value;
     const tipoAsignatura = document.getElementById('tipo_asignatura').value;
+    const busqueda = document.getElementById('busqueda').value;
     
     // Verificar si se ha seleccionado al menos un filtro
-    const hayFiltrosSeleccionados = unidad || tipoAsignatura;
+    const hayFiltrosSeleccionados = unidad || tipoAsignatura || busqueda;
     
     // Controlar visibilidad del mensaje y las asignaturas
     const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
@@ -1360,6 +1707,13 @@ function verificarFiltrosIniciales() {
 function aplicarFiltros() {
     const unidad = document.getElementById('ubicacion').value;
     const tipoAsignatura = document.getElementById('tipo_asignatura').value;
+    const busqueda = document.getElementById('busqueda').value;
+    
+    // Mostrar indicador de carga
+    const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
+    if (mensajeSinFiltros) {
+        mensajeSinFiltros.innerHTML = '<td colspan=\"4\" class=\"text-center text-muted py-4\"><i class=\"fas fa-spinner fa-spin fa-2x mb-2\"></i><br>Cargando asignaturas...</td>';
+    }
     
     // Construir la URL con los filtros
     let url = `{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/vincular?`;
@@ -1375,6 +1729,10 @@ function aplicarFiltros() {
         params.append('tipo_asignatura', tipoAsignatura);
     }
     
+    if (busqueda) {
+        params.append('busqueda', busqueda);
+    }
+    
     url += params.toString();
     
     // Recargar la página con los filtros
@@ -1382,8 +1740,286 @@ function aplicarFiltros() {
 }
 
 // Agregar eventos a los selectores de filtros
-document.getElementById('ubicacion').addEventListener('change', aplicarFiltros);
-document.getElementById('tipo_asignatura').addEventListener('change', aplicarFiltros);
+document.getElementById('ubicacion').addEventListener('change', function() {
+    // Para ubicación y tipo, usar recarga de página para mantener la funcionalidad completa
+    aplicarFiltros();
+});
+document.getElementById('tipo_asignatura').addEventListener('change', function() {
+    // Para ubicación y tipo, usar recarga de página para mantener la funcionalidad completa
+    aplicarFiltros();
+});
+
+// Agregar evento para el campo de búsqueda (Enter key)
+document.getElementById('busqueda').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        realizarBusqueda();
+    }
+});
+
+// Función para realizar búsqueda manual
+function realizarBusqueda() {
+    const busqueda = document.getElementById('busqueda').value.trim();
+    
+    if (!busqueda) {
+        // Si no hay texto de búsqueda, mostrar mensaje inicial
+        const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
+        if (mensajeSinFiltros) {
+            mensajeSinFiltros.innerHTML = '<td colspan=\"4\" class=\"text-center text-muted py-4\"><i class=\"fas fa-info-circle fa-2x mb-2\"></i><br>Seleccione una ubicación o un tipo de asignatura para ver las asignaturas disponibles</td>';
+            mensajeSinFiltros.style.display = 'table-row';
+        }
+        const botonesAccion = document.getElementById('botonesAccion');
+        if (botonesAccion) {
+            botonesAccion.style.display = 'none';
+        }
+        return;
+    }
+    
+    // Mostrar indicador de carga
+    const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
+    const botonesAccion = document.getElementById('botonesAccion');
+    const btnBuscar = document.getElementById('btnBuscar');
+    
+    // Deshabilitar botón de búsqueda y mostrar estado de carga
+    if (btnBuscar) {
+        btnBuscar.disabled = true;
+        btnBuscar.innerHTML = '<i class=\"fas fa-spinner fa-spin\"></i>';
+    }
+    
+    if (mensajeSinFiltros) {
+        mensajeSinFiltros.innerHTML = '<td colspan=\"4\" class=\"text-center text-muted py-4\"><i class=\"fas fa-spinner fa-spin fa-2x mb-2\"></i><br>Buscando asignaturas...</td>';
+        mensajeSinFiltros.style.display = 'table-row';
+    }
+    
+    // Ocultar asignaturas existentes
+    document.querySelectorAll('.asignatura-disponible').forEach(row => {
+        row.style.display = 'none';
+    });
+    
+    // Construir parámetros para la petición AJAX
+    const params = new URLSearchParams();
+    params.append('busqueda', busqueda);
+    
+    // Realizar petición AJAX
+    const url = `{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/vincular/ajax?\${params.toString()}`;
+    
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            actualizarTablaAsignaturas(data.asignaturas);
+        } else {
+            console.error('Error al cargar asignaturas:', data.message);
+            if (mensajeSinFiltros) {
+                mensajeSinFiltros.innerHTML = '<td colspan=\"4\" class=\"text-center text-muted py-4\"><i class=\"fas fa-exclamation-triangle fa-2x mb-2\"></i><br>Error al cargar las asignaturas</td>';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        if (mensajeSinFiltros) {
+            mensajeSinFiltros.innerHTML = '<td colspan=\"4\" class=\"text-center text-muted py-4\"><i class=\"fas fa-exclamation-triangle fa-2x mb-2\"></i><br>Error al cargar las asignaturas<br><small>Intente nuevamente</small></td>';
+        }
+        // Ocultar botones de acción en caso de error
+        if (botonesAccion) {
+            botonesAccion.style.display = 'none';
+        }
+    });
+}
+
+// Función para aplicar filtros con AJAX (mantenida para compatibilidad)
+function aplicarFiltrosAjax() {
+    const unidad = document.getElementById('ubicacion').value;
+    const tipoAsignatura = document.getElementById('tipo_asignatura').value;
+    const busqueda = document.getElementById('busqueda').value;
+    
+    // Si hay filtros de ubicación o tipo, usar recarga de página para mantener consistencia
+    if (unidad || tipoAsignatura) {
+        aplicarFiltros();
+        return;
+    }
+    
+    // Solo usar AJAX para búsqueda cuando no hay otros filtros
+    if (!busqueda) {
+        // Si no hay búsqueda, mostrar mensaje inicial
+        const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
+        if (mensajeSinFiltros) {
+            mensajeSinFiltros.innerHTML = '<td colspan=\"4\" class=\"text-center text-muted py-4\"><i class=\"fas fa-info-circle fa-2x mb-2\"></i><br>Seleccione una ubicación o un tipo de asignatura para ver las asignaturas disponibles</td>';
+            mensajeSinFiltros.style.display = 'table-row';
+        }
+        const botonesAccion = document.getElementById('botonesAccion');
+        if (botonesAccion) {
+            botonesAccion.style.display = 'none';
+        }
+        return;
+    }
+    
+    // Mostrar indicador de carga
+    const tbodyAsignaturas = document.getElementById('tbodyAsignaturas');
+    const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
+    const botonesAccion = document.getElementById('botonesAccion');
+    
+    if (mensajeSinFiltros) {
+        mensajeSinFiltros.innerHTML = '<td colspan=\"4\" class=\"text-center text-muted py-4\"><i class=\"fas fa-spinner fa-spin fa-2x mb-2\"></i><br>Cargando asignaturas...</td>';
+        mensajeSinFiltros.style.display = 'table-row';
+    }
+    
+    // Ocultar asignaturas existentes
+    document.querySelectorAll('.asignatura-disponible').forEach(row => {
+        row.style.display = 'none';
+    });
+    
+    // Construir parámetros para la petición AJAX
+    const params = new URLSearchParams();
+    
+    // Solo enviar búsqueda ya que los otros filtros no están activos
+    params.append('busqueda', busqueda);
+    
+    // Realizar petición AJAX
+    const url = `{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/vincular/ajax?\${params.toString()}`;
+    
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            actualizarTablaAsignaturas(data.asignaturas);
+        } else {
+            console.error('Error al cargar asignaturas:', data.message);
+            if (mensajeSinFiltros) {
+                mensajeSinFiltros.innerHTML = '<td colspan=\"4\" class=\"text-center text-muted py-4\"><i class=\"fas fa-exclamation-triangle fa-2x mb-2\"></i><br>Error al cargar las asignaturas</td>';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        if (mensajeSinFiltros) {
+            mensajeSinFiltros.innerHTML = '<td colspan=\"4\" class=\"text-center text-muted py-4\"><i class=\"fas fa-exclamation-triangle fa-2x mb-2\"></i><br>Error al cargar las asignaturas<br><small>Intente nuevamente</small></td>';
+        }
+        // Ocultar botones de acción en caso de error
+        if (botonesAccion) {
+            botonesAccion.style.display = 'none';
+        }
+    });
+}
+
+// Función para actualizar la tabla de asignaturas
+function actualizarTablaAsignaturas(asignaturas) {
+    // Restaurar botón de búsqueda
+    const btnBuscar = document.getElementById('btnBuscar');
+    if (btnBuscar) {
+        btnBuscar.disabled = false;
+        btnBuscar.innerHTML = '<i class=\"fas fa-search\"></i>';
+    }
+    
+    const tbodyAsignaturas = document.getElementById('tbodyAsignaturas');
+    const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
+    const botonesAccion = document.getElementById('botonesAccion');
+    
+    // Limpiar tabla existente
+    document.querySelectorAll('.asignatura-disponible').forEach(row => {
+        row.remove();
+    });
+    
+    if (asignaturas.length === 0) {
+        if (mensajeSinFiltros) {
+            mensajeSinFiltros.innerHTML = '<td colspan=\"4\" class=\"text-center text-muted py-4\"><i class=\"fas fa-search fa-2x mb-2\"></i><br>No se encontraron asignaturas con los filtros aplicados</td>';
+            mensajeSinFiltros.style.display = 'table-row';
+        }
+        if (botonesAccion) {
+            botonesAccion.style.display = 'none';
+        }
+        return;
+    }
+    
+    // Ocultar mensaje sin filtros
+    if (mensajeSinFiltros) {
+        mensajeSinFiltros.style.display = 'none';
+    }
+    
+    // Mostrar botones de acción
+    if (botonesAccion) {
+        botonesAccion.style.display = 'flex';
+    }
+    
+    // Agregar nuevas filas
+    asignaturas.forEach((asignatura, index) => {
+        const newRow = document.createElement('tr');
+        newRow.className = 'asignatura-disponible';
+        newRow.style.display = 'table-row';
+        
+        newRow.innerHTML = `
+            <td class=\"align-top\">
+                <input type=\"checkbox\" class=\"form-check-input\" name=\"asignaturas[]\" value=\"\${asignatura.id}\" data-nombre=\"\${asignatura.nombre}\" data-tipo=\"\${asignatura.tipo}\">
+            </td>
+            <td class=\"align-top\">
+                <div style=\"font-size: 0.9em; word-break: break-all;\">
+                    \${asignatura.codigos ? asignatura.codigos.replace(/, /g, '\\n') : ''}
+                </div>
+            </td>
+            <td class=\"align-top\">\${asignatura.nombre}</td>
+            <td class=\"align-top\">
+                <div class=\"form-check\">
+                    <input class=\"form-check-input tipo-bibliografia\" type=\"radio\" 
+                           name=\"tipo_bibliografia_\${asignatura.id}\" 
+                           value=\"basica\" 
+                           data-asignatura-id=\"\${asignatura.id}\"
+                           checked>
+                    <label class=\"form-check-label\">Básica</label>
+                </div>
+                <div class=\"form-check\">
+                    <input class=\"form-check-input tipo-bibliografia\" type=\"radio\" 
+                           name=\"tipo_bibliografia_\${asignatura.id}\" 
+                           value=\"complementaria\" 
+                           data-asignatura-id=\"\${asignatura.id}\">
+                    <label class=\"form-check-label\">Complementaria</label>
+                </div>
+                <div class=\"form-check\">
+                    <input class=\"form-check-input tipo-bibliografia\" type=\"radio\" 
+                           name=\"tipo_bibliografia_\${asignatura.id}\" 
+                           value=\"otro\" 
+                           data-asignatura-id=\"\${asignatura.id}\">
+                    <label class=\"form-check-label\">Otro</label>
+                </div>
+            </td>
+        `;
+        
+        tbodyAsignaturas.appendChild(newRow);
+    });
+}
+
+// Función para limpiar filtros
+function limpiarFiltros() {
+    document.getElementById('ubicacion').value = '';
+    document.getElementById('tipo_asignatura').value = '';
+    document.getElementById('busqueda').value = '';
+    
+    // Mostrar mensaje inicial
+    const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
+    if (mensajeSinFiltros) {
+        mensajeSinFiltros.innerHTML = '<td colspan=\"4\" class=\"text-center text-muted py-4\"><i class=\"fas fa-info-circle fa-2x mb-2\"></i><br>Seleccione una ubicación o un tipo de asignatura para ver las asignaturas disponibles</td>';
+        mensajeSinFiltros.style.display = 'table-row';
+    }
+    
+    // Ocultar asignaturas existentes y botones de acción
+    document.querySelectorAll('.asignatura-disponible').forEach(row => {
+        row.style.display = 'none';
+    });
+    
+    const botonesAccion = document.getElementById('botonesAccion');
+    if (botonesAccion) {
+        botonesAccion.style.display = 'none';
+    }
+}
 
 // Verificar filtros iniciales al cargar la página
 document.addEventListener('DOMContentLoaded', function() {

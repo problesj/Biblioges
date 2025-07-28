@@ -10,12 +10,33 @@ use src\Models\Usuario;
 class UsuarioController extends BaseController
 {
     protected $usuarioModel;
+    protected $pdo;
 
     public function __construct()
     {
         global $twig;
         parent::__construct($twig, new \Slim\Psr7\Response());
         $this->usuarioModel = new Usuario();
+        
+        // Configuración de la base de datos
+        $dbConfig = [
+            'host' => $_ENV['DB_HOST'] ?? 'localhost',
+            'port' => $_ENV['DB_PORT'] ?? '3306',
+            'dbname' => $_ENV['DB_DATABASE'] ?? 'biblioges',
+            'user' => $_ENV['DB_USERNAME'] ?? 'root',
+            'password' => $_ENV['DB_PASSWORD'] ?? ''
+        ];
+
+        try {
+            $dsn = "mysql:host={$dbConfig['host']};port={$dbConfig['port']};dbname={$dbConfig['dbname']};charset=utf8mb4";
+            $this->pdo = new \PDO($dsn, $dbConfig['user'], $dbConfig['password'], [
+                \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+                \PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
+            ]);
+        } catch (\PDOException $e) {
+            die("Error de conexión: " . $e->getMessage());
+        }
     }
 
     /**
@@ -23,41 +44,128 @@ class UsuarioController extends BaseController
      */
     public function index(Request $request, Response $response, array $args): Response
     {
+        error_log('UsuarioController@index: Iniciando método');
+        
         try {
-            $params = $request->getQueryParams();
-            $page = isset($params['page']) ? (int)$params['page'] : 1;
-            $search = $params['search'] ?? '';
-            $rol = $params['rol'] ?? '';
-            $estado = isset($params['estado']) ? (int)$params['estado'] : '';
+            // Obtener datos de sesión
+            $sessionData = [
+                'user_id' => $_SESSION['user_id'] ?? null,
+                'user_email' => $_SESSION['user_email'] ?? null,
+                'user_nombre' => $_SESSION['user_nombre'] ?? null,
+                'user_rol' => $_SESSION['user_rol'] ?? null
+            ];
 
-            $result = $this->usuarioModel->getAll($page, 10, $search, $rol, $estado);
+            // Parámetros de paginación y ordenamiento
+            $page = max(1, intval($_GET['page'] ?? 1));
+            $perPage = intval($_GET['per_page'] ?? 10);
             
+            // Validar opciones de registros por página
+            $allowedPerPage = [5, 10, 15, 20];
+            if (!in_array($perPage, $allowedPerPage)) {
+                $perPage = 10;
+            }
+            
+            $offset = ($page - 1) * $perPage;
+            
+            // Parámetros de ordenamiento
+            $sortColumn = $_GET['sort'] ?? 'nombre';
+            $sortDirection = strtoupper($_GET['direction'] ?? 'ASC');
+            
+            // Validar columnas permitidas para ordenamiento
+            $allowedColumns = ['rut', 'nombre', 'email', 'rol', 'estado', 'fecha_creacion'];
+            if (!in_array($sortColumn, $allowedColumns)) {
+                $sortColumn = 'nombre';
+            }
+            
+            // Validar dirección de ordenamiento
+            if (!in_array($sortDirection, ['ASC', 'DESC'])) {
+                $sortDirection = 'ASC';
+            }
+            
+            // Construir la consulta base para contar total de registros
+            $countSql = "SELECT COUNT(*) as total FROM usuarios WHERE 1=1";
+            
+            // Construir la consulta principal
+            $sql = "SELECT * FROM usuarios WHERE 1=1";
+            
+            $params = [];
+            
+            // Aplicar filtros si existen
+            if (isset($_GET['search']) && $_GET['search'] !== '') {
+                $searchTerm = '%' . $_GET['search'] . '%';
+                $sql .= " AND (nombre LIKE ? OR email LIKE ? OR rut LIKE ?)";
+                $countSql .= " AND (nombre LIKE ? OR email LIKE ? OR rut LIKE ?)";
+                $params[] = $searchTerm;
+                $params[] = $searchTerm;
+                $params[] = $searchTerm;
+            }
+            
+            if (isset($_GET['rol']) && $_GET['rol'] !== '') {
+                $sql .= " AND rol = ?";
+                $countSql .= " AND rol = ?";
+                $params[] = $_GET['rol'];
+            }
+            
+            if (isset($_GET['estado']) && $_GET['estado'] !== '') {
+                $sql .= " AND estado = ?";
+                $countSql .= " AND estado = ?";
+                $params[] = $_GET['estado'];
+            }
+            
+            // Obtener total de registros
+            $stmt = $this->pdo->prepare($countSql);
+            $stmt->execute($params);
+            $totalRecords = $stmt->fetch()['total'];
+            
+            // Calcular información de paginación
+            $totalPages = ceil($totalRecords / $perPage);
+            $currentPage = $page;
+            
+            // Agregar ORDER BY y LIMIT a la consulta principal
+            $sql .= " ORDER BY {$sortColumn} {$sortDirection} LIMIT {$perPage} OFFSET {$offset}";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            $usuarios = $stmt->fetchAll(\PDO::FETCH_OBJ);
+            
+            error_log('UsuarioController@index: Total usuarios encontrados: ' . count($usuarios));
+
+            // Obtener roles y estados para los filtros
+            $roles = $this->usuarioModel->getRoles();
+            $estados = $this->usuarioModel->getEstados();
+
+            // Renderizar la vista
             return $this->render($response, 'usuarios/index.twig', [
-                'usuarios' => $result['data'],
-                'pagination' => [
-                    'current_page' => $result['current_page'],
-                    'total_pages' => $result['pages'],
-                    'total_records' => $result['total']
-                ],
-                'filters' => [
-                    'search' => $search,
-                    'rol' => $rol,
-                    'estado' => $estado
-                ],
-                'roles' => $this->usuarioModel->getRoles(),
-                'estados' => $this->usuarioModel->getEstados(),
+                'usuarios' => $usuarios,
+                'session' => $sessionData,
                 'app_url' => $GLOBALS['twig']->getGlobals()['app_url'] ?? '',
-                'session' => $_SESSION,
                 'current_page' => 'usuarios',
-                'user' => [
-                    'id' => $_SESSION['user_id'] ?? null,
-                    'email' => $_SESSION['user_email'] ?? null,
-                    'nombre' => $_SESSION['user_nombre'] ?? null,
-                    'rol' => $_SESSION['user_rol'] ?? null
+                'filtros' => [
+                    'search' => $_GET['search'] ?? '',
+                    'rol' => $_GET['rol'] ?? '',
+                    'estado' => $_GET['estado'] ?? ''
+                ],
+                'roles' => $roles,
+                'estados' => $estados,
+                'paginacion' => [
+                    'current_page' => $currentPage,
+                    'per_page' => $perPage,
+                    'total_records' => $totalRecords,
+                    'total_pages' => $totalPages,
+                    'has_previous' => $currentPage > 1,
+                    'has_next' => $currentPage < $totalPages,
+                    'previous_page' => $currentPage - 1,
+                    'next_page' => $currentPage + 1,
+                    'allowed_per_page' => $allowedPerPage
+                ],
+                'ordenamiento' => [
+                    'column' => $sortColumn,
+                    'direction' => $sortDirection
                 ]
             ]);
+            
         } catch (\Exception $e) {
-            // error_log("Error en UsuarioController@index: " . $e->getMessage());
+            error_log("Error en UsuarioController@index: " . $e->getMessage());
             return $this->errorResponse($response, "Error al cargar el listado de usuarios", 500);
         }
     }

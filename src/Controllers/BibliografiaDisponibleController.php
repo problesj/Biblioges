@@ -60,127 +60,155 @@ class BibliografiaDisponibleController extends BaseController
     public function index(Request $request, Response $response): Response
     {
         try {
-            $query = BibliografiaDisponible::with(['bibliografiaDeclarada', 'sedes', 'autores']);
+            // Obtener parámetros de paginación y ordenamiento
+            $page = (int)($request->getQueryParams()['page'] ?? 1);
+            $perPage = (int)($request->getQueryParams()['per_page'] ?? 10);
+            $sortColumn = $request->getQueryParams()['sort'] ?? 'titulo';
+            $sortDirection = $request->getQueryParams()['direction'] ?? 'ASC';
 
-            // Filtro por búsqueda (título, autores o editorial)
+            // Validar parámetros
+            $allowedPerPage = [5, 10, 15, 20];
+            $perPage = in_array($perPage, $allowedPerPage) ? $perPage : 10;
+            $allowedColumns = ['titulo', 'editorial', 'autores'];
+            $sortColumn = in_array($sortColumn, $allowedColumns) ? $sortColumn : 'titulo';
+            $sortDirection = in_array(strtoupper($sortDirection), ['ASC', 'DESC']) ? strtoupper($sortDirection) : 'ASC';
+
+            // Calcular offset
+            $offset = ($page - 1) * $perPage;
+
+            // Construir consulta base
+            $baseQuery = "
+                SELECT DISTINCT bd.*, 
+                       GROUP_CONCAT(DISTINCT CONCAT(a.apellidos, ', ', a.nombres) SEPARATOR '; ') as autores_nombres
+                FROM bibliografias_disponibles bd
+                LEFT JOIN bibliografias_disponibles_autores bda ON bd.id = bda.bibliografia_disponible_id
+                LEFT JOIN autores a ON bda.autor_id = a.id
+                WHERE 1=1
+            ";
+
+            // Filtros
+            $filters = [];
+            $whereConditions = [];
+
+            // Filtro por búsqueda
             $busqueda = $request->getQueryParams()['busqueda'] ?? '';
             if (!empty($busqueda)) {
-                $query->where(function($q) use ($busqueda) {
-                    $q->where('titulo', 'LIKE', "%{$busqueda}%")
-                      ->orWhere('editorial', 'LIKE', "%{$busqueda}%")
-                      ->orWhereHas('autores', function($q) use ($busqueda) {
-                          $q->where('nombres', 'LIKE', "%{$busqueda}%")
-                            ->orWhere('apellidos', 'LIKE', "%{$busqueda}%");
-                      });
-                });
+                $whereConditions[] = "(bd.titulo LIKE ? OR bd.editorial LIKE ? OR a.nombres LIKE ? OR a.apellidos LIKE ?)";
+                $filters[] = "%{$busqueda}%";
+                $filters[] = "%{$busqueda}%";
+                $filters[] = "%{$busqueda}%";
+                $filters[] = "%{$busqueda}%";
             }
 
             // Filtro por disponibilidad
             $disponibilidad = $request->getQueryParams()['disponibilidad'] ?? '';
             if (!empty($disponibilidad)) {
-                $query->where('disponibilidad', $disponibilidad);
+                $whereConditions[] = "bd.disponibilidad = ?";
+                $filters[] = $disponibilidad;
             }
 
             // Filtro por estado
             $estado = $request->getQueryParams()['estado'] ?? '';
             if ($estado !== '') {
-                $query->where('estado', $estado);
+                $whereConditions[] = "bd.estado = ?";
+                $filters[] = $estado;
             }
 
             // Filtro por año de edición
             $anioEdicion = $request->getQueryParams()['anio_edicion'] ?? '';
             if (!empty($anioEdicion)) {
-                $query->where('anio_edicion', $anioEdicion);
+                $whereConditions[] = "bd.anio_edicion = ?";
+                $filters[] = $anioEdicion;
             }
+
+            // Agregar condiciones WHERE
+            if (!empty($whereConditions)) {
+                $baseQuery .= " AND " . implode(" AND ", $whereConditions);
+            }
+
+            // Agregar GROUP BY
+            $baseQuery .= " GROUP BY bd.id";
 
             // Ordenamiento
-            $orden = $request->getQueryParams()['orden'] ?? 'titulo';
-            $direccion = $request->getQueryParams()['direccion'] ?? 'asc';
-
-            // Validar campo de ordenamiento
-            $camposOrdenamiento = ['titulo', 'editorial', 'autores'];
-            $orden = in_array($orden, $camposOrdenamiento) ? $orden : 'titulo';
-            $direccion = in_array($direccion, ['asc', 'desc']) ? $direccion : 'asc';
-
-            // Aplicar ordenamiento
-            switch ($orden) {
+            switch ($sortColumn) {
                 case 'titulo':
-                    $query->orderBy('titulo', $direccion);
+                    $baseQuery .= " ORDER BY bd.titulo " . $sortDirection;
                     break;
                 case 'editorial':
-                    $query->orderBy('editorial', $direccion);
+                    $baseQuery .= " ORDER BY bd.editorial " . $sortDirection;
                     break;
                 case 'autores':
-                    $query->join('bibliografias_disponibles_autores', 'bibliografias_disponibles.id', '=', 'bibliografias_disponibles_autores.bibliografia_disponible_id')
-                          ->join('autores', 'bibliografias_disponibles_autores.autor_id', '=', 'autores.id')
-                          ->select([
-                              'bibliografias_disponibles.*',
-                              'autores.apellidos',
-                              'autores.nombres'
-                          ])
-                          ->orderBy('autores.apellidos', $direccion)
-                          ->orderBy('autores.nombres', $direccion)
-                          ->distinct();
+                    $baseQuery .= " ORDER BY MIN(a.apellidos) " . $sortDirection . ", MIN(a.nombres) " . $sortDirection;
                     break;
+                default:
+                    $baseQuery .= " ORDER BY bd.titulo ASC";
             }
 
-            // Paginación
-            $pagina = (int)($request->getQueryParams()['pagina'] ?? 1);
-            $porPagina = 20;
-            $total = $query->count();
-            $totalPaginas = ceil($total / $porPagina);
-            $pagina = max(1, min($pagina, $totalPaginas)); // Asegurar que la página esté entre 1 y totalPaginas
-
-            $bibliografias = $query->skip(($pagina - 1) * $porPagina)
-                                 ->take($porPagina)
-                                 ->get();
-
-            // error_log('Renderizando plantilla: bibliografias_disponibles/index.twig');
-            // error_log('Datos pasados a la plantilla: ' . print_r([
-            //     'bibliografias' => $bibliografias,
-            //     'filtros' => [
-            //         'busqueda' => $busqueda,
-            //         'disponibilidad' => $disponibilidad,
-            //         'estado' => $estado,
-            //         'anio_edicion' => $anioEdicion,
-            //         'orden' => $orden,
-            //         'direccion' => $direccion,
-            //         'pagina' => $pagina,
-            //         'total_paginas' => $totalPaginas,
-            //         'total_registros' => $total
-            //     ]
-            // ], true));
+            // Consulta para contar total de registros
+            $countQuery = "
+                SELECT COUNT(DISTINCT bd.id) as total
+                FROM bibliografias_disponibles bd
+                LEFT JOIN bibliografias_disponibles_autores bda ON bd.id = bda.bibliografia_disponible_id
+                LEFT JOIN autores a ON bda.autor_id = a.id
+                WHERE 1=1
+            ";
             
-            // Agregar variables globales a la plantilla
-            $data = [
+            if (!empty($whereConditions)) {
+                $countQuery .= " AND " . implode(" AND ", $whereConditions);
+            }
+
+            // Ejecutar consulta de conteo
+            $stmt = $this->pdo->prepare($countQuery);
+            $stmt->execute($filters);
+            $totalRecords = $stmt->fetch()['total'];
+
+            // Calcular total de páginas
+            $totalPages = ceil($totalRecords / $perPage);
+            $currentPage = max(1, min($page, $totalPages));
+
+            // Consulta principal con LIMIT y OFFSET
+            $mainQuery = $baseQuery . " LIMIT " . (int)$perPage . " OFFSET " . (int)$offset;
+            
+            // Ejecutar consulta principal
+            $stmt = $this->pdo->prepare($mainQuery);
+            $stmt->execute($filters);
+            $bibliografias = $stmt->fetchAll();
+
+            // Preparar datos para la vista
+            $viewData = [
                 'bibliografias' => $bibliografias,
+                'paginacion' => [
+                    'current_page' => $currentPage,
+                    'per_page' => $perPage,
+                    'total_records' => $totalRecords,
+                    'total_pages' => $totalPages,
+                    'allowed_per_page' => $allowedPerPage
+                ],
+                'ordenamiento' => [
+                    'column' => $sortColumn,
+                    'direction' => $sortDirection
+                ],
                 'filtros' => [
                     'busqueda' => $busqueda,
                     'disponibilidad' => $disponibilidad,
                     'estado' => $estado,
-                    'anio_edicion' => $anioEdicion,
-                    'orden' => $orden,
-                    'direccion' => $direccion,
-                    'pagina' => $pagina,
-                    'total_paginas' => $totalPaginas,
-                    'total_registros' => $total
+                    'anio_edicion' => $anioEdicion
                 ],
                 'app_url' => Config::get('app_url'),
                 'session' => $_SESSION,
                 'current_page' => 'bibliografias-disponibles'
             ];
-            
-            // Limpiar mensajes de sesión después de pasarlos a la plantilla
+
+            // Limpiar mensajes de sesión
             if (isset($_SESSION['success'])) {
                 unset($_SESSION['success']);
             }
             if (isset($_SESSION['error'])) {
                 unset($_SESSION['error']);
             }
-            
+
             // Renderizar la plantilla
-            $content = $this->twig->render('bibliografias_disponibles/index.twig', $data);
-            // error_log('Plantilla renderizada correctamente');
+            $content = $this->twig->render('bibliografias_disponibles/index.twig', $viewData);
             
             // Establecer el contenido en la respuesta
             header('Content-Type: text/html; charset=utf-8');

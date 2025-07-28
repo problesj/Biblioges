@@ -102,25 +102,39 @@ class BibliografiaDeclaradaController
             // Obtener parámetros de la solicitud
             $queryParams = $request ? $request->getQueryParams() : $_GET;
             
+            // Parámetros de paginación y ordenamiento
+            $page = max(1, intval($queryParams['page'] ?? 1));
+            $perPage = intval($queryParams['per_page'] ?? 10);
+            // Validar opciones de registros por página
+            $allowedPerPage = [5, 10, 15, 20];
+            if (!in_array($perPage, $allowedPerPage)) { $perPage = 10; }
+            $offset = ($page - 1) * $perPage;
+            
+            // Parámetros de ordenamiento
+            $sortColumn = $queryParams['sort'] ?? 'titulo';
+            $sortDirection = strtoupper($queryParams['direction'] ?? 'ASC');
+            // Validar columnas permitidas para ordenamiento
+            $allowedColumns = ['titulo', 'tipo', 'estado', 'autores', 'asignaturas', 'anio_publicacion'];
+            if (!in_array($sortColumn, $allowedColumns)) { $sortColumn = 'titulo'; }
+            // Validar dirección de ordenamiento
+            if (!in_array($sortDirection, ['ASC', 'DESC'])) { $sortDirection = 'ASC'; }
+            
             // Inicializar filtros con valores por defecto
             $filtros = [
                 'busqueda' => $queryParams['busqueda'] ?? '',
                 'tipo_busqueda' => $queryParams['tipo_busqueda'] ?? 'todos',
                 'tipo' => $queryParams['tipo'] ?? '',
-                'estado' => $queryParams['estado'] ?? '',
-                'orden' => $queryParams['orden'] ?? 'titulo',
-                'direccion' => $queryParams['direccion'] ?? 'asc',
-                'pagina' => (int)($queryParams['pagina'] ?? 1)
+                'estado' => $queryParams['estado'] ?? ''
             ];
 
-            // Validar dirección de ordenamiento
-            $filtros['direccion'] = in_array($filtros['direccion'], ['asc', 'desc']) ? $filtros['direccion'] : 'asc';
+            // Construir la consulta base para contar total de registros
+            $countSql = "SELECT COUNT(DISTINCT b.id) as total FROM bibliografias_declaradas b
+                   LEFT JOIN bibliografias_autores ba ON b.id = ba.bibliografia_id
+                   LEFT JOIN autores a ON ba.autor_id = a.id
+                   LEFT JOIN asignaturas_bibliografias ab ON b.id = ab.bibliografia_id
+                   LEFT JOIN asignaturas asig ON ab.asignatura_id = asig.id";
 
-            // Validar campo de ordenamiento
-            $camposOrdenamiento = ['id', 'titulo', 'tipo', 'anio_publicacion', 'estado', 'autores', 'asignaturas'];
-            $filtros['orden'] = in_array($filtros['orden'], $camposOrdenamiento) ? $filtros['orden'] : 'titulo';
-
-            // Construir la consulta base
+            // Construir la consulta principal
             $sql = "SELECT b.*, 
                    GROUP_CONCAT(DISTINCT CONCAT(a.apellidos, ', ', a.nombres) SEPARATOR '; ') as autores,
                    GROUP_CONCAT(DISTINCT CONCAT(asig.nombre, ' (', ab.tipo_bibliografia, ')') SEPARATOR '; ') as asignaturas
@@ -177,27 +191,27 @@ class BibliografiaDeclaradaController
 
             // Agregar condiciones WHERE si existen
             if (!empty($where)) {
+                $countSql .= " WHERE " . implode(" AND ", $where);
                 $sql .= " WHERE " . implode(" AND ", $where);
             }
 
-            // Agregar GROUP BY
-            $sql .= " GROUP BY b.id";
-
-            // Agregar ORDER BY según el campo seleccionado
-            $sql .= " ORDER BY " . $filtros['orden'] . " " . $filtros['direccion'];
-
-            // Paginación
-            $porPagina = 20;
-            
-            // Obtener el total de registros
-            $stmt = $this->pdo->prepare($sql);
+            // Obtener total de registros
+            $stmt = $this->pdo->prepare($countSql);
             $stmt->execute($params);
-            $total = $stmt->rowCount();
-            $totalPaginas = ceil($total / $porPagina);
-            $filtros['pagina'] = max(1, min($filtros['pagina'], $totalPaginas)); // Asegurar que la página esté entre 1 y totalPaginas
-
-            // Agregar LIMIT para la paginación
-            $sql .= " LIMIT " . (($filtros['pagina'] - 1) * $porPagina) . ", " . $porPagina;
+            $totalRecords = $stmt->fetch()['total'];
+            
+            // Calcular información de paginación
+            $totalPages = ceil($totalRecords / $perPage);
+            $currentPage = $page;
+            
+            // Agregar GROUP BY y ORDER BY a la consulta principal
+            if ($sortColumn === 'autores') {
+                $sql .= " GROUP BY b.id ORDER BY MIN(a.apellidos) {$sortDirection} LIMIT {$perPage} OFFSET {$offset}";
+            } elseif ($sortColumn === 'asignaturas') {
+                $sql .= " GROUP BY b.id ORDER BY MIN(asig.nombre) {$sortDirection} LIMIT {$perPage} OFFSET {$offset}";
+            } else {
+                $sql .= " GROUP BY b.id ORDER BY b.{$sortColumn} {$sortDirection} LIMIT {$perPage} OFFSET {$offset}";
+            }
 
             // Ejecutar la consulta final
             $stmt = $this->pdo->prepare($sql);
@@ -208,18 +222,41 @@ class BibliografiaDeclaradaController
             $stmt = $this->pdo->query("SELECT id, nombre FROM asignaturas WHERE estado = 1 ORDER BY nombre");
             $asignaturas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Agregar información de paginación a los filtros
-            $filtros['total_paginas'] = $totalPaginas;
-            $filtros['total_registros'] = $total;
+            // Obtener datos del usuario
+            $user = [
+                'id' => $this->session->get('user_id'),
+                'email' => $this->session->get('user_email'),
+                'nombre' => $this->session->get('user_nombre'),
+                'rol' => $this->session->get('user_rol')
+            ];
 
-            return $this->render($response, 'bibliografias_declaradas/index.twig', [
+            // Preparar datos para la vista
+            $viewData = [
                 'bibliografias' => $bibliografias,
                 'asignaturas' => $asignaturas,
-                'filtros' => $filtros,
+                'user' => $user,
+                'current_page' => 'bibliografias_declaradas',
                 'app_url' => Config::get('app_url'),
                 'session' => $_SESSION,
-                'swal' => $swal
-            ]);
+                'swal' => $swal,
+                'filtros' => $filtros,
+                'paginacion' => [
+                    'current_page' => $currentPage,
+                    'per_page' => $perPage,
+                    'total_records' => $totalRecords,
+                    'total_pages' => $totalPages,
+                    'has_previous' => $currentPage > 1,
+                    'has_next' => $currentPage < $totalPages,
+                    'previous_page' => $currentPage - 1,
+                    'next_page' => $currentPage + 1
+                ],
+                'ordenamiento' => [
+                    'column' => $sortColumn,
+                    'direction' => $sortDirection
+                ]
+            ];
+
+            return $this->render($response, 'bibliografias_declaradas/index.twig', $viewData);
         } catch (\Exception $e) {
             //error_log('Error en index: ' . $e->getMessage());
             return $this->jsonResponse([
@@ -1088,7 +1125,8 @@ class BibliografiaDeclaradaController
                     s.id as sede_id,
                     s.nombre as sede_nombre,
                     u.id as unidad_id,
-                    u.nombre as unidad_nombre
+                    u.nombre as unidad_nombre,
+                    u.codigo as unidad_codigo
                 FROM sedes s
                 LEFT JOIN unidades u ON u.sede_id = s.id
                 ORDER BY s.nombre, u.nombre
@@ -1109,7 +1147,8 @@ class BibliografiaDeclaradaController
                 if ($row['unidad_id'] && !isset($sedes[$row['sede_id']]['unidades'][$row['unidad_id']])) {
                     $sedes[$row['sede_id']]['unidades'][$row['unidad_id']] = [
                         'id' => $row['unidad_id'],
-                        'nombre' => $row['unidad_nombre']
+                        'nombre' => $row['unidad_nombre'],
+                        'codigo' => $row['unidad_codigo']
                     ];
                 }
             }
@@ -1158,14 +1197,15 @@ class BibliografiaDeclaradaController
             // Obtener los filtros de la URL
             $filtros = [
                 'unidad' => $_GET['unidad'] ?? null,
-                'tipo_asignatura' => $_GET['tipo_asignatura'] ?? null
+                'tipo_asignatura' => $_GET['tipo_asignatura'] ?? null,
+                'busqueda' => $_GET['busqueda'] ?? null
             ];
             //error_log('Filtros aplicados: ' . print_r($filtros, true));
 
             // Obtener las asignaturas disponibles
-            //error_log('Obteniendo asignaturas disponibles');
+            error_log('Obteniendo asignaturas disponibles con filtros: ' . print_r($filtros, true));
             $asignaturas_disponibles = $this->obtenerAsignaturasDisponibles($id, $filtros);
-            //error_log('Asignaturas disponibles obtenidas: ' . print_r($asignaturas_disponibles, true));
+            error_log('Asignaturas disponibles obtenidas: ' . count($asignaturas_disponibles) . ' registros');
 
             // Crear una nueva respuesta si no se proporciona una
             if (!$response) {
@@ -1192,11 +1232,49 @@ class BibliografiaDeclaradaController
             return $response;
 
         } catch (\Exception $e) {
-            //error_log('Error en método vincular: ' . $e->getMessage());
-            //error_log('Stack trace: ' . $e->getTraceAsString());
+            error_log('Error en método vincular: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
             $_SESSION['error'] = 'Error al cargar la página: ' . $e->getMessage();
-        header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas');
-        exit;
+            header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas');
+            exit;
+        }
+    }
+
+    /**
+     * Endpoint AJAX para obtener asignaturas disponibles filtradas.
+     */
+    public function vincularAjax(Request $request, Response $response, array $args = []): Response
+    {
+        try {
+            $id = $args['id'] ?? null;
+            
+            if (!$id) {
+                return $this->jsonResponse([
+                    'success' => false,
+                    'message' => 'ID de bibliografía no proporcionado'
+                ]);
+            }
+
+            // Obtener los filtros de la URL
+            $filtros = [
+                'unidad' => $_GET['unidad'] ?? null,
+                'tipo_asignatura' => $_GET['tipo_asignatura'] ?? null,
+                'busqueda' => $_GET['busqueda'] ?? null
+            ];
+
+            // Obtener las asignaturas disponibles
+            $asignaturas_disponibles = $this->obtenerAsignaturasDisponibles($id, $filtros);
+
+            return $this->jsonResponse([
+                'success' => true,
+                'asignaturas' => $asignaturas_disponibles
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->jsonResponse([
+                'success' => false,
+                'message' => 'Error al obtener asignaturas: ' . $e->getMessage()
+            ]);
         }
     }
 
@@ -1241,12 +1319,24 @@ class BibliografiaDeclaradaController
             $params[':tipo_asignatura'] = $filtros['tipo_asignatura'];
         }
 
+        // Aplicar filtro de búsqueda por nombre o código
+        if (!empty($filtros['busqueda'])) {
+            $sql .= " AND (a.nombre LIKE :busqueda_nombre OR ad.codigo_asignatura LIKE :busqueda_codigo)";
+            $params[':busqueda_nombre'] = '%' . trim($filtros['busqueda']) . '%';
+            $params[':busqueda_codigo'] = '%' . trim($filtros['busqueda']) . '%';
+        }
+
         $sql .= " GROUP BY a.id, a.nombre, ab.tipo_bibliografia";
         $sql .= " ORDER BY a.nombre";
 
+        error_log('SQL Query: ' . $sql);
+        error_log('SQL Params: ' . print_r($params, true));
+
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        error_log('Resultado de la consulta: ' . count($result) . ' registros');
+        return $result;
     }
 
     /**

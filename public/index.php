@@ -61,6 +61,7 @@ if (file_exists($envFile)) {
     $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
     $dotenv->load();
 } else {
+                $section = 'carreras'; // Por defecto
     // Configuración por defecto si no existe .env
     $_ENV['DB_HOST'] = '127.0.0.1';
     $_ENV['DB_PORT'] = '3306';
@@ -109,6 +110,7 @@ $app->add(function ($request, $handler) {
             $pathInfo = '/';
         }
     } else {
+                $section = 'carreras'; // Por defecto
         $pathInfo = $path;
     }
     
@@ -157,6 +159,178 @@ $twig->addFunction(new \Twig\TwigFunction('clean_error_message', function () {
         unset($_SESSION['success']);
     }
     return '';
+}));
+
+// Funciones para paginación y ordenamiento
+$twig->addFunction(new \Twig\TwigFunction('build_sort_url', function ($column, $current_sort = '', $current_direction = 'ASC', $filters = [], $page = 1, $perPage = 10) use ($baseUrl) {
+    $direction = ($current_sort === $column && $current_direction === 'ASC') ? 'DESC' : 'ASC';
+    $params = array_merge($filters, [
+        'sort' => $column,
+        'direction' => $direction
+    ]);
+    if ($page > 1) {
+        $params['page'] = $page;
+    }
+    if ($perPage != 10) {
+        $params['per_page'] = $perPage;
+    }
+    $query = http_build_query($params);
+    
+    // Detectar la sección actual basándose en la URL
+    $currentPath = $_SERVER['REQUEST_URI'] ?? '';
+    $pathWithoutQuery = strtok($currentPath, '?');
+    $pathParts = explode('/', trim($pathWithoutQuery, '/'));
+    $currentSection = end($pathParts);
+    
+    // Determinar la sección correcta
+    if ($currentSection === 'asignaturas') {
+        $section = 'asignaturas';
+    } elseif ($currentSection === 'bibliografias-declaradas') {
+        $section = 'bibliografias-declaradas';
+    } elseif ($currentSection === 'bibliografias-disponibles') {
+        $section = 'bibliografias-disponibles';
+    } elseif ($currentSection === 'mallas') {
+        $section = 'mallas';
+    } elseif ($currentSection === 'coberturas') {
+        $section = 'reportes/coberturas';
+    } elseif ($currentSection === 'listado-bibliografias') {
+        $section = 'reportes/listado-bibliografias';
+    } elseif ($currentSection === 'sedes') {
+        $section = 'sedes';
+    } elseif ($currentSection === 'unidades') {
+        $section = 'unidades';
+    } elseif ($currentSection === 'usuarios') {
+        $section = 'usuarios';
+    } elseif ($currentSection === 'tareas_programadas') {
+        $section = 'tareas_programadas';
+    } elseif ($currentSection === 'tareas-programadas') {
+        $section = 'tareas-programadas';
+    } else {
+        $section = 'carreras'; // Por defecto
+    }
+    
+    return $baseUrl . $section . ($query ? '?' . $query : '');
+}));
+
+$twig->addFunction(new \Twig\TwigFunction('build_page_url', function ($page, $sort = '', $direction = 'ASC', $filters = [], $perPage = 10) use ($baseUrl) {
+    $params = $filters;
+    
+    if ($sort) {
+        $params['sort'] = $sort;
+    }
+    
+    if ($direction) {
+        $params['direction'] = $direction;
+    }
+    
+    if ($page > 1) {
+        $params['page'] = $page;
+    }
+    
+    if ($perPage != 10) {
+        $params['per_page'] = $perPage;
+    }
+    
+    $query = http_build_query($params);
+    
+    // Detectar la sección actual basándose en la URL
+    $currentPath = $_SERVER['REQUEST_URI'] ?? '';
+    $pathWithoutQuery = strtok($currentPath, '?');
+    $pathParts = explode('/', trim($pathWithoutQuery, '/'));
+    $currentSection = end($pathParts);
+    
+    // Determinar la sección correcta
+    if ($currentSection === 'asignaturas') {
+        $section = 'asignaturas';
+    } elseif ($currentSection === 'bibliografias-declaradas') {
+        $section = 'bibliografias-declaradas';
+    } elseif ($currentSection === 'bibliografias-disponibles') {
+        $section = 'bibliografias-disponibles';
+    } elseif ($currentSection === 'mallas') {
+        $section = 'mallas';
+    } elseif ($currentSection === 'coberturas') {
+        $section = 'reportes/coberturas';
+    } elseif ($currentSection === 'listado-bibliografias') {
+        $section = 'reportes/listado-bibliografias';
+    } elseif ($currentSection === 'sedes') {
+        $section = 'sedes';
+    } elseif ($currentSection === 'unidades') {
+        $section = 'unidades';
+    } elseif ($currentSection === 'usuarios') {
+        $section = 'usuarios';
+    } elseif ($currentSection === 'tareas_programadas') {
+        $section = 'tareas_programadas';
+    } elseif ($currentSection === 'tareas-programadas') {
+        $section = 'tareas-programadas';
+    } else {
+        $section = 'carreras'; // Por defecto
+    }
+    
+    return $baseUrl . $section . ($query ? '?' . $query : '');
+}));
+
+$twig->addFunction(new \Twig\TwigFunction('get_sort_icon', function ($column, $current_sort, $current_direction) {
+    if ($current_sort === $column) {
+        return $current_direction === 'ASC' ? 'fa-sort-up' : 'fa-sort-down';
+    }
+    return 'fa-sort';
+}));
+
+$twig->addFunction(new \Twig\TwigFunction('build_per_page_url', function ($perPage, $sort = '', $direction = 'ASC', $filters = [], $page = 1) use ($baseUrl) {
+    $params = $filters;
+    
+    if ($sort) {
+        $params['sort'] = $sort;
+    }
+    
+    if ($direction) {
+        $params['direction'] = $direction;
+    }
+    
+    if ($perPage != 10) {
+        $params['per_page'] = $perPage;
+    }
+    
+    if ($page > 1) {
+        $params['page'] = $page;
+    }
+    
+    $query = http_build_query($params);
+    
+    // Detectar la sección actual basándose en la URL
+    $currentPath = $_SERVER['REQUEST_URI'] ?? '';
+    $pathWithoutQuery = strtok($currentPath, '?');
+    $pathParts = explode('/', trim($pathWithoutQuery, '/'));
+    $currentSection = end($pathParts);
+    
+    // Determinar la sección correcta
+    if ($currentSection === 'asignaturas') {
+        $section = 'asignaturas';
+    } elseif ($currentSection === 'bibliografias-declaradas') {
+        $section = 'bibliografias-declaradas';
+    } elseif ($currentSection === 'bibliografias-disponibles') {
+        $section = 'bibliografias-disponibles';
+    } elseif ($currentSection === 'mallas') {
+        $section = 'mallas';
+    } elseif ($currentSection === 'coberturas') {
+        $section = 'reportes/coberturas';
+    } elseif ($currentSection === 'listado-bibliografias') {
+        $section = 'reportes/listado-bibliografias';
+    } elseif ($currentSection === 'sedes') {
+        $section = 'sedes';
+    } elseif ($currentSection === 'unidades') {
+        $section = 'unidades';
+    } elseif ($currentSection === 'usuarios') {
+        $section = 'usuarios';
+    } elseif ($currentSection === 'tareas_programadas') {
+        $section = 'tareas_programadas';
+    } elseif ($currentSection === 'tareas-programadas') {
+        $section = 'tareas-programadas';
+    } else {
+        $section = 'carreras'; // Por defecto
+    }
+    
+    return $baseUrl . $section . ($query ? '?' . $query : '');
 }));
 
 // Log para depuración de rutas

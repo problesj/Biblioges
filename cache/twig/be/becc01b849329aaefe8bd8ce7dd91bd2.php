@@ -14,8 +14,8 @@ use Twig\Source;
 use Twig\Template;
 use Twig\TemplateWrapper;
 
-/* asignaturas/edit.twig */
-class __TwigTemplate_d928239d2ce252e2d5453eff60820277 extends Template
+/* asignaturas/create.twig */
+class __TwigTemplate_4f3539fdd19eb2947ee43ce6684c74bf extends Template
 {
     private Source $source;
     /**
@@ -45,7 +45,7 @@ class __TwigTemplate_d928239d2ce252e2d5453eff60820277 extends Template
     protected function doDisplay(array $context, array $blocks = []): iterable
     {
         $macros = $this->macros;
-        $this->parent = $this->loadTemplate("base.twig", "asignaturas/edit.twig", 1);
+        $this->parent = $this->loadTemplate("base.twig", "asignaturas/create.twig", 1);
         yield from $this->parent->unwrap()->yield($context, array_merge($this->blocks, $blocks));
     }
 
@@ -56,7 +56,7 @@ class __TwigTemplate_d928239d2ce252e2d5453eff60820277 extends Template
     public function block_title(array $context, array $blocks = []): iterable
     {
         $macros = $this->macros;
-        yield "Editar Asignatura - Biblioges";
+        yield "Crear Asignatura - Biblioges";
         yield from [];
     }
 
@@ -70,7 +70,7 @@ class __TwigTemplate_d928239d2ce252e2d5453eff60820277 extends Template
         // line 6
         yield "<div class=\"container-fluid\">
     <div class=\"d-flex justify-content-between align-items-center mb-4\">
-        <h1 class=\"h3 mb-0 text-gray-800\">Editar Asignatura</h1>
+        <h1 class=\"h3 mb-0 text-gray-800\">Crear Nueva Asignatura</h1>
         <a href=\"";
         // line 9
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
@@ -81,21 +81,16 @@ class __TwigTemplate_d928239d2ce252e2d5453eff60820277 extends Template
 
     <div class=\"card shadow mb-4\">
         <div class=\"card-body\">
-            <form id=\"editAsignaturaForm\" method=\"POST\" action=\"";
+            <form id=\"createAsignaturaForm\" action=\"";
         // line 16
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
-        yield "asignaturas/";
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "id", [], "any", false, false, false, 16), "html", null, true);
-        yield "/update\">
+        yield "asignaturas\" method=\"POST\">
                 <!-- Datos Básicos -->
                 <h5 class=\"mb-3\">Datos Básicos</h5>
                 <div class=\"row\">
                     <div class=\"col-md-6 mb-3\">
                         <label for=\"nombre\" class=\"form-label\">Nombre</label>
-                        <input type=\"text\" class=\"form-control\" id=\"nombre\" name=\"nombre\" value=\"";
-        // line 22
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "nombre", [], "any", false, false, false, 22), "html", null, true);
-        yield "\" required>
+                        <input type=\"text\" class=\"form-control\" id=\"nombre\" name=\"nombre\" required>
                         <div class=\"invalid-feedback\" id=\"nombreError\"></div>
                     </div>
 
@@ -103,60 +98,15 @@ class __TwigTemplate_d928239d2ce252e2d5453eff60820277 extends Template
                         <label for=\"tipo\" class=\"form-label\">Tipo</label>
                         <select class=\"form-select\" id=\"tipo\" name=\"tipo\" required>
                             <option value=\"\">Seleccione un tipo</option>
-                            <option value=\"REGULAR\" ";
-        // line 30
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "tipo", [], "any", false, false, false, 30) == "REGULAR")) {
-            yield "selected";
-        }
-        yield ">Regular</option>
-                            <option value=\"FORMACION_BASICA\" ";
-        // line 31
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "tipo", [], "any", false, false, false, 31) == "FORMACION_BASICA")) {
-            yield "selected";
-        }
-        yield ">Formación Básica</option>
-                            <option value=\"FORMACION_GENERAL\" ";
-        // line 32
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "tipo", [], "any", false, false, false, 32) == "FORMACION_GENERAL")) {
-            yield "selected";
-        }
-        yield ">Formación General</option>
-                            <option value=\"FORMACION_IDIOMAS\" ";
-        // line 33
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "tipo", [], "any", false, false, false, 33) == "FORMACION_IDIOMAS")) {
-            yield "selected";
-        }
-        yield ">Formación Idiomas</option>
-                            <option value=\"FORMACION_PROFESIONAL\" ";
-        // line 34
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "tipo", [], "any", false, false, false, 34) == "FORMACION_PROFESIONAL")) {
-            yield "selected";
-        }
-        yield ">Formación Profesional</option>
-                            <option value=\"FORMACION_VALORES\" ";
-        // line 35
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "tipo", [], "any", false, false, false, 35) == "FORMACION_VALORES")) {
-            yield "selected";
-        }
-        yield ">Formación Valores</option>
-                            <option value=\"FORMACION_ESPECIALIDAD\" ";
-        // line 36
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "tipo", [], "any", false, false, false, 36) == "FORMACION_ESPECIALIDAD")) {
-            yield "selected";
-        }
-        yield ">Formación Especialidad</option>
-                            <option value=\"FORMACION_ELECTIVA\" ";
-        // line 37
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "tipo", [], "any", false, false, false, 37) == "FORMACION_ELECTIVA")) {
-            yield "selected";
-        }
-        yield ">Formación Electiva</option>
-                            <option value=\"FORMACION_ESPECIAL\" ";
-        // line 38
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "tipo", [], "any", false, false, false, 38) == "FORMACION_ESPECIAL")) {
-            yield "selected";
-        }
-        yield ">Formación Especial</option>
+                            <option value=\"REGULAR\">Regular</option>
+                            <option value=\"FORMACION_BASICA\">Formación Básica</option>
+                            <option value=\"FORMACION_GENERAL\">Formación General</option>
+                            <option value=\"FORMACION_IDIOMAS\">Formación Idiomas</option>
+                            <option value=\"FORMACION_PROFESIONAL\">Formación Profesional</option>
+                            <option value=\"FORMACION_VALORES\">Formación Valores</option>
+                            <option value=\"FORMACION_ESPECIALIDAD\">Formación Especialidad</option>
+                            <option value=\"FORMACION_ELECTIVA\">Formación Electiva</option>
+                            <option value=\"FORMACION_ESPECIAL\">Formación Especial</option>
                         </select>
                         <div class=\"invalid-feedback\" id=\"tipoError\"></div>
                     </div>
@@ -166,12 +116,8 @@ class __TwigTemplate_d928239d2ce252e2d5453eff60820277 extends Template
                     <div class=\"col-md-6 mb-3\">
                         <label for=\"vigencia_desde\" class=\"form-label\">Vigencia Desde</label>
                         <input type=\"number\" class=\"form-control\" id=\"vigencia_desde\" name=\"vigencia_desde\" 
-                               value=\"";
-        // line 48
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "vigencia_desde", [], "any", false, false, false, 48), "html", null, true);
-        yield "\" required
-                               min=\"100000\" max=\"999999\" pattern=\"\\d{6}\" 
-                               title=\"Debe ser un número de 6 dígitos\">
+                               min=\"100000\" max=\"999999\" required
+                               pattern=\"\\d{6}\" title=\"Debe ser un número de 6 dígitos\">
                         <small class=\"form-text text-muted\">Formato: AAAAXX (4 dígitos año + 2 dígitos secuencia)</small>
                         <div class=\"invalid-feedback\" id=\"vigenciaDesdeError\"></div>
                     </div>
@@ -179,12 +125,8 @@ class __TwigTemplate_d928239d2ce252e2d5453eff60820277 extends Template
                     <div class=\"col-md-6 mb-3\">
                         <label for=\"vigencia_hasta\" class=\"form-label\">Vigencia Hasta</label>
                         <input type=\"number\" class=\"form-control\" id=\"vigencia_hasta\" name=\"vigencia_hasta\"
-                               value=\"";
-        // line 58
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "vigencia_hasta", [], "any", false, false, false, 58), "html", null, true);
-        yield "\"
-                               min=\"100000\" max=\"999999\" pattern=\"\\d{6}\"
-                               title=\"Debe ser un número de 6 dígitos\">
+                               min=\"100000\" max=\"999999\"
+                               pattern=\"\\d{6}\" title=\"Debe ser un número de 6 dígitos\">
                         <small class=\"form-text text-muted\">Formato: AAAAXX (4 dígitos año + 2 dígitos secuencia)</small>
                         <div class=\"invalid-feedback\" id=\"vigenciaHastaError\"></div>
                     </div>
@@ -195,18 +137,8 @@ class __TwigTemplate_d928239d2ce252e2d5453eff60820277 extends Template
                         <label for=\"periodicidad\" class=\"form-label\">Periodicidad</label>
                         <select class=\"form-select\" id=\"periodicidad\" name=\"periodicidad\" required>
                             <option value=\"\">Seleccione una periodicidad</option>
-                            <option value=\"semestral\" ";
-        // line 71
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "periodicidad", [], "any", false, false, false, 71) == "semestral")) {
-            yield "selected";
-        }
-        yield ">Semestral</option>
-                            <option value=\"anual\" ";
-        // line 72
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "periodicidad", [], "any", false, false, false, 72) == "anual")) {
-            yield "selected";
-        }
-        yield ">Anual</option>
+                            <option value=\"semestral\">Semestral</option>
+                            <option value=\"anual\">Anual</option>
                         </select>
                         <div class=\"invalid-feedback\" id=\"periodicidadError\"></div>
                     </div>
@@ -214,18 +146,8 @@ class __TwigTemplate_d928239d2ce252e2d5453eff60820277 extends Template
                     <div class=\"col-md-6 mb-3\">
                         <label for=\"estado\" class=\"form-label\">Estado</label>
                         <select class=\"form-select\" id=\"estado\" name=\"estado\" required>
-                            <option value=\"1\" ";
-        // line 80
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "estado", [], "any", false, false, false, 80) == 1)) {
-            yield "selected";
-        }
-        yield ">Activa</option>
-                            <option value=\"0\" ";
-        // line 81
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "estado", [], "any", false, false, false, 81) == 0)) {
-            yield "selected";
-        }
-        yield ">Inactiva</option>
+                            <option value=\"1\">Activa</option>
+                            <option value=\"0\">Inactiva</option>
                         </select>
                         <div class=\"invalid-feedback\" id=\"estadoError\"></div>
                     </div>
@@ -234,161 +156,54 @@ class __TwigTemplate_d928239d2ce252e2d5453eff60820277 extends Template
                 <!-- Datos por Unidad -->
                 <h5 class=\"mb-3 mt-4\">Datos por Unidad</h5>
                 <div id=\"codigosContainer\">
-                    ";
-        // line 90
-        if (CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "unidades", [], "any", false, false, false, 90)) {
-            // line 91
-            yield "                        ";
-            $context['_parent'] = $context;
-            $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "unidades", [], "any", false, false, false, 91));
-            $context['loop'] = [
-              'parent' => $context['_parent'],
-              'index0' => 0,
-              'index'  => 1,
-              'first'  => true,
-            ];
-            if (is_array($context['_seq']) || (is_object($context['_seq']) && $context['_seq'] instanceof \Countable)) {
-                $length = count($context['_seq']);
-                $context['loop']['revindex0'] = $length - 1;
-                $context['loop']['revindex'] = $length;
-                $context['loop']['length'] = $length;
-                $context['loop']['last'] = 1 === $length;
-            }
-            foreach ($context['_seq'] as $context["_key"] => $context["info"]) {
-                // line 92
-                yield "                        <div class=\"row mb-3 codigo-row\">
-                            <div class=\"col-md-4\">
-                                <label for=\"unidad_id_";
-                // line 94
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 94), "html", null, true);
-                yield "\" class=\"form-label\">Unidad</label>
-                                <select class=\"form-control select-unidad\" 
-                                        name=\"codigos[";
-                // line 96
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 96), "html", null, true);
-                yield "][id_unidad]\" 
-                                        data-index=\"";
-                // line 97
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 97), "html", null, true);
-                yield "\" required style=\"font-size: 0.85rem;\">
-                                    <option value=\"\">Seleccione una unidad</option>
+                    <div class=\"row mb-3 codigo-row\">
+                        <div class=\"col-md-4\">
+                            <label for=\"id_unidad_0\" class=\"form-label\">Unidad</label>
+                            <select class=\"form-select\" id=\"id_unidad_0\" name=\"codigos[0][id_unidad]\" required style=\"font-size: 0.85rem;\">
+                                <option value=\"\">Seleccione una unidad</option>
+                                ";
+        // line 93
+        $context['_parent'] = $context;
+        $context['_seq'] = CoreExtension::ensureTraversable(($context["unidades"] ?? null));
+        foreach ($context['_seq'] as $context["_key"] => $context["unidad"]) {
+            // line 94
+            yield "                                <option value=\"";
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "id", [], "any", false, false, false, 94), "html", null, true);
+            yield "\" style=\"font-size: 0.85rem;\">
                                     ";
-                // line 99
-                $context['_parent'] = $context;
-                $context['_seq'] = CoreExtension::ensureTraversable(($context["unidades"] ?? null));
-                foreach ($context['_seq'] as $context["_key"] => $context["unidad"]) {
-                    // line 100
-                    yield "                                    <option value=\"";
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "id", [], "any", false, false, false, 100), "html", null, true);
-                    yield "\" ";
-                    if ((CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "id", [], "any", false, false, false, 100) == CoreExtension::getAttribute($this->env, $this->source, $context["info"], "id_unidad", [], "any", false, false, false, 100))) {
-                        yield "selected";
-                    }
-                    yield " style=\"font-size: 0.85rem;\">
-                                        ";
-                    // line 101
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "unidad_completa", [], "any", false, false, false, 101), "html", null, true);
-                    yield "
-                                    </option>
-                                    ";
-                }
-                $_parent = $context['_parent'];
-                unset($context['_seq'], $context['_key'], $context['unidad'], $context['_parent']);
-                $context = array_intersect_key($context, $_parent) + $_parent;
-                // line 104
-                yield "                                </select>
-                                <div class=\"invalid-feedback\" id=\"unidadError_";
-                // line 105
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 105), "html", null, true);
-                yield "\"></div>
-                            </div>
-
-                            <div class=\"col-md-4\">
-                                <div class=\"form-group\">
-                                    <label for=\"codigo_";
-                // line 110
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 110), "html", null, true);
-                yield "\" class=\"form-label\">Código de Asignatura</label>
-                                    <input type=\"text\" class=\"form-control\" id=\"codigo_";
-                // line 111
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 111), "html", null, true);
-                yield "\" 
-                                           name=\"codigos[";
-                // line 112
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 112), "html", null, true);
-                yield "][codigo]\" 
-                                           value=\"";
-                // line 113
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["info"], "codigo_asignatura", [], "any", false, false, false, 113), "html", null, true);
-                yield "\" required>
-                                    <div class=\"invalid-feedback\" id=\"codigoError_";
-                // line 114
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 114), "html", null, true);
-                yield "\"></div>
-                                </div>
-                            </div>
-
-                            <div class=\"col-md-4\">
-                                <div class=\"form-group\">
-                                    <label for=\"cantidad_alumnos_";
-                // line 120
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 120), "html", null, true);
-                yield "\" class=\"form-label\">Cantidad de Alumnos</label>
-                                    <input type=\"number\" class=\"form-control\" id=\"cantidad_alumnos_";
-                // line 121
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 121), "html", null, true);
-                yield "\" 
-                                           name=\"codigos[";
-                // line 122
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 122), "html", null, true);
-                yield "][cantidad_alumnos]\" 
-                                           value=\"";
-                // line 123
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["info"], "cantidad_alumnos", [], "any", false, false, false, 123), "html", null, true);
-                yield "\" min=\"1\" required>
-                                    <div class=\"invalid-feedback\" id=\"cantidadAlumnosError_";
-                // line 124
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 124), "html", null, true);
-                yield "\"></div>
-                                </div>
-                            </div>
-
-                            <div class=\"col-md-2 d-flex align-items-end\">
-                                <button type=\"button\" class=\"btn btn-danger btn-sm\" onclick=\"removeRow(this)\" 
-                                        ";
-                // line 130
-                if ((CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 130) == 0)) {
-                    yield "style=\"display: none;\"";
-                }
-                yield ">
-                                    <i class=\"fas fa-times\"></i>
-                                </button>
-                            </div>
-                        </div>
-                        ";
-                ++$context['loop']['index0'];
-                ++$context['loop']['index'];
-                $context['loop']['first'] = false;
-                if (isset($context['loop']['revindex0'], $context['loop']['revindex'])) {
-                    --$context['loop']['revindex0'];
-                    --$context['loop']['revindex'];
-                    $context['loop']['last'] = 0 === $context['loop']['revindex0'];
-                }
-            }
-            $_parent = $context['_parent'];
-            unset($context['_seq'], $context['_key'], $context['info'], $context['_parent'], $context['loop']);
-            $context = array_intersect_key($context, $_parent) + $_parent;
-            // line 136
-            yield "                    ";
-        } else {
-            // line 137
-            yield "                        <div class=\"alert alert-info\">
-                            <i class=\"fas fa-info-circle\"></i> No hay códigos de unidad vinculados a esta asignatura.
-                        </div>
-                    ";
+            // line 95
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "unidad_completa", [], "any", false, false, false, 95), "html", null, true);
+            yield "
+                                </option>
+                                ";
         }
-        // line 141
-        yield "                </div>
+        $_parent = $context['_parent'];
+        unset($context['_seq'], $context['_key'], $context['unidad'], $context['_parent']);
+        $context = array_intersect_key($context, $_parent) + $_parent;
+        // line 98
+        yield "                            </select>
+                            <div class=\"invalid-feedback\" id=\"unidadError_0\"></div>
+                        </div>
+
+                        <div class=\"col-md-3\">
+                            <label for=\"codigo_0\" class=\"form-label\">Código de Asignatura</label>
+                            <input type=\"text\" class=\"form-control\" id=\"codigo_0\" name=\"codigos[0][codigo]\" required>
+                            <div class=\"invalid-feedback\" id=\"codigoError_0\"></div>
+                        </div>
+
+                        <div class=\"col-md-3\">
+                            <label for=\"cantidad_alumnos_0\" class=\"form-label\">Cantidad de Alumnos</label>
+                            <input type=\"number\" class=\"form-control\" id=\"cantidad_alumnos_0\" name=\"codigos[0][cantidad_alumnos]\" min=\"1\" required>
+                            <div class=\"invalid-feedback\" id=\"cantidadAlumnosError_0\"></div>
+                        </div>
+
+                        <div class=\"col-md-2 d-flex align-items-end\">
+                            <button type=\"button\" class=\"btn btn-danger btn-sm\" onclick=\"removeRow(this)\" style=\"display: none;\">
+                                <i class=\"fas fa-times\"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
                 <div class=\"row mb-3\">
                     <div class=\"col-12\">
@@ -411,32 +226,41 @@ class __TwigTemplate_d928239d2ce252e2d5453eff60820277 extends Template
         yield from [];
     }
 
-    // line 162
+    // line 141
     /**
      * @return iterable<null|scalar|\Stringable>
      */
     public function block_scripts(array $context, array $blocks = []): iterable
     {
         $macros = $this->macros;
-        // line 163
+        // line 142
         yield "<script>
-let codigoCount = ";
-        // line 164
-        yield ((CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "unidades", [], "any", false, false, false, 164)) ? ($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((Twig\Extension\CoreExtension::length($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, ($context["asignatura"] ?? null), "unidades", [], "any", false, false, false, 164)) - 1), "html", null, true)) : ($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape( -1, "html", null, true)));
-        yield ";
+let codigoCount = 0;
 
 // Función para manejar el cambio en el tipo de asignatura
 function handleTipoChange() {
     const tipoSelect = document.getElementById('tipo');
     const codigosContainer = document.getElementById('codigosContainer');
     const addRowButton = document.querySelector('button[onclick=\"addRow()\"]');
+    const cantidadAlumnosInput = document.getElementById('cantidad_alumnos_0');
+    const unidadSelect = document.getElementById('id_unidad_0');
     
     if (tipoSelect.value === 'FORMACION_ELECTIVA') {
         // Mantener el botón de agregar códigos visible para Formación Electiva
-        if (addRowButton) {
-            addRowButton.style.display = 'block';
-        }
+        addRowButton.style.display = 'block';
         
+        // Establecer cantidad de alumnos a 0 y deshabilitar
+        cantidadAlumnosInput.value = '0';
+        cantidadAlumnosInput.disabled = true;
+        
+        // Buscar y seleccionar \"Sin unidad\"
+        Array.from(unidadSelect.options).forEach(option => {
+            if (option.text.includes('Sin unidad')) {
+                unidadSelect.value = option.value;
+            }
+        });
+        unidadSelect.disabled = true;
+
         // Actualizar todas las filas existentes
         document.querySelectorAll('.codigo-row').forEach((row, index) => {
             const cantInput = row.querySelector(`input[name\$=\"[cantidad_alumnos]\"]`);
@@ -444,22 +268,27 @@ function handleTipoChange() {
             if (cantInput && depSelect) {
                 cantInput.value = '0';
                 cantInput.disabled = true;
+                depSelect.value = unidadSelect.value;
                 depSelect.disabled = true;
             }
         });
     } else {
         // Restaurar el estado normal para otros tipos
-        if (addRowButton) {
-            addRowButton.style.display = 'block';
-        }
-        
+        addRowButton.style.display = 'block';
+        cantidadAlumnosInput.disabled = false;
+        cantidadAlumnosInput.value = '';
+        unidadSelect.disabled = false;
+        unidadSelect.value = '';
+
         // Restaurar todas las filas existentes
         document.querySelectorAll('.codigo-row').forEach(row => {
             const cantInput = row.querySelector(`input[name\$=\"[cantidad_alumnos]\"]`);
             const depSelect = row.querySelector(`select[name^=\"codigos[\"]`);
             if (cantInput && depSelect) {
                 cantInput.disabled = false;
+                cantInput.value = '';
                 depSelect.disabled = false;
+                depSelect.value = '';
             }
         });
     }
@@ -472,23 +301,21 @@ function addRow() {
     newRow.className = 'row mb-3 codigo-row';
     newRow.innerHTML = `
         <div class=\"col-md-4\">
-            <label for=\"unidad_id_\${codigoCount}\" class=\"form-label\">Unidad</label>
-            <select class=\"form-control select-unidad\" 
-                    name=\"codigos[\${codigoCount}][id_unidad]\" 
-                    data-index=\"\${codigoCount}\" required style=\"font-size: 0.85rem;\">
+            <label for=\"id_unidad_\${codigoCount}\" class=\"form-label\">Unidad</label>
+            <select class=\"form-select\" id=\"id_unidad_\${codigoCount}\" name=\"codigos[\${codigoCount}][id_unidad]\" required style=\"font-size: 0.85rem;\">
                 <option value=\"\">Seleccione una unidad</option>
                 ";
-        // line 218
+        // line 212
         $context['_parent'] = $context;
         $context['_seq'] = CoreExtension::ensureTraversable(($context["unidades"] ?? null));
         foreach ($context['_seq'] as $context["_key"] => $context["unidad"]) {
-            // line 219
+            // line 213
             yield "                <option value=\"";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "id", [], "any", false, false, false, 219), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "id", [], "any", false, false, false, 213), "html", null, true);
             yield "\" style=\"font-size: 0.85rem;\">
                     ";
-            // line 220
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "unidad_completa", [], "any", false, false, false, 220), "html", null, true);
+            // line 214
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "unidad_completa", [], "any", false, false, false, 214), "html", null, true);
             yield "
                 </option>
                 ";
@@ -496,25 +323,21 @@ function addRow() {
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_key'], $context['unidad'], $context['_parent']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 223
+        // line 217
         yield "            </select>
             <div class=\"invalid-feedback\" id=\"unidadError_\${codigoCount}\"></div>
         </div>
 
-        <div class=\"col-md-4\">
-            <div class=\"form-group\">
-                <label for=\"codigo_\${codigoCount}\" class=\"form-label\">Código de Asignatura</label>
-                <input type=\"text\" class=\"form-control\" id=\"codigo_\${codigoCount}\" name=\"codigos[\${codigoCount}][codigo]\" required>
-                <div class=\"invalid-feedback\" id=\"codigoError_\${codigoCount}\"></div>
-            </div>
+        <div class=\"col-md-3\">
+            <label for=\"codigo_\${codigoCount}\" class=\"form-label\">Código de Asignatura</label>
+            <input type=\"text\" class=\"form-control\" id=\"codigo_\${codigoCount}\" name=\"codigos[\${codigoCount}][codigo]\" required>
+            <div class=\"invalid-feedback\" id=\"codigoError_\${codigoCount}\"></div>
         </div>
 
-        <div class=\"col-md-4\">
-            <div class=\"form-group\">
-                <label for=\"cantidad_alumnos_\${codigoCount}\" class=\"form-label\">Cantidad de Alumnos</label>
-                <input type=\"number\" class=\"form-control\" id=\"cantidad_alumnos_\${codigoCount}\" name=\"codigos[\${codigoCount}][cantidad_alumnos]\" min=\"1\" required>
-                <div class=\"invalid-feedback\" id=\"cantidadAlumnosError_\${codigoCount}\"></div>
-            </div>
+        <div class=\"col-md-3\">
+            <label for=\"cantidad_alumnos_\${codigoCount}\" class=\"form-label\">Cantidad de Alumnos</label>
+            <input type=\"number\" class=\"form-control\" id=\"cantidad_alumnos_\${codigoCount}\" name=\"codigos[\${codigoCount}][cantidad_alumnos]\" min=\"1\" required>
+            <div class=\"invalid-feedback\" id=\"cantidadAlumnosError_\${codigoCount}\"></div>
         </div>
 
         <div class=\"col-md-2 d-flex align-items-end\">
@@ -524,18 +347,6 @@ function addRow() {
         </div>
     `;
     container.appendChild(newRow);
-
-    // Si es Formación Electiva, aplicar las restricciones a la nueva fila
-    if (document.getElementById('tipo').value === 'FORMACION_ELECTIVA') {
-        const cantInput = newRow.querySelector(`input[name\$=\"[cantidad_alumnos]\"]`);
-        const depSelect = newRow.querySelector(`select[name^=\"codigos[\"]`);
-        if (cantInput && depSelect) {
-            cantInput.value = '0';
-            cantInput.disabled = true;
-            depSelect.value = document.getElementById('unidad_id_0').value;
-            depSelect.disabled = true;
-        }
-    }
 }
 
 function removeRow(button) {
@@ -553,7 +364,7 @@ function reindexRows() {
         
         if (depSelect && codInput && cantInput) {
             depSelect.name = `codigos[\${index}][id_unidad]`;
-            depSelect.id = `unidad_id_\${index}`;
+            depSelect.id = `id_unidad_\${index}`;
             codInput.name = `codigos[\${index}][codigo]`;
             codInput.id = `codigo_\${index}`;
             cantInput.name = `codigos[\${index}][cantidad_alumnos]`;
@@ -569,15 +380,14 @@ function reindexRows() {
 
 document.addEventListener('DOMContentLoaded', function() {
     // Agregar el event listener para el cambio de tipo
-    const tipoSelect = document.getElementById('tipo');
-    if (tipoSelect) {
-        tipoSelect.addEventListener('change', handleTipoChange);
-    }
+    document.getElementById('tipo').addEventListener('change', handleTipoChange);
     
-    // Aplicar la lógica inicial según el tipo de asignatura
-    handleTipoChange();
+    const rows = document.querySelectorAll('.codigo-row');
+    if (rows.length > 1) {
+        rows[0].querySelector('.btn-danger').style.display = 'block';
+    }
 
-    document.getElementById('editAsignaturaForm').addEventListener('submit', async function(e) {
+    document.getElementById('createAsignaturaForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
         document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
@@ -683,7 +493,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         try {
-            const response = await fetch(this.action, {
+            const response = await fetch('";
+        // line 386
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
+        yield "asignaturas', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -699,12 +512,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 Swal.fire({
                     icon: 'success',
                     title: '¡Éxito!',
-                    text: result.message || 'Asignatura actualizada exitosamente',
+                    text: result.message || 'Asignatura creada exitosamente',
                     showConfirmButton: false,
                     timer: 2000
                 }).then(() => {
                     window.location.href = '";
-        // line 429
+        // line 406
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "asignaturas';
                 });
@@ -774,7 +587,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: 'Error al actualizar la asignatura: ' + result.message
+                        text: 'Error al crear la asignatura: ' + result.message
                     });
                 }
             }
@@ -798,7 +611,7 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     public function getTemplateName(): string
     {
-        return "asignaturas/edit.twig";
+        return "asignaturas/create.twig";
     }
 
     /**
@@ -814,19 +627,19 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     public function getDebugInfo(): array
     {
-        return array (  708 => 429,  500 => 223,  491 => 220,  486 => 219,  482 => 218,  425 => 164,  422 => 163,  415 => 162,  391 => 141,  385 => 137,  382 => 136,  360 => 130,  351 => 124,  347 => 123,  343 => 122,  339 => 121,  335 => 120,  326 => 114,  322 => 113,  318 => 112,  314 => 111,  310 => 110,  302 => 105,  299 => 104,  290 => 101,  281 => 100,  277 => 99,  272 => 97,  268 => 96,  263 => 94,  259 => 92,  241 => 91,  239 => 90,  225 => 81,  219 => 80,  206 => 72,  200 => 71,  184 => 58,  171 => 48,  156 => 38,  150 => 37,  144 => 36,  138 => 35,  132 => 34,  126 => 33,  120 => 32,  114 => 31,  108 => 30,  97 => 22,  86 => 16,  76 => 9,  71 => 6,  64 => 5,  53 => 3,  42 => 1,);
+        return array (  521 => 406,  498 => 386,  327 => 217,  318 => 214,  313 => 213,  309 => 212,  237 => 142,  230 => 141,  184 => 98,  175 => 95,  170 => 94,  166 => 93,  86 => 16,  76 => 9,  71 => 6,  64 => 5,  53 => 3,  42 => 1,);
     }
 
     public function getSourceContext(): Source
     {
         return new Source("{% extends \"base.twig\" %}
 
-{% block title %}Editar Asignatura - Biblioges{% endblock %}
+{% block title %}Crear Asignatura - Biblioges{% endblock %}
 
 {% block content %}
 <div class=\"container-fluid\">
     <div class=\"d-flex justify-content-between align-items-center mb-4\">
-        <h1 class=\"h3 mb-0 text-gray-800\">Editar Asignatura</h1>
+        <h1 class=\"h3 mb-0 text-gray-800\">Crear Nueva Asignatura</h1>
         <a href=\"{{ app_url }}asignaturas\" class=\"btn btn-secondary\">
             <i class=\"fas fa-arrow-left\"></i> Volver
         </a>
@@ -834,13 +647,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <div class=\"card shadow mb-4\">
         <div class=\"card-body\">
-            <form id=\"editAsignaturaForm\" method=\"POST\" action=\"{{ app_url }}asignaturas/{{ asignatura.id }}/update\">
+            <form id=\"createAsignaturaForm\" action=\"{{ app_url }}asignaturas\" method=\"POST\">
                 <!-- Datos Básicos -->
                 <h5 class=\"mb-3\">Datos Básicos</h5>
                 <div class=\"row\">
                     <div class=\"col-md-6 mb-3\">
                         <label for=\"nombre\" class=\"form-label\">Nombre</label>
-                        <input type=\"text\" class=\"form-control\" id=\"nombre\" name=\"nombre\" value=\"{{ asignatura.nombre }}\" required>
+                        <input type=\"text\" class=\"form-control\" id=\"nombre\" name=\"nombre\" required>
                         <div class=\"invalid-feedback\" id=\"nombreError\"></div>
                     </div>
 
@@ -848,15 +661,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         <label for=\"tipo\" class=\"form-label\">Tipo</label>
                         <select class=\"form-select\" id=\"tipo\" name=\"tipo\" required>
                             <option value=\"\">Seleccione un tipo</option>
-                            <option value=\"REGULAR\" {% if asignatura.tipo == 'REGULAR' %}selected{% endif %}>Regular</option>
-                            <option value=\"FORMACION_BASICA\" {% if asignatura.tipo == 'FORMACION_BASICA' %}selected{% endif %}>Formación Básica</option>
-                            <option value=\"FORMACION_GENERAL\" {% if asignatura.tipo == 'FORMACION_GENERAL' %}selected{% endif %}>Formación General</option>
-                            <option value=\"FORMACION_IDIOMAS\" {% if asignatura.tipo == 'FORMACION_IDIOMAS' %}selected{% endif %}>Formación Idiomas</option>
-                            <option value=\"FORMACION_PROFESIONAL\" {% if asignatura.tipo == 'FORMACION_PROFESIONAL' %}selected{% endif %}>Formación Profesional</option>
-                            <option value=\"FORMACION_VALORES\" {% if asignatura.tipo == 'FORMACION_VALORES' %}selected{% endif %}>Formación Valores</option>
-                            <option value=\"FORMACION_ESPECIALIDAD\" {% if asignatura.tipo == 'FORMACION_ESPECIALIDAD' %}selected{% endif %}>Formación Especialidad</option>
-                            <option value=\"FORMACION_ELECTIVA\" {% if asignatura.tipo == 'FORMACION_ELECTIVA' %}selected{% endif %}>Formación Electiva</option>
-                            <option value=\"FORMACION_ESPECIAL\" {% if asignatura.tipo == 'FORMACION_ESPECIAL' %}selected{% endif %}>Formación Especial</option>
+                            <option value=\"REGULAR\">Regular</option>
+                            <option value=\"FORMACION_BASICA\">Formación Básica</option>
+                            <option value=\"FORMACION_GENERAL\">Formación General</option>
+                            <option value=\"FORMACION_IDIOMAS\">Formación Idiomas</option>
+                            <option value=\"FORMACION_PROFESIONAL\">Formación Profesional</option>
+                            <option value=\"FORMACION_VALORES\">Formación Valores</option>
+                            <option value=\"FORMACION_ESPECIALIDAD\">Formación Especialidad</option>
+                            <option value=\"FORMACION_ELECTIVA\">Formación Electiva</option>
+                            <option value=\"FORMACION_ESPECIAL\">Formación Especial</option>
                         </select>
                         <div class=\"invalid-feedback\" id=\"tipoError\"></div>
                     </div>
@@ -866,9 +679,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class=\"col-md-6 mb-3\">
                         <label for=\"vigencia_desde\" class=\"form-label\">Vigencia Desde</label>
                         <input type=\"number\" class=\"form-control\" id=\"vigencia_desde\" name=\"vigencia_desde\" 
-                               value=\"{{ asignatura.vigencia_desde }}\" required
-                               min=\"100000\" max=\"999999\" pattern=\"\\d{6}\" 
-                               title=\"Debe ser un número de 6 dígitos\">
+                               min=\"100000\" max=\"999999\" required
+                               pattern=\"\\d{6}\" title=\"Debe ser un número de 6 dígitos\">
                         <small class=\"form-text text-muted\">Formato: AAAAXX (4 dígitos año + 2 dígitos secuencia)</small>
                         <div class=\"invalid-feedback\" id=\"vigenciaDesdeError\"></div>
                     </div>
@@ -876,9 +688,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class=\"col-md-6 mb-3\">
                         <label for=\"vigencia_hasta\" class=\"form-label\">Vigencia Hasta</label>
                         <input type=\"number\" class=\"form-control\" id=\"vigencia_hasta\" name=\"vigencia_hasta\"
-                               value=\"{{ asignatura.vigencia_hasta }}\"
-                               min=\"100000\" max=\"999999\" pattern=\"\\d{6}\"
-                               title=\"Debe ser un número de 6 dígitos\">
+                               min=\"100000\" max=\"999999\"
+                               pattern=\"\\d{6}\" title=\"Debe ser un número de 6 dígitos\">
                         <small class=\"form-text text-muted\">Formato: AAAAXX (4 dígitos año + 2 dígitos secuencia)</small>
                         <div class=\"invalid-feedback\" id=\"vigenciaHastaError\"></div>
                     </div>
@@ -889,8 +700,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         <label for=\"periodicidad\" class=\"form-label\">Periodicidad</label>
                         <select class=\"form-select\" id=\"periodicidad\" name=\"periodicidad\" required>
                             <option value=\"\">Seleccione una periodicidad</option>
-                            <option value=\"semestral\" {% if asignatura.periodicidad == 'semestral' %}selected{% endif %}>Semestral</option>
-                            <option value=\"anual\" {% if asignatura.periodicidad == 'anual' %}selected{% endif %}>Anual</option>
+                            <option value=\"semestral\">Semestral</option>
+                            <option value=\"anual\">Anual</option>
                         </select>
                         <div class=\"invalid-feedback\" id=\"periodicidadError\"></div>
                     </div>
@@ -898,8 +709,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class=\"col-md-6 mb-3\">
                         <label for=\"estado\" class=\"form-label\">Estado</label>
                         <select class=\"form-select\" id=\"estado\" name=\"estado\" required>
-                            <option value=\"1\" {% if asignatura.estado == 1 %}selected{% endif %}>Activa</option>
-                            <option value=\"0\" {% if asignatura.estado == 0 %}selected{% endif %}>Inactiva</option>
+                            <option value=\"1\">Activa</option>
+                            <option value=\"0\">Inactiva</option>
                         </select>
                         <div class=\"invalid-feedback\" id=\"estadoError\"></div>
                     </div>
@@ -908,57 +719,38 @@ document.addEventListener('DOMContentLoaded', function() {
                 <!-- Datos por Unidad -->
                 <h5 class=\"mb-3 mt-4\">Datos por Unidad</h5>
                 <div id=\"codigosContainer\">
-                    {% if asignatura.unidades %}
-                        {% for info in asignatura.unidades %}
-                        <div class=\"row mb-3 codigo-row\">
-                            <div class=\"col-md-4\">
-                                <label for=\"unidad_id_{{ loop.index0 }}\" class=\"form-label\">Unidad</label>
-                                <select class=\"form-control select-unidad\" 
-                                        name=\"codigos[{{ loop.index0 }}][id_unidad]\" 
-                                        data-index=\"{{ loop.index0 }}\" required style=\"font-size: 0.85rem;\">
-                                    <option value=\"\">Seleccione una unidad</option>
-                                    {% for unidad in unidades %}
-                                    <option value=\"{{ unidad.id }}\" {% if unidad.id == info.id_unidad %}selected{% endif %} style=\"font-size: 0.85rem;\">
-                                        {{ unidad.unidad_completa }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                                <div class=\"invalid-feedback\" id=\"unidadError_{{ loop.index0 }}\"></div>
-                            </div>
-
-                            <div class=\"col-md-4\">
-                                <div class=\"form-group\">
-                                    <label for=\"codigo_{{ loop.index0 }}\" class=\"form-label\">Código de Asignatura</label>
-                                    <input type=\"text\" class=\"form-control\" id=\"codigo_{{ loop.index0 }}\" 
-                                           name=\"codigos[{{ loop.index0 }}][codigo]\" 
-                                           value=\"{{ info.codigo_asignatura }}\" required>
-                                    <div class=\"invalid-feedback\" id=\"codigoError_{{ loop.index0 }}\"></div>
-                                </div>
-                            </div>
-
-                            <div class=\"col-md-4\">
-                                <div class=\"form-group\">
-                                    <label for=\"cantidad_alumnos_{{ loop.index0 }}\" class=\"form-label\">Cantidad de Alumnos</label>
-                                    <input type=\"number\" class=\"form-control\" id=\"cantidad_alumnos_{{ loop.index0 }}\" 
-                                           name=\"codigos[{{ loop.index0 }}][cantidad_alumnos]\" 
-                                           value=\"{{ info.cantidad_alumnos }}\" min=\"1\" required>
-                                    <div class=\"invalid-feedback\" id=\"cantidadAlumnosError_{{ loop.index0 }}\"></div>
-                                </div>
-                            </div>
-
-                            <div class=\"col-md-2 d-flex align-items-end\">
-                                <button type=\"button\" class=\"btn btn-danger btn-sm\" onclick=\"removeRow(this)\" 
-                                        {% if loop.index0 == 0 %}style=\"display: none;\"{% endif %}>
-                                    <i class=\"fas fa-times\"></i>
-                                </button>
-                            </div>
+                    <div class=\"row mb-3 codigo-row\">
+                        <div class=\"col-md-4\">
+                            <label for=\"id_unidad_0\" class=\"form-label\">Unidad</label>
+                            <select class=\"form-select\" id=\"id_unidad_0\" name=\"codigos[0][id_unidad]\" required style=\"font-size: 0.85rem;\">
+                                <option value=\"\">Seleccione una unidad</option>
+                                {% for unidad in unidades %}
+                                <option value=\"{{ unidad.id }}\" style=\"font-size: 0.85rem;\">
+                                    {{ unidad.unidad_completa }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class=\"invalid-feedback\" id=\"unidadError_0\"></div>
                         </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class=\"alert alert-info\">
-                            <i class=\"fas fa-info-circle\"></i> No hay códigos de unidad vinculados a esta asignatura.
+
+                        <div class=\"col-md-3\">
+                            <label for=\"codigo_0\" class=\"form-label\">Código de Asignatura</label>
+                            <input type=\"text\" class=\"form-control\" id=\"codigo_0\" name=\"codigos[0][codigo]\" required>
+                            <div class=\"invalid-feedback\" id=\"codigoError_0\"></div>
                         </div>
-                    {% endif %}
+
+                        <div class=\"col-md-3\">
+                            <label for=\"cantidad_alumnos_0\" class=\"form-label\">Cantidad de Alumnos</label>
+                            <input type=\"number\" class=\"form-control\" id=\"cantidad_alumnos_0\" name=\"codigos[0][cantidad_alumnos]\" min=\"1\" required>
+                            <div class=\"invalid-feedback\" id=\"cantidadAlumnosError_0\"></div>
+                        </div>
+
+                        <div class=\"col-md-2 d-flex align-items-end\">
+                            <button type=\"button\" class=\"btn btn-danger btn-sm\" onclick=\"removeRow(this)\" style=\"display: none;\">
+                                <i class=\"fas fa-times\"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class=\"row mb-3\">
@@ -982,20 +774,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
 {% block scripts %}
 <script>
-let codigoCount = {{ asignatura.unidades ? asignatura.unidades|length - 1 : -1 }};
+let codigoCount = 0;
 
 // Función para manejar el cambio en el tipo de asignatura
 function handleTipoChange() {
     const tipoSelect = document.getElementById('tipo');
     const codigosContainer = document.getElementById('codigosContainer');
     const addRowButton = document.querySelector('button[onclick=\"addRow()\"]');
+    const cantidadAlumnosInput = document.getElementById('cantidad_alumnos_0');
+    const unidadSelect = document.getElementById('id_unidad_0');
     
     if (tipoSelect.value === 'FORMACION_ELECTIVA') {
         // Mantener el botón de agregar códigos visible para Formación Electiva
-        if (addRowButton) {
-            addRowButton.style.display = 'block';
-        }
+        addRowButton.style.display = 'block';
         
+        // Establecer cantidad de alumnos a 0 y deshabilitar
+        cantidadAlumnosInput.value = '0';
+        cantidadAlumnosInput.disabled = true;
+        
+        // Buscar y seleccionar \"Sin unidad\"
+        Array.from(unidadSelect.options).forEach(option => {
+            if (option.text.includes('Sin unidad')) {
+                unidadSelect.value = option.value;
+            }
+        });
+        unidadSelect.disabled = true;
+
         // Actualizar todas las filas existentes
         document.querySelectorAll('.codigo-row').forEach((row, index) => {
             const cantInput = row.querySelector(`input[name\$=\"[cantidad_alumnos]\"]`);
@@ -1003,22 +807,27 @@ function handleTipoChange() {
             if (cantInput && depSelect) {
                 cantInput.value = '0';
                 cantInput.disabled = true;
+                depSelect.value = unidadSelect.value;
                 depSelect.disabled = true;
             }
         });
     } else {
         // Restaurar el estado normal para otros tipos
-        if (addRowButton) {
-            addRowButton.style.display = 'block';
-        }
-        
+        addRowButton.style.display = 'block';
+        cantidadAlumnosInput.disabled = false;
+        cantidadAlumnosInput.value = '';
+        unidadSelect.disabled = false;
+        unidadSelect.value = '';
+
         // Restaurar todas las filas existentes
         document.querySelectorAll('.codigo-row').forEach(row => {
             const cantInput = row.querySelector(`input[name\$=\"[cantidad_alumnos]\"]`);
             const depSelect = row.querySelector(`select[name^=\"codigos[\"]`);
             if (cantInput && depSelect) {
                 cantInput.disabled = false;
+                cantInput.value = '';
                 depSelect.disabled = false;
+                depSelect.value = '';
             }
         });
     }
@@ -1031,10 +840,8 @@ function addRow() {
     newRow.className = 'row mb-3 codigo-row';
     newRow.innerHTML = `
         <div class=\"col-md-4\">
-            <label for=\"unidad_id_\${codigoCount}\" class=\"form-label\">Unidad</label>
-            <select class=\"form-control select-unidad\" 
-                    name=\"codigos[\${codigoCount}][id_unidad]\" 
-                    data-index=\"\${codigoCount}\" required style=\"font-size: 0.85rem;\">
+            <label for=\"id_unidad_\${codigoCount}\" class=\"form-label\">Unidad</label>
+            <select class=\"form-select\" id=\"id_unidad_\${codigoCount}\" name=\"codigos[\${codigoCount}][id_unidad]\" required style=\"font-size: 0.85rem;\">
                 <option value=\"\">Seleccione una unidad</option>
                 {% for unidad in unidades %}
                 <option value=\"{{ unidad.id }}\" style=\"font-size: 0.85rem;\">
@@ -1045,20 +852,16 @@ function addRow() {
             <div class=\"invalid-feedback\" id=\"unidadError_\${codigoCount}\"></div>
         </div>
 
-        <div class=\"col-md-4\">
-            <div class=\"form-group\">
-                <label for=\"codigo_\${codigoCount}\" class=\"form-label\">Código de Asignatura</label>
-                <input type=\"text\" class=\"form-control\" id=\"codigo_\${codigoCount}\" name=\"codigos[\${codigoCount}][codigo]\" required>
-                <div class=\"invalid-feedback\" id=\"codigoError_\${codigoCount}\"></div>
-            </div>
+        <div class=\"col-md-3\">
+            <label for=\"codigo_\${codigoCount}\" class=\"form-label\">Código de Asignatura</label>
+            <input type=\"text\" class=\"form-control\" id=\"codigo_\${codigoCount}\" name=\"codigos[\${codigoCount}][codigo]\" required>
+            <div class=\"invalid-feedback\" id=\"codigoError_\${codigoCount}\"></div>
         </div>
 
-        <div class=\"col-md-4\">
-            <div class=\"form-group\">
-                <label for=\"cantidad_alumnos_\${codigoCount}\" class=\"form-label\">Cantidad de Alumnos</label>
-                <input type=\"number\" class=\"form-control\" id=\"cantidad_alumnos_\${codigoCount}\" name=\"codigos[\${codigoCount}][cantidad_alumnos]\" min=\"1\" required>
-                <div class=\"invalid-feedback\" id=\"cantidadAlumnosError_\${codigoCount}\"></div>
-            </div>
+        <div class=\"col-md-3\">
+            <label for=\"cantidad_alumnos_\${codigoCount}\" class=\"form-label\">Cantidad de Alumnos</label>
+            <input type=\"number\" class=\"form-control\" id=\"cantidad_alumnos_\${codigoCount}\" name=\"codigos[\${codigoCount}][cantidad_alumnos]\" min=\"1\" required>
+            <div class=\"invalid-feedback\" id=\"cantidadAlumnosError_\${codigoCount}\"></div>
         </div>
 
         <div class=\"col-md-2 d-flex align-items-end\">
@@ -1068,18 +871,6 @@ function addRow() {
         </div>
     `;
     container.appendChild(newRow);
-
-    // Si es Formación Electiva, aplicar las restricciones a la nueva fila
-    if (document.getElementById('tipo').value === 'FORMACION_ELECTIVA') {
-        const cantInput = newRow.querySelector(`input[name\$=\"[cantidad_alumnos]\"]`);
-        const depSelect = newRow.querySelector(`select[name^=\"codigos[\"]`);
-        if (cantInput && depSelect) {
-            cantInput.value = '0';
-            cantInput.disabled = true;
-            depSelect.value = document.getElementById('unidad_id_0').value;
-            depSelect.disabled = true;
-        }
-    }
 }
 
 function removeRow(button) {
@@ -1097,7 +888,7 @@ function reindexRows() {
         
         if (depSelect && codInput && cantInput) {
             depSelect.name = `codigos[\${index}][id_unidad]`;
-            depSelect.id = `unidad_id_\${index}`;
+            depSelect.id = `id_unidad_\${index}`;
             codInput.name = `codigos[\${index}][codigo]`;
             codInput.id = `codigo_\${index}`;
             cantInput.name = `codigos[\${index}][cantidad_alumnos]`;
@@ -1113,15 +904,14 @@ function reindexRows() {
 
 document.addEventListener('DOMContentLoaded', function() {
     // Agregar el event listener para el cambio de tipo
-    const tipoSelect = document.getElementById('tipo');
-    if (tipoSelect) {
-        tipoSelect.addEventListener('change', handleTipoChange);
-    }
+    document.getElementById('tipo').addEventListener('change', handleTipoChange);
     
-    // Aplicar la lógica inicial según el tipo de asignatura
-    handleTipoChange();
+    const rows = document.querySelectorAll('.codigo-row');
+    if (rows.length > 1) {
+        rows[0].querySelector('.btn-danger').style.display = 'block';
+    }
 
-    document.getElementById('editAsignaturaForm').addEventListener('submit', async function(e) {
+    document.getElementById('createAsignaturaForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
         document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
@@ -1227,7 +1017,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         try {
-            const response = await fetch(this.action, {
+            const response = await fetch('{{ app_url }}asignaturas', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1243,7 +1033,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 Swal.fire({
                     icon: 'success',
                     title: '¡Éxito!',
-                    text: result.message || 'Asignatura actualizada exitosamente',
+                    text: result.message || 'Asignatura creada exitosamente',
                     showConfirmButton: false,
                     timer: 2000
                 }).then(() => {
@@ -1315,7 +1105,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: 'Error al actualizar la asignatura: ' + result.message
+                        text: 'Error al crear la asignatura: ' + result.message
                     });
                 }
             }
@@ -1330,6 +1120,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-{% endblock %} ", "asignaturas/edit.twig", "/var/www/html/biblioges/templates/asignaturas/edit.twig");
+{% endblock %} ", "asignaturas/create.twig", "/var/www/html/biblioges/templates/asignaturas/create.twig");
     }
 }

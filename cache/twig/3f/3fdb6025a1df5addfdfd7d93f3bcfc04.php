@@ -156,9 +156,7 @@ class __TwigTemplate_22c6f3c12a447186507b22fb7e42cdfe extends Template
             yield "</td>
                                 <td>";
             // line 57
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["info"], "sede_nombre", [], "any", false, false, false, 57), "html", null, true);
-            yield " - ";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["info"], "unidad_nombre", [], "any", false, false, false, 57), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["info"], "unidad_completa", [], "any", false, false, false, 57), "html", null, true);
             yield "</td>
                                 <td>";
             // line 58
@@ -291,7 +289,7 @@ class __TwigTemplate_22c6f3c12a447186507b22fb7e42cdfe extends Template
      */
     public function getDebugInfo(): array
     {
-        return array (  268 => 109,  261 => 108,  255 => 105,  247 => 99,  238 => 96,  232 => 93,  224 => 92,  219 => 90,  215 => 89,  211 => 88,  208 => 87,  204 => 86,  184 => 68,  182 => 67,  174 => 61,  165 => 58,  159 => 57,  155 => 56,  152 => 55,  148 => 54,  121 => 30,  113 => 29,  108 => 27,  100 => 24,  96 => 23,  92 => 22,  76 => 9,  71 => 6,  64 => 5,  53 => 3,  42 => 1,);
+        return array (  266 => 109,  259 => 108,  253 => 105,  245 => 99,  236 => 96,  230 => 93,  222 => 92,  217 => 90,  213 => 89,  209 => 88,  206 => 87,  202 => 86,  182 => 68,  180 => 67,  172 => 61,  163 => 58,  159 => 57,  155 => 56,  152 => 55,  148 => 54,  121 => 30,  113 => 29,  108 => 27,  100 => 24,  96 => 23,  92 => 22,  76 => 9,  71 => 6,  64 => 5,  53 => 3,  42 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -352,7 +350,7 @@ class __TwigTemplate_22c6f3c12a447186507b22fb7e42cdfe extends Template
                         {% for info in asignatura.unidades %}
                             <tr>
                                 <td>{{ info.codigo_asignatura }}</td>
-                                <td>{{ info.sede_nombre }} - {{ info.unidad_nombre }}</td>
+                                <td>{{ info.unidad_completa }}</td>
                                 <td>{{ info.cantidad_alumnos }}</td>
                             </tr>
                         {% endfor %}

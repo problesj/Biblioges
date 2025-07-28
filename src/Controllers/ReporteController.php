@@ -10,13 +10,37 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use src\Controllers\BaseController;
+use PDO;
+use PDOException;
 
 class ReporteController extends BaseController
 {
+    protected $pdo;
+
     public function __construct()
     {
         global $twig;
         parent::__construct($twig, new \Slim\Psr7\Response());
+        
+        // Configuración de la base de datos
+        $dbConfig = [
+            'host' => $_ENV['DB_HOST'] ?? 'localhost',
+            'port' => $_ENV['DB_PORT'] ?? '3306',
+            'dbname' => $_ENV['DB_DATABASE'] ?? 'biblioges',
+            'user' => $_ENV['DB_USERNAME'] ?? 'root',
+            'password' => $_ENV['DB_PASSWORD'] ?? ''
+        ];
+
+        try {
+            $dsn = "mysql:host={$dbConfig['host']};port={$dbConfig['port']};dbname={$dbConfig['dbname']};charset=utf8mb4";
+            $this->pdo = new PDO($dsn, $dbConfig['user'], $dbConfig['password'], [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
+            ]);
+        } catch (PDOException $e) {
+            die("Error de conexión: " . $e->getMessage());
+        }
     }
 
     public function coberturaAsignatura(Request $request, Response $response, array $args): Response
@@ -114,13 +138,12 @@ class ReporteController extends BaseController
         // Obtener todas las carreras para el formulario
         $carreras = DB::table('carreras')->get();
         
-        $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
-        $template = $view->load('reportes/coberturas/index.twig');
-        
-        $response->getBody()->write($template->render([
+        global $twig;
+        $html = $twig->render('reportes/coberturas/index.twig', [
             'carreras' => $carreras
-        ]));
+        ]);
         
+        $response->getBody()->write($html);
         return $response->withHeader('Content-Type', 'text/html');
     }
     
@@ -214,28 +237,180 @@ class ReporteController extends BaseController
 
     public function bibliografiasDeclaradas(Request $request, Response $response, array $args): Response
     {
-        try {
-            // Usar el método render del BaseController
-            return $this->render($response, 'reportes/bibliografias_declaradas.twig', [
-                'app_url' => $GLOBALS['twig']->getGlobals()['app_url'] ?? '',
-                'session' => $_SESSION,
-                'current_page' => 'reportes',
-                'user' => [
-                    'id' => $_SESSION['user_id'] ?? null,
-                    'email' => $_SESSION['user_email'] ?? null,
-                    'nombre' => $_SESSION['user_nombre'] ?? null,
-                    'rol' => $_SESSION['user_rol'] ?? null
-                ]
-            ]);
-            
-        } catch (\Exception $e) {
-            error_log("ERROR en bibliografiasDeclaradas: " . $e->getMessage());
-            error_log("Stack trace: " . $e->getTraceAsString());
-            
-            // Devolver una respuesta de error
-            $response->getBody()->write("Error al cargar el reporte: " . $e->getMessage());
-            return $response->withStatus(500)->withHeader('Content-Type', 'text/html');
+        error_log('ReporteController@bibliografiasDeclaradas: Iniciando método');
+        
+        // Obtener datos de sesión
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
         }
+        $sessionData = [
+            'user_id' => $_SESSION['user_id'] ?? null,
+            'user_email' => $_SESSION['user_email'] ?? null,
+            'user_nombre' => $_SESSION['user_nombre'] ?? null,
+            'user_rol' => $_SESSION['user_rol'] ?? null
+        ];
+        
+        // Parámetros de paginación y ordenamiento
+        $page = max(1, intval($_GET['page'] ?? 1));
+        $perPage = intval($_GET['per_page'] ?? 10);
+        
+        // Validar opciones de registros por página
+        $allowedPerPage = [5, 10, 15, 20];
+        if (!in_array($perPage, $allowedPerPage)) {
+            $perPage = 10;
+        }
+        
+        $offset = ($page - 1) * $perPage;
+        
+        // Parámetros de ordenamiento
+        $sortColumn = $_GET['sort'] ?? 'titulo';
+        $sortDirection = strtoupper($_GET['direction'] ?? 'ASC');
+        
+        // Validar columnas permitidas para ordenamiento
+        $allowedColumns = ['titulo', 'autores', 'anio_publicacion', 'editorial', 'tipo', 'estado', 'num_asignaturas', 'num_bibliografias_disponibles', 'tipos_bibliografias'];
+        if (!in_array($sortColumn, $allowedColumns)) {
+            $sortColumn = 'titulo';
+        }
+        
+        // Validar dirección de ordenamiento
+        if (!in_array($sortDirection, ['ASC', 'DESC'])) {
+            $sortDirection = 'ASC';
+        }
+        
+        // Construir la consulta base para contar total de registros
+        $countSql = "SELECT COUNT(DISTINCT bd.id) as total
+        FROM bibliografias_declaradas bd
+        LEFT JOIN bibliografias_autores ba ON bd.id = ba.bibliografia_id
+        LEFT JOIN autores a ON ba.autor_id = a.id
+        LEFT JOIN asignaturas_bibliografias ab ON bd.id = ab.bibliografia_id
+        LEFT JOIN bibliografias_disponibles bdis ON bd.id = bdis.bibliografia_declarada_id
+        WHERE 1=1";
+        
+        // Construir la consulta principal
+        $sql = "SELECT 
+                bd.id,
+                bd.titulo,
+                bd.tipo,
+                bd.anio_publicacion,
+                bd.editorial,
+                bd.estado,
+                GROUP_CONCAT(DISTINCT CONCAT(a.apellidos, ', ', a.nombres) SEPARATOR '; ') as autores,
+                COUNT(DISTINCT ab.asignatura_id) as num_asignaturas,
+                COUNT(DISTINCT bdis.id) as num_bibliografias_disponibles,
+                GROUP_CONCAT(DISTINCT ab.tipo_bibliografia SEPARATOR ', ') as tipos_bibliografias
+        FROM bibliografias_declaradas bd
+        LEFT JOIN bibliografias_autores ba ON bd.id = ba.bibliografia_id
+        LEFT JOIN autores a ON ba.autor_id = a.id
+        LEFT JOIN asignaturas_bibliografias ab ON bd.id = ab.bibliografia_id
+        LEFT JOIN bibliografias_disponibles bdis ON bd.id = bdis.bibliografia_declarada_id
+        WHERE 1=1";
+        
+        $params = [];
+        
+        // Aplicar filtros si existen
+        if (!empty($_GET['titulo'])) {
+            $sql .= " AND bd.titulo LIKE ?";
+            $countSql .= " AND bd.titulo LIKE ?";
+            $params[] = '%' . $_GET['titulo'] . '%';
+        }
+        
+        if (!empty($_GET['autor'])) {
+            $sql .= " AND (a.apellidos LIKE ? OR a.nombres LIKE ?)";
+            $countSql .= " AND (a.apellidos LIKE ? OR a.nombres LIKE ?)";
+            $params[] = '%' . $_GET['autor'] . '%';
+            $params[] = '%' . $_GET['autor'] . '%';
+        }
+        
+        if (!empty($_GET['editorial'])) {
+            $sql .= " AND bd.editorial LIKE ?";
+            $countSql .= " AND bd.editorial LIKE ?";
+            $params[] = '%' . $_GET['editorial'] . '%';
+        }
+        
+        if (!empty($_GET['tipo'])) {
+            $sql .= " AND bd.tipo = ?";
+            $countSql .= " AND bd.tipo = ?";
+            $params[] = $_GET['tipo'];
+        }
+        
+        if (isset($_GET['estado']) && $_GET['estado'] !== '') {
+            $sql .= " AND bd.estado = ?";
+            $countSql .= " AND bd.estado = ?";
+            $params[] = $_GET['estado'];
+        }
+        
+        if (!empty($_GET['tipo_bibliografia'])) {
+            $sql .= " AND EXISTS (SELECT 1 FROM asignaturas_bibliografias ab2 WHERE ab2.bibliografia_id = bd.id AND ab2.tipo_bibliografia = ?)";
+            $countSql .= " AND EXISTS (SELECT 1 FROM asignaturas_bibliografias ab2 WHERE ab2.bibliografia_id = bd.id AND ab2.tipo_bibliografia = ?)";
+            $params[] = $_GET['tipo_bibliografia'];
+        }
+        
+        if (!empty($_GET['bibliografias_disponibles'])) {
+            if ($_GET['bibliografias_disponibles'] === 'con_disponibles') {
+                $sql .= " AND EXISTS (SELECT 1 FROM bibliografias_disponibles bdis2 WHERE bdis2.bibliografia_declarada_id = bd.id)";
+                $countSql .= " AND EXISTS (SELECT 1 FROM bibliografias_disponibles bdis2 WHERE bdis2.bibliografia_declarada_id = bd.id)";
+            } elseif ($_GET['bibliografias_disponibles'] === 'sin_disponibles') {
+                $sql .= " AND NOT EXISTS (SELECT 1 FROM bibliografias_disponibles bdis2 WHERE bdis2.bibliografia_declarada_id = bd.id)";
+                $countSql .= " AND NOT EXISTS (SELECT 1 FROM bibliografias_disponibles bdis2 WHERE bdis2.bibliografia_declarada_id = bd.id)";
+            }
+        }
+        
+        // Agregar GROUP BY para la consulta principal
+        $sql .= " GROUP BY bd.id, bd.titulo, bd.tipo, bd.anio_publicacion, bd.editorial, bd.estado";
+        
+        // Obtener total de registros
+        $stmt = $this->pdo->prepare($countSql);
+        $stmt->execute($params);
+        $totalRecords = $stmt->fetch()['total'];
+        
+        // Calcular información de paginación
+        $totalPages = ceil($totalRecords / $perPage);
+        $currentPage = $page;
+        
+        // Agregar ORDER BY y LIMIT a la consulta principal
+        $sql .= " ORDER BY {$sortColumn} {$sortDirection} LIMIT {$perPage} OFFSET {$offset}";
+        
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        $bibliografias = $stmt->fetchAll(\PDO::FETCH_OBJ);
+        
+        error_log('ReporteController@bibliografiasDeclaradas: Total bibliografías encontradas: ' . count($bibliografias));
+
+        global $twig;
+        $html = $twig->render('reportes/bibliografias_declaradas/index.twig', [
+            'bibliografias' => $bibliografias,
+            'session' => $sessionData,
+            'app_url' => app_url(),
+            'current_page' => 'listado-bibliografias',
+            'filtros' => [
+                'titulo' => $_GET['titulo'] ?? '',
+                'autor' => $_GET['autor'] ?? '',
+                'editorial' => $_GET['editorial'] ?? '',
+                'tipo' => $_GET['tipo'] ?? '',
+                'estado' => $_GET['estado'] ?? '',
+                'tipo_bibliografia' => $_GET['tipo_bibliografia'] ?? '',
+                'bibliografias_disponibles' => $_GET['bibliografias_disponibles'] ?? ''
+            ],
+            'paginacion' => [
+                'current_page' => $currentPage,
+                'per_page' => $perPage,
+                'total_records' => $totalRecords,
+                'total_pages' => $totalPages,
+                'has_previous' => $currentPage > 1,
+                'has_next' => $currentPage < $totalPages,
+                'previous_page' => $currentPage - 1,
+                'next_page' => $currentPage + 1,
+                'allowed_per_page' => $allowedPerPage
+            ],
+            'ordenamiento' => [
+                'column' => $sortColumn,
+                'direction' => $sortDirection
+            ]
+        ]);
+        
+        error_log('ReporteController@bibliografiasDeclaradas: Vista renderizada correctamente');
+        $response->getBody()->write($html);
+        return $response->withHeader('Content-Type', 'text/html');
     }
 
     public function getBibliografiasDeclaradas(Request $request, Response $response, array $args): Response
@@ -594,27 +769,107 @@ class ReporteController extends BaseController
         // Obtener el año actual
         $anioActual = date('Y');
         
-        // Obtener sedes, carreras y sus relaciones usando la estructura correcta
-        $carreras = DB::table('carreras')
-            ->join('carreras_espejos', 'carreras.id', '=', 'carreras_espejos.carrera_id')
-            ->join('sedes', 'carreras_espejos.sede_id', '=', 'sedes.id')
-            ->select(
-                'sedes.nombre as sede',
-                'carreras_espejos.codigo_carrera as codigo',
-                'carreras.nombre',
-                'carreras.tipo_programa',
-                'carreras.estado',
-                'carreras.id as carrera_id',
-                'sedes.id as sede_id'
-            )
-            ->orderBy('sedes.nombre')
-            ->orderBy('carreras_espejos.codigo_carrera')
-            ->get();
+        // Parámetros de paginación y ordenamiento
+        $page = max(1, intval($_GET['page'] ?? 1));
+        $perPage = intval($_GET['per_page'] ?? 10);
+        
+        // Validar opciones de registros por página
+        $allowedPerPage = [5, 10, 15, 20];
+        if (!in_array($perPage, $allowedPerPage)) {
+            $perPage = 10;
+        }
+        
+        $offset = ($page - 1) * $perPage;
+        
+        // Parámetros de ordenamiento
+        $sortColumn = $_GET['sort'] ?? 'sede';
+        $sortDirection = strtoupper($_GET['direction'] ?? 'ASC');
+        
+        // Validar columnas permitidas para ordenamiento
+        $allowedColumns = ['sede', 'codigo', 'nombre', 'tipo_programa', 'estado', 'cobertura_basica', 'cobertura_complementaria'];
+        if (!in_array($sortColumn, $allowedColumns)) {
+            $sortColumn = 'sede';
+        }
+        
+        // Validar dirección de ordenamiento
+        if (!in_array($sortDirection, ['ASC', 'DESC'])) {
+            $sortDirection = 'ASC';
+        }
+        
+        // Construir la consulta base para contar total de registros
+        $countSql = "SELECT COUNT(DISTINCT CONCAT(ce.sede_id, '-', ce.carrera_id)) as total
+        FROM carreras c
+        JOIN carreras_espejos ce ON c.id = ce.carrera_id
+        JOIN sedes s ON ce.sede_id = s.id
+        WHERE 1=1";
+        
+        // Construir la consulta principal
+        $sql = "SELECT 
+                s.nombre as sede,
+                ce.codigo_carrera as codigo,
+                c.nombre,
+                c.tipo_programa,
+                c.estado,
+                c.id as carrera_id,
+                s.id as sede_id
+        FROM carreras c
+        JOIN carreras_espejos ce ON c.id = ce.carrera_id
+        JOIN sedes s ON ce.sede_id = s.id
+        WHERE 1=1";
+        
+        $params = [];
+        
+        // Aplicar filtros si existen
+        if (!empty($_GET['sede'])) {
+            $sql .= " AND s.nombre LIKE ?";
+            $countSql .= " AND s.nombre LIKE ?";
+            $params[] = '%' . $_GET['sede'] . '%';
+        }
+        
+        if (!empty($_GET['tipo_programa'])) {
+            $sql .= " AND c.tipo_programa = ?";
+            $countSql .= " AND c.tipo_programa = ?";
+            $params[] = $_GET['tipo_programa'];
+        }
+        
+        if (isset($_GET['estado']) && $_GET['estado'] !== '') {
+            $sql .= " AND c.estado = ?";
+            $countSql .= " AND c.estado = ?";
+            $params[] = $_GET['estado'];
+        }
+        
+        if (!empty($_GET['nombre'])) {
+            $sql .= " AND c.nombre LIKE ?";
+            $countSql .= " AND c.nombre LIKE ?";
+            $params[] = '%' . $_GET['nombre'] . '%';
+        }
+        
+        // Obtener total de registros
+        $stmt = $this->pdo->prepare($countSql);
+        $stmt->execute($params);
+        $totalRecords = $stmt->fetch()['total'];
+        
+        // Calcular información de paginación
+        $totalPages = ceil($totalRecords / $perPage);
+        $currentPage = $page;
+        
+        // Agregar ORDER BY y LIMIT a la consulta principal
+        if ($sortColumn === 'cobertura_basica' || $sortColumn === 'cobertura_complementaria') {
+            // Para ordenar por cobertura, necesitamos hacer un subquery
+            $sql .= " ORDER BY c.nombre ASC LIMIT {$perPage} OFFSET {$offset}";
+        } else {
+            $sql .= " ORDER BY {$sortColumn} {$sortDirection} LIMIT {$perPage} OFFSET {$offset}";
+        }
+        
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        $carreras = $stmt->fetchAll(\PDO::FETCH_OBJ);
+        
         error_log('ReporteController@coberturaBasica: Total carreras encontradas: ' . count($carreras));
 
         // Cobertura básica por carrera
         $coberturasBasicas = [];
-        $carrerasCodigos = $carreras->pluck('codigo');
+        $carrerasCodigos = array_column($carreras, 'codigo');
         foreach ($carrerasCodigos as $codigoCarrera) {
             $ultimaFecha = DB::table('reporte_coberturas_carreras_basicas')
                 ->where('codigo_carrera', $codigoCarrera)
@@ -667,15 +922,49 @@ class ReporteController extends BaseController
             $carrera->cobertura_basica = $coberturaBasica;
             $carrera->cobertura_complementaria = $coberturaComplementaria;
         }
+        
+        // Ordenar por cobertura si es necesario (después de obtener los datos)
+        if ($sortColumn === 'cobertura_basica' || $sortColumn === 'cobertura_complementaria') {
+            usort($carreras, function($a, $b) use ($sortColumn, $sortDirection) {
+                $aVal = is_numeric($a->$sortColumn) ? $a->$sortColumn : 0;
+                $bVal = is_numeric($b->$sortColumn) ? $b->$sortColumn : 0;
+                
+                if ($sortDirection === 'ASC') {
+                    return $aVal <=> $bVal;
+                } else {
+                    return $bVal <=> $aVal;
+                }
+            });
+        }
 
-        $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
-        $template = $view->load('reportes/coberturas/index.twig');
-        $html = $template->render([
+        global $twig;
+        $html = $twig->render('reportes/coberturas/index.twig', [
             'carreras' => $carreras,
             'session' => $sessionData,
             'app_url' => app_url(),
             'current_page' => 'coberturas',
-            'anio_actual' => $anioActual
+            'anio_actual' => $anioActual,
+            'filtros' => [
+                'sede' => $_GET['sede'] ?? '',
+                'tipo_programa' => $_GET['tipo_programa'] ?? '',
+                'estado' => $_GET['estado'] ?? '',
+                'nombre' => $_GET['nombre'] ?? ''
+            ],
+            'paginacion' => [
+                'current_page' => $currentPage,
+                'per_page' => $perPage,
+                'total_records' => $totalRecords,
+                'total_pages' => $totalPages,
+                'has_previous' => $currentPage > 1,
+                'has_next' => $currentPage < $totalPages,
+                'previous_page' => $currentPage - 1,
+                'next_page' => $currentPage + 1,
+                'allowed_per_page' => $allowedPerPage
+            ],
+            'ordenamiento' => [
+                'column' => $sortColumn,
+                'direction' => $sortDirection
+            ]
         ]);
         error_log('ReporteController@coberturaBasica: Vista renderizada correctamente');
         $response->getBody()->write($html);
@@ -4220,5 +4509,219 @@ class ReporteController extends BaseController
             $response->getBody()->write(json_encode(['error' => 'Error al guardar el reporte: ' . $e->getMessage()]));
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
+    }
+
+    public function exportarCoberturasExcel(Request $request, Response $response, array $args): Response
+    {
+        error_log('ReporteController@exportarCoberturasExcel: Iniciando método');
+        
+        // Obtener el año actual
+        $anioActual = date('Y');
+        
+        // Construir la consulta base sin paginación para obtener todos los registros
+        $sql = "SELECT 
+                s.nombre as sede,
+                ce.codigo_carrera as codigo,
+                c.nombre,
+                c.tipo_programa,
+                c.estado,
+                c.id as carrera_id,
+                s.id as sede_id
+        FROM carreras c
+        JOIN carreras_espejos ce ON c.id = ce.carrera_id
+        JOIN sedes s ON ce.sede_id = s.id
+        WHERE 1=1";
+        
+        $params = [];
+        
+        // Aplicar filtros si existen
+        if (!empty($_GET['sede'])) {
+            $sql .= " AND s.nombre LIKE ?";
+            $params[] = '%' . $_GET['sede'] . '%';
+        }
+        
+        if (!empty($_GET['tipo_programa'])) {
+            $sql .= " AND c.tipo_programa = ?";
+            $params[] = $_GET['tipo_programa'];
+        }
+        
+        if (isset($_GET['estado']) && $_GET['estado'] !== '') {
+            $sql .= " AND c.estado = ?";
+            $params[] = $_GET['estado'];
+        }
+        
+        if (!empty($_GET['nombre'])) {
+            $sql .= " AND c.nombre LIKE ?";
+            $params[] = '%' . $_GET['nombre'] . '%';
+        }
+        
+        // Ordenar por sede y nombre por defecto
+        $sql .= " ORDER BY s.nombre ASC, c.nombre ASC";
+        
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        $carreras = $stmt->fetchAll(\PDO::FETCH_OBJ);
+        
+        error_log('ReporteController@exportarCoberturasExcel: Total carreras encontradas: ' . count($carreras));
+
+        // Cobertura básica por carrera
+        $coberturasBasicas = [];
+        $carrerasCodigos = array_column($carreras, 'codigo');
+        foreach ($carrerasCodigos as $codigoCarrera) {
+            $ultimaFecha = DB::table('reporte_coberturas_carreras_basicas')
+                ->where('codigo_carrera', $codigoCarrera)
+                ->whereYear('fecha_medicion', $anioActual)
+                ->max('fecha_medicion');
+            if ($ultimaFecha) {
+                $cobertura = DB::table('reporte_coberturas_carreras_basicas')
+                    ->select(
+                        DB::raw('COUNT(DISTINCT id_bibliografia_declarada) AS total_declaradas'),
+                        DB::raw('COUNT(DISTINCT CASE WHEN no_bib_disponible_basica > 0 THEN id_bibliografia_declarada END) AS total_disponibles'),
+                        DB::raw('ROUND(LEAST(COUNT(DISTINCT CASE WHEN no_bib_disponible_basica > 0 THEN id_bibliografia_declarada END) * 100.0 / NULLIF(COUNT(DISTINCT id_bibliografia_declarada), 0), 100), 2) AS cobertura')
+                    )
+                    ->where('codigo_carrera', $codigoCarrera)
+                    ->where('fecha_medicion', $ultimaFecha)
+                    ->first();
+                $coberturasBasicas[$codigoCarrera] = $cobertura->cobertura ?? 'Sin información';
+            } else {
+                $coberturasBasicas[$codigoCarrera] = 'Sin información';
+            }
+        }
+
+        // Cobertura complementaria por carrera
+        $coberturasComplementarias = [];
+        foreach ($carrerasCodigos as $codigoCarrera) {
+            $ultimaFecha = DB::table('reporte_coberturas_carreras_complementarias')
+                ->where('codigo_carrera', $codigoCarrera)
+                ->whereYear('fecha_medicion', $anioActual)
+                ->max('fecha_medicion');
+            if ($ultimaFecha) {
+                $cobertura = DB::table('reporte_coberturas_carreras_complementarias')
+                    ->select(
+                        DB::raw('COUNT(DISTINCT id_bibliografia_declarada) AS total_declaradas'),
+                        DB::raw('COUNT(DISTINCT CASE WHEN no_bib_disponible_complementaria > 0 THEN id_bibliografia_declarada END) AS total_disponibles'),
+                        DB::raw('ROUND(LEAST(COUNT(DISTINCT CASE WHEN no_bib_disponible_complementaria > 0 THEN id_bibliografia_declarada END) * 100.0 / NULLIF(COUNT(DISTINCT id_bibliografia_declarada), 0), 100), 2) AS cobertura')
+                    )
+                    ->where('codigo_carrera', $codigoCarrera)
+                    ->where('fecha_medicion', $ultimaFecha)
+                    ->first();
+                $coberturasComplementarias[$codigoCarrera] = $cobertura->cobertura ?? 'Sin información';
+            } else {
+                $coberturasComplementarias[$codigoCarrera] = 'Sin información';
+            }
+        }
+
+        // Agregar datos de cobertura a cada carrera
+        foreach ($carreras as $carrera) {
+            $carreraCodigo = $carrera->codigo ?? null;
+            $coberturaBasica = $coberturasBasicas[$carreraCodigo] ?? 'Sin información';
+            $coberturaComplementaria = $coberturasComplementarias[$carreraCodigo] ?? 'Sin información';
+            $carrera->cobertura_basica = $coberturaBasica;
+            $carrera->cobertura_complementaria = $coberturaComplementaria;
+        }
+
+        // Crear el archivo Excel
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        
+        // Configurar el título del reporte
+        $sheet->setCellValue('A1', 'REPORTE DE COBERTURAS - ' . $anioActual);
+        $sheet->mergeCells('A1:H1');
+        
+        // Estilo para el título
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('4E73DF');
+        $sheet->getStyle('A1')->getFont()->getColor()->setRGB('FFFFFF');
+        
+        // Configurar encabezados
+        $headers = [
+            'A3' => 'Sede',
+            'B3' => 'Código Carrera',
+            'C3' => 'Nombre Carrera',
+            'D3' => 'Tipo Programa',
+            'E3' => 'Estado',
+            'F3' => 'Cobertura Básica (' . $anioActual . ')',
+            'G3' => 'Cobertura Complementaria (' . $anioActual . ')'
+        ];
+        
+        foreach ($headers as $cell => $header) {
+            $sheet->setCellValue($cell, $header);
+            $sheet->getStyle($cell)->getFont()->setBold(true);
+            $sheet->getStyle($cell)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('E3F2FD');
+            $sheet->getStyle($cell)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        }
+        
+        // Agregar datos
+        $row = 4;
+        foreach ($carreras as $carrera) {
+            $sheet->setCellValue('A' . $row, $carrera->sede);
+            $sheet->setCellValue('B' . $row, $carrera->codigo);
+            $sheet->setCellValue('C' . $row, $carrera->nombre);
+            
+            // Tipo de programa
+            $tipoPrograma = '';
+            if ($carrera->tipo_programa == 'P') {
+                $tipoPrograma = 'Pregrado';
+            } elseif ($carrera->tipo_programa == 'G') {
+                $tipoPrograma = 'Postgrado';
+            } elseif ($carrera->tipo_programa == 'O') {
+                $tipoPrograma = 'Otro';
+            } else {
+                $tipoPrograma = $carrera->tipo_programa;
+            }
+            $sheet->setCellValue('D' . $row, $tipoPrograma);
+            
+            // Estado
+            $estado = $carrera->estado == 1 ? 'Activo' : 'Inactivo';
+            $sheet->setCellValue('E' . $row, $estado);
+            
+            // Coberturas
+            $coberturaBasica = $carrera->cobertura_basica;
+            if (is_numeric($coberturaBasica)) {
+                $coberturaBasica = number_format($coberturaBasica, 2) . '%';
+            }
+            $sheet->setCellValue('F' . $row, $coberturaBasica);
+            
+            $coberturaComplementaria = $carrera->cobertura_complementaria;
+            if (is_numeric($coberturaComplementaria)) {
+                $coberturaComplementaria = number_format($coberturaComplementaria, 2) . '%';
+            }
+            $sheet->setCellValue('G' . $row, $coberturaComplementaria);
+            
+            $row++;
+        }
+        
+        // Autoajustar columnas
+        foreach (range('A', 'G') as $column) {
+            $sheet->getColumnDimension($column)->setAutoSize(true);
+        }
+        
+        // Agregar bordes a toda la tabla
+        $lastRow = $row - 1;
+        $tableRange = 'A3:G' . $lastRow;
+        $sheet->getStyle($tableRange)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        
+        // Configurar el writer
+        $writer = new Xlsx($spreadsheet);
+        
+        // Generar nombre del archivo
+        $fecha = date('Y-m-d_H-i-s');
+        $filename = 'Reporte_Coberturas_' . $anioActual . '_' . $fecha . '.xlsx';
+        
+        // Configurar headers para descarga
+        $response = $response->withHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $response = $response->withHeader('Content-Disposition', 'attachment; filename="' . $filename . '"');
+        $response = $response->withHeader('Cache-Control', 'max-age=0');
+        
+        // Escribir el archivo al output
+        ob_start();
+        $writer->save('php://output');
+        $content = ob_get_clean();
+        
+        $response->getBody()->write($content);
+        
+        error_log('ReporteController@exportarCoberturasExcel: Archivo Excel generado correctamente');
+        return $response;
     }
 } 

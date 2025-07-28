@@ -45,6 +45,8 @@ class SedeController
 
     public function index(Request $request, Response $response, array $args = [])
     {
+        error_log('SedeController@index: Iniciando método');
+        
         try {
             // Verificar autenticación
             if (!$this->session->get('user_id')) {
@@ -58,31 +60,73 @@ class SedeController
                     ->withStatus(302);
             }
 
-            // Obtener filtros
-            $queryParams = $request->getQueryParams();
-            $estado = $queryParams['estado'] ?? null;
+            // Obtener datos de sesión
+            $sessionData = [
+                'user_id' => $this->session->get('user_id'),
+                'user_email' => $this->session->get('user_email'),
+                'user_nombre' => $this->session->get('user_nombre'),
+                'user_rol' => $this->session->get('user_rol')
+            ];
 
-            // Construir la consulta
-            $sql = "SELECT * FROM sedes WHERE 1=1";
-            $params = [];
-
-            if ($estado !== null && $estado !== '') {
-                $sql .= " AND estado = ?";
-                $params[] = $estado;
+            // Parámetros de paginación y ordenamiento
+            $page = max(1, intval($_GET['page'] ?? 1));
+            $perPage = intval($_GET['per_page'] ?? 10);
+            
+            // Validar opciones de registros por página
+            $allowedPerPage = [5, 10, 15, 20];
+            if (!in_array($perPage, $allowedPerPage)) {
+                $perPage = 10;
             }
-
-            $sql .= " ORDER BY nombre";
+            
+            $offset = ($page - 1) * $perPage;
+            
+            // Parámetros de ordenamiento
+            $sortColumn = $_GET['sort'] ?? 'nombre';
+            $sortDirection = strtoupper($_GET['direction'] ?? 'ASC');
+            
+            // Validar columnas permitidas para ordenamiento
+            $allowedColumns = ['codigo', 'nombre', 'estado'];
+            if (!in_array($sortColumn, $allowedColumns)) {
+                $sortColumn = 'nombre';
+            }
+            
+            // Validar dirección de ordenamiento
+            if (!in_array($sortDirection, ['ASC', 'DESC'])) {
+                $sortDirection = 'ASC';
+            }
+            
+            // Construir la consulta base para contar total de registros
+            $countSql = "SELECT COUNT(*) as total FROM sedes WHERE 1=1";
+            
+            // Construir la consulta principal
+            $sql = "SELECT * FROM sedes WHERE 1=1";
+            
+            $params = [];
+            
+            // Aplicar filtros si existen
+            if (isset($_GET['estado']) && $_GET['estado'] !== '') {
+                $sql .= " AND estado = ?";
+                $countSql .= " AND estado = ?";
+                $params[] = $_GET['estado'];
+            }
+            
+            // Obtener total de registros
+            $stmt = $this->pdo->prepare($countSql);
+            $stmt->execute($params);
+            $totalRecords = $stmt->fetch()['total'];
+            
+            // Calcular información de paginación
+            $totalPages = ceil($totalRecords / $perPage);
+            $currentPage = $page;
+            
+            // Agregar ORDER BY y LIMIT a la consulta principal
+            $sql .= " ORDER BY {$sortColumn} {$sortDirection} LIMIT {$perPage} OFFSET {$offset}";
             
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute($params);
-            $sedes = $stmt->fetchAll();
-
-            // Obtener datos del usuario
-            $user_id = $this->session->get('user_id');
-            $sql_user = "SELECT id, nombre, email FROM usuarios WHERE id = ?";
-            $stmt = $this->pdo->prepare($sql_user);
-            $stmt->execute([$user_id]);
-            $user = $stmt->fetch();
+            $sedes = $stmt->fetchAll(\PDO::FETCH_OBJ);
+            
+            error_log('SedeController@index: Total sedes encontradas: ' . count($sedes));
 
             // Obtener mensajes de sesión y limpiarlos
             $success = $this->session->get('success');
@@ -95,22 +139,37 @@ class SedeController
             // Renderizar la vista
             $html = $this->twig->render('sedes/index.twig', [
                 'sedes' => $sedes,
-                'filtros' => [
-                    'estado' => $estado
-                ],
-                'user' => $user,
+                'session' => $sessionData,
                 'app_url' => Config::get('app_url'),
-                'session' => $_SESSION,
                 'current_page' => 'sedes',
+                'filtros' => [
+                    'estado' => $_GET['estado'] ?? ''
+                ],
+                'paginacion' => [
+                    'current_page' => $currentPage,
+                    'per_page' => $perPage,
+                    'total_records' => $totalRecords,
+                    'total_pages' => $totalPages,
+                    'has_previous' => $currentPage > 1,
+                    'has_next' => $currentPage < $totalPages,
+                    'previous_page' => $currentPage - 1,
+                    'next_page' => $currentPage + 1,
+                    'allowed_per_page' => $allowedPerPage
+                ],
+                'ordenamiento' => [
+                    'column' => $sortColumn,
+                    'direction' => $sortDirection
+                ],
                 'success' => $success,
                 'error' => $error
             ]);
             
+            error_log('SedeController@index: Vista renderizada correctamente');
             $response->getBody()->write($html);
             return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
             
         } catch (\Exception $e) {
-            // error_log("Error en SedeController@index: " . $e->getMessage());
+            error_log("Error en SedeController@index: " . $e->getMessage());
             $this->session->set('swal', [
                 'icon' => 'error',
                 'title' => 'Error',

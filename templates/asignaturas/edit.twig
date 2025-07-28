@@ -94,11 +94,11 @@
                                 <label for="unidad_id_{{ loop.index0 }}" class="form-label">Unidad</label>
                                 <select class="form-control select-unidad" 
                                         name="codigos[{{ loop.index0 }}][id_unidad]" 
-                                        data-index="{{ loop.index0 }}" required>
+                                        data-index="{{ loop.index0 }}" required style="font-size: 0.85rem;">
                                     <option value="">Seleccione una unidad</option>
                                     {% for unidad in unidades %}
-                                    <option value="{{ unidad.id }}" {% if unidad.id == info.id_unidad %}selected{% endif %}>
-                                        {{ unidad.sede_nombre }} - {{ unidad.unidad_nombre }}
+                                    <option value="{{ unidad.id }}" {% if unidad.id == info.id_unidad %}selected{% endif %} style="font-size: 0.85rem;">
+                                        {{ unidad.unidad_completa }}
                                     </option>
                                     {% endfor %}
                                 </select>
@@ -213,11 +213,11 @@ function addRow() {
             <label for="unidad_id_${codigoCount}" class="form-label">Unidad</label>
             <select class="form-control select-unidad" 
                     name="codigos[${codigoCount}][id_unidad]" 
-                    data-index="${codigoCount}" required>
+                    data-index="${codigoCount}" required style="font-size: 0.85rem;">
                 <option value="">Seleccione una unidad</option>
                 {% for unidad in unidades %}
-                <option value="{{ unidad.id }}">
-                    {{ unidad.sede_nombre }} - {{ unidad.unidad_nombre }}
+                <option value="{{ unidad.id }}" style="font-size: 0.85rem;">
+                    {{ unidad.unidad_completa }}
                 </option>
                 {% endfor %}
             </select>

@@ -91,18 +91,18 @@
         </div>
         <div class="card-body">
             <form id="filtroForm" class="row g-3">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <label for="ubicacion" class="form-label">Ubicación</label>
-                    <select name="ubicacion" id="ubicacion" class="form-select">
-                        <option value="">Seleccione Ubicación</option>
+                    <select name="ubicacion" id="ubicacion" class="form-select" style="font-size: 0.9rem;">
+                        <option value="" style="font-size: 0.9rem;">Seleccione Ubicación</option>
                         {% for sede in sedes %}
                             {% for unidad in sede.unidades %}
-                                <option value="u_{{ unidad.id }}">{{ sede.nombre }} - {{ unidad.nombre }}</option>
+                                <option value="u_{{ unidad.id }}" style="font-size: 0.9rem;">{{ sede.nombre }} - {{ unidad.codigo }} {{ unidad.nombre }}</option>
                             {% endfor %}
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <label for="tipo_asignatura" class="form-label">Tipo de Asignatura</label>
                     <select name="tipo_asignatura" id="tipo_asignatura" class="form-select">
                         <option value="">Seleccione Tipo de Asignatura</option>
@@ -116,7 +116,23 @@
                         <option value="FORMACION_ESPECIAL">Formación Especial</option>
                     </select>
                 </div>
+                <div class="col-md-4">
+                    <label for="busqueda" class="form-label">Buscar por Nombre o Código</label>
+                    <div class="input-group">
+                        <input type="text" name="busqueda" id="busqueda" class="form-control" placeholder="Ingrese nombre o código de asignatura">
+                        <button type="button" class="btn btn-outline-primary" id="btnBuscar" onclick="realizarBusqueda()">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
             </form>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="limpiarFiltros()">
+                        <i class="fas fa-times"></i> Limpiar Filtros
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -272,6 +288,7 @@ function getUrlParameter(name) {
 function establecerFiltrosDesdeURL() {
     const unidad = getUrlParameter('unidad');
     const tipoAsignatura = getUrlParameter('tipo_asignatura');
+    const busqueda = getUrlParameter('busqueda');
     
     // Establecer valor del filtro de ubicación
     if (unidad) {
@@ -282,6 +299,11 @@ function establecerFiltrosDesdeURL() {
     if (tipoAsignatura) {
         document.getElementById('tipo_asignatura').value = tipoAsignatura;
     }
+    
+    // Establecer valor del filtro de búsqueda
+    if (busqueda) {
+        document.getElementById('busqueda').value = busqueda;
+    }
 }
 
 // Función para verificar filtros al cargar la página
@@ -291,9 +313,10 @@ function verificarFiltrosIniciales() {
     
     const unidad = document.getElementById('ubicacion').value;
     const tipoAsignatura = document.getElementById('tipo_asignatura').value;
+    const busqueda = document.getElementById('busqueda').value;
     
     // Verificar si se ha seleccionado al menos un filtro
-    const hayFiltrosSeleccionados = unidad || tipoAsignatura;
+    const hayFiltrosSeleccionados = unidad || tipoAsignatura || busqueda;
     
     // Controlar visibilidad del mensaje y las asignaturas
     const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
@@ -325,6 +348,13 @@ function verificarFiltrosIniciales() {
 function aplicarFiltros() {
     const unidad = document.getElementById('ubicacion').value;
     const tipoAsignatura = document.getElementById('tipo_asignatura').value;
+    const busqueda = document.getElementById('busqueda').value;
+    
+    // Mostrar indicador de carga
+    const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
+    if (mensajeSinFiltros) {
+        mensajeSinFiltros.innerHTML = '<td colspan="4" class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin fa-2x mb-2"></i><br>Cargando asignaturas...</td>';
+    }
     
     // Construir la URL con los filtros
     let url = `{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/vincular?`;
@@ -340,6 +370,10 @@ function aplicarFiltros() {
         params.append('tipo_asignatura', tipoAsignatura);
     }
     
+    if (busqueda) {
+        params.append('busqueda', busqueda);
+    }
+    
     url += params.toString();
     
     // Recargar la página con los filtros
@@ -347,8 +381,286 @@ function aplicarFiltros() {
 }
 
 // Agregar eventos a los selectores de filtros
-document.getElementById('ubicacion').addEventListener('change', aplicarFiltros);
-document.getElementById('tipo_asignatura').addEventListener('change', aplicarFiltros);
+document.getElementById('ubicacion').addEventListener('change', function() {
+    // Para ubicación y tipo, usar recarga de página para mantener la funcionalidad completa
+    aplicarFiltros();
+});
+document.getElementById('tipo_asignatura').addEventListener('change', function() {
+    // Para ubicación y tipo, usar recarga de página para mantener la funcionalidad completa
+    aplicarFiltros();
+});
+
+// Agregar evento para el campo de búsqueda (Enter key)
+document.getElementById('busqueda').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        realizarBusqueda();
+    }
+});
+
+// Función para realizar búsqueda manual
+function realizarBusqueda() {
+    const busqueda = document.getElementById('busqueda').value.trim();
+    
+    if (!busqueda) {
+        // Si no hay texto de búsqueda, mostrar mensaje inicial
+        const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
+        if (mensajeSinFiltros) {
+            mensajeSinFiltros.innerHTML = '<td colspan="4" class="text-center text-muted py-4"><i class="fas fa-info-circle fa-2x mb-2"></i><br>Seleccione una ubicación o un tipo de asignatura para ver las asignaturas disponibles</td>';
+            mensajeSinFiltros.style.display = 'table-row';
+        }
+        const botonesAccion = document.getElementById('botonesAccion');
+        if (botonesAccion) {
+            botonesAccion.style.display = 'none';
+        }
+        return;
+    }
+    
+    // Mostrar indicador de carga
+    const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
+    const botonesAccion = document.getElementById('botonesAccion');
+    const btnBuscar = document.getElementById('btnBuscar');
+    
+    // Deshabilitar botón de búsqueda y mostrar estado de carga
+    if (btnBuscar) {
+        btnBuscar.disabled = true;
+        btnBuscar.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    }
+    
+    if (mensajeSinFiltros) {
+        mensajeSinFiltros.innerHTML = '<td colspan="4" class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin fa-2x mb-2"></i><br>Buscando asignaturas...</td>';
+        mensajeSinFiltros.style.display = 'table-row';
+    }
+    
+    // Ocultar asignaturas existentes
+    document.querySelectorAll('.asignatura-disponible').forEach(row => {
+        row.style.display = 'none';
+    });
+    
+    // Construir parámetros para la petición AJAX
+    const params = new URLSearchParams();
+    params.append('busqueda', busqueda);
+    
+    // Realizar petición AJAX
+    const url = `{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/vincular/ajax?${params.toString()}`;
+    
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            actualizarTablaAsignaturas(data.asignaturas);
+        } else {
+            console.error('Error al cargar asignaturas:', data.message);
+            if (mensajeSinFiltros) {
+                mensajeSinFiltros.innerHTML = '<td colspan="4" class="text-center text-muted py-4"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>Error al cargar las asignaturas</td>';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        if (mensajeSinFiltros) {
+            mensajeSinFiltros.innerHTML = '<td colspan="4" class="text-center text-muted py-4"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>Error al cargar las asignaturas<br><small>Intente nuevamente</small></td>';
+        }
+        // Ocultar botones de acción en caso de error
+        if (botonesAccion) {
+            botonesAccion.style.display = 'none';
+        }
+    });
+}
+
+// Función para aplicar filtros con AJAX (mantenida para compatibilidad)
+function aplicarFiltrosAjax() {
+    const unidad = document.getElementById('ubicacion').value;
+    const tipoAsignatura = document.getElementById('tipo_asignatura').value;
+    const busqueda = document.getElementById('busqueda').value;
+    
+    // Si hay filtros de ubicación o tipo, usar recarga de página para mantener consistencia
+    if (unidad || tipoAsignatura) {
+        aplicarFiltros();
+        return;
+    }
+    
+    // Solo usar AJAX para búsqueda cuando no hay otros filtros
+    if (!busqueda) {
+        // Si no hay búsqueda, mostrar mensaje inicial
+        const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
+        if (mensajeSinFiltros) {
+            mensajeSinFiltros.innerHTML = '<td colspan="4" class="text-center text-muted py-4"><i class="fas fa-info-circle fa-2x mb-2"></i><br>Seleccione una ubicación o un tipo de asignatura para ver las asignaturas disponibles</td>';
+            mensajeSinFiltros.style.display = 'table-row';
+        }
+        const botonesAccion = document.getElementById('botonesAccion');
+        if (botonesAccion) {
+            botonesAccion.style.display = 'none';
+        }
+        return;
+    }
+    
+    // Mostrar indicador de carga
+    const tbodyAsignaturas = document.getElementById('tbodyAsignaturas');
+    const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
+    const botonesAccion = document.getElementById('botonesAccion');
+    
+    if (mensajeSinFiltros) {
+        mensajeSinFiltros.innerHTML = '<td colspan="4" class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin fa-2x mb-2"></i><br>Cargando asignaturas...</td>';
+        mensajeSinFiltros.style.display = 'table-row';
+    }
+    
+    // Ocultar asignaturas existentes
+    document.querySelectorAll('.asignatura-disponible').forEach(row => {
+        row.style.display = 'none';
+    });
+    
+    // Construir parámetros para la petición AJAX
+    const params = new URLSearchParams();
+    
+    // Solo enviar búsqueda ya que los otros filtros no están activos
+    params.append('busqueda', busqueda);
+    
+    // Realizar petición AJAX
+    const url = `{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/vincular/ajax?${params.toString()}`;
+    
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            actualizarTablaAsignaturas(data.asignaturas);
+        } else {
+            console.error('Error al cargar asignaturas:', data.message);
+            if (mensajeSinFiltros) {
+                mensajeSinFiltros.innerHTML = '<td colspan="4" class="text-center text-muted py-4"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>Error al cargar las asignaturas</td>';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        if (mensajeSinFiltros) {
+            mensajeSinFiltros.innerHTML = '<td colspan="4" class="text-center text-muted py-4"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>Error al cargar las asignaturas<br><small>Intente nuevamente</small></td>';
+        }
+        // Ocultar botones de acción en caso de error
+        if (botonesAccion) {
+            botonesAccion.style.display = 'none';
+        }
+    });
+}
+
+// Función para actualizar la tabla de asignaturas
+function actualizarTablaAsignaturas(asignaturas) {
+    // Restaurar botón de búsqueda
+    const btnBuscar = document.getElementById('btnBuscar');
+    if (btnBuscar) {
+        btnBuscar.disabled = false;
+        btnBuscar.innerHTML = '<i class="fas fa-search"></i>';
+    }
+    
+    const tbodyAsignaturas = document.getElementById('tbodyAsignaturas');
+    const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
+    const botonesAccion = document.getElementById('botonesAccion');
+    
+    // Limpiar tabla existente
+    document.querySelectorAll('.asignatura-disponible').forEach(row => {
+        row.remove();
+    });
+    
+    if (asignaturas.length === 0) {
+        if (mensajeSinFiltros) {
+            mensajeSinFiltros.innerHTML = '<td colspan="4" class="text-center text-muted py-4"><i class="fas fa-search fa-2x mb-2"></i><br>No se encontraron asignaturas con los filtros aplicados</td>';
+            mensajeSinFiltros.style.display = 'table-row';
+        }
+        if (botonesAccion) {
+            botonesAccion.style.display = 'none';
+        }
+        return;
+    }
+    
+    // Ocultar mensaje sin filtros
+    if (mensajeSinFiltros) {
+        mensajeSinFiltros.style.display = 'none';
+    }
+    
+    // Mostrar botones de acción
+    if (botonesAccion) {
+        botonesAccion.style.display = 'flex';
+    }
+    
+    // Agregar nuevas filas
+    asignaturas.forEach((asignatura, index) => {
+        const newRow = document.createElement('tr');
+        newRow.className = 'asignatura-disponible';
+        newRow.style.display = 'table-row';
+        
+        newRow.innerHTML = `
+            <td class="align-top">
+                <input type="checkbox" class="form-check-input" name="asignaturas[]" value="${asignatura.id}" data-nombre="${asignatura.nombre}" data-tipo="${asignatura.tipo}">
+            </td>
+            <td class="align-top">
+                <div style="font-size: 0.9em; word-break: break-all;">
+                    ${asignatura.codigos ? asignatura.codigos.replace(/, /g, '\n') : ''}
+                </div>
+            </td>
+            <td class="align-top">${asignatura.nombre}</td>
+            <td class="align-top">
+                <div class="form-check">
+                    <input class="form-check-input tipo-bibliografia" type="radio" 
+                           name="tipo_bibliografia_${asignatura.id}" 
+                           value="basica" 
+                           data-asignatura-id="${asignatura.id}"
+                           checked>
+                    <label class="form-check-label">Básica</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input tipo-bibliografia" type="radio" 
+                           name="tipo_bibliografia_${asignatura.id}" 
+                           value="complementaria" 
+                           data-asignatura-id="${asignatura.id}">
+                    <label class="form-check-label">Complementaria</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input tipo-bibliografia" type="radio" 
+                           name="tipo_bibliografia_${asignatura.id}" 
+                           value="otro" 
+                           data-asignatura-id="${asignatura.id}">
+                    <label class="form-check-label">Otro</label>
+                </div>
+            </td>
+        `;
+        
+        tbodyAsignaturas.appendChild(newRow);
+    });
+}
+
+// Función para limpiar filtros
+function limpiarFiltros() {
+    document.getElementById('ubicacion').value = '';
+    document.getElementById('tipo_asignatura').value = '';
+    document.getElementById('busqueda').value = '';
+    
+    // Mostrar mensaje inicial
+    const mensajeSinFiltros = document.getElementById('mensajeSinFiltros');
+    if (mensajeSinFiltros) {
+        mensajeSinFiltros.innerHTML = '<td colspan="4" class="text-center text-muted py-4"><i class="fas fa-info-circle fa-2x mb-2"></i><br>Seleccione una ubicación o un tipo de asignatura para ver las asignaturas disponibles</td>';
+        mensajeSinFiltros.style.display = 'table-row';
+    }
+    
+    // Ocultar asignaturas existentes y botones de acción
+    document.querySelectorAll('.asignatura-disponible').forEach(row => {
+        row.style.display = 'none';
+    });
+    
+    const botonesAccion = document.getElementById('botonesAccion');
+    if (botonesAccion) {
+        botonesAccion.style.display = 'none';
+    }
+}
 
 // Verificar filtros iniciales al cargar la página
 document.addEventListener('DOMContentLoaded', function() {

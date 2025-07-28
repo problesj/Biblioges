@@ -66,6 +66,33 @@ class AsignaturaController extends BaseController
                     ->withStatus(302);
             }
 
+            // Parámetros de paginación y ordenamiento
+            $page = max(1, intval($_GET['page'] ?? 1));
+            $perPage = intval($_GET['per_page'] ?? 10);
+
+            // Validar opciones de registros por página
+            $allowedPerPage = [5, 10, 15, 20];
+            if (!in_array($perPage, $allowedPerPage)) {
+                $perPage = 10;
+            }
+
+            $offset = ($page - 1) * $perPage;
+
+            // Parámetros de ordenamiento
+            $sortColumn = $_GET['sort'] ?? 'nombre';
+            $sortDirection = strtoupper($_GET['direction'] ?? 'ASC');
+
+            // Validar columnas permitidas para ordenamiento
+            $allowedColumns = ['nombre', 'tipo', 'estado', 'periodicidad', 'unidad'];
+            if (!in_array($sortColumn, $allowedColumns)) {
+                $sortColumn = 'nombre';
+            }
+
+            // Validar dirección de ordenamiento
+            if (!in_array($sortDirection, ['ASC', 'DESC'])) {
+                $sortDirection = 'ASC';
+            }
+
             // Obtener filtros de los query parameters
             $queryParams = $request->getQueryParams();
             $nombre = $queryParams['nombre'] ?? null;
@@ -73,7 +100,13 @@ class AsignaturaController extends BaseController
             $unidad = $queryParams['unidad'] ?? null;
             $estado = $queryParams['estado'] ?? null;
 
-            // Construir la consulta base
+            // Construir la consulta base para contar total de registros
+            $countQuery = "SELECT COUNT(DISTINCT a.id) as total 
+                FROM asignaturas a 
+                LEFT JOIN asignaturas_departamentos ad ON a.id = ad.asignatura_id 
+                LEFT JOIN unidades u ON ad.id_unidad = u.id";
+
+            // Construir la consulta principal
             $query = "SELECT 
                 a.id,
                 a.nombre,
@@ -112,17 +145,42 @@ class AsignaturaController extends BaseController
 
             if (!empty($where)) {
                 $query .= " WHERE " . implode(" AND ", $where);
+                $countQuery .= " WHERE " . implode(" AND ", $where);
             }
 
-            $query .= " GROUP BY a.id, a.nombre, a.tipo, a.vigencia_desde, a.vigencia_hasta, a.periodicidad, a.estado ORDER BY a.nombre";
+            // Obtener total de registros
+            $stmt = $this->db->prepare($countQuery);
+            $stmt->execute($params);
+            $totalRecords = $stmt->fetch()['total'];
 
-            // Ejecutar la consulta
+            // Calcular información de paginación
+            $totalPages = ceil($totalRecords / $perPage);
+            $currentPage = $page;
+
+            // Agregar GROUP BY y ORDER BY a la consulta principal
+            if ($sortColumn === 'unidad') {
+                // Para ordenar por unidad, usamos MIN() para obtener la primera unidad de cada asignatura
+                $query .= " GROUP BY a.id ORDER BY MIN(u.nombre) {$sortDirection} LIMIT {$perPage} OFFSET {$offset}";
+            } else {
+                $query .= " GROUP BY a.id ORDER BY a.{$sortColumn} {$sortDirection} LIMIT {$perPage} OFFSET {$offset}";
+            }
+
+            // Ejecutar la consulta principal
             $stmt = $this->db->prepare($query);
             $stmt->execute($params);
             $asignaturas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             // Obtener unidades para el filtro
-            $stmt = $this->db->query("SELECT * FROM unidades WHERE estado = 1 ORDER BY nombre");
+            $stmt = $this->db->prepare("
+                SELECT u.id, u.codigo as unidad_codigo, u.nombre as unidad_nombre,
+                       COALESCE(s.nombre, 'Sin sede') as sede_nombre,
+                       CONCAT(COALESCE(s.nombre, 'Sin sede'), ' - ', u.codigo, ' - ', u.nombre) as unidad_completa
+                FROM unidades u
+                LEFT JOIN sedes s ON u.sede_id = s.id
+                WHERE u.estado = 1
+                ORDER BY COALESCE(s.nombre, 'Sin sede') ASC, u.codigo ASC, u.nombre ASC
+            ");
+            $stmt->execute();
             $unidades = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             // Obtener datos del usuario
@@ -131,21 +189,39 @@ class AsignaturaController extends BaseController
             $stmt->execute([$user_id]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            // Renderizar la vista
-            $html = $this->twig->render('asignaturas/index.twig', [
+            // Preparar datos para la vista
+            $viewData = [
                 'asignaturas' => $asignaturas,
                 'unidades' => $unidades,
+                'user' => $user,
+                'app_url' => Config::get('app_url'),
+                'session' => $_SESSION,
+                'current_page' => 'asignaturas',
                 'filtros' => [
                     'nombre' => $nombre,
                     'tipo' => $tipo,
                     'unidad' => $unidad,
                     'estado' => $estado
                 ],
-                'user' => $user,
-                'app_url' => Config::get('app_url'),
-                'session' => $_SESSION,
-                'current_page' => 'asignaturas'
-            ]);
+                'paginacion' => [
+                    'current_page' => $currentPage,
+                    'per_page' => $perPage,
+                    'total_records' => $totalRecords,
+                    'total_pages' => $totalPages,
+                    'has_previous' => $currentPage > 1,
+                    'has_next' => $currentPage < $totalPages,
+                    'previous_page' => $currentPage - 1,
+                    'next_page' => $currentPage + 1,
+                    'allowed_per_page' => $allowedPerPage
+                ],
+                'ordenamiento' => [
+                    'column' => $sortColumn,
+                    'direction' => $sortDirection
+                ]
+            ];
+
+            // Renderizar la vista
+            $html = $this->twig->render('asignaturas/index.twig', $viewData);
             
             $response->getBody()->write($html);
             return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
@@ -197,13 +273,15 @@ class AsignaturaController extends BaseController
                         ad.id_unidad,
                         ad.cantidad_alumnos,
                         u.id as unidad_id,
+                        u.codigo as unidad_codigo,
                         u.nombre as unidad_nombre,
-                        s.nombre as sede_nombre
+                        s.nombre as sede_nombre,
+                        CONCAT(s.nombre, ' - ', u.codigo, ' - ', u.nombre) as unidad_completa
                     FROM asignaturas_departamentos ad
                     JOIN unidades u ON ad.id_unidad = u.id
                     JOIN sedes s ON u.sede_id = s.id
                     WHERE ad.asignatura_id = ?
-                    ORDER BY s.nombre, u.nombre
+                    ORDER BY s.nombre, u.codigo, u.nombre
                 ");
                 $stmt->execute([$id]);
                 $asignatura['unidades'] = $stmt->fetchAll();
@@ -215,13 +293,15 @@ class AsignaturaController extends BaseController
                         ad.id_unidad,
                         ad.cantidad_alumnos,
                         u.id as unidad_id,
+                        u.codigo as unidad_codigo,
                         u.nombre as unidad_nombre,
-                        s.nombre as sede_nombre
+                        s.nombre as sede_nombre,
+                        CONCAT(s.nombre, ' - ', u.codigo, ' - ', u.nombre) as unidad_completa
                     FROM asignaturas_departamentos ad
                     JOIN unidades u ON ad.id_unidad = u.id
                     JOIN sedes s ON u.sede_id = s.id
                     WHERE ad.asignatura_id = ?
-                    ORDER BY s.nombre, u.nombre
+                    ORDER BY s.nombre, u.codigo, u.nombre
                 ");
                 $stmt->execute([$id]);
                 $asignatura['unidades'] = $stmt->fetchAll();
@@ -504,12 +584,13 @@ class AsignaturaController extends BaseController
 
             // Obtener unidades con su jerarquía
             $stmt = $this->db->prepare("
-                SELECT u.id, u.nombre as unidad_nombre,
-                       COALESCE(s.nombre, 'Sin sede') as sede_nombre
+                SELECT u.id, u.codigo as unidad_codigo, u.nombre as unidad_nombre,
+                       COALESCE(s.nombre, 'Sin sede') as sede_nombre,
+                       CONCAT(COALESCE(s.nombre, 'Sin sede'), ' - ', u.codigo, ' - ', u.nombre) as unidad_completa
                 FROM unidades u
                 LEFT JOIN sedes s ON u.sede_id = s.id
                 WHERE u.estado = 1
-                ORDER BY COALESCE(s.nombre, 'Sin sede') ASC, u.nombre ASC
+                ORDER BY COALESCE(s.nombre, 'Sin sede') ASC, u.codigo ASC, u.nombre ASC
             ");
             $stmt->execute();
             $unidades = $stmt->fetchAll();
@@ -907,12 +988,13 @@ class AsignaturaController extends BaseController
 
             // Obtener unidades con su jerarquía
             $stmt = $this->db->prepare("
-                SELECT u.id, u.nombre as unidad_nombre,
-                       COALESCE(s.nombre, 'Sin sede') as sede_nombre
+                SELECT u.id, u.codigo as unidad_codigo, u.nombre as unidad_nombre,
+                       COALESCE(s.nombre, 'Sin sede') as sede_nombre,
+                       CONCAT(COALESCE(s.nombre, 'Sin sede'), ' - ', u.codigo, ' - ', u.nombre) as unidad_completa
                 FROM unidades u
                 LEFT JOIN sedes s ON u.sede_id = s.id
                 WHERE u.estado = 1
-                ORDER BY COALESCE(s.nombre, 'Sin sede') ASC, u.nombre ASC
+                ORDER BY COALESCE(s.nombre, 'Sin sede') ASC, u.codigo ASC, u.nombre ASC
             ");
             $stmt->execute();
             $unidades = $stmt->fetchAll();

@@ -59,7 +59,42 @@ class CarreraController
         }
 
         try {
-            // Obtener todas las carreras con sus sedes y unidades
+            // Parámetros de paginación y ordenamiento
+            $page = max(1, intval($_GET['page'] ?? 1));
+            $perPage = intval($_GET['per_page'] ?? 10);
+            
+            // Validar opciones de registros por página
+            $allowedPerPage = [5, 10, 15, 20];
+            if (!in_array($perPage, $allowedPerPage)) {
+                $perPage = 10;
+            }
+            
+            $offset = ($page - 1) * $perPage;
+            
+            // Parámetros de ordenamiento
+            $sortColumn = $_GET['sort'] ?? 'nombre';
+            $sortDirection = strtoupper($_GET['direction'] ?? 'ASC');
+            
+            // Validar columnas permitidas para ordenamiento
+            $allowedColumns = ['nombre', 'tipo_programa', 'estado', 'cantidad_semestres', 'sede'];
+            if (!in_array($sortColumn, $allowedColumns)) {
+                $sortColumn = 'nombre';
+            }
+            
+            // Validar dirección de ordenamiento
+            if (!in_array($sortDirection, ['ASC', 'DESC'])) {
+                $sortDirection = 'ASC';
+            }
+
+            // Construir la consulta base para contar total de registros
+            $countSql = "SELECT COUNT(DISTINCT c.id) as total
+            FROM carreras c
+                    LEFT JOIN carreras_espejos ce ON c.id = ce.carrera_id
+                    LEFT JOIN sedes s ON ce.sede_id = s.id
+                    LEFT JOIN unidades u ON ce.id_unidad = u.id
+                    WHERE 1=1";
+
+            // Construir la consulta principal
             $sql = "SELECT c.*, 
                            GROUP_CONCAT(DISTINCT ce.codigo_carrera) as codigos_carrera,
                            GROUP_CONCAT(DISTINCT s.nombre) as sedes,
@@ -75,28 +110,47 @@ class CarreraController
             // Aplicar filtro de nombre
             if (!empty($_GET['nombre'])) {
                 $sql .= " AND c.nombre LIKE ?";
+                $countSql .= " AND c.nombre LIKE ?";
                 $params[] = '%' . $_GET['nombre'] . '%';
             }
 
             // Aplicar filtro de tipo de programa
             if (!empty($_GET['tipo_programa'])) {
                 $sql .= " AND c.tipo_programa = ?";
+                $countSql .= " AND c.tipo_programa = ?";
                 $params[] = $_GET['tipo_programa'];
             }
 
             // Aplicar filtro de sede
             if (!empty($_GET['sede'])) {
                 $sql .= " AND ce.sede_id = ?";
+                $countSql .= " AND ce.sede_id = ?";
                 $params[] = $_GET['sede'];
             }
 
             // Aplicar filtro de estado
             if (isset($_GET['estado']) && $_GET['estado'] !== '') {
                 $sql .= " AND c.estado = ?";
+                $countSql .= " AND c.estado = ?";
                 $params[] = $_GET['estado'];
             }
 
-            $sql .= " GROUP BY c.id ORDER BY c.nombre ASC";
+            // Obtener total de registros
+            $stmt = $this->pdo->prepare($countSql);
+            $stmt->execute($params);
+            $totalRecords = $stmt->fetch()['total'];
+            
+            // Calcular información de paginación
+            $totalPages = ceil($totalRecords / $perPage);
+            $currentPage = $page;
+            
+            // Agregar GROUP BY y ORDER BY a la consulta principal
+            if ($sortColumn === 'sede') {
+                // Para ordenar por sede, usamos MIN() para obtener la primera sede de cada carrera
+                $sql .= " GROUP BY c.id ORDER BY MIN(s.nombre) {$sortDirection} LIMIT {$perPage} OFFSET {$offset}";
+            } else {
+                $sql .= " GROUP BY c.id ORDER BY c.{$sortColumn} {$sortDirection} LIMIT {$perPage} OFFSET {$offset}";
+            }
             
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute($params);
@@ -128,6 +182,21 @@ class CarreraController
                     'tipo_programa' => $_GET['tipo_programa'] ?? '',
                     'sede' => $_GET['sede'] ?? '',
                     'estado' => $_GET['estado'] ?? ''
+                ],
+                'paginacion' => [
+                    'current_page' => $currentPage,
+                    'per_page' => $perPage,
+                    'total_records' => $totalRecords,
+                    'total_pages' => $totalPages,
+                    'has_previous' => $currentPage > 1,
+                    'has_next' => $currentPage < $totalPages,
+                    'previous_page' => $currentPage - 1,
+                    'next_page' => $currentPage + 1,
+                    'allowed_per_page' => $allowedPerPage
+                ],
+                'ordenamiento' => [
+                    'column' => $sortColumn,
+                    'direction' => $sortDirection
                 ]
             ];
 
