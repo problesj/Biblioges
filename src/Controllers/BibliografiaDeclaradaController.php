@@ -291,7 +291,16 @@ class BibliografiaDeclaradaController
         // Obtener autores
         $autores = $this->getAutores();
         
-        // Obtener carreras
+        // Obtener carreras existentes en tesis
+        $stmt = $this->pdo->query("
+            SELECT DISTINCT nombre_carrera 
+            FROM tesis 
+            WHERE nombre_carrera IS NOT NULL AND nombre_carrera != ''
+            ORDER BY nombre_carrera
+        ");
+        $carrerasExistentes = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        
+        // Obtener todas las carreras del sistema
         $stmt = $this->pdo->query("
             SELECT id, nombre 
             FROM carreras 
@@ -316,6 +325,7 @@ class BibliografiaDeclaradaController
             'revistas' => $revistas,
             'autores' => $autores,
             'carreras' => $carreras,
+            'carrerasExistentes' => $carrerasExistentes,
             'app_url' => Config::get('app_url'),
             'session' => [
                 'form_token' => $token
@@ -457,13 +467,17 @@ class BibliografiaDeclaradaController
                     break;
 
                 case 'tesis':
+                    $nombreCarrera = $datos['nombre_carrera'] ?? null;
+                    if ($nombreCarrera === 'otra') {
+                        $nombreCarrera = $datos['nueva_carrera'] ?? null;
+                    }
                     $stmt = $this->pdo->prepare("
-                        INSERT INTO tesis (bibliografia_id, carrera_id)
-                        VALUES (:bibliografia_id, :carrera_id)
+                        INSERT INTO tesis (bibliografia_id, nombre_carrera)
+                        VALUES (:bibliografia_id, :nombre_carrera)
                     ");
                     $stmt->execute([
                         ':bibliografia_id' => $bibliografiaId,
-                        ':carrera_id' => $datos['carrera_id'] ?? null
+                        ':nombre_carrera' => $nombreCarrera
                     ]);
                     break;
 
@@ -727,6 +741,15 @@ class BibliografiaDeclaradaController
             $editoriales = BibliografiaDeclarada::distinct()->pluck('editorial')->filter();
             $revistas = Articulo::distinct()->pluck('titulo_revista')->filter();
             $carreras = Carrera::where('estado', true)->orderBy('nombre')->get();
+            
+            // Obtener carreras existentes en tesis
+            $stmt = $this->pdo->query("
+                SELECT DISTINCT nombre_carrera 
+                FROM tesis 
+                WHERE nombre_carrera IS NOT NULL AND nombre_carrera != ''
+                ORDER BY nombre_carrera
+            ");
+            $carrerasExistentes = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
             // Obtener mensajes de sesión y limpiarlos
             $swal = $this->session->get('swal');
@@ -738,6 +761,7 @@ class BibliografiaDeclaradaController
             'editoriales' => $editoriales,
             'revistas' => $revistas,
             'carreras' => $carreras,
+            'carrerasExistentes' => $carrerasExistentes,
                 'app_url' => Config::get('app_url'),
             'isEdit' => true,
                 'swal' => $swal
@@ -894,9 +918,9 @@ class BibliografiaDeclaradaController
 
                     case 'tesis':
                             $stmt = $this->pdo->prepare("
-                            UPDATE tesis SET carrera_id = ? WHERE bibliografia_id = ?
+                            UPDATE tesis SET nombre_carrera = ? WHERE bibliografia_id = ?
                         ");
-                        $stmt->execute([$data['carrera_id'] ?? null, $id]);
+                        $stmt->execute([$data['nombre_carrera'] ?? null, $id]);
                         break;
 
                     case 'articulo':
@@ -1810,10 +1834,9 @@ class BibliografiaDeclaradaController
 
             case 'tesis':
                 $stmt = $this->pdo->prepare("
-                    SELECT t.carrera_id, c.nombre as carrera_nombre
-                    FROM tesis t
-                    LEFT JOIN carreras c ON t.carrera_id = c.id
-                    WHERE t.bibliografia_id = :id
+                    SELECT nombre_carrera
+                    FROM tesis
+                    WHERE bibliografia_id = :id
                 ");
                 $stmt->execute([':id' => $id]);
                 $datosEspecificos = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -2042,10 +2065,9 @@ class BibliografiaDeclaradaController
 
                 case 'tesis':
                     $stmt = $this->pdo->prepare("
-                        SELECT t.carrera_id, c.nombre as carrera_nombre 
-                        FROM tesis t 
-                        LEFT JOIN carreras c ON t.carrera_id = c.id 
-                        WHERE t.bibliografia_id = ?
+                        SELECT nombre_carrera
+                        FROM tesis
+                        WHERE bibliografia_id = ?
                     ");
                     $stmt->execute([$args['id']]);
                     $datosEspecificos = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -2193,7 +2215,7 @@ class BibliografiaDeclaradaController
             'Ñ'=>'N'
         );
         $campo = strtr($campo, $unwanted_array);
-        $campo = str_replace([',', ';', '"', "'", '.', ':', ';'], '', $campo);
+        $campo = str_replace([',', ';', '"', "'", '.', ':', ';', '¿', '?'], '', $campo);
         // Reemplazar espacios por +
         return str_replace(' ', '+', trim($campo));
     }
@@ -2400,7 +2422,9 @@ class BibliografiaDeclaradaController
                                 }
                                 
                                 $recordId = $registroGrupo['pnx']['control']['recordid'][0] ?? '';
-                                $catalogoUrl = "https://ucn.primo.exlibrisgroup.com/discovery/fulldisplay?vid=56UCN_INST:UCN&tab=ALL&search_scope=MyInst_and_CI&lang=es&context=L&adaptor=Local+Search+Engine&docid=" . $recordId;
+                                $catalogoUrl = "https://ucn.primo.exlibrisgroup.com/discovery/fulldisplay?".
+                                               "vid=". ($_ENV['PRIMO_VID'] ?? '56UCN_INST:UCN') .
+                                               "&tab=ALL&search_scope=MyInst_and_CI&lang=es&context=L&adaptor=Local+Search+Engine&docid=" . $recordId;
                                 
                                 $result = [
                                     'catalogo_id' => $recordId,
@@ -2447,9 +2471,13 @@ class BibliografiaDeclaradaController
                     $catalogoUrl = '';
                     
                     if ($context === 'L' && $adaptor === 'Local Search Engine') {
-                        $catalogoUrl = "https://ucn.primo.exlibrisgroup.com/discovery/fulldisplay?vid=56UCN_INST:UCN&tab=ALL&search_scope=MyInst_and_CI&lang=es&context=L&adaptor=Local+Search+Engine&docid=" . $recordId;
+                        $catalogoUrl = "https://ucn.primo.exlibrisgroup.com/discovery/fulldisplay?".
+                                       "vid=" . ($_ENV['PRIMO_VID'] ?? '56UCN_INST:UCN') .
+                                       "&tab=ALL&search_scope=MyInst_and_CI&lang=es&context=L&adaptor=Local+Search+Engine&docid=" . $recordId;
                     } else {
-                        $catalogoUrl = "https://ucn.primo.exlibrisgroup.com/discovery/fulldisplay?&context=PC&vid=56UCN_INST:UCN&search_scope=MyInst_and_CI&tab=ALL&lang=es&adaptor=Primo+Central&docid=" . $recordId;
+                        $catalogoUrl = "https://ucn.primo.exlibrisgroup.com/discovery/fulldisplay?&context=PC&".
+                                       "vid=". ($_ENV['PRIMO_VID'] ?? '56UCN_INST:UCN') .
+                                       "&search_scope=MyInst_and_CI&tab=ALL&lang=es&adaptor=Primo+Central&docid=" . $recordId;
                     }
                     
                     $result = [
@@ -2474,10 +2502,105 @@ class BibliografiaDeclaradaController
                 }
             }
             
-            return $this->jsonResponse([
-                'success' => true, 
-                'results' => $results
+            // Si no se encontraron resultados en el catálogo, devolver mensaje para mostrar botón de Google
+            if (empty($results)) {
+                return $this->jsonResponse([
+                    'success' => true,
+                    'results' => [],
+                    'source' => 'catalogo',
+                    'message' => 'No se encontraron resultados en el catálogo'
+                ]);
+            }
+            
+                        return $this->jsonResponse([
+                'success' => true,
+                'results' => $results,
+                'source' => 'catalogo'
             ]);
+        } catch (\Exception $e) {
+            //error_log('Error en apiBuscarCatalogo: ' . $e->getMessage());
+            return $this->jsonResponse([
+                'success' => false,
+                'message' => 'Error al buscar en el catálogo: ' . $e->getMessage()
+            ])->withStatus(500);
+        }
+    }
+
+    public function apiBuscarGoogle(Request $request, Response $response, array $args): Response
+    {
+        try {
+            // Obtener los datos del cuerpo de la petición
+            $rawData = $request->getBody()->getContents();
+            $data = json_decode($rawData, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return $this->jsonResponse([
+                    'success' => false,
+                    'message' => 'Error al decodificar los datos JSON: ' . json_last_error_msg()
+                ])->withStatus(400);
+            }
+
+            // Procesar y limpiar los campos de búsqueda
+            $titulo = $this->procesarCampoBusqueda($data['titulo'] ?? '');
+            $autor = $this->procesarCampoBusqueda($data['autor'] ?? '');
+            $busquedaAdicional = $this->procesarCampoBusqueda($data['busqueda_adicional'] ?? '');
+            $fuente = $data['fuente'] ?? '';
+
+            // Validar que al menos uno de los campos tenga contenido
+            if (empty($titulo) && empty($autor)) {
+                return $this->jsonResponse([
+                    'success' => false,
+                    'message' => 'Debe ingresar al menos un título o un autor para realizar la búsqueda'
+                ])->withStatus(400);
+            }
+
+            $googleResults = [];
+            $source = '';
+            $message = '';
+
+            // Seguir la lógica: 1. Google Scholar, 2. Google Books, 3. Google tradicional
+            if ($fuente === 'scholar' || $fuente === '') {
+                // 1. Buscar en Google Scholar
+                $googleResults = $this->buscarEnGoogleScholar($titulo, $autor, $busquedaAdicional);
+                if (!empty($googleResults)) {
+                    $source = 'google_scholar';
+                    $message = 'Resultados obtenidos de Google Scholar';
+                }
+            }
+
+            if (empty($googleResults) && ($fuente === 'books' || $fuente === '')) {
+                // 2. Si no hay resultados en Scholar, buscar en Google Books
+                $googleResults = $this->buscarEnGoogleBooks($titulo, $autor, $busquedaAdicional);
+                if (!empty($googleResults)) {
+                    $source = 'google_books';
+                    $message = 'Resultados obtenidos de Google Books';
+                }
+            }
+
+            if (empty($googleResults) && $fuente === '') {
+                // 3. Si no hay resultados en Books, buscar en Google tradicional
+                $googleResults = $this->buscarEnGoogleTradicional($titulo, $autor, $busquedaAdicional);
+                if (!empty($googleResults)) {
+                    $source = 'google_tradicional';
+                    $message = 'Resultados obtenidos de Google';
+                }
+            }
+
+            if (!empty($googleResults)) {
+                return $this->jsonResponse([
+                    'success' => true,
+                    'results' => $googleResults,
+                    'source' => $source,
+                    'message' => $message
+                ]);
+            } else {
+                return $this->jsonResponse([
+                    'success' => true,
+                    'results' => [],
+                    'source' => 'google',
+                    'message' => 'No se encontraron resultados en Google'
+                ]);
+            }
             
 
         } catch (\Exception $e) {
@@ -2497,6 +2620,821 @@ class BibliografiaDeclaradaController
             return $apellidos . ', ' . $nombres;
         }
         return null;
+    }
+
+    private function buscarEnGoogle($titulo, $autor, $busquedaAdicional) {
+        try {
+            // Construir la consulta de búsqueda para Google
+            $query = '';
+            $searchTerms = [];
+            
+            if (!empty($titulo)) {
+                $searchTerms[] = '"' . $titulo . '"';
+            }
+            
+            if (!empty($autor)) {
+                $searchTerms[] = $autor;
+            }
+            
+            if (!empty($busquedaAdicional)) {
+                $searchTerms[] = $busquedaAdicional;
+            }
+            
+            if (empty($searchTerms)) {
+                return [];
+            }
+            
+            $query = implode(' ', $searchTerms);
+            
+            // Primero intentar con Google Scholar
+            $googleScholarResults = $this->buscarEnGoogleWeb($query);
+            if (!empty($googleScholarResults)) {
+                return $googleScholarResults;
+            }
+            
+            // Si no hay resultados en Google Scholar, intentar con Google Books API
+            $googleBooksResults = $this->buscarEnGoogleBooks($titulo, $autor, $busquedaAdicional);
+            if (!empty($googleBooksResults)) {
+                return $googleBooksResults;
+            }
+            
+            return [];
+        } catch (\Exception $e) {
+            error_log('Error en buscarEnGoogle: ' . $e->getMessage());
+            return [];
+        }
+    }
+    
+    private function buscarEnGoogleScholar($titulo, $autor, $busquedaAdicional) {
+        try {
+            // Construir la consulta de búsqueda para Google Scholar
+            $query = '';
+            $searchTerms = [];
+            
+            if (!empty($titulo)) {
+                $searchTerms[] = '"' . $titulo . '"';
+            }
+            
+            if (!empty($autor)) {
+                $searchTerms[] = $autor;
+            }
+            
+            if (!empty($busquedaAdicional)) {
+                $searchTerms[] = $busquedaAdicional;
+            }
+            
+            if (empty($searchTerms)) {
+                return [];
+            }
+            
+            $query = implode(' ', $searchTerms);
+            
+            // Búsqueda directa en Google Scholar
+            return $this->buscarEnGoogleWeb($query);
+            
+        } catch (\Exception $e) {
+            error_log('Error en buscarEnGoogleScholar: ' . $e->getMessage());
+            return [];
+        }
+    }
+    
+    private function buscarEnGoogleBooks($titulo, $autor, $busquedaAdicional) {
+        try {
+            // Construir la consulta de búsqueda para Google Books
+            $query = '';
+            $searchTerms = [];
+            
+            if (!empty($titulo)) {
+                $searchTerms[] = '"' . $titulo . '"';
+            }
+            
+            if (!empty($autor)) {
+                $searchTerms[] = $autor;
+            }
+            
+            if (!empty($busquedaAdicional)) {
+                $searchTerms[] = $busquedaAdicional;
+            }
+            
+            if (empty($searchTerms)) {
+                return [];
+            }
+            
+            $query = implode(' ', $searchTerms);
+            
+            // Usar Google Books API (gratuita y más confiable)
+            $url = "https://www.googleapis.com/books/v1/volumes?" .
+                   "q=" . urlencode($query) .
+                   "&langRestrict=es" .
+                   "&maxResults=10" .
+                   "&printType=books";
+            
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Accept: application/json'
+            ]);
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            
+            if (curl_errno($ch)) {
+                throw new \Exception('Error en la petición cURL a Google Books: ' . curl_error($ch));
+            }
+            
+            curl_close($ch);
+            
+            if ($httpCode !== 200) {
+                throw new \Exception('Error al consultar Google Books API: ' . $httpCode);
+            }
+            
+            $data = json_decode($response, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new \Exception('Error al decodificar la respuesta de Google Books: ' . json_last_error_msg());
+            }
+            
+            $results = [];
+            if (isset($data['items']) && is_array($data['items'])) {
+                foreach ($data['items'] as $item) {
+                    $volumeInfo = $item['volumeInfo'] ?? [];
+                    $authors = isset($volumeInfo['authors']) ? implode('; ', $volumeInfo['authors']) : '';
+                    $publishedDate = $volumeInfo['publishedDate'] ?? '';
+                    $publisher = $volumeInfo['publisher'] ?? '';
+                    $description = $volumeInfo['description'] ?? '';
+                    $previewLink = $volumeInfo['previewLink'] ?? '';
+                    
+                    $results[] = [
+                        'catalogo_id' => 'google_books_' . md5($item['id'] ?? ''),
+                        'sourcerecordid' => '',
+                        'titulo' => $volumeInfo['title'] ?? 'Sin título',
+                        'autores' => $authors,
+                        'anio' => $this->extraerAnioDeTexto($publishedDate),
+                        'editorial' => $publisher,
+                        'url' => $previewLink,
+                        'context' => 'PC',
+                        'adaptor' => 'Google Books',
+                        'formato' => 'Libro',
+                        'snippet' => $description
+                    ];
+                }
+            }
+            
+            return $results;
+            
+        } catch (\Exception $e) {
+            error_log('Error en buscarEnGoogleBooks: ' . $e->getMessage());
+            return [];
+        }
+    }
+    
+    private function buscarEnGoogleTradicional($titulo, $autor, $busquedaAdicional) {
+        try {
+            // Construir la consulta de búsqueda para Google tradicional
+            $query = '';
+            $searchTerms = [];
+            
+            if (!empty($titulo)) {
+                $searchTerms[] = '"' . $titulo . '"';
+            }
+            
+            if (!empty($autor)) {
+                $searchTerms[] = $autor;
+            }
+            
+            if (!empty($busquedaAdicional)) {
+                $searchTerms[] = $busquedaAdicional;
+            }
+            
+            if (empty($searchTerms)) {
+                return [];
+            }
+            
+            $query = implode(' ', $searchTerms);
+            
+            // Usar Google Custom Search API si está configurada
+            $apiKey = $_ENV['GOOGLE_API_KEY'] ?? '';
+            $searchEngineId = $_ENV['GOOGLE_SEARCH_ENGINE_ID'] ?? '';
+            
+            if (!empty($apiKey) && !empty($searchEngineId)) {
+                $url = "https://www.googleapis.com/customsearch/v1?" .
+                       "key=" . urlencode($apiKey) .
+                       "&cx=" . urlencode($searchEngineId) .
+                       "&q=" . urlencode($query) .
+                       "&num=10" .
+                       "&lr=lang_es";
+                
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Accept: application/json'
+                ]);
+                
+                $response = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                
+                if (curl_errno($ch)) {
+                    throw new \Exception('Error en la petición cURL a Google: ' . curl_error($ch));
+                }
+                
+                curl_close($ch);
+                
+                if ($httpCode !== 200) {
+                    throw new \Exception('Error al consultar Google API: ' . $httpCode);
+                }
+                
+                $data = json_decode($response, true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    throw new \Exception('Error al decodificar la respuesta de Google: ' . json_last_error_msg());
+                }
+                
+                $results = [];
+                if (isset($data['items']) && is_array($data['items'])) {
+                    foreach ($data['items'] as $item) {
+                        $results[] = [
+                            'catalogo_id' => 'google_' . md5($item['link'] ?? ''),
+                            'sourcerecordid' => '',
+                            'titulo' => $item['title'] ?? 'Sin título',
+                            'autores' => $this->extraerAutoresDeGoogle($item['snippet'] ?? ''),
+                            'anio' => $this->extraerAnioDeGoogle($item['snippet'] ?? ''),
+                            'editorial' => '',
+                            'url' => $item['link'] ?? '',
+                            'context' => 'PC',
+                            'adaptor' => 'Google Search',
+                            'formato' => 'Web',
+                            'snippet' => $item['snippet'] ?? ''
+                        ];
+                    }
+                }
+                
+                return $results;
+            }
+            
+            return [];
+            
+        } catch (\Exception $e) {
+            error_log('Error en buscarEnGoogleTradicional: ' . $e->getMessage());
+            return [];
+        }
+    }
+    
+    private function buscarEnGoogleWeb($query) {
+        try {
+            // Intentar primero con Google Custom Search Engine configurado para Scholar
+            $apiKey = $_ENV['GOOGLE_API_KEY'] ?? '';
+            $searchEngineId = $_ENV['GOOGLE_SEARCH_ENGINE_ID'] ?? '';
+            
+            if (!empty($apiKey) && !empty($searchEngineId)) {
+                // Usar Custom Search Engine que incluya Google Scholar
+                $url = "https://www.googleapis.com/customsearch/v1?" .
+                       "key=" . urlencode($apiKey) .
+                       "&cx=" . urlencode($searchEngineId) .
+                       "&q=" . urlencode($query) .
+                       "&num=10" .
+                       "&lr=lang_es";
+                
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Accept: application/json'
+                ]);
+                
+                $response = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                
+                if (curl_errno($ch)) {
+                    throw new \Exception('Error en la petición cURL a Google Custom Search: ' . curl_error($ch));
+                }
+                
+                curl_close($ch);
+                
+                if ($httpCode === 200) {
+                    $data = json_decode($response, true);
+                    if (json_last_error() === JSON_ERROR_NONE && isset($data['items'])) {
+                        $results = [];
+                        foreach ($data['items'] as $item) {
+                            $title = $item['title'] ?? '';
+                            $snippet = $item['snippet'] ?? '';
+                            $link = $item['link'] ?? '';
+                            
+                            // Filtrar solo documentos indexados (no citaciones)
+                            // Filtrar solo documentos indexados (no citaciones)
+                            $esIndexado = $this->esDocumentoIndexado($title, $snippet, $link);
+                            if ($esIndexado) {
+                                $results[] = [
+                                    'catalogo_id' => 'google_scholar_' . md5($link),
+                                    'sourcerecordid' => '',
+                                    'titulo' => $title,
+                                    'autores' => $this->extraerAutoresDeGoogle($snippet),
+                                    'anio' => $this->extraerAnioDeGoogle($snippet),
+                                    'editorial' => $this->extraerEditorialDeGoogle($snippet),
+                                    'url' => $link,
+                                    'context' => 'PC',
+                                    'adaptor' => 'Google Scholar',
+                                    'formato' => $this->determinarFormato($link, $title),
+                                    'snippet' => $snippet
+                                ];
+                            }
+                        }
+                        return $results;
+                    }
+                }
+            }
+            
+            // Si no funciona Custom Search, intentar búsqueda web directa
+            $url = "https://scholar.google.com/scholar?" .
+                   "q=" . urlencode($query) .
+                   "&hl=es" .
+                   "&num=10" .
+                   "&as_sdt=0,5" . // Incluir tesis y libros
+                   "&btnG="; // Botón de búsqueda
+            
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language: es-ES,es;q=0.8,en-US;q=0.5,en;q=0.3',
+                'Accept-Encoding: gzip, deflate',
+                'Connection: keep-alive',
+                'Upgrade-Insecure-Requests: 1',
+                'Cache-Control: no-cache',
+                'Pragma: no-cache'
+            ]);
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            
+            if (curl_errno($ch)) {
+                throw new \Exception('Error en la petición cURL a Google Scholar: ' . curl_error($ch));
+            }
+            
+            curl_close($ch);
+            
+            if ($httpCode !== 200) {
+                throw new \Exception('Error al consultar Google Scholar: ' . $httpCode);
+            }
+            
+            // Verificar si Google Scholar bloqueó la petición
+            if (strpos($response, 'Our systems have detected unusual traffic') !== false || 
+                strpos($response, 'captcha') !== false ||
+                strpos($response, 'robot') !== false ||
+                strpos($response, 'unusual traffic') !== false) {
+                error_log('Google Scholar bloqueó la petición para query: ' . $query);
+                return [];
+            }
+            
+            // Verificar si hay resultados
+            if (strpos($response, 'No se encontraron resultados') !== false || 
+                strpos($response, 'No results found') !== false ||
+                strpos($response, 'did not match any articles') !== false) {
+                error_log('Google Scholar no encontró resultados para query: ' . $query);
+                return [];
+            }
+            
+            // Procesar la respuesta HTML para extraer resultados
+            $results = $this->procesarRespuestaGoogleScholar($response, $query);
+            
+            // Si no se encontraron resultados con el procesamiento normal, intentar con un enfoque más simple
+            if (empty($results)) {
+                $results = $this->procesarRespuestaGoogleScholarSimple($response, $query);
+            }
+            
+            return $results;
+            
+        } catch (\Exception $e) {
+            error_log('Error en buscarEnGoogleWeb: ' . $e->getMessage());
+            // Si Google Scholar falla, intentar con Google Books como respaldo
+            return $this->buscarEnGoogleBooksComoRespaldo($query);
+        }
+    }
+    
+    private function buscarEnGoogleBooksComoRespaldo($query) {
+        try {
+            // Usar Google Books API como respaldo para búsquedas académicas
+            $url = "https://www.googleapis.com/books/v1/volumes?" .
+                   "q=" . urlencode($query) .
+                   "&langRestrict=es" .
+                   "&maxResults=10" .
+                   "&printType=books" .
+                   "&orderBy=relevance";
+            
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Accept: application/json'
+            ]);
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            
+            if (curl_errno($ch)) {
+                throw new \Exception('Error en la petición cURL a Google Books: ' . curl_error($ch));
+            }
+            
+            curl_close($ch);
+            
+            if ($httpCode !== 200) {
+                throw new \Exception('Error al consultar Google Books API: ' . $httpCode);
+            }
+            
+            $data = json_decode($response, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new \Exception('Error al decodificar la respuesta de Google Books: ' . json_last_error_msg());
+            }
+            
+            $results = [];
+            if (isset($data['items']) && is_array($data['items'])) {
+                foreach ($data['items'] as $item) {
+                    $volumeInfo = $item['volumeInfo'] ?? [];
+                    $authors = isset($volumeInfo['authors']) ? implode('; ', $volumeInfo['authors']) : '';
+                    $publishedDate = $volumeInfo['publishedDate'] ?? '';
+                    $publisher = $volumeInfo['publisher'] ?? '';
+                    $description = $volumeInfo['description'] ?? '';
+                    $previewLink = $volumeInfo['previewLink'] ?? '';
+                    
+                    $results[] = [
+                        'catalogo_id' => 'google_books_backup_' . md5($item['id'] ?? ''),
+                        'sourcerecordid' => '',
+                        'titulo' => $volumeInfo['title'] ?? 'Sin título',
+                        'autores' => $authors,
+                        'anio' => $this->extraerAnioDeTexto($publishedDate),
+                        'editorial' => $publisher,
+                        'url' => $previewLink,
+                        'context' => 'PC',
+                        'adaptor' => 'Google Books (Respaldo)',
+                        'formato' => 'Libro',
+                        'snippet' => $description
+                    ];
+                }
+            }
+            
+            return $results;
+            
+        } catch (\Exception $e) {
+            error_log('Error en buscarEnGoogleBooksComoRespaldo: ' . $e->getMessage());
+            return [];
+        }
+    }
+    
+    private function procesarRespuestaGoogleScholar($html, $query) {
+        $results = [];
+        
+        // Debug: Guardar HTML para análisis
+        error_log('HTML de Google Scholar recibido: ' . substr($html, 0, 2000));
+        
+        // Extraer resultados usando expresiones regulares mejoradas
+        // Buscar títulos en diferentes formatos posibles
+        preg_match_all('/<h3[^>]*class="[^"]*gs_rt[^"]*"[^>]*>(.*?)<\/h3>/s', $html, $titles);
+        if (empty($titles[1])) {
+            // Intentar con formato alternativo
+            preg_match_all('/<h3[^>]*>(.*?)<\/h3>/s', $html, $titles);
+        }
+        if (empty($titles[1])) {
+            // Intentar con formato más genérico
+            preg_match_all('/<h3[^>]*class="[^"]*"[^>]*>(.*?)<\/h3>/s', $html, $titles);
+        }
+        
+        // Buscar autores y fuentes
+        preg_match_all('/<div[^>]*class="[^"]*gs_a[^"]*"[^>]*>(.*?)<\/div>/s', $html, $authors);
+        if (empty($authors[1])) {
+            // Intentar con formato alternativo
+            preg_match_all('/<div[^>]*class="[^"]*gs_a[^"]*"[^>]*>(.*?)<\/div>/s', $html, $authors);
+        }
+        
+        // Buscar snippets/resúmenes
+        preg_match_all('/<div[^>]*class="[^"]*gs_rs[^"]*"[^>]*>(.*?)<\/div>/s', $html, $snippets);
+        if (empty($snippets[1])) {
+            // Intentar con formato alternativo
+            preg_match_all('/<div[^>]*class="[^"]*gs_rs[^"]*"[^>]*>(.*?)<\/div>/s', $html, $snippets);
+        }
+        
+        // Buscar enlaces
+        preg_match_all('/href="([^"]*)"[^>]*class="[^"]*gs_rt[^"]*"/s', $html, $links);
+        if (empty($links[1])) {
+            // Intentar con formato alternativo
+            preg_match_all('/href="([^"]*)"[^>]*>/s', $html, $links);
+        }
+        
+        // Si aún no encontramos resultados, usar un enfoque más genérico
+        if (empty($titles[1])) {
+            // Buscar cualquier enlace que contenga el título
+            preg_match_all('/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/s', $html, $genericLinks);
+            if (!empty($genericLinks[1])) {
+                for ($i = 0; $i < min(count($genericLinks[1]), 10); $i++) {
+                    $link = $genericLinks[1][$i];
+                    $title = strip_tags($genericLinks[2][$i]);
+                    
+                    // Filtrar solo enlaces que parezcan resultados académicos
+                    if (!empty($title) && 
+                        strlen($title) > 10 && 
+                        !strpos($link, 'google.com') && 
+                        !strpos($link, 'scholar.google.com') &&
+                        !strpos($title, 'Google') &&
+                        !strpos($title, 'Scholar')) {
+                        $results[] = [
+                            'catalogo_id' => 'google_scholar_' . md5($link),
+                            'sourcerecordid' => '',
+                            'titulo' => $title,
+                            'autores' => $this->extraerAutoresDeHTML($html, $i),
+                            'anio' => $this->extraerAnioDeTexto($title),
+                            'editorial' => '',
+                            'url' => $link,
+                            'context' => 'PC',
+                            'adaptor' => 'Google Scholar',
+                            'formato' => 'Academic',
+                            'snippet' => $this->extraerSnippetDeHTML($html, $i)
+                        ];
+                    }
+                }
+                return $results;
+            }
+        }
+        
+        $count = min(count($titles[1]), 10);
+        
+        for ($i = 0; $i < $count; $i++) {
+            $title = strip_tags($titles[1][$i] ?? '');
+            $author = strip_tags($authors[1][$i] ?? '');
+            $snippet = strip_tags($snippets[1][$i] ?? '');
+            $link = $links[1][$i] ?? '';
+            
+            if (!empty($title)) {
+                $results[] = [
+                    'catalogo_id' => 'google_scholar_' . md5($link),
+                    'sourcerecordid' => '',
+                    'titulo' => $title,
+                    'autores' => $author,
+                    'anio' => $this->extraerAnioDeTexto($author . ' ' . $snippet),
+                    'editorial' => '',
+                    'url' => $link,
+                    'context' => 'PC',
+                    'adaptor' => 'Google Scholar',
+                    'formato' => 'Academic',
+                    'snippet' => $snippet
+                ];
+            }
+        }
+        
+        return $results;
+    }
+    
+    private function extraerAutoresDeHTML($html, $index) {
+        // Intentar extraer autores del HTML basado en el índice
+        $pattern = '/<div[^>]*class="[^"]*gs_a[^"]*"[^>]*>(.*?)<\/div>/s';
+        preg_match_all($pattern, $html, $matches);
+        
+        if (isset($matches[1][$index])) {
+            return strip_tags($matches[1][$index]);
+        }
+        
+        return '';
+    }
+    
+    private function extraerSnippetDeHTML($html, $index) {
+        // Intentar extraer snippet del HTML basado en el índice
+        $pattern = '/<div[^>]*class="[^"]*gs_rs[^"]*"[^>]*>(.*?)<\/div>/s';
+        preg_match_all($pattern, $html, $matches);
+        
+        if (isset($matches[1][$index])) {
+            return strip_tags($matches[1][$index]);
+        }
+        
+        return '';
+    }
+    
+    private function procesarRespuestaGoogleScholarSimple($html, $query) {
+        $results = [];
+        
+        // Enfoque más simple: buscar cualquier enlace que contenga texto relevante
+        preg_match_all('/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/s', $html, $matches);
+        
+        $count = 0;
+        for ($i = 0; $i < count($matches[1]) && $count < 10; $i++) {
+            $link = $matches[1][$i];
+            $title = strip_tags($matches[2][$i]);
+            
+            // Filtrar enlaces relevantes
+            if (!empty($title) && 
+                strlen($title) > 10 && 
+                !strpos($link, 'google.com') && 
+                !strpos($link, 'scholar.google.com') &&
+                !strpos($link, 'javascript:') &&
+                !strpos($title, 'Google') &&
+                !strpos($title, 'Scholar')) {
+                
+                // Extraer información básica del título
+                $autores = $this->extraerAutoresDeTexto($title);
+                $anio = $this->extraerAnioDeTexto($title);
+                
+                $results[] = [
+                    'catalogo_id' => 'google_scholar_simple_' . md5($link),
+                    'sourcerecordid' => '',
+                    'titulo' => $title,
+                    'autores' => $autores,
+                    'anio' => $anio,
+                    'editorial' => '',
+                    'url' => $link,
+                    'context' => 'PC',
+                    'adaptor' => 'Google Scholar',
+                    'formato' => 'Academic',
+                    'snippet' => substr($title, 0, 200) . '...'
+                ];
+                
+                $count++;
+            }
+        }
+        
+        return $results;
+    }
+    
+    private function extraerAutoresDeTexto($texto) {
+        // Intentar extraer autores del texto
+        $autores = [];
+        
+        // Buscar patrones de nombres (mayúscula seguida de minúsculas)
+        if (preg_match_all('/([A-Z][a-z]+ [A-Z][a-z]+)/', $texto, $matches)) {
+            $autores = array_slice($matches[1], 0, 3);
+        }
+        
+        return implode('; ', $autores);
+    }
+    
+    private function extraerAutoresDeGoogle($snippet) {
+        // Intentar extraer autores del snippet
+        $autores = [];
+        
+        // Buscar patrones comunes de autores en el snippet
+        if (preg_match_all('/([A-Z][a-z]+ [A-Z][a-z]+)/', $snippet, $matches)) {
+            $autores = array_slice($matches[1], 0, 3); // Máximo 3 autores
+        }
+        
+        return implode('; ', $autores);
+    }
+    
+    private function extraerAnioDeGoogle($snippet) {
+        // Extraer año del snippet
+        if (preg_match('/(19|20)\d{2}/', $snippet, $matches)) {
+            return $matches[0];
+        }
+        return '';
+    }
+    
+    private function extraerAnioDeTexto($texto) {
+        // Extraer año del texto
+        if (preg_match('/(19|20)\d{2}/', $texto, $matches)) {
+            return $matches[0];
+        }
+        return '';
+    }
+    
+    private function esDocumentoIndexado($title, $snippet, $link) {
+        // Excluir solo resultados claramente no deseados
+        $exclusiones = [
+            'facebook.com',
+            'twitter.com',
+            'linkedin.com',
+            'youtube.com',
+            'instagram.com',
+            'tiktok.com',
+            'snapchat.com',
+            'pinterest.com'
+        ];
+        
+        $textoCompleto = strtolower($title . ' ' . $snippet . ' ' . $link);
+        
+        foreach ($exclusiones as $exclusion) {
+            if (strpos($textoCompleto, strtolower($exclusion)) !== false) {
+                return false;
+            }
+        }
+        
+        // Incluir cualquier resultado que parezca académico o educativo
+        $inclusiones = [
+            '.pdf',
+            '.doc',
+            '.docx',
+            'academia.edu',
+            'researchgate.net',
+            'sciencedirect.com',
+            'springer.com',
+            'wiley.com',
+            'tandfonline.com',
+            'sagepub.com',
+            'jstor.org',
+            'dialnet.unirioja.es',
+            'redalyc.org',
+            'scielo.org',
+            'revistas.',
+            'universidad',
+            'university',
+            'tesis',
+            'thesis',
+            'artículo',
+            'article',
+            'libro',
+            'book',
+            'capítulo',
+            'chapter',
+            'grupoblascabrera.org',
+            'proquest.com',
+            'revistascientificas.us.es',
+            'mapa.org',
+            'editorial',
+            'editora',
+            'publisher',
+            'press',
+            'didáctica',
+            'didactic',
+            'educación',
+            'education',
+            'pedagogía',
+            'pedagogy',
+            'enseñanza',
+            'teaching',
+            'aprendizaje',
+            'learning'
+        ];
+        
+        foreach ($inclusiones as $inclusion) {
+            if (strpos($textoCompleto, strtolower($inclusion)) !== false) {
+                return true;
+            }
+        }
+        
+        // Si no coincide con inclusiones específicas, incluir si no es claramente una citación
+        return !$this->esCitacion($title, $snippet);
+    }
+    
+    private function esCitacion($title, $snippet) {
+        // Solo excluir si es claramente solo una citación sin contenido
+        $patronesCitacion = [
+            '/^citado\s*por\s*\d+$/i',
+            '/^cited\s*by\s*\d+$/i',
+            '/^versiones?\s*\d+$/i',
+            '/^versions?\s*\d+$/i'
+        ];
+        
+        $texto = trim($title . ' ' . $snippet);
+        
+        foreach ($patronesCitacion as $patron) {
+            if (preg_match($patron, $texto)) {
+                return true;
+            }
+        }
+        
+        // Si el título contiene información sustancial, no es solo una citación
+        if (strlen($title) > 20) {
+            return false;
+        }
+        
+        return false;
+    }
+    
+    private function extraerEditorialDeGoogle($snippet) {
+        // Extraer editorial del snippet
+        $patrones = [
+            '/([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s+(?:Editorial|Editora|Publishers?|Press))/',
+            '/([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s+(?:Universidad|University))/',
+            '/([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s+(?:Revista|Journal))/'
+        ];
+        
+        foreach ($patrones as $patron) {
+            if (preg_match($patron, $snippet, $matches)) {
+                return trim($matches[1]);
+            }
+        }
+        
+        return '';
+    }
+    
+    private function determinarFormato($link, $title) {
+        $texto = strtolower($link . ' ' . $title);
+        
+        if (strpos($texto, '.pdf') !== false) {
+            return 'PDF';
+        } elseif (strpos($texto, 'tesis') !== false || strpos($texto, 'thesis') !== false) {
+            return 'Tesis';
+        } elseif (strpos($texto, 'artículo') !== false || strpos($texto, 'article') !== false) {
+            return 'Artículo';
+        } elseif (strpos($texto, 'libro') !== false || strpos($texto, 'book') !== false) {
+            return 'Libro';
+        } elseif (strpos($texto, 'capítulo') !== false || strpos($texto, 'chapter') !== false) {
+            return 'Capítulo';
+        } else {
+            return 'Documento';
+        }
     }
 
     private function obtenerEjemplares($recordId) {
@@ -2636,7 +3574,7 @@ class BibliografiaDeclaradaController
         
         //error_log('Autor procesado - Apellidos: ' . $apellidos . ', Nombres: ' . $nombres);
         
-        // Buscar si el autor ya existe
+        // Buscar si el autor ya existe en la tabla autores
         $stmt = $this->pdo->prepare("SELECT id FROM autores WHERE UPPER(apellidos) = UPPER(?) AND UPPER(nombres) = UPPER(?)");
         $stmt->execute([$apellidos, $nombres]);
         $autorExistente = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -2647,6 +3585,26 @@ class BibliografiaDeclaradaController
                 'id' => $autorExistente['id'],
                 'apellidos' => $apellidos,
                 'nombres' => $nombres
+            ];
+        }
+        
+        // Si no se encuentra en autores, buscar en alias_autores
+        $nombreCompleto = trim($apellidos . ', ' . $nombres);
+        $stmt = $this->pdo->prepare("
+            SELECT a.id, a.apellidos, a.nombres 
+            FROM autores a 
+            INNER JOIN alias_autores aa ON a.id = aa.autor_id 
+            WHERE UPPER(aa.nombre_variacion) = UPPER(?)
+        ");
+        $stmt->execute([$nombreCompleto]);
+        $autorConAlias = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($autorConAlias) {
+            //error_log('Autor encontrado en alias con ID: ' . $autorConAlias['id']);
+            return [
+                'id' => $autorConAlias['id'],
+                'apellidos' => $autorConAlias['apellidos'],
+                'nombres' => $autorConAlias['nombres']
             ];
         }
         
@@ -2800,19 +3758,35 @@ class BibliografiaDeclaradaController
                             // Determinar disponibilidad para registros locales
                             if ($tienePortafolios && $tieneRepresentaciones && !empty($ejemplares)) {
                                 $disponibilidad = 'ambos';
-                                $url_acceso = $bibliografia['url'];
+                                //$url_acceso = $bibliografia['url'];
+                                $url_acceso = 'https://ucn.primo.exlibrisgroup.com/discovery/openurl?'.
+                                              'institution=' . ($_ENV['PRIMO_INST'] ?? '56UCN_INST') .
+                                              '&vid='. ($_ENV['PRIMO_VID'] ?? '56UCN_INST:UCN') .
+                                              '&Force_direct=true&rft.mms_id='. $idMms;
                             } elseif ($tienePortafolios && !empty($ejemplares)) {
                                 $disponibilidad = 'ambos';
-                                $url_acceso = $bibliografia['url'];
+                                $url_acceso = 'https://ucn.primo.exlibrisgroup.com/discovery/openurl?'.
+                                              'institution=' . ($_ENV['PRIMO_INST'] ?? '56UCN_INST') .
+                                              '&vid='. ($_ENV['PRIMO_VID'] ?? '56UCN_INST:UCN') .
+                                              '&Force_direct=true&rft.mms_id='. $idMms;
                             } elseif ($tieneRepresentaciones && !empty($ejemplares)) {
                                 $disponibilidad = 'ambos';
-                                $url_acceso = $bibliografia['url'];
+                                $url_acceso = 'https://ucn.primo.exlibrisgroup.com/discovery/openurl?'.
+                                              'institution=' . ($_ENV['PRIMO_INST'] ?? '56UCN_INST') .
+                                              '&vid='. ($_ENV['PRIMO_VID'] ?? '56UCN_INST:UCN') .
+                                              '&Force_direct=true&rft.mms_id='. $idMms;
                             } elseif ($tienePortafolios && empty($ejemplares)) {
                                 $disponibilidad = 'electronico';
-                                $url_acceso = $bibliografia['url'];
+                                $url_acceso = 'https://ucn.primo.exlibrisgroup.com/discovery/openurl?'.
+                                              'institution=' . ($_ENV['PRIMO_INST'] ?? '56UCN_INST') .
+                                              '&vid='. ($_ENV['PRIMO_VID'] ?? '56UCN_INST:UCN') .
+                                              '&Force_direct=true&rft.mms_id='. $idMms;
                             } elseif ($tieneRepresentaciones && empty($ejemplares)) {
                                 $disponibilidad = 'electronico';
-                                $url_acceso = $bibliografia['url'];
+                                $url_acceso = 'https://ucn.primo.exlibrisgroup.com/discovery/openurl?'.
+                                              'institution=' . ($_ENV['PRIMO_INST'] ?? '56UCN_INST') .
+                                              '&vid='. ($_ENV['PRIMO_VID'] ?? '56UCN_INST:UCN') .
+                                              '&Force_direct=true&rft.mms_id='. $idMms;
                             }
 
                         } catch (\Exception $e) {
@@ -2823,6 +3797,12 @@ class BibliografiaDeclaradaController
                         $disponibilidad = 'electronico';
                         $url_acceso = $bibliografia['url'];
                         $url_catalogo = '';
+                    } else if ($adaptor === 'Google Scholar' || $adaptor === 'Google Books' || $adaptor === 'Google Books (Respaldo)') {
+                        // Para resultados de Google, siempre marcar como electrónico y usar la URL del resultado
+                        $disponibilidad = 'electronico';
+                        $url_acceso = $bibliografia['url'];
+                        $url_catalogo = '';
+                        error_log('Resultado de Google procesado - Disponibilidad: electronico, URL: ' . $url_acceso);
                     }
                     
                     error_log('Disponibilidad determinada: ' . $disponibilidad);
@@ -3174,13 +4154,17 @@ class BibliografiaDeclaradaController
                     break;
 
                 case 'tesis':
+                    $nombreCarrera = $datos['nombre_carrera'] ?? null;
+                    if ($nombreCarrera === 'otra') {
+                        $nombreCarrera = $datos['nueva_carrera'] ?? null;
+                    }
                     $stmt = $this->pdo->prepare("
-                        INSERT INTO tesis (bibliografia_id, carrera_id)
-                        VALUES (:bibliografia_id, :carrera_id)
+                        INSERT INTO tesis (bibliografia_id, nombre_carrera)
+                        VALUES (:bibliografia_id, :nombre_carrera)
                     ");
                     $stmt->execute([
                         ':bibliografia_id' => $bibliografiaId,
-                        ':carrera_id' => $datos['carrera_id'] ?? null
+                        ':nombre_carrera' => $nombreCarrera
                     ]);
                     break;
 

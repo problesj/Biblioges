@@ -247,7 +247,24 @@ document.getElementById('searchForm').addEventListener('submit', async function(
                 });
             });
         } else {
-            resultsDiv.innerHTML = '<div class="alert alert-info">No se encontraron resultados</div>';
+            // Mostrar mensaje de no resultados y opciones de búsqueda alternativa
+            resultsDiv.innerHTML = `
+                <div class="alert alert-info">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-info-circle"></i> No se encontraron resultados en el catálogo
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-warning me-2" onclick="buscarEnGoogleScholar()">
+                                <i class="fas fa-graduation-cap"></i> Buscar en Google Scholar
+                            </button>
+                            <button type="button" class="btn btn-info" onclick="buscarEnGoogleBooks()">
+                                <i class="fas fa-book"></i> Buscar en Google Books
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
     } catch (error) {
         console.error('Error:', error);
@@ -375,6 +392,179 @@ async function saveSelectedResults() {
             text: error.message || 'Error al guardar las bibliografías',
             confirmButtonText: 'Aceptar'
         });
+    }
+}
+
+async function buscarEnGoogleScholar() {
+    const resultsDiv = document.getElementById('searchResults');
+    resultsDiv.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"><span class="sr-only">Buscando...</span></div><p class="mt-2">Buscando en Google Scholar...</p></div>';
+
+    const formData = {
+        titulo: document.getElementById('titulo').value,
+        autor: document.getElementById('autor').value,
+        busqueda_adicional: document.getElementById('busqueda_adicional').value,
+        tipo_recurso: document.getElementById('tipo_recurso').value,
+        fuente: 'scholar'
+    };
+
+    try {
+        const response = await fetch('{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/buscarGoogle/api', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Error al buscar en Google Scholar');
+        }
+
+        mostrarResultadosGoogle(data, 'Google Scholar');
+    } catch (error) {
+        console.error('Error:', error);
+        resultsDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle"></i> ${error.message}
+            </div>
+        `;
+    }
+}
+
+async function buscarEnGoogleBooks() {
+    const resultsDiv = document.getElementById('searchResults');
+    resultsDiv.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"><span class="sr-only">Buscando...</span></div><p class="mt-2">Buscando en Google Books...</p></div>';
+
+    const formData = {
+        titulo: document.getElementById('titulo').value,
+        autor: document.getElementById('autor').value,
+        busqueda_adicional: document.getElementById('busqueda_adicional').value,
+        tipo_recurso: document.getElementById('tipo_recurso').value,
+        fuente: 'books'
+    };
+
+    try {
+        const response = await fetch('{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/buscarGoogle/api', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Error al buscar en Google Books');
+        }
+
+        mostrarResultadosGoogle(data, 'Google Books');
+    } catch (error) {
+        console.error('Error:', error);
+        resultsDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle"></i> ${error.message}
+            </div>
+        `;
+    }
+}
+
+function mostrarResultadosGoogle(data, fuente) {
+    const resultsDiv = document.getElementById('searchResults');
+    resultsDiv.innerHTML = '';
+
+    if (data.results && data.results.length > 0) {
+        // Mostrar mensaje de fuente
+        const sourceMessage = document.createElement('div');
+        sourceMessage.className = 'alert alert-warning mb-3';
+        sourceMessage.innerHTML = `
+            <i class="fas fa-exclamation-triangle"></i> 
+            Resultados obtenidos de ${fuente}
+        `;
+        resultsDiv.appendChild(sourceMessage);
+
+        const table = document.createElement('table');
+        table.className = 'table table-striped';
+        
+        // Crear encabezado de la tabla
+        const thead = document.createElement('thead');
+        thead.innerHTML = `
+            <tr>
+                <th><input type="checkbox" id="selectAll"></th>
+                <th>Título</th>
+                <th>Autor</th>
+                <th>Año</th>
+                <th>Editorial</th>
+                <th>Formato</th>
+                <th>Acciones</th>
+            </tr>
+        `;
+        table.appendChild(thead);
+
+        // Crear cuerpo de la tabla
+        const tbody = document.createElement('tbody');
+        data.results.forEach(result => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="checkbox" class="result-checkbox" data-id="${result.catalogo_id}" data-context="${result.context}" data-adaptor="${result.adaptor}" data-sourcerecordid="${result.sourcerecordid}" data-url="${result.url}"></td>
+                <td>${result.titulo}</td>
+                <td>${result.autores}</td>
+                <td>${result.anio}</td>
+                <td>${result.editorial}</td>
+                <td>${result.formato}</td>
+                <td>
+                    <a href="${result.url}" target="_blank" class="btn btn-sm btn-info">
+                        <i class="fas fa-external-link-alt"></i> Ver en ${fuente}
+                    </a>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        resultsDiv.appendChild(table);
+
+        // Agregar botón para guardar selección
+        const saveButton = document.createElement('button');
+        saveButton.className = 'btn btn-primary mt-3';
+        saveButton.innerHTML = '<i class="fas fa-save"></i> Guardar selección';
+        saveButton.onclick = function() {
+            const selectedIds = Array.from(document.querySelectorAll('.result-checkbox:checked'))
+                .map(checkbox => checkbox.dataset.id);
+            if (selectedIds.length > 0) {
+                saveSelectedResults();
+            } else {
+                alert('Por favor, seleccione al menos un resultado');
+            }
+        };
+        resultsDiv.appendChild(saveButton);
+
+        // Manejar selección de todos los resultados
+        document.getElementById('selectAll').addEventListener('change', function() {
+            document.querySelectorAll('.result-checkbox').forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+    } else {
+        resultsDiv.innerHTML = `
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i> 
+                No se encontraron resultados en ${fuente}
+            </div>
+        `;
     }
 }
 </script>

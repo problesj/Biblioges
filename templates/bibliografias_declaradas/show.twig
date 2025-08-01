@@ -13,7 +13,7 @@
                         <a href="{{ app_url }}bibliografias-declaradas" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Volver
                         </a>
-                        <a href="{{ app_url }}bibliografias-declaradas/edit/{{ bibliografia.id }}" class="btn btn-primary">
+                        <a href="{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/edit" class="btn btn-primary">
                             <i class="fas fa-edit"></i> Editar
                         </a>
                     </div>
@@ -76,36 +76,32 @@
                             <table class="table table-bordered">
                                 <thead>
                                     <tr>
+                                        <th>ID</th>
                                         <th>ID MMS</th>
                                         <th>Título</th>
                                         <th>Autor(es)</th>
                                         <th>Año</th>
                                         <th>Editorial</th>
-                                        <th style="text-align:center;">URL Acceso</th>
-                                        <th style="text-align:center;">URL Catálogo</th>
+                                        <th style="text-align:center;">URLs</th>
                                         <th style="text-align:center;">Disponibilidad</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for bd in bibliografias_disponibles %}
                                         <tr>
+                                            <td>{{ bd.id }}</td>
                                             <td>{{ bd.id_mms }}</td>
                                             <td>{{ bd.titulo }}</td>
                                             <td>{{ bd.autores }}</td>
                                             <td>{{ bd.anio_edicion }}</td>
                                             <td>{{ bd.editorial }}</td>
-                                            <td  align="center">
-                                                {% if bd.url_acceso %}
-                                                    <a href="{{ bd.url_acceso }}" target="_blank" class="btn btn-sm btn-info">
-                                                        <i class="fas fa-external-link-alt"></i>
-                                                    </a>
-                                                {% endif %}
-                                            </td>
                                             <td align="center">
-                                                {% if bd.url_catalogo %}
-                                                    <a href="{{ bd.url_catalogo }}" target="_blank" class="btn btn-sm btn-info">
-                                                        <i class="fas fa-external-link-alt"></i>
-                                                    </a>
+                                                {% if bd.url_acceso or bd.url_catalogo %}
+                                                    <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#urlModal{{ bd.id }}">
+                                                        <i class="fas fa-link"></i> Ver URLs
+                                                    </button>
+                                                {% else %}
+                                                    <span class="text-muted">Sin URLs</span>
                                                 {% endif %}
                                             </td>
                                             <td align="center">
@@ -128,4 +124,48 @@
         </div>
     </div>
 </div>
+
+<!-- Modales para URLs -->
+{% for bd in bibliografias_disponibles %}
+    {% if bd.url_acceso or bd.url_catalogo %}
+    <div class="modal fade" id="urlModal{{ bd.id }}" tabindex="-1" aria-labelledby="urlModalLabel{{ bd.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="urlModalLabel{{ bd.id }}">URLs - {{ bd.titulo }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    {% if bd.url_acceso %}
+                    <div class="mb-3">
+                        <label class="form-label"><strong>URL de Acceso:</strong></label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" value="{{ bd.url_acceso }}" readonly>
+                            <a href="{{ bd.url_acceso }}" target="_blank" class="btn btn-outline-primary">
+                                <i class="fas fa-external-link-alt"></i> Abrir
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if bd.url_catalogo %}
+                    <div class="mb-3">
+                        <label class="form-label"><strong>URL del Catálogo:</strong></label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" value="{{ bd.url_catalogo }}" readonly>
+                            <a href="{{ bd.url_catalogo }}" target="_blank" class="btn btn-outline-primary">
+                                <i class="fas fa-external-link-alt"></i> Abrir
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endfor %}
 {% endblock %} 

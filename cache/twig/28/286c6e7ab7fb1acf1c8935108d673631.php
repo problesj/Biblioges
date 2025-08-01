@@ -33,6 +33,7 @@ class __TwigTemplate_b38bcd4511ce9305f04d4ed195f88289 extends Template
             'title' => [$this, 'block_title'],
             'head' => [$this, 'block_head'],
             'content' => [$this, 'block_content'],
+            'scripts' => [$this, 'block_scripts'],
         ];
     }
 
@@ -851,7 +852,61 @@ $context["bibliografia"], "disponibilidad", [], "any", false, false, false, 410)
         // line 529
         yield "</div>
 
+";
+        // line 531
+        yield from $this->unwrap()->yieldBlock('scripts', $context, $blocks);
+        yield from [];
+    }
+
+    /**
+     * @return iterable<null|scalar|\Stringable>
+     */
+    public function block_scripts(array $context, array $blocks = []): iterable
+    {
+        $macros = $this->macros;
+        // line 532
+        yield "<script src=\"https://cdn.jsdelivr.net/npm/sweetalert2@11\"></script>
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Verificar si hay un mensaje swal del servidor
+    ";
+        // line 536
+        if (($context["swal"] ?? null)) {
+            // line 537
+            yield "        Swal.fire({
+            icon: '";
+            // line 538
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "icon", [], "any", false, false, false, 538), "html", null, true);
+            yield "',
+            title: '";
+            // line 539
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "title", [], "any", false, false, false, 539), "html", null, true);
+            yield "',
+            text: '";
+            // line 540
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "text", [], "any", false, false, false, 540), "html", null, true);
+            yield "',
+            confirmButtonText: 'Aceptar'
+        });
+    ";
+        }
+        // line 544
+        yield "    
+    // Verificar si hay un mensaje en sessionStorage (para compatibilidad)
+    const swalMessage = sessionStorage.getItem('swal');
+    if (swalMessage) {
+        const message = JSON.parse(swalMessage);
+        Swal.fire({
+            icon: message.icon,
+            title: message.title,
+            text: message.text,
+            confirmButtonText: 'Aceptar'
+        });
+        // Limpiar el mensaje después de mostrarlo
+        sessionStorage.removeItem('swal');
+    }
+});
+
 function changePerPage(value) {
     const url = new URL(window.location);
     url.searchParams.set('per_page', value);
@@ -868,12 +923,39 @@ function limpiarFiltros() {
 }
 
 function confirmarEliminacion(id) {
-    if (confirm('¿Estás seguro de que deseas eliminar esta bibliografía disponible?')) {
-        window.location.href = '";
-        // line 549
+    Swal.fire({
+        title: '¿Está seguro?',
+        text: \"¿Está seguro de que desea eliminar esta bibliografía disponible?\",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Crear un formulario temporal para enviar la petición POST
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '";
+        // line 590
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "bibliografias-disponibles/' + id + '/delete';
-    }
+            
+            // Agregar el token CSRF si existe
+            const csrfToken = document.querySelector('meta[name=\"csrf-token\"]');
+            if (csrfToken) {
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_token';
+                csrfInput.value = csrfToken.getAttribute('content');
+                form.appendChild(csrfInput);
+            }
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
 }
 </script>
 ";
@@ -901,7 +983,7 @@ function confirmarEliminacion(id) {
      */
     public function getDebugInfo(): array
     {
-        return array (  874 => 549,  852 => 529,  842 => 521,  837 => 518,  826 => 510,  820 => 509,  811 => 503,  805 => 502,  801 => 500,  793 => 497,  790 => 496,  784 => 492,  781 => 491,  779 => 490,  776 => 489,  765 => 486,  758 => 485,  754 => 484,  751 => 483,  748 => 482,  742 => 478,  740 => 477,  735 => 475,  732 => 474,  730 => 473,  727 => 472,  724 => 471,  722 => 470,  713 => 464,  707 => 463,  698 => 457,  692 => 456,  686 => 452,  684 => 451,  677 => 446,  664 => 439,  655 => 435,  647 => 432,  642 => 429,  634 => 425,  632 => 424,  628 => 422,  620 => 418,  618 => 417,  614 => 415,  610 => 413,  606 => 411,  604 => 410,  601 => 409,  599 => 408,  594 => 406,  590 => 405,  586 => 404,  582 => 403,  579 => 402,  575 => 401,  561 => 390,  556 => 388,  549 => 384,  544 => 382,  537 => 378,  532 => 376,  517 => 366,  512 => 363,  503 => 360,  494 => 359,  490 => 358,  480 => 350,  478 => 349,  459 => 333,  455 => 332,  444 => 326,  438 => 325,  426 => 318,  420 => 317,  414 => 316,  405 => 310,  392 => 299,  385 => 295,  382 => 294,  380 => 293,  377 => 292,  370 => 288,  367 => 287,  365 => 286,  357 => 281,  352 => 278,  345 => 277,  71 => 6,  64 => 5,  53 => 3,  42 => 1,);
+        return array (  942 => 590,  894 => 544,  887 => 540,  883 => 539,  879 => 538,  876 => 537,  874 => 536,  868 => 532,  857 => 531,  853 => 529,  843 => 521,  838 => 518,  827 => 510,  821 => 509,  812 => 503,  806 => 502,  802 => 500,  794 => 497,  791 => 496,  785 => 492,  782 => 491,  780 => 490,  777 => 489,  766 => 486,  759 => 485,  755 => 484,  752 => 483,  749 => 482,  743 => 478,  741 => 477,  736 => 475,  733 => 474,  731 => 473,  728 => 472,  725 => 471,  723 => 470,  714 => 464,  708 => 463,  699 => 457,  693 => 456,  687 => 452,  685 => 451,  678 => 446,  665 => 439,  656 => 435,  648 => 432,  643 => 429,  635 => 425,  633 => 424,  629 => 422,  621 => 418,  619 => 417,  615 => 415,  611 => 413,  607 => 411,  605 => 410,  602 => 409,  600 => 408,  595 => 406,  591 => 405,  587 => 404,  583 => 403,  580 => 402,  576 => 401,  562 => 390,  557 => 388,  550 => 384,  545 => 382,  538 => 378,  533 => 376,  518 => 366,  513 => 363,  504 => 360,  495 => 359,  491 => 358,  481 => 350,  479 => 349,  460 => 333,  456 => 332,  445 => 326,  439 => 325,  427 => 318,  421 => 317,  415 => 316,  406 => 310,  393 => 299,  386 => 295,  383 => 294,  381 => 293,  378 => 292,  371 => 288,  368 => 287,  366 => 286,  358 => 281,  353 => 278,  346 => 277,  72 => 6,  65 => 5,  54 => 3,  43 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -1436,7 +1518,35 @@ function confirmarEliminacion(id) {
     {% endif %}
 </div>
 
+{% block scripts %}
+<script src=\"https://cdn.jsdelivr.net/npm/sweetalert2@11\"></script>
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Verificar si hay un mensaje swal del servidor
+    {% if swal %}
+        Swal.fire({
+            icon: '{{ swal.icon }}',
+            title: '{{ swal.title }}',
+            text: '{{ swal.text }}',
+            confirmButtonText: 'Aceptar'
+        });
+    {% endif %}
+    
+    // Verificar si hay un mensaje en sessionStorage (para compatibilidad)
+    const swalMessage = sessionStorage.getItem('swal');
+    if (swalMessage) {
+        const message = JSON.parse(swalMessage);
+        Swal.fire({
+            icon: message.icon,
+            title: message.title,
+            text: message.text,
+            confirmButtonText: 'Aceptar'
+        });
+        // Limpiar el mensaje después de mostrarlo
+        sessionStorage.removeItem('swal');
+    }
+});
+
 function changePerPage(value) {
     const url = new URL(window.location);
     url.searchParams.set('per_page', value);
@@ -1453,11 +1563,39 @@ function limpiarFiltros() {
 }
 
 function confirmarEliminacion(id) {
-    if (confirm('¿Estás seguro de que deseas eliminar esta bibliografía disponible?')) {
-        window.location.href = '{{ app_url }}bibliografias-disponibles/' + id + '/delete';
-    }
+    Swal.fire({
+        title: '¿Está seguro?',
+        text: \"¿Está seguro de que desea eliminar esta bibliografía disponible?\",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Crear un formulario temporal para enviar la petición POST
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ app_url }}bibliografias-disponibles/' + id + '/delete';
+            
+            // Agregar el token CSRF si existe
+            const csrfToken = document.querySelector('meta[name=\"csrf-token\"]');
+            if (csrfToken) {
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_token';
+                csrfInput.value = csrfToken.getAttribute('content');
+                form.appendChild(csrfInput);
+            }
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
 }
 </script>
+{% endblock %}
 {% endblock %} ", "bibliografias_disponibles/index.twig", "/var/www/html/biblioges/templates/bibliografias_disponibles/index.twig");
     }
 }

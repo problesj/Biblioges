@@ -167,6 +167,7 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     // Rutas para búsqueda en catálogo
     $group->get('/bibliografias-declaradas/{id}/buscarCatalogo', [BibliografiaDeclaradaController::class, 'buscarCatalogo']);
     $group->post('/bibliografias-declaradas/{id}/buscarCatalogo/api', [BibliografiaDeclaradaController::class, 'apiBuscarCatalogo']);
+    $group->post('/bibliografias-declaradas/{id}/buscarGoogle/api', [BibliografiaDeclaradaController::class, 'apiBuscarGoogle']);
     $group->post('/bibliografias-declaradas/{id}/guardar-seleccionadas', [BibliografiaDeclaradaController::class, 'guardarBibliografiasSeleccionadas']);
 
     // Rutas para el módulo de autores
@@ -177,12 +178,28 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->get('/autores/{id}/edit', [src\Controllers\AutorController::class, 'edit']);
     $group->put('/autores/{id}', [src\Controllers\AutorController::class, 'update']);
     $group->post('/autores/{id}/update', [src\Controllers\AutorController::class, 'update']);
+    
+    // Rutas para alias de autores
+    $group->get('/autores/{id}/variaciones', [src\Controllers\AutorController::class, 'mostrarVariaciones']);
+    $group->post('/autores/{id}/variaciones', [src\Controllers\AutorController::class, 'agregarVariacion']);
+    $group->delete('/autores/{autor_id}/variaciones/{alias_id}', [src\Controllers\AutorController::class, 'eliminarVariacion']);
+    $group->post('/autores/{autor_id}/variaciones/{alias_id}/delete', [src\Controllers\AutorController::class, 'eliminarVariacion']);
+    $group->get('/autores/buscar-variacion', [src\Controllers\AutorController::class, 'buscarPorVariacion']);
+    
+    // Rutas para fusión mejorada de duplicados
+    $group->post('/autores/buscar-variaciones-fusion', [src\Controllers\AutorController::class, 'buscarVariacionesFusion']);
     $group->delete('/autores/{id}', [src\Controllers\AutorController::class, 'destroy']);
     $group->post('/autores/{id}/delete', [src\Controllers\AutorController::class, 'destroy']);
     $group->post('/autores/{id}/fusionar', [src\Controllers\AutorController::class, 'fusionar']);
     $group->get('/autores/duplicados-globales', [src\Controllers\AutorController::class, 'buscarDuplicadosGlobales']);
     $group->post('/autores/fusionar-grupo', [src\Controllers\AutorController::class, 'fusionarGrupo']);
     $group->post('/autores/{id}/fusionar/{duplicado_id}', [src\Controllers\AutorController::class, 'fusionar']);
+    
+    // API para obtener progreso de búsqueda de duplicados
+    $group->get('/autores/progreso-duplicados', [src\Controllers\AutorController::class, 'obtenerProgresoDuplicados']);
+    
+    // API para iniciar búsqueda de duplicados globales
+    $group->post('/autores/iniciar-busqueda-duplicados', [src\Controllers\AutorController::class, 'iniciarBusquedaDuplicados']);
 
     // Rutas para Usuarios
     $group->get('/usuarios', [UsuarioController::class, 'index']);

@@ -63,4 +63,36 @@ class Autor extends Model
             'bibliografia_disponible_id'
         );
     }
+
+    /**
+     * Obtiene los alias del autor.
+     */
+    public function alias()
+    {
+        return $this->hasMany(AliasAutor::class, 'autor_id');
+    }
+
+    /**
+     * Obtiene el nombre completo del autor.
+     */
+    public function getNombreCompletoAttribute()
+    {
+        return trim($this->apellidos . ', ' . $this->nombres);
+    }
+
+    /**
+     * Crear un alias para este autor
+     */
+    public function crearAlias($nombreVariacion)
+    {
+        return AliasAutor::crearAlias($this->id, $nombreVariacion);
+    }
+
+    /**
+     * Obtener todas las variaciones de nombre de este autor
+     */
+    public function obtenerVariaciones()
+    {
+        return $this->alias()->get();
+    }
 } 

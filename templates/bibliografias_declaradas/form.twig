@@ -136,15 +136,31 @@
                     <div class="tipo-campo" id="camposTesis" style="display: none;">
                         <h3 class="mb-3">Datos de la Tesis</h3>
                         <div class="mb-3">
-                            <label for="carrera_id" class="form-label">Carrera</label>
-                            <select class="form-select" id="carrera_id" name="carrera_id">
+                            <label for="nombre_carrera" class="form-label">Carrera</label>
+                            <select class="form-select" id="nombre_carrera" name="nombre_carrera">
                                 <option value="">Seleccione una carrera</option>
-                                {% for carrera in carreras %}
-                                    <option value="{{ carrera.id }}" {% if bibliografia.carrera_id == carrera.id %}selected{% endif %}>
-                                        {{ carrera.nombre }}
-                                    </option>
-                                {% endfor %}
+                                {% if carrerasExistentes is defined %}
+                                    <optgroup label="Carreras existentes en tesis">
+                                        {% for carrera in carrerasExistentes %}
+                                            <option value="{{ carrera }}" {% if bibliografia.nombre_carrera == carrera %}selected{% endif %}>
+                                                {{ carrera }}
+                                            </option>
+                                        {% endfor %}
+                                    </optgroup>
+                                {% endif %}
+                                <optgroup label="Carreras del sistema">
+                                    {% for carrera in carreras %}
+                                        <option value="{{ carrera.nombre }}" {% if bibliografia.nombre_carrera == carrera.nombre %}selected{% endif %}>
+                                            {{ carrera.nombre }}
+                                        </option>
+                                    {% endfor %}
+                                </optgroup>
+                                <option value="otra">Otra carrera...</option>
                             </select>
+                        </div>
+                        <div class="mb-3" id="nuevaCarreraContainer" style="display: none;">
+                            <label for="nueva_carrera" class="form-label">Nueva Carrera</label>
+                            <input type="text" class="form-control" id="nueva_carrera" name="nueva_carrera" placeholder="Ingrese el nombre de la nueva carrera">
                         </div>
                         </div>
 
@@ -335,6 +351,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const nuevaEditorialContainer = document.getElementById('nuevaEditorialContainer');
     const tituloRevistaSelect = document.getElementById('titulo_revista');
     const nuevaRevistaContainer = document.getElementById('nuevaRevistaContainer');
+    const nombreCarreraSelect = document.getElementById('nombre_carrera');
+    const nuevaCarreraContainer = document.getElementById('nuevaCarreraContainer');
     let autoresSeleccionadosList = new Set();
     let submitButton = form.querySelector('button[type="submit"]');
 
@@ -396,6 +414,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (tituloRevistaSelect) {
         tituloRevistaSelect.addEventListener('change', function() {
             nuevaRevistaContainer.style.display = this.value === 'otra' ? 'block' : 'none';
+        });
+    }
+    
+    // Manejar la visibilidad de la nueva carrera
+    if (nombreCarreraSelect) {
+        nombreCarreraSelect.addEventListener('change', function() {
+            nuevaCarreraContainer.style.display = this.value === 'otra' ? 'block' : 'none';
         });
     }
 
@@ -550,6 +575,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }).filter(autor => autor !== null);
 
             data.autores = JSON.stringify(autores);
+            
+            // Manejar el caso de nueva carrera para tesis
+            if (data.tipo === 'tesis' && data.nombre_carrera === 'otra') {
+                data.nombre_carrera = data.nueva_carrera;
+            }
 
             // Determinar si es una actualización o creación
             const isUpdate = form.action.includes('/edit') || form.querySelector('input[name="_method"]')?.value === 'PUT';

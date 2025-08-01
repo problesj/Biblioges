@@ -100,7 +100,7 @@ global $twig;
 // Variables globales para Twig
 $baseUrl = rtrim($_ENV['APP_URL'] ?? 'https://biblioges.ucn.cl', '/');
 // Para el frontend, siempre usar la URL base sin /biblioges
-$frontendUrl = 'https://biblioges.ucn.cl';
+$frontendUrl = rtrim($_ENV['APP_URL_FRONTEND'] ?? 'https://biblioges.ucn.cl', '/');
 $twig->addGlobal('app_url', $frontendUrl);
 $twig->addGlobal('admin_url', $frontendUrl . '/biblioges');
 $twig->addGlobal('assets_url', $frontendUrl . '/assets');

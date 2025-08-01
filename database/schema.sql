@@ -155,6 +155,17 @@ CREATE TABLE IF NOT EXISTS autores (
     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
+-- Tabla de alias de autores
+CREATE TABLE IF NOT EXISTS alias_autores (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    autor_id INT NOT NULL,
+    nombre_variacion VARCHAR(250) NOT NULL,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (autor_id) REFERENCES autores(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_autor_variacion (autor_id, nombre_variacion)
+) ENGINE=InnoDB;
+
 -- Tabla de bibliografías declaradas
 CREATE TABLE IF NOT EXISTS bibliografias_declaradas (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -203,11 +214,10 @@ CREATE TABLE IF NOT EXISTS articulos (
 CREATE TABLE IF NOT EXISTS tesis (
     id INT AUTO_INCREMENT PRIMARY KEY,
     bibliografia_id INT NOT NULL,
-    carrera_id INT NOT NULL,
+    nombre_carrera VARCHAR(300) NOT NULL,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (bibliografia_id) REFERENCES bibliografias_declaradas(id) ON DELETE CASCADE,
-    FOREIGN KEY (carrera_id) REFERENCES carreras(id) ON DELETE RESTRICT,
     UNIQUE KEY unique_bibliografia_tesis (bibliografia_id)
 ) ENGINE=InnoDB;
 

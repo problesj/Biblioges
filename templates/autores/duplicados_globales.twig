@@ -5,9 +5,152 @@
 {% block stylesheets %}
     {{ parent() }}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
+    <style>
+        .modal-progreso {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-progreso .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .modal-progreso .titulo {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .modal-progreso .descripcion {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .modal-progreso .barra-progreso {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        
+        .modal-progreso .progreso-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #007bff, #0056b3);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        
+        .modal-progreso .porcentaje {
+            text-align: center;
+            font-weight: bold;
+            color: #007bff;
+            font-size: 16px;
+        }
+        
+        .modal-progreso .estado {
+            text-align: center;
+            margin-top: 10px;
+            color: #666;
+            font-size: 12px;
+            font-style: italic;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Estilos para las acciones de fusión */
+        .accion-radio {
+            margin: 0;
+            padding: 0;
+        }
+        
+        .accion-radio .custom-control {
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+        
+        .accion-radio .custom-control-label {
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .accion-radio .custom-control-input:checked ~ .custom-control-label::before {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        
+        .table th {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            vertical-align: middle;
+        }
+        
+        .table td {
+            vertical-align: middle;
+        }
+        
+        .btn-accion {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            margin: 0.1rem;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
+<!-- Modal de Progreso -->
+<div id="modalProgreso" class="modal-progreso">
+    <div class="modal-content">
+        <div class="titulo">
+            <i class="fas fa-search"></i> Buscando Duplicados
+        </div>
+        <div class="descripcion">
+            Analizando autores para encontrar posibles duplicados...
+        </div>
+        <div class="barra-progreso">
+            <div class="progreso-fill" id="progresoFill"></div>
+        </div>
+        <div class="porcentaje" id="porcentaje">0%</div>
+        <div class="estado" id="estado">
+            <span class="spinner"></span>Iniciando búsqueda...
+        </div>
+    </div>
+</div>
+
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -16,6 +159,33 @@
                     <h3 class="card-title">Búsqueda Global de Duplicados</h3>
                 </div>
                 <div class="card-body">
+                    <!-- Formulario de búsqueda para fusión mejorada -->
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title">Buscar Variaciones para Fusión</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form method="POST" action="{{ app_url }}autores/buscar-variaciones-fusion" class="row g-3">
+                                        <div class="col-md-8">
+                                            <input type="text" class="form-control" name="termino_busqueda" 
+                                                   placeholder="Ingrese nombre, apellido o variación para buscar..." required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-search"></i> Buscar Variaciones
+                                            </button>
+                                        </div>
+                                    </form>
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle"></i> 
+                                        Busca autores por nombre, apellido o variaciones para fusionar duplicados con selección de acciones.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     {% if error %}
                         <div class="alert alert-danger alert-dismissible">
                             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
@@ -38,17 +208,19 @@
                                             <table class="table table-bordered table-striped">
                                                 <thead>
                                                     <tr>
-                                                        <th style="width: 50px;">Principal</th>
-                                                        <th style="width: 50px;">Fusionar</th>
+                                                        <th style="width: 80px;">Principal</th>
+                                                        <th style="width: 80px;">Mantener</th>
+                                                        <th style="width: 100px;">Convertir en Alias</th>
+                                                        <th style="width: 80px;">Eliminar</th>
                                                         <th>Nombres</th>
                                                         <th>Apellidos</th>
                                                         <th>Género</th>
-                                                        <th>Acciones</th>
+                                                        <th style="width: 100px;">Acciones</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     <tr>
-                                                        <td>
+                                                        <td class="text-center">
                                                             <div class="custom-control custom-radio">
                                                                 <input type="radio" class="custom-control-input autor-principal" 
                                                                        id="autor_{{ grupo.principal.id }}" 
@@ -57,27 +229,45 @@
                                                                 <label class="custom-control-label" for="autor_{{ grupo.principal.id }}"></label>
                                                             </div>
                                                         </td>
-                                                        <td>
-                                                            <div class="custom-control custom-checkbox">
-                                                                <input type="checkbox" class="custom-control-input autor-fusionar" 
-                                                                       id="fusionar_{{ grupo.principal.id }}" 
-                                                                       name="autores_fusionar[]" 
-                                                                       value="{{ grupo.principal.id }}">
-                                                                <label class="custom-control-label" for="fusionar_{{ grupo.principal.id }}"></label>
+                                                        <td class="text-center">
+                                                            <div class="custom-control custom-radio accion-radio">
+                                                                <input type="radio" class="custom-control-input accion-autor" 
+                                                                       id="mantener_{{ grupo.principal.id }}" 
+                                                                       name="acciones_autores[{{ grupo.principal.id }}]" 
+                                                                       value="mantener">
+                                                                <label class="custom-control-label" for="mantener_{{ grupo.principal.id }}"></label>
+                                                            </div>
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <div class="custom-control custom-radio accion-radio">
+                                                                <input type="radio" class="custom-control-input accion-autor" 
+                                                                       id="alias_{{ grupo.principal.id }}" 
+                                                                       name="acciones_autores[{{ grupo.principal.id }}]" 
+                                                                       value="convertir_alias">
+                                                                <label class="custom-control-label" for="alias_{{ grupo.principal.id }}"></label>
+                                                            </div>
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <div class="custom-control custom-radio accion-radio">
+                                                                <input type="radio" class="custom-control-input accion-autor" 
+                                                                       id="eliminar_{{ grupo.principal.id }}" 
+                                                                       name="acciones_autores[{{ grupo.principal.id }}]" 
+                                                                       value="eliminar">
+                                                                <label class="custom-control-label" for="eliminar_{{ grupo.principal.id }}"></label>
                                                             </div>
                                                         </td>
                                                         <td>{{ grupo.principal.nombres }}</td>
                                                         <td>{{ grupo.principal.apellidos }}</td>
                                                         <td>{{ grupo.principal.genero }}</td>
-                                                        <td>
-                                                            <a href="{{ app_url }}autores/{{ grupo.principal.id }}/edit" class="btn btn-sm btn-info">
+                                                        <td class="text-center">
+                                                            <a href="{{ app_url }}autores/{{ grupo.principal.id }}/edit" class="btn btn-sm btn-info btn-accion">
                                                                 <i class="fas fa-edit"></i> Editar
                                                             </a>
                                                         </td>
                                                     </tr>
                                                     {% for duplicado in grupo.duplicados %}
                                                         <tr>
-                                                            <td>
+                                                            <td class="text-center">
                                                                 <div class="custom-control custom-radio">
                                                                     <input type="radio" class="custom-control-input autor-principal" 
                                                                            id="autor_{{ duplicado.id }}" 
@@ -86,20 +276,38 @@
                                                                     <label class="custom-control-label" for="autor_{{ duplicado.id }}"></label>
                                                                 </div>
                                                             </td>
-                                                            <td>
-                                                                <div class="custom-control custom-checkbox">
-                                                                    <input type="checkbox" class="custom-control-input autor-fusionar" 
-                                                                           id="fusionar_{{ duplicado.id }}" 
-                                                                           name="autores_fusionar[]" 
-                                                                           value="{{ duplicado.id }}">
-                                                                    <label class="custom-control-label" for="fusionar_{{ duplicado.id }}"></label>
+                                                            <td class="text-center">
+                                                                <div class="custom-control custom-radio accion-radio">
+                                                                    <input type="radio" class="custom-control-input accion-autor" 
+                                                                           id="mantener_{{ duplicado.id }}" 
+                                                                           name="acciones_autores[{{ duplicado.id }}]" 
+                                                                           value="mantener">
+                                                                    <label class="custom-control-label" for="mantener_{{ duplicado.id }}"></label>
+                                                                </div>
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <div class="custom-control custom-radio accion-radio">
+                                                                    <input type="radio" class="custom-control-input accion-autor" 
+                                                                           id="alias_{{ duplicado.id }}" 
+                                                                           name="acciones_autores[{{ duplicado.id }}]" 
+                                                                           value="convertir_alias">
+                                                                    <label class="custom-control-label" for="alias_{{ duplicado.id }}"></label>
+                                                                </div>
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <div class="custom-control custom-radio accion-radio">
+                                                                    <input type="radio" class="custom-control-input accion-autor" 
+                                                                           id="eliminar_{{ duplicado.id }}" 
+                                                                           name="acciones_autores[{{ duplicado.id }}]" 
+                                                                           value="eliminar">
+                                                                    <label class="custom-control-label" for="eliminar_{{ duplicado.id }}"></label>
                                                                 </div>
                                                             </td>
                                                             <td>{{ duplicado.nombres }}</td>
                                                             <td>{{ duplicado.apellidos }}</td>
                                                             <td>{{ duplicado.genero }}</td>
-                                                            <td>
-                                                                <a href="{{ app_url }}autores/{{ duplicado.id }}/edit" class="btn btn-sm btn-info">
+                                                            <td class="text-center">
+                                                                <a href="{{ app_url }}autores/{{ duplicado.id }}/edit" class="btn btn-sm btn-info btn-accion">
                                                                     <i class="fas fa-edit"></i> Editar
                                                                 </a>
                                                             </td>
@@ -137,6 +345,66 @@
             </div>
         </div>
     </div>
+
+    {# Paginación #}
+    {% if paginacion is defined and paginacion.totalPaginas > 1 %}
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <p class="text-muted">
+                Mostrando página {{ paginacion.pagina }} de {{ paginacion.totalPaginas }} 
+                ({{ paginacion.totalGrupos }} grupos de duplicados encontrados)
+            </p>
+        </div>
+        <div class="col-md-6">
+            <nav aria-label="Navegación de páginas" class="float-end">
+                <ul class="pagination mb-0">
+                    {# Botón Primera Página #}
+                    <li class="page-item {% if paginacion.pagina == 1 %}disabled{% endif %}">
+                        <a class="page-link" href="{{ app_url }}autores/duplicados-globales?pagina=1" aria-label="Primera">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                    </li>
+
+                    {# Botón Página Anterior #}
+                    <li class="page-item {% if paginacion.pagina == 1 %}disabled{% endif %}">
+                        <a class="page-link" href="{{ app_url }}autores/duplicados-globales?pagina={{ paginacion.pagina - 1 }}" aria-label="Anterior">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    </li>
+
+                    {# Números de Página #}
+                    {% set inicio = max(1, paginacion.pagina - 2) %}
+                    {% set fin = min(paginacion.totalPaginas, inicio + 4) %}
+                    {% if fin - inicio < 4 %}
+                        {% set inicio = max(1, fin - 4) %}
+                    {% endif %}
+
+                    {% for i in inicio..fin %}
+                        <li class="page-item {% if i == paginacion.pagina %}active{% endif %}">
+                            <a class="page-link" href="{{ app_url }}autores/duplicados-globales?pagina={{ i }}">
+                                {{ i }}
+                            </a>
+                        </li>
+                    {% endfor %}
+
+                    {# Botón Página Siguiente #}
+                    <li class="page-item {% if paginacion.pagina == paginacion.totalPaginas %}disabled{% endif %}">
+                        <a class="page-link" href="{{ app_url }}autores/duplicados-globales?pagina={{ paginacion.pagina + 1 }}" aria-label="Siguiente">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                    </li>
+
+                    {# Botón Última Página #}
+                    <li class="page-item {% if paginacion.pagina == paginacion.totalPaginas %}disabled{% endif %}">
+                        <a class="page-link" href="{{ app_url }}autores/duplicados-globales?pagina={{ paginacion.totalPaginas }}" aria-label="Última">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
 
@@ -145,42 +413,302 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Variables para la modal de progreso
+        const modalProgreso = document.getElementById('modalProgreso');
+        const progresoFill = document.getElementById('progresoFill');
+        const porcentaje = document.getElementById('porcentaje');
+        const estado = document.getElementById('estado');
+        
+        // Verificar que todos los elementos estén disponibles
+        console.log('Elementos de modal encontrados:', {
+            modalProgreso: !!modalProgreso,
+            progresoFill: !!progresoFill,
+            porcentaje: !!porcentaje,
+            estado: !!estado
+        });
+        
+        // Función para mostrar la modal de progreso
+        function mostrarProgreso() {
+            console.log('Mostrando modal de progreso');
+            if (modalProgreso && progresoFill && porcentaje && estado) {
+                modalProgreso.style.display = 'block';
+                actualizarProgreso(0, 'Iniciando búsqueda de duplicados...');
+                console.log('Modal mostrada correctamente');
+            } else {
+                console.error('Elementos de modal no encontrados:', {
+                    modalProgreso: !!modalProgreso,
+                    progresoFill: !!progresoFill,
+                    porcentaje: !!porcentaje,
+                    estado: !!estado
+                });
+            }
+        }
+        
+        // Función para ocultar la modal de progreso
+        function ocultarProgreso() {
+            if (modalProgreso) {
+                modalProgreso.style.display = 'none';
+            }
+        }
+        
+        // Función para actualizar el progreso
+        function actualizarProgreso(porcentajeValor, mensaje) {
+            if (progresoFill && porcentaje && estado) {
+                progresoFill.style.width = porcentajeValor + '%';
+                porcentaje.textContent = porcentajeValor + '%';
+                estado.innerHTML = '<span class="spinner"></span>' + mensaje;
+            }
+        }
+        
+        // Función para obtener progreso real desde el servidor
+        function obtenerProgresoReal() {
+            console.log('Obteniendo progreso real desde servidor');
+            fetch('{{ app_url }}autores/progreso-duplicados')
+                .then(response => {
+                    console.log('Respuesta del servidor:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Datos de progreso:', data);
+                    if (data.error) {
+                        console.error('Error al obtener progreso:', data.error);
+                        simularProgreso();
+                        return;
+                    }
+                    
+                    const porcentaje = data.porcentaje || 0;
+                    const mensaje = data.estado || 'Procesando búsqueda...';
+                    const completado = data.completado || false;
+                    
+                    actualizarProgreso(porcentaje, mensaje);
+                    
+                    // Si está completado, ocultar modal después de un tiempo
+                    if (completado) {
+                        setTimeout(() => {
+                            ocultarProgreso();
+                        }, 2000);
+                    } else if (porcentaje < 100) {
+                        // Si aún no está completo, seguir consultando
+                        setTimeout(obtenerProgresoReal, 1000);
+                    } else {
+                        // Si llegó al 100%, ocultar después de un tiempo
+                        setTimeout(() => {
+                            ocultarProgreso();
+                        }, 2000);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al obtener progreso:', error);
+                    // En caso de error, usar progreso simulado
+                    simularProgreso();
+                });
+        }
+        
+        // Función para simular progreso durante la búsqueda (fallback)
+        function simularProgreso() {
+            console.log('Iniciando progreso simulado');
+            let progreso = 0;
+            const interval = setInterval(() => {
+                progreso += Math.random() * 10 + 5; // Entre 5-15 por paso
+                if (progreso > 90) {
+                    progreso = 90;
+                }
+                
+                let mensaje = '';
+                if (progreso < 20) {
+                    mensaje = 'Analizando estructura de datos...';
+                } else if (progreso < 40) {
+                    mensaje = 'Buscando autores similares...';
+                } else if (progreso < 60) {
+                    mensaje = 'Comparando nombres y apellidos...';
+                } else if (progreso < 80) {
+                    mensaje = 'Agrupando duplicados encontrados...';
+                } else {
+                    mensaje = 'Finalizando búsqueda...';
+                }
+                
+                actualizarProgreso(Math.round(progreso), mensaje);
+                
+                if (progreso >= 90) {
+                    clearInterval(interval);
+                    // Ocultar modal después de completar
+                    setTimeout(() => {
+                        ocultarProgreso();
+                    }, 2000);
+                }
+            }, 300);
+            
+            return interval;
+        }
+        
+        // Función para verificar si estamos en la página de duplicados globales
+        function esPaginaDuplicadosGlobales() {
+            const esDuplicados = window.location.href.includes('duplicados-globales');
+            console.log('URL actual:', window.location.href);
+            console.log('¿Es página de duplicados globales?', esDuplicados);
+            return esDuplicados;
+        }
+        
+        // Función para iniciar progreso en carga de página
+        function iniciarProgresoEnCarga() {
+            console.log('Verificando si debe iniciar progreso en carga');
+            if (esPaginaDuplicadosGlobales()) {
+                console.log('Iniciando progreso en carga de página');
+                // Pequeño delay para asegurar que la página se cargue completamente
+                setTimeout(() => {
+                    // Solo mostrar progreso si hay una búsqueda en curso
+                    const busquedaEnCurso = sessionStorage.getItem('busqueda_duplicados_en_curso');
+                    if (busquedaEnCurso === 'true') {
+                        mostrarProgreso();
+                        obtenerProgresoReal();
+                        
+                        // Limpiar el flag de búsqueda en curso
+                        sessionStorage.removeItem('busqueda_duplicados_en_curso');
+                    }
+                }, 200); // Aumentar delay inicial
+            } else {
+                console.log('No es página de duplicados globales, no iniciando progreso');
+            }
+        }
+        
+        // Interceptar envío de formularios para mostrar progreso
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                // Solo mostrar progreso para búsquedas, no para fusiones
+                if (form.action.includes('buscar-variaciones-fusion')) {
+                    mostrarProgreso();
+                    obtenerProgresoReal();
+                }
+            });
+        });
+        
+        // Interceptar clicks en enlaces de paginación
+        document.querySelectorAll('a[href*="duplicados-globales"]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (this.href.includes('pagina=')) {
+                    e.preventDefault();
+                    mostrarProgreso();
+                    obtenerProgresoReal();
+                    
+                    // Redirigir después de un breve delay
+                    setTimeout(() => {
+                        window.location.href = this.href;
+                    }, 1000);
+                }
+            });
+        });
+        
+        // Interceptar clicks en el botón de duplicados globales desde la página de autores
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.closest('a[href*="duplicados-globales"]')) {
+                const link = e.target.closest('a[href*="duplicados-globales"]');
+                if (!link.href.includes('pagina=')) {
+                    // Es el enlace principal de duplicados globales
+                    e.preventDefault();
+                    
+                    // Marcar que hay una búsqueda en curso
+                    sessionStorage.setItem('busqueda_duplicados_en_curso', 'true');
+                    
+                    // Mostrar modal de progreso
+                    mostrarProgreso();
+                    
+                    // Iniciar búsqueda de duplicados
+                    fetch('{{ app_url }}autores/iniciar-busqueda-duplicados', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Iniciar monitoreo de progreso
+                            obtenerProgresoReal();
+                            
+                            // Redirigir después de un breve delay
+                            setTimeout(() => {
+                                window.location.href = data.redirect_url;
+                            }, 2000);
+                        } else {
+                            console.error('Error al iniciar búsqueda:', data.error);
+                            ocultarProgreso();
+                            sessionStorage.removeItem('busqueda_duplicados_en_curso');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al iniciar búsqueda:', error);
+                        ocultarProgreso();
+                        sessionStorage.removeItem('busqueda_duplicados_en_curso');
+                    });
+                }
+            }
+        });
+        
+        // Iniciar progreso cuando se carga la página
+        iniciarProgresoEnCarga();
+        
+        // Forzar la visualización del modal si estamos en la página correcta
+        setTimeout(() => {
+            if (esPaginaDuplicadosGlobales() && modalProgreso) {
+                console.log('Forzando visualización del modal');
+                mostrarProgreso();
+                obtenerProgresoReal();
+            }
+        }, 500);
+        
+        // Agregar listener para el botón de duplicados globales en la página de autores
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.closest('a[href*="duplicados-globales"]')) {
+                const link = e.target.closest('a[href*="duplicados-globales"]');
+                if (!link.href.includes('pagina=')) {
+                    // Es el enlace principal de duplicados globales
+                    e.preventDefault();
+                    mostrarProgreso();
+                    obtenerProgresoReal();
+                    
+                    // Redirigir después de un breve delay
+                    setTimeout(() => {
+                        window.location.href = link.href;
+                    }, 1000);
+                }
+            }
+        });
+        
         // Para cada formulario de grupo
         document.querySelectorAll('.grupo-form').forEach(form => {
             const radioButtons = form.querySelectorAll('.autor-principal');
-            const checkboxes = form.querySelectorAll('.autor-fusionar');
+            const accionRadios = form.querySelectorAll('.accion-autor');
             const fusionarBtn = form.querySelector('.fusionar-grupo-btn');
 
             // Función para actualizar el estado del botón de fusionar
             function actualizarBotonFusionar() {
                 const autorPrincipal = form.querySelector('.autor-principal:checked');
-                const autoresFusionar = form.querySelectorAll('.autor-fusionar:checked');
+                const accionesSeleccionadas = form.querySelectorAll('.accion-autor:checked');
                 
-                // Habilitar el botón solo si hay un autor principal y al menos un autor para fusionar
-                fusionarBtn.disabled = !autorPrincipal || autoresFusionar.length === 0;
+                // Habilitar el botón solo si hay un autor principal y al menos una acción seleccionada
+                fusionarBtn.disabled = !autorPrincipal || accionesSeleccionadas.length === 0;
             }
 
-            // Evento para los radio buttons
+            // Evento para los radio buttons de autor principal
             radioButtons.forEach(radio => {
                 radio.addEventListener('change', function() {
-                    // Desmarcar el checkbox del autor principal
-                    const checkbox = form.querySelector(`#fusionar_${this.value}`);
-                    if (checkbox) {
-                        checkbox.checked = false;
-                    }
+                    // Desmarcar las acciones del autor que se convierte en principal
+                    const accionesAutor = form.querySelectorAll(`input[name="acciones_autores[${this.value}]"]`);
+                    accionesAutor.forEach(accion => {
+                        accion.checked = false;
+                    });
                     actualizarBotonFusionar();
                 });
             });
 
-            // Evento para los checkboxes
-            checkboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    // Si se marca el checkbox, desmarcar el radio button
-                    if (this.checked) {
-                        const radio = form.querySelector(`#autor_${this.value}`);
-                        if (radio) {
-                            radio.checked = false;
-                        }
+            // Evento para los radio buttons de acciones
+            accionRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    // Si se selecciona una acción, desmarcar el radio de autor principal
+                    const autorId = this.name.match(/\[(\d+)\]/)[1];
+                    const radioPrincipal = form.querySelector(`#autor_${autorId}`);
+                    if (radioPrincipal) {
+                        radioPrincipal.checked = false;
                     }
                     actualizarBotonFusionar();
                 });
@@ -191,7 +719,7 @@
                 e.preventDefault();
                 
                 const autorPrincipal = form.querySelector('.autor-principal:checked');
-                const autoresFusionar = form.querySelectorAll('.autor-fusionar:checked');
+                const accionesSeleccionadas = form.querySelectorAll('.accion-autor:checked');
                 
                 if (!autorPrincipal) {
                     Swal.fire({
@@ -202,11 +730,32 @@
                     return;
                 }
                 
-                if (autoresFusionar.length === 0) {
+                if (accionesSeleccionadas.length === 0) {
                     Swal.fire({
                         title: 'Error',
-                        text: 'Por favor, seleccione al menos un autor para fusionar.',
+                        text: 'Por favor, seleccione al menos una acción para los autores.',
                         icon: 'error'
+                    });
+                    return;
+                }
+
+                // Verificar que todos los autores tengan una acción seleccionada
+                const todosAutores = form.querySelectorAll('input[name^="acciones_autores["]');
+                const autoresSinAccion = [];
+                
+                todosAutores.forEach(input => {
+                    const autorId = input.name.match(/\[(\d+)\]/)[1];
+                    const tieneAccion = form.querySelector(`input[name="acciones_autores[${autorId}]"]:checked`);
+                    if (!tieneAccion && autorId !== autorPrincipal.value) {
+                        autoresSinAccion.push(autorId);
+                    }
+                });
+                
+                if (autoresSinAccion.length > 0) {
+                    Swal.fire({
+                        title: 'Acciones incompletas',
+                        text: 'Por favor, seleccione una acción para todos los autores (excepto el principal).',
+                        icon: 'warning'
                     });
                     return;
                 }
@@ -227,6 +776,11 @@
                 });
             });
         });
+        
+        // Función global para mostrar progreso manualmente (ya no es necesaria)
+        window.mostrarProgresoManual = function() {
+            console.log('Función mostrarProgresoManual ya no es necesaria');
+        };
     });
     </script>
 {% endblock %} 

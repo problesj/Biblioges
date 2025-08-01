@@ -15,7 +15,7 @@ class Tesis extends Model
      */
     protected $fillable = [
         'bibliografia_id',
-        'carrera_id'
+        'nombre_carrera'
     ];
 
     /**
@@ -24,13 +24,5 @@ class Tesis extends Model
     public function bibliografia()
     {
         return $this->belongsTo(BibliografiaDeclarada::class, 'bibliografia_id');
-    }
-
-    /**
-     * Obtener la carrera asociada.
-     */
-    public function carrera()
-    {
-        return $this->belongsTo(Carrera::class, 'carrera_id');
     }
 } 

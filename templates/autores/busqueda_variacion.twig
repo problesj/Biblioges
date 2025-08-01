@@ -1,0 +1,126 @@
+{% extends "base.twig" %}
+
+{% block title %}Búsqueda por Variación de Nombre{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>Búsqueda por Variación de Nombre</h1>
+            <p class="text-muted">Término buscado: <strong>"{{ busqueda }}"</strong></p>
+        </div>
+        <div>
+            <a href="{{ app_url }}autores" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <!-- Formulario de búsqueda -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3 class="card-title">Buscar por Variación</h3>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ app_url }}autores/buscar-variacion" class="row g-3">
+                <div class="col-md-8">
+                    <input type="text" class="form-control" name="busqueda" 
+                           placeholder="Ingrese la variación de nombre a buscar..." 
+                           value="{{ busqueda }}" required>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resultados -->
+    {% if alias|length > 0 %}
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Resultados de la Búsqueda</h3>
+                <span class="badge bg-primary">{{ alias|length }} resultado(s)</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Autor</th>
+                                <th>Variación Encontrada</th>
+                                <th>Género</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for aliasItem in alias %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ aliasItem.autor.apellidos }}, {{ aliasItem.autor.nombres }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="text-success">{{ aliasItem.nombre_variacion }}</span>
+                                    </td>
+                                    <td>{{ aliasItem.autor.genero }}</td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ app_url }}autores/{{ aliasItem.autor.id }}/edit" class="btn btn-sm btn-info">
+                                                <i class="fas fa-edit"></i> Editar
+                                            </a>
+                                            <a href="{{ app_url }}autores/{{ aliasItem.autor.id }}/variaciones" class="btn btn-sm btn-success">
+                                                <i class="fas fa-tags"></i> Alias
+                                            </a>
+                                            <a href="{{ app_url }}autores/{{ aliasItem.autor.id }}/duplicados" class="btn btn-sm btn-warning">
+                                                <i class="fas fa-search"></i> Duplicados
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> 
+            No se encontraron autores con la variación de nombre "<strong>{{ busqueda }}</strong>".
+            <br>
+            <small class="text-muted">
+                Intente con un término diferente o verifique la ortografía.
+            </small>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Resaltar el término buscado en los resultados
+            const searchTerm = '{{ busqueda }}';
+            if (searchTerm) {
+                const cells = document.querySelectorAll('td');
+                cells.forEach(cell => {
+                    if (cell.textContent.includes(searchTerm)) {
+                        cell.innerHTML = cell.innerHTML.replace(
+                            new RegExp(searchTerm, 'gi'),
+                            '<mark>$&</mark>'
+                        );
+                    }
+                });
+            }
+        });
+    </script>
+{% endblock %} 

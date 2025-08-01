@@ -332,34 +332,74 @@ class __TwigTemplate_7a47c0b419c07b80ebec47e1f4188e86 extends Template
                     <div class=\"tipo-campo\" id=\"camposTesis\" style=\"display: none;\">
                         <h3 class=\"mb-3\">Datos de la Tesis</h3>
                         <div class=\"mb-3\">
-                            <label for=\"carrera_id\" class=\"form-label\">Carrera</label>
-                            <select class=\"form-select\" id=\"carrera_id\" name=\"carrera_id\">
+                            <label for=\"nombre_carrera\" class=\"form-label\">Carrera</label>
+                            <select class=\"form-select\" id=\"nombre_carrera\" name=\"nombre_carrera\">
                                 <option value=\"\">Seleccione una carrera</option>
                                 ";
         // line 142
+        if (array_key_exists("carrerasExistentes", $context)) {
+            // line 143
+            yield "                                    <optgroup label=\"Carreras existentes en tesis\">
+                                        ";
+            // line 144
+            $context['_parent'] = $context;
+            $context['_seq'] = CoreExtension::ensureTraversable(($context["carrerasExistentes"] ?? null));
+            foreach ($context['_seq'] as $context["_key"] => $context["carrera"]) {
+                // line 145
+                yield "                                            <option value=\"";
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($context["carrera"], "html", null, true);
+                yield "\" ";
+                if ((CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "nombre_carrera", [], "any", false, false, false, 145) == $context["carrera"])) {
+                    yield "selected";
+                }
+                yield ">
+                                                ";
+                // line 146
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($context["carrera"], "html", null, true);
+                yield "
+                                            </option>
+                                        ";
+            }
+            $_parent = $context['_parent'];
+            unset($context['_seq'], $context['_key'], $context['carrera'], $context['_parent']);
+            $context = array_intersect_key($context, $_parent) + $_parent;
+            // line 149
+            yield "                                    </optgroup>
+                                ";
+        }
+        // line 151
+        yield "                                <optgroup label=\"Carreras del sistema\">
+                                    ";
+        // line 152
         $context['_parent'] = $context;
         $context['_seq'] = CoreExtension::ensureTraversable(($context["carreras"] ?? null));
         foreach ($context['_seq'] as $context["_key"] => $context["carrera"]) {
-            // line 143
-            yield "                                    <option value=\"";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "id", [], "any", false, false, false, 143), "html", null, true);
+            // line 153
+            yield "                                        <option value=\"";
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "nombre", [], "any", false, false, false, 153), "html", null, true);
             yield "\" ";
-            if ((CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "carrera_id", [], "any", false, false, false, 143) == CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "id", [], "any", false, false, false, 143))) {
+            if ((CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "nombre_carrera", [], "any", false, false, false, 153) == CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "nombre", [], "any", false, false, false, 153))) {
                 yield "selected";
             }
             yield ">
-                                        ";
-            // line 144
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "nombre", [], "any", false, false, false, 144), "html", null, true);
+                                            ";
+            // line 154
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "nombre", [], "any", false, false, false, 154), "html", null, true);
             yield "
-                                    </option>
-                                ";
+                                        </option>
+                                    ";
         }
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_key'], $context['carrera'], $context['_parent']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 147
-        yield "                            </select>
+        // line 157
+        yield "                                </optgroup>
+                                <option value=\"otra\">Otra carrera...</option>
+                            </select>
+                        </div>
+                        <div class=\"mb-3\" id=\"nuevaCarreraContainer\" style=\"display: none;\">
+                            <label for=\"nueva_carrera\" class=\"form-label\">Nueva Carrera</label>
+                            <input type=\"text\" class=\"form-control\" id=\"nueva_carrera\" name=\"nueva_carrera\" placeholder=\"Ingrese el nombre de la nueva carrera\">
                         </div>
                         </div>
 
@@ -370,8 +410,8 @@ class __TwigTemplate_7a47c0b419c07b80ebec47e1f4188e86 extends Template
                             <label for=\"issn\" class=\"form-label\">ISSN</label>
                             <input type=\"text\" class=\"form-control\" id=\"issn\" name=\"issn\" 
                                    value=\"";
-        // line 157
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "issn", [], "any", false, false, false, 157), "html", null, true);
+        // line 173
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "issn", [], "any", false, false, false, 173), "html", null, true);
         yield "\">
                         </div>
                         <div class=\"mb-3\">
@@ -379,15 +419,15 @@ class __TwigTemplate_7a47c0b419c07b80ebec47e1f4188e86 extends Template
                             <select class=\"form-select\" id=\"titulo_revista\" name=\"titulo_revista\">
                                 <option value=\"\">Seleccione una revista</option>
                                 ";
-        // line 163
+        // line 179
         $context['_parent'] = $context;
         $context['_seq'] = CoreExtension::ensureTraversable(($context["revistas"] ?? null));
         foreach ($context['_seq'] as $context["_key"] => $context["revista"]) {
-            // line 164
+            // line 180
             yield "                                    <option value=\"";
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($context["revista"], "html", null, true);
             yield "\" ";
-            if ((CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "titulo_revista", [], "any", false, false, false, 164) == $context["revista"])) {
+            if ((CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "titulo_revista", [], "any", false, false, false, 180) == $context["revista"])) {
                 yield "selected";
             }
             yield ">";
@@ -398,7 +438,7 @@ class __TwigTemplate_7a47c0b419c07b80ebec47e1f4188e86 extends Template
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_key'], $context['revista'], $context['_parent']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 166
+        // line 182
         yield "                                <option value=\"otra\">Otra...</option>
                             </select>
                         </div>
@@ -410,8 +450,8 @@ class __TwigTemplate_7a47c0b419c07b80ebec47e1f4188e86 extends Template
                             <label for=\"cronologia\" class=\"form-label\">Cronología</label>
                             <input type=\"text\" class=\"form-control\" id=\"cronologia\" name=\"cronologia\" 
                                    value=\"";
-        // line 176
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "cronologia", [], "any", false, false, false, 176), "html", null, true);
+        // line 192
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "cronologia", [], "any", false, false, false, 192), "html", null, true);
         yield "\">
                         </div>
                     </div>
@@ -422,8 +462,8 @@ class __TwigTemplate_7a47c0b419c07b80ebec47e1f4188e86 extends Template
                         <div class=\"mb-3\">
                             <label for=\"descripcion\" class=\"form-label\">Descripción</label>
                             <textarea class=\"form-control\" id=\"descripcion\" name=\"descripcion\" rows=\"3\">";
-        // line 185
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "descripcion", [], "any", false, false, false, 185), "html", null, true);
+        // line 201
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "descripcion", [], "any", false, false, false, 201), "html", null, true);
         yield "</textarea>
                         </div>
                         </div>
@@ -435,8 +475,8 @@ class __TwigTemplate_7a47c0b419c07b80ebec47e1f4188e86 extends Template
                             <label for=\"fecha_consulta\" class=\"form-label\">Fecha de Consulta <span class=\"text-danger\">*</span></label>
                             <input type=\"date\" class=\"form-control\" id=\"fecha_consulta\" name=\"fecha_consulta\" 
                                    value=\"";
-        // line 195
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->extensions['Twig\Extension\CoreExtension']->formatDate(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "fecha_consulta", [], "any", false, false, false, 195), "Y-m-d"), "html", null, true);
+        // line 211
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->extensions['Twig\Extension\CoreExtension']->formatDate(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "fecha_consulta", [], "any", false, false, false, 211), "Y-m-d"), "html", null, true);
         yield "\" required>
                             <small class=\"form-text text-muted\">Seleccione la fecha en que se consultó el sitio web</small>
                                 </div>
@@ -449,8 +489,8 @@ class __TwigTemplate_7a47c0b419c07b80ebec47e1f4188e86 extends Template
                             <label for=\"version\" class=\"form-label\">Versión</label>
                             <input type=\"text\" class=\"form-control\" id=\"version\" name=\"version\" 
                                    value=\"";
-        // line 206
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "version", [], "any", false, false, false, 206), "html", null, true);
+        // line 222
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "version", [], "any", false, false, false, 222), "html", null, true);
         yield "\">
                         </div>
                     </div>
@@ -467,31 +507,31 @@ class __TwigTemplate_7a47c0b419c07b80ebec47e1f4188e86 extends Template
                                 </div>
                                 <select class=\"form-select\" id=\"autoresDisponibles\" multiple size=\"10\" style=\"height: auto;\">
                         ";
-        // line 221
+        // line 237
         $context['_parent'] = $context;
         $context['_seq'] = CoreExtension::ensureTraversable(($context["autores"] ?? null));
         foreach ($context['_seq'] as $context["_key"] => $context["autor"]) {
-            // line 222
+            // line 238
             yield "                                        <option value=\"";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "id", [], "any", false, false, false, 222), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "id", [], "any", false, false, false, 238), "html", null, true);
             yield "\" 
                                                 data-apellidos=\"";
-            // line 223
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "apellidos", [], "any", false, false, false, 223), "html", null, true);
+            // line 239
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "apellidos", [], "any", false, false, false, 239), "html", null, true);
             yield "\" 
                                                 data-nombres=\"";
-            // line 224
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "nombres", [], "any", false, false, false, 224), "html", null, true);
+            // line 240
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "nombres", [], "any", false, false, false, 240), "html", null, true);
             yield "\" 
                                                 data-genero=\"";
-            // line 225
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "genero", [], "any", false, false, false, 225), "html", null, true);
+            // line 241
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "genero", [], "any", false, false, false, 241), "html", null, true);
             yield "\">
                                             ";
-            // line 226
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "apellidos", [], "any", false, false, false, 226), "html", null, true);
+            // line 242
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "apellidos", [], "any", false, false, false, 242), "html", null, true);
             yield ", ";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "nombres", [], "any", false, false, false, 226), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "nombres", [], "any", false, false, false, 242), "html", null, true);
             yield "
                                         </option>
                                     ";
@@ -499,7 +539,7 @@ class __TwigTemplate_7a47c0b419c07b80ebec47e1f4188e86 extends Template
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_key'], $context['autor'], $context['_parent']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 229
+        // line 245
         yield "                                </select>
                                 <div class=\"mt-2\">
                                     <button type=\"button\" class=\"btn btn-sm btn-success\" id=\"agregarAutorSeleccionado\">
@@ -522,35 +562,35 @@ class __TwigTemplate_7a47c0b419c07b80ebec47e1f4188e86 extends Template
                                 <div class=\"card-body\">
                                     <div id=\"autoresSeleccionados\" class=\"list-group\">
                                         ";
-        // line 250
-        if (CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "autores", [], "any", true, true, false, 250)) {
-            // line 251
+        // line 266
+        if (CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "autores", [], "any", true, true, false, 266)) {
+            // line 267
             yield "                                            ";
             $context['_parent'] = $context;
-            $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "autores", [], "any", false, false, false, 251));
+            $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "autores", [], "any", false, false, false, 267));
             foreach ($context['_seq'] as $context["_key"] => $context["autor"]) {
-                // line 252
+                // line 268
                 yield "                                            <div class=\"list-group-item d-flex justify-content-between align-items-center\" data-autor-id=\"";
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "id", [], "any", false, false, false, 252), "html", null, true);
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "id", [], "any", false, false, false, 268), "html", null, true);
                 yield "\">
                                                 <div>
                                                         <span class=\"autor-apellidos\">";
-                // line 254
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "apellidos", [], "any", false, false, false, 254), "html", null, true);
+                // line 270
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "apellidos", [], "any", false, false, false, 270), "html", null, true);
                 yield "</span>, 
                                                         <span class=\"autor-nombres\">";
-                // line 255
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "nombres", [], "any", false, false, false, 255), "html", null, true);
+                // line 271
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "nombres", [], "any", false, false, false, 271), "html", null, true);
                 yield "</span>
                                                     <br>
                                                         <small class=\"text-muted autor-genero\">";
-                // line 257
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "genero", [], "any", false, false, false, 257), "html", null, true);
+                // line 273
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "genero", [], "any", false, false, false, 273), "html", null, true);
                 yield "</small>
                                                 </div>
                                                 <button type=\"button\" class=\"btn btn-sm btn-danger\" onclick=\"eliminarAutor('";
-                // line 259
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "id", [], "any", false, false, false, 259), "html", null, true);
+                // line 275
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "id", [], "any", false, false, false, 275), "html", null, true);
                 yield "')\">
                                                     <i class=\"fas fa-times\"></i>
                                                 </button>
@@ -560,10 +600,10 @@ class __TwigTemplate_7a47c0b419c07b80ebec47e1f4188e86 extends Template
             $_parent = $context['_parent'];
             unset($context['_seq'], $context['_key'], $context['autor'], $context['_parent']);
             $context = array_intersect_key($context, $_parent) + $_parent;
-            // line 264
+            // line 280
             yield "                                        ";
         }
-        // line 265
+        // line 281
         yield "                                    </div>
                                 </div>
                             </div>
@@ -619,7 +659,7 @@ class __TwigTemplate_7a47c0b419c07b80ebec47e1f4188e86 extends Template
 </div>
 
 ";
-        // line 319
+        // line 335
         yield from $this->unwrap()->yieldBlock('scripts', $context, $blocks);
         yield from [];
     }
@@ -630,7 +670,7 @@ class __TwigTemplate_7a47c0b419c07b80ebec47e1f4188e86 extends Template
     public function block_scripts(array $context, array $blocks = []): iterable
     {
         $macros = $this->macros;
-        // line 320
+        // line 336
         yield "<script src=\"https://cdn.jsdelivr.net/npm/sweetalert2@11\"></script>
 <script>
 // Variables globales
@@ -649,6 +689,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const nuevaEditorialContainer = document.getElementById('nuevaEditorialContainer');
     const tituloRevistaSelect = document.getElementById('titulo_revista');
     const nuevaRevistaContainer = document.getElementById('nuevaRevistaContainer');
+    const nombreCarreraSelect = document.getElementById('nombre_carrera');
+    const nuevaCarreraContainer = document.getElementById('nuevaCarreraContainer');
     let autoresSeleccionadosList = new Set();
     let submitButton = form.querySelector('button[type=\"submit\"]');
 
@@ -710,6 +752,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (tituloRevistaSelect) {
         tituloRevistaSelect.addEventListener('change', function() {
             nuevaRevistaContainer.style.display = this.value === 'otra' ? 'block' : 'none';
+        });
+    }
+    
+    // Manejar la visibilidad de la nueva carrera
+    if (nombreCarreraSelect) {
+        nombreCarreraSelect.addEventListener('change', function() {
+            nuevaCarreraContainer.style.display = this.value === 'otra' ? 'block' : 'none';
         });
     }
 
@@ -864,6 +913,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }).filter(autor => autor !== null);
 
             data.autores = JSON.stringify(autores);
+            
+            // Manejar el caso de nueva carrera para tesis
+            if (data.tipo === 'tesis' && data.nombre_carrera === 'otra') {
+                data.nombre_carrera = data.nueva_carrera;
+            }
 
             // Determinar si es una actualización o creación
             const isUpdate = form.action.includes('/edit') || form.querySelector('input[name=\"_method\"]')?.value === 'PUT';
@@ -960,7 +1014,7 @@ document.addEventListener('DOMContentLoaded', function() {
             submitButton.innerHTML = '<i class=\"fas fa-spinner fa-spin\"></i> Guardando...';
 
             const response = await fetch('";
-        // line 648
+        // line 678
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "bibliografias-declaradas/forzar', {
                 method: 'POST',
@@ -1005,18 +1059,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Mostrar duplicados si existen (para peticiones no AJAX)
     ";
-        // line 690
+        // line 720
         if (($context["duplicados"] ?? null)) {
-            // line 691
+            // line 721
             yield "        document.addEventListener('DOMContentLoaded', function() {
             mostrarAlertaDuplicados(";
-            // line 692
+            // line 722
             yield json_encode(($context["duplicados"] ?? null));
             yield ", {});
         });
     ";
         }
-        // line 695
+        // line 725
         yield "
     // Remover todos los manejadores de eventos anteriores
     const oldSubmitHandler = form.onsubmit;
@@ -1065,7 +1119,7 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     public function getDebugInfo(): array
     {
-        return array (  1020 => 695,  1014 => 692,  1011 => 691,  1009 => 690,  964 => 648,  634 => 320,  623 => 319,  567 => 265,  564 => 264,  553 => 259,  548 => 257,  543 => 255,  539 => 254,  533 => 252,  528 => 251,  526 => 250,  503 => 229,  492 => 226,  488 => 225,  484 => 224,  480 => 223,  475 => 222,  471 => 221,  453 => 206,  439 => 195,  426 => 185,  414 => 176,  402 => 166,  387 => 164,  383 => 163,  374 => 157,  362 => 147,  353 => 144,  344 => 143,  340 => 142,  326 => 131,  305 => 112,  290 => 110,  286 => 109,  270 => 98,  264 => 97,  258 => 96,  252 => 95,  246 => 94,  240 => 93,  230 => 86,  219 => 80,  213 => 79,  201 => 72,  195 => 71,  189 => 70,  180 => 64,  171 => 58,  159 => 51,  150 => 45,  138 => 37,  134 => 35,  132 => 34,  121 => 33,  115 => 29,  109 => 27,  107 => 26,  99 => 21,  96 => 20,  92 => 18,  88 => 16,  86 => 15,  81 => 12,  74 => 11,  67 => 7,  63 => 5,  60 => 4,  53 => 3,  42 => 1,);
+        return array (  1074 => 725,  1068 => 722,  1065 => 721,  1063 => 720,  1018 => 678,  674 => 336,  663 => 335,  607 => 281,  604 => 280,  593 => 275,  588 => 273,  583 => 271,  579 => 270,  573 => 268,  568 => 267,  566 => 266,  543 => 245,  532 => 242,  528 => 241,  524 => 240,  520 => 239,  515 => 238,  511 => 237,  493 => 222,  479 => 211,  466 => 201,  454 => 192,  442 => 182,  427 => 180,  423 => 179,  414 => 173,  396 => 157,  387 => 154,  378 => 153,  374 => 152,  371 => 151,  367 => 149,  358 => 146,  349 => 145,  345 => 144,  342 => 143,  340 => 142,  326 => 131,  305 => 112,  290 => 110,  286 => 109,  270 => 98,  264 => 97,  258 => 96,  252 => 95,  246 => 94,  240 => 93,  230 => 86,  219 => 80,  213 => 79,  201 => 72,  195 => 71,  189 => 70,  180 => 64,  171 => 58,  159 => 51,  150 => 45,  138 => 37,  134 => 35,  132 => 34,  121 => 33,  115 => 29,  109 => 27,  107 => 26,  99 => 21,  96 => 20,  92 => 18,  88 => 16,  86 => 15,  81 => 12,  74 => 11,  67 => 7,  63 => 5,  60 => 4,  53 => 3,  42 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -1208,15 +1262,31 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class=\"tipo-campo\" id=\"camposTesis\" style=\"display: none;\">
                         <h3 class=\"mb-3\">Datos de la Tesis</h3>
                         <div class=\"mb-3\">
-                            <label for=\"carrera_id\" class=\"form-label\">Carrera</label>
-                            <select class=\"form-select\" id=\"carrera_id\" name=\"carrera_id\">
+                            <label for=\"nombre_carrera\" class=\"form-label\">Carrera</label>
+                            <select class=\"form-select\" id=\"nombre_carrera\" name=\"nombre_carrera\">
                                 <option value=\"\">Seleccione una carrera</option>
-                                {% for carrera in carreras %}
-                                    <option value=\"{{ carrera.id }}\" {% if bibliografia.carrera_id == carrera.id %}selected{% endif %}>
-                                        {{ carrera.nombre }}
-                                    </option>
-                                {% endfor %}
+                                {% if carrerasExistentes is defined %}
+                                    <optgroup label=\"Carreras existentes en tesis\">
+                                        {% for carrera in carrerasExistentes %}
+                                            <option value=\"{{ carrera }}\" {% if bibliografia.nombre_carrera == carrera %}selected{% endif %}>
+                                                {{ carrera }}
+                                            </option>
+                                        {% endfor %}
+                                    </optgroup>
+                                {% endif %}
+                                <optgroup label=\"Carreras del sistema\">
+                                    {% for carrera in carreras %}
+                                        <option value=\"{{ carrera.nombre }}\" {% if bibliografia.nombre_carrera == carrera.nombre %}selected{% endif %}>
+                                            {{ carrera.nombre }}
+                                        </option>
+                                    {% endfor %}
+                                </optgroup>
+                                <option value=\"otra\">Otra carrera...</option>
                             </select>
+                        </div>
+                        <div class=\"mb-3\" id=\"nuevaCarreraContainer\" style=\"display: none;\">
+                            <label for=\"nueva_carrera\" class=\"form-label\">Nueva Carrera</label>
+                            <input type=\"text\" class=\"form-control\" id=\"nueva_carrera\" name=\"nueva_carrera\" placeholder=\"Ingrese el nombre de la nueva carrera\">
                         </div>
                         </div>
 
@@ -1407,6 +1477,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const nuevaEditorialContainer = document.getElementById('nuevaEditorialContainer');
     const tituloRevistaSelect = document.getElementById('titulo_revista');
     const nuevaRevistaContainer = document.getElementById('nuevaRevistaContainer');
+    const nombreCarreraSelect = document.getElementById('nombre_carrera');
+    const nuevaCarreraContainer = document.getElementById('nuevaCarreraContainer');
     let autoresSeleccionadosList = new Set();
     let submitButton = form.querySelector('button[type=\"submit\"]');
 
@@ -1468,6 +1540,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (tituloRevistaSelect) {
         tituloRevistaSelect.addEventListener('change', function() {
             nuevaRevistaContainer.style.display = this.value === 'otra' ? 'block' : 'none';
+        });
+    }
+    
+    // Manejar la visibilidad de la nueva carrera
+    if (nombreCarreraSelect) {
+        nombreCarreraSelect.addEventListener('change', function() {
+            nuevaCarreraContainer.style.display = this.value === 'otra' ? 'block' : 'none';
         });
     }
 
@@ -1622,6 +1701,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }).filter(autor => autor !== null);
 
             data.autores = JSON.stringify(autores);
+            
+            // Manejar el caso de nueva carrera para tesis
+            if (data.tipo === 'tesis' && data.nombre_carrera === 'otra') {
+                data.nombre_carrera = data.nueva_carrera;
+            }
 
             // Determinar si es una actualización o creación
             const isUpdate = form.action.includes('/edit') || form.querySelector('input[name=\"_method\"]')?.value === 'PUT';

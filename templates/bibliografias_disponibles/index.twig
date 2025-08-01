@@ -528,7 +528,35 @@
     {% endif %}
 </div>
 
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Verificar si hay un mensaje swal del servidor
+    {% if swal %}
+        Swal.fire({
+            icon: '{{ swal.icon }}',
+            title: '{{ swal.title }}',
+            text: '{{ swal.text }}',
+            confirmButtonText: 'Aceptar'
+        });
+    {% endif %}
+    
+    // Verificar si hay un mensaje en sessionStorage (para compatibilidad)
+    const swalMessage = sessionStorage.getItem('swal');
+    if (swalMessage) {
+        const message = JSON.parse(swalMessage);
+        Swal.fire({
+            icon: message.icon,
+            title: message.title,
+            text: message.text,
+            confirmButtonText: 'Aceptar'
+        });
+        // Limpiar el mensaje después de mostrarlo
+        sessionStorage.removeItem('swal');
+    }
+});
+
 function changePerPage(value) {
     const url = new URL(window.location);
     url.searchParams.set('per_page', value);
@@ -545,9 +573,37 @@ function limpiarFiltros() {
 }
 
 function confirmarEliminacion(id) {
-    if (confirm('¿Estás seguro de que deseas eliminar esta bibliografía disponible?')) {
-        window.location.href = '{{ app_url }}bibliografias-disponibles/' + id + '/delete';
-    }
+    Swal.fire({
+        title: '¿Está seguro?',
+        text: "¿Está seguro de que desea eliminar esta bibliografía disponible?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Crear un formulario temporal para enviar la petición POST
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ app_url }}bibliografias-disponibles/' + id + '/delete';
+            
+            // Agregar el token CSRF si existe
+            const csrfToken = document.querySelector('meta[name="csrf-token"]');
+            if (csrfToken) {
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_token';
+                csrfInput.value = csrfToken.getAttribute('content');
+                form.appendChild(csrfInput);
+            }
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
 }
 </script>
+{% endblock %}
 {% endblock %} 
