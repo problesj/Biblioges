@@ -177,6 +177,13 @@ ALMA_API_KEY=tu_api_key_alma
 PRIMO_API_KEY=tu_api_key_primo
 PRIMO_INST=tu_instancia_primo
 PRIMO_VID=tu_vid_primo
+
+# Configuración de APIs de Google
+GOOGLE_API_KEY=tu_api_key_google
+GOOGLE_SEARCH_ENGINE_ID=tu_search_engine_id
+GOOGLE_SCHOLAR_ENABLED=true
+GOOGLE_BOOKS_ENABLED=true
+GOOGLE_CUSTOM_SEARCH_ENABLED=false
 ```
 
 #### Inicializar la base de datos:
@@ -453,6 +460,21 @@ ls -la public/exports/
 - Gestión de disponibilidad
 - Autores, libros, artículos, tesis
 - Software y sitios web
+- **Nuevo:** Búsquedas integradas con Google Scholar y Google Books
+- **Nuevo:** Detección automática de metadatos académicos
+
+### Gestión de Autores Avanzada
+- **Nuevo:** Algoritmo ultra-optimizado para detección de duplicados
+- **Nuevo:** Sistema de variaciones y alias de autores
+- **Nuevo:** Fusión automática de registros duplicados
+- **Nuevo:** Preservación de referencias durante fusión
+
+### APIs de Google Integradas
+- **Google Scholar API:** Búsqueda académica avanzada
+- **Google Books API:** Búsqueda de libros con metadatos completos
+- **Google Custom Search API:** Búsqueda web personalizada (opcional)
+- Extracción inteligente de metadatos
+- Filtrado automático por relevancia académica
 
 ### Reportes y Exportaciones
 - Reportes de cobertura
@@ -527,6 +549,19 @@ tail -f /var/log/cron_tareas.log
 # Probar ejecución manual del script
 sudo -u www-data php /var/www/html/biblioges/cron_ejecutar_tareas.php
 ```
+
+## Documentación Adicional
+
+### 📚 Índice de Documentación
+Para una navegación completa de toda la documentación técnica:
+- **Índice de Documentación:** `docs/INDICE_DOCUMENTACION.md`
+
+### Documentación Técnica
+- **APIs de Google y Mejoras en Duplicados:** `docs/APIS_GOOGLE_Y_MEJORAS_DUPLICADOS.md`
+- **Paginación y Ordenamiento:** `docs/PAGINACION_ORDENAMIENTO.md`
+- **Requerimientos del Sistema:** `docs/REQUERIMIENTOS_SISTEMA.md`
+- **Configuración Apache:** `docs/APACHE_CONFIGURACION_ACTUAL.md`
+- **Configuración HTTP/HTTPS:** `docs/APACHE_HTTP_HTTPS_CONFIGURATION.md`
 
 ## Contacto y Soporte
 
