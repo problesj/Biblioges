@@ -279,7 +279,7 @@ class BibliografiaDisponibleController extends BaseController
     {
         $bibliografiasDeclaradas = BibliografiaDeclarada::where('estado', true)->get();
         $sedes = Sede::where('estado', true)->get();
-        $autores = Autor::all();
+        $autores = Autor::orderBy('apellidos')->orderBy('nombres')->get();
         
         // Obtener editoriales únicas de ambas tablas
         $editorialesDeclaradas = BibliografiaDeclarada::whereNotNull('editorial')
@@ -579,7 +579,7 @@ class BibliografiaDisponibleController extends BaseController
             $bibliografia->sedes = $sedesConEjemplares;
             
             $bibliografiasDeclaradas = BibliografiaDeclarada::where('estado', true)->get();
-            $autores = Autor::all();
+            $autores = Autor::orderBy('apellidos')->orderBy('nombres')->get();
 
             // Obtener editoriales únicas de ambas tablas
             $editorialesDeclaradas = BibliografiaDeclarada::whereNotNull('editorial')

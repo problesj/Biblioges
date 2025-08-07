@@ -358,27 +358,30 @@ class __TwigTemplate_cca946115ed43a0602ee5ffa2c7ba2d9 extends Template
                                 <div class=\"d-flex justify-content-between align-items-center mb-2\">
                                     <label class=\"form-label\">Autores Disponibles</label>
                                 </div>
+                                <div class=\"mb-2\">
+                                    <input type=\"text\" class=\"form-control\" id=\"buscarAutor\" placeholder=\"Buscar autores por nombre o apellido...\" style=\"font-size: 0.9rem;\">
+                                </div>
                                 <select class=\"form-select\" id=\"autoresDisponibles\" multiple size=\"10\" style=\"height: auto;\">
                                     ";
-        // line 170
+        // line 173
         $context['_parent'] = $context;
         $context['_seq'] = CoreExtension::ensureTraversable(($context["autores"] ?? null));
         foreach ($context['_seq'] as $context["_key"] => $context["autor"]) {
-            // line 171
+            // line 174
             yield "                                        <option value=\"";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "id", [], "any", false, false, false, 171), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "id", [], "any", false, false, false, 174), "html", null, true);
             yield "\" data-apellidos=\"";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "apellidos", [], "any", false, false, false, 171), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "apellidos", [], "any", false, false, false, 174), "html", null, true);
             yield "\" data-nombres=\"";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "nombres", [], "any", false, false, false, 171), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "nombres", [], "any", false, false, false, 174), "html", null, true);
             yield "\" data-genero=\"";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "genero", [], "any", false, false, false, 171), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "genero", [], "any", false, false, false, 174), "html", null, true);
             yield "\">
                                             ";
-            // line 172
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "apellidos", [], "any", false, false, false, 172), "html", null, true);
+            // line 175
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "apellidos", [], "any", false, false, false, 175), "html", null, true);
             yield ", ";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "nombres", [], "any", false, false, false, 172), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "nombres", [], "any", false, false, false, 175), "html", null, true);
             yield "
                                         </option>
                                     ";
@@ -386,7 +389,7 @@ class __TwigTemplate_cca946115ed43a0602ee5ffa2c7ba2d9 extends Template
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_key'], $context['autor'], $context['_parent']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 175
+        // line 178
         yield "                                </select>
                                 <div class=\"mt-2\">
                                     <button type=\"button\" class=\"btn btn-sm btn-success\" id=\"agregarAutorSeleccionado\">
@@ -409,44 +412,44 @@ class __TwigTemplate_cca946115ed43a0602ee5ffa2c7ba2d9 extends Template
                                 <div class=\"card-body\">
                                     <div id=\"autoresSeleccionados\" class=\"list-group\">
                                         ";
-        // line 196
+        // line 199
         $context['_parent'] = $context;
-        $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "autores", [], "any", false, false, false, 196));
+        $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "autores", [], "any", false, false, false, 199));
         foreach ($context['_seq'] as $context["_key"] => $context["autor"]) {
-            // line 197
+            // line 200
             yield "                                            <div class=\"list-group-item d-flex justify-content-between align-items-center\" data-autor-id=\"";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "id", [], "any", false, false, false, 197), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "id", [], "any", false, false, false, 200), "html", null, true);
             yield "\">
                                                 <div>
                                                     <strong>";
-            // line 199
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "apellidos", [], "any", false, false, false, 199), "html", null, true);
+            // line 202
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "apellidos", [], "any", false, false, false, 202), "html", null, true);
             yield ", ";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "nombres", [], "any", false, false, false, 199), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "nombres", [], "any", false, false, false, 202), "html", null, true);
             yield "</strong>
                                                     <br>
                                                     <small class=\"text-muted\">";
-            // line 201
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "genero", [], "any", false, false, false, 201), "html", null, true);
+            // line 204
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "genero", [], "any", false, false, false, 204), "html", null, true);
             yield "</small>
                                                 </div>
                                                 <button type=\"button\" class=\"btn btn-sm btn-danger\" onclick=\"eliminarAutor('";
-            // line 203
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "id", [], "any", false, false, false, 203), "html", null, true);
+            // line 206
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "id", [], "any", false, false, false, 206), "html", null, true);
             yield "')\">
                                                     <i class=\"fas fa-times\"></i>
                                                 </button>
                                             </div>
                                             <input type=\"hidden\" name=\"autores[]\" value=\"";
-            // line 207
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "id", [], "any", false, false, false, 207), "html", null, true);
+            // line 210
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["autor"], "id", [], "any", false, false, false, 210), "html", null, true);
             yield "\">
                                         ";
         }
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_key'], $context['autor'], $context['_parent']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 209
+        // line 212
         yield "                                    </div>
                                 </div>
                             </div>
@@ -459,7 +462,7 @@ class __TwigTemplate_cca946115ed43a0602ee5ffa2c7ba2d9 extends Template
                         <i class=\"fas fa-save\"></i> Guardar
                     </button>
                     <a href=\"";
-        // line 220
+        // line 223
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "bibliografias-disponibles\" class=\"btn btn-secondary\">
                         <i class=\"fas fa-times\"></i> Cancelar
@@ -510,14 +513,14 @@ class __TwigTemplate_cca946115ed43a0602ee5ffa2c7ba2d9 extends Template
         yield from [];
     }
 
-    // line 267
+    // line 270
     /**
      * @return iterable<null|scalar|\Stringable>
      */
     public function block_scripts(array $context, array $blocks = []): iterable
     {
         $macros = $this->macros;
-        // line 268
+        // line 271
         yield "<script src=\"https://cdn.jsdelivr.net/npm/sweetalert2@11\"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -917,6 +920,70 @@ document.addEventListener('DOMContentLoaded', function() {
             opciones[i].style.display = '';
         }
     });
+
+    // Funcionalidad de búsqueda de autores
+    const buscarAutor = document.getElementById('buscarAutor');
+    
+    function normalizarTexto(texto) {
+        return texto
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\\u0300-\\u036f]/g, '') // Remover acentos
+            .replace(/[ñ]/g, 'n') // Reemplazar ñ por n
+            .replace(/[ü]/g, 'u') // Reemplazar ü por u
+            .replace(/[ç]/g, 'c') // Reemplazar ç por c
+            .replace(/[^a-z0-9\\s]/g, ''); // Remover caracteres especiales excepto espacios
+    }
+    
+    function filtrarAutores(termino) {
+        const opciones = autoresDisponibles.options;
+        const terminoNormalizado = normalizarTexto(termino.trim());
+        
+        // Mostrar todas las opciones si no hay término de búsqueda
+        if (terminoNormalizado === '') {
+            for (let i = 0; i < opciones.length; i++) {
+                opciones[i].style.display = '';
+            }
+            return;
+        }
+        
+        // Filtrar opciones
+        for (let i = 0; i < opciones.length; i++) {
+            const opcion = opciones[i];
+            const apellidos = normalizarTexto(opcion.dataset.apellidos);
+            const nombres = normalizarTexto(opcion.dataset.nombres);
+            const textoCompleto = normalizarTexto(`\${opcion.dataset.apellidos}, \${opcion.dataset.nombres}`);
+            
+            if (apellidos.includes(terminoNormalizado) || 
+                nombres.includes(terminoNormalizado) || 
+                textoCompleto.includes(terminoNormalizado)) {
+                opcion.style.display = '';
+            } else {
+                opcion.style.display = 'none';
+            }
+        }
+    }
+    
+    // Evento para buscar al escribir
+    buscarAutor.addEventListener('input', function() {
+        filtrarAutores(this.value);
+    });
+    
+    // Limpiar búsqueda cuando se hace clic en el campo
+    buscarAutor.addEventListener('focus', function() {
+        if (this.value === '') {
+            filtrarAutores('');
+        }
+    });
+    
+    // Limpiar búsqueda cuando se presiona Escape
+    buscarAutor.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            this.value = '';
+            filtrarAutores('');
+            this.blur();
+        }
+    });
 });
 
 function toggleEditorialInput() {
@@ -962,7 +1029,7 @@ function toggleEditorialInput() {
      */
     public function getDebugInfo(): array
     {
-        return array (  521 => 268,  514 => 267,  463 => 220,  450 => 209,  442 => 207,  435 => 203,  430 => 201,  423 => 199,  417 => 197,  413 => 196,  390 => 175,  379 => 172,  368 => 171,  364 => 170,  349 => 157,  337 => 151,  332 => 149,  328 => 148,  323 => 146,  318 => 144,  313 => 141,  309 => 140,  294 => 127,  285 => 124,  276 => 123,  272 => 122,  260 => 112,  251 => 109,  242 => 108,  238 => 107,  220 => 92,  210 => 85,  200 => 78,  190 => 71,  178 => 64,  172 => 63,  166 => 62,  153 => 54,  144 => 48,  130 => 36,  126 => 34,  124 => 33,  120 => 32,  115 => 29,  109 => 27,  107 => 26,  99 => 21,  96 => 20,  92 => 18,  88 => 16,  86 => 15,  81 => 12,  74 => 11,  67 => 7,  63 => 5,  60 => 4,  53 => 3,  42 => 1,);
+        return array (  524 => 271,  517 => 270,  466 => 223,  453 => 212,  445 => 210,  438 => 206,  433 => 204,  426 => 202,  420 => 200,  416 => 199,  393 => 178,  382 => 175,  371 => 174,  367 => 173,  349 => 157,  337 => 151,  332 => 149,  328 => 148,  323 => 146,  318 => 144,  313 => 141,  309 => 140,  294 => 127,  285 => 124,  276 => 123,  272 => 122,  260 => 112,  251 => 109,  242 => 108,  238 => 107,  220 => 92,  210 => 85,  200 => 78,  190 => 71,  178 => 64,  172 => 63,  166 => 62,  153 => 54,  144 => 48,  130 => 36,  126 => 34,  124 => 33,  120 => 32,  115 => 29,  109 => 27,  107 => 26,  99 => 21,  96 => 20,  92 => 18,  88 => 16,  86 => 15,  81 => 12,  74 => 11,  67 => 7,  63 => 5,  60 => 4,  53 => 3,  42 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -1134,6 +1201,9 @@ function toggleEditorialInput() {
                             <div class=\"mb-3\">
                                 <div class=\"d-flex justify-content-between align-items-center mb-2\">
                                     <label class=\"form-label\">Autores Disponibles</label>
+                                </div>
+                                <div class=\"mb-2\">
+                                    <input type=\"text\" class=\"form-control\" id=\"buscarAutor\" placeholder=\"Buscar autores por nombre o apellido...\" style=\"font-size: 0.9rem;\">
                                 </div>
                                 <select class=\"form-select\" id=\"autoresDisponibles\" multiple size=\"10\" style=\"height: auto;\">
                                     {% for autor in autores %}
@@ -1631,6 +1701,70 @@ document.addEventListener('DOMContentLoaded', function() {
         const opciones = this.options;
         for (let i = 0; i < opciones.length; i++) {
             opciones[i].style.display = '';
+        }
+    });
+
+    // Funcionalidad de búsqueda de autores
+    const buscarAutor = document.getElementById('buscarAutor');
+    
+    function normalizarTexto(texto) {
+        return texto
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\\u0300-\\u036f]/g, '') // Remover acentos
+            .replace(/[ñ]/g, 'n') // Reemplazar ñ por n
+            .replace(/[ü]/g, 'u') // Reemplazar ü por u
+            .replace(/[ç]/g, 'c') // Reemplazar ç por c
+            .replace(/[^a-z0-9\\s]/g, ''); // Remover caracteres especiales excepto espacios
+    }
+    
+    function filtrarAutores(termino) {
+        const opciones = autoresDisponibles.options;
+        const terminoNormalizado = normalizarTexto(termino.trim());
+        
+        // Mostrar todas las opciones si no hay término de búsqueda
+        if (terminoNormalizado === '') {
+            for (let i = 0; i < opciones.length; i++) {
+                opciones[i].style.display = '';
+            }
+            return;
+        }
+        
+        // Filtrar opciones
+        for (let i = 0; i < opciones.length; i++) {
+            const opcion = opciones[i];
+            const apellidos = normalizarTexto(opcion.dataset.apellidos);
+            const nombres = normalizarTexto(opcion.dataset.nombres);
+            const textoCompleto = normalizarTexto(`\${opcion.dataset.apellidos}, \${opcion.dataset.nombres}`);
+            
+            if (apellidos.includes(terminoNormalizado) || 
+                nombres.includes(terminoNormalizado) || 
+                textoCompleto.includes(terminoNormalizado)) {
+                opcion.style.display = '';
+            } else {
+                opcion.style.display = 'none';
+            }
+        }
+    }
+    
+    // Evento para buscar al escribir
+    buscarAutor.addEventListener('input', function() {
+        filtrarAutores(this.value);
+    });
+    
+    // Limpiar búsqueda cuando se hace clic en el campo
+    buscarAutor.addEventListener('focus', function() {
+        if (this.value === '') {
+            filtrarAutores('');
+        }
+    });
+    
+    // Limpiar búsqueda cuando se presiona Escape
+    buscarAutor.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            this.value = '';
+            filtrarAutores('');
+            this.blur();
         }
     });
 });

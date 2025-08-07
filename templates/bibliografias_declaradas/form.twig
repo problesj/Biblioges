@@ -117,6 +117,12 @@
                             <label for="nueva_editorial" class="form-label">Nueva Editorial</label>
                             <input type="text" class="form-control" id="nueva_editorial" name="nueva_editorial">
                         </div>
+                        
+                        <div class="mb-3">
+                            <label for="doi" class="form-label">DOI</label>
+                            <input type="text" class="form-control" id="doi" name="doi" 
+                                   value="{{ bibliografia.doi }}" placeholder="10.1000/182">
+                        </div>
                         </div>
                     </div>
 
@@ -232,6 +238,9 @@
                             <div class="mb-3">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <label class="form-label">Autores Disponibles</label>
+                                </div>
+                                <div class="mb-2">
+                                    <input type="text" class="form-control" id="buscarAutor" placeholder="Buscar autores por nombre o apellido..." style="font-size: 0.9rem;">
                                 </div>
                                 <select class="form-select" id="autoresDisponibles" multiple size="10" style="height: auto;">
                         {% for autor in autores %}
@@ -743,6 +752,70 @@ document.addEventListener('DOMContentLoaded', function() {
             agregarAutorALista(autor);
             });
         });
+
+    // Funcionalidad de búsqueda de autores
+    const buscarAutor = document.getElementById('buscarAutor');
+    
+    function normalizarTexto(texto) {
+        return texto
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '') // Remover acentos
+            .replace(/[ñ]/g, 'n') // Reemplazar ñ por n
+            .replace(/[ü]/g, 'u') // Reemplazar ü por u
+            .replace(/[ç]/g, 'c') // Reemplazar ç por c
+            .replace(/[^a-z0-9\s]/g, ''); // Remover caracteres especiales excepto espacios
+    }
+    
+    function filtrarAutores(termino) {
+        const opciones = autoresDisponibles.options;
+        const terminoNormalizado = normalizarTexto(termino.trim());
+        
+        // Mostrar todas las opciones si no hay término de búsqueda
+        if (terminoNormalizado === '') {
+            for (let i = 0; i < opciones.length; i++) {
+                opciones[i].style.display = '';
+            }
+            return;
+        }
+        
+        // Filtrar opciones
+        for (let i = 0; i < opciones.length; i++) {
+            const opcion = opciones[i];
+            const apellidos = normalizarTexto(opcion.dataset.apellidos);
+            const nombres = normalizarTexto(opcion.dataset.nombres);
+            const textoCompleto = normalizarTexto(`${opcion.dataset.apellidos}, ${opcion.dataset.nombres}`);
+            
+            if (apellidos.includes(terminoNormalizado) || 
+                nombres.includes(terminoNormalizado) || 
+                textoCompleto.includes(terminoNormalizado)) {
+                opcion.style.display = '';
+            } else {
+                opcion.style.display = 'none';
+            }
+        }
+    }
+    
+    // Evento para buscar al escribir
+    buscarAutor.addEventListener('input', function() {
+        filtrarAutores(this.value);
+    });
+    
+    // Limpiar búsqueda cuando se hace clic en el campo
+    buscarAutor.addEventListener('focus', function() {
+        if (this.value === '') {
+            filtrarAutores('');
+        }
+    });
+    
+    // Limpiar búsqueda cuando se presiona Escape
+    buscarAutor.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            this.value = '';
+            filtrarAutores('');
+            this.blur();
+        }
+    });
 });
 </script>
 {% endblock %}

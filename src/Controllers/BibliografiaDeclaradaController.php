@@ -477,10 +477,10 @@ class BibliografiaDeclaradaController
                             $stmt = $this->pdo->prepare("
                 INSERT INTO bibliografias_declaradas (
                     titulo, anio_publicacion, edicion, url, formato, 
-                    nota, tipo, editorial, estado
+                    nota, tipo, editorial, doi, estado
                 ) VALUES (
                     :titulo, :anio_publicacion, :edicion, :url, :formato,
-                    :nota, :tipo, :editorial, :estado
+                    :nota, :tipo, :editorial, :doi, :estado
                 )
                             ");
                             
@@ -493,6 +493,7 @@ class BibliografiaDeclaradaController
                 ':nota' => $datos['nota'] ?? null,
                 ':tipo' => $datos['tipo'] ?? null,
                 ':editorial' => ($datos['editorial'] ?? '') === 'otra' ? ($datos['nueva_editorial'] ?? '') : ($datos['editorial'] ?? ''),
+                ':doi' => $datos['doi'] ?? null,
                 ':estado' => $datos['estado'] ?? 1
             ]);
             
@@ -782,7 +783,7 @@ class BibliografiaDeclaradaController
             exit;
         }
 
-            $autores = Autor::orderBy('apellidos')->get();
+            $autores = Autor::orderBy('apellidos')->orderBy('nombres')->get();
             $editoriales = BibliografiaDeclarada::distinct()->pluck('editorial')->filter();
             $revistas = Articulo::distinct()->pluck('titulo_revista')->filter();
             $carreras = Carrera::where('estado', true)->orderBy('nombre')->get();
@@ -892,6 +893,7 @@ class BibliografiaDeclaradaController
                     nota = ?, 
                     tipo = ?, 
                     editorial = ?, 
+                    doi = ?,
                     estado = ?,
                     fecha_actualizacion = CURRENT_TIMESTAMP
                     WHERE id = ?";
@@ -907,6 +909,7 @@ class BibliografiaDeclaradaController
                     $data['nota'] ?? null,
                     $data['tipo'],
                     $data['editorial'] === 'otra' ? $data['nueva_editorial'] : $data['editorial'],
+                    $data['doi'] ?? null,
                     $data['estado'] ?? 1,
                     $id
                 ];
@@ -4164,10 +4167,10 @@ class BibliografiaDeclaradaController
             $stmt = $this->pdo->prepare("
                 INSERT INTO bibliografias_declaradas (
                     titulo, anio_publicacion, edicion, url, formato, 
-                    nota, tipo, editorial, estado
+                    nota, tipo, editorial, doi, estado
                 ) VALUES (
                     :titulo, :anio_publicacion, :edicion, :url, :formato,
-                    :nota, :tipo, :editorial, :estado
+                    :nota, :tipo, :editorial, :doi, :estado
                 )
             ");
             
@@ -4180,6 +4183,7 @@ class BibliografiaDeclaradaController
                 ':nota' => $datos['nota'] ?? null,
                 ':tipo' => $datos['tipo'] ?? null,
                 ':editorial' => ($datos['editorial'] ?? '') === 'otra' ? ($datos['nueva_editorial'] ?? '') : ($datos['editorial'] ?? ''),
+                ':doi' => $datos['doi'] ?? null,
                 ':estado' => $datos['estado'] ?? 1
             ]);
             
