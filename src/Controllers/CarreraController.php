@@ -10,6 +10,7 @@ use App\Models\Unidad;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use App\Core\Session;
+use App\Core\ListStateManager;
 use PDO;
 use App\Core\Config;
 
@@ -59,32 +60,27 @@ class CarreraController
         }
 
         try {
-            // Parámetros de paginación y ordenamiento
-            $page = max(1, intval($_GET['page'] ?? 1));
-            $perPage = intval($_GET['per_page'] ?? 10);
+            // Inicializar el gestor de estado del listado
+            $stateManager = new ListStateManager($this->session, 'carreras');
             
-            // Validar opciones de registros por página
+            // Obtener parámetros de la URL
+            $urlParams = $_GET;
+            
+            // Obtener estado (combinando sesión y URL)
+            $state = $stateManager->getState($urlParams);
+            
+            // Guardar estado en sesión
+            $stateManager->saveState($state);
+            
+            // Extraer parámetros del estado
+            $page = $state['page'];
+            $perPage = $state['per_page'];
+            $sortColumn = $state['sort'];
+            $sortDirection = $state['direction'];
             $allowedPerPage = [5, 10, 15, 20];
-            if (!in_array($perPage, $allowedPerPage)) {
-                $perPage = 10;
-            }
+            $allowedColumns = ['nombre', 'tipo_programa', 'estado', 'cantidad_semestres', 'sede'];
             
             $offset = ($page - 1) * $perPage;
-            
-            // Parámetros de ordenamiento
-            $sortColumn = $_GET['sort'] ?? 'nombre';
-            $sortDirection = strtoupper($_GET['direction'] ?? 'ASC');
-            
-            // Validar columnas permitidas para ordenamiento
-            $allowedColumns = ['nombre', 'tipo_programa', 'estado', 'cantidad_semestres', 'sede'];
-            if (!in_array($sortColumn, $allowedColumns)) {
-                $sortColumn = 'nombre';
-            }
-            
-            // Validar dirección de ordenamiento
-            if (!in_array($sortDirection, ['ASC', 'DESC'])) {
-                $sortDirection = 'ASC';
-            }
 
             // Construir la consulta base para contar total de registros
             $countSql = "SELECT COUNT(DISTINCT c.id) as total
@@ -107,32 +103,32 @@ class CarreraController
 
             $params = [];
 
-            // Aplicar filtro de nombre
-            if (!empty($_GET['nombre'])) {
+            // Aplicar filtros desde el estado
+            if (!empty($state['nombre'])) {
                 $sql .= " AND c.nombre LIKE ?";
                 $countSql .= " AND c.nombre LIKE ?";
-                $params[] = '%' . $_GET['nombre'] . '%';
+                $params[] = '%' . $state['nombre'] . '%';
             }
 
             // Aplicar filtro de tipo de programa
-            if (!empty($_GET['tipo_programa'])) {
+            if (!empty($state['tipo_programa'])) {
                 $sql .= " AND c.tipo_programa = ?";
                 $countSql .= " AND c.tipo_programa = ?";
-                $params[] = $_GET['tipo_programa'];
+                $params[] = $state['tipo_programa'];
             }
 
             // Aplicar filtro de sede
-            if (!empty($_GET['sede'])) {
+            if (!empty($state['sede'])) {
                 $sql .= " AND ce.sede_id = ?";
                 $countSql .= " AND ce.sede_id = ?";
-                $params[] = $_GET['sede'];
+                $params[] = $state['sede'];
             }
 
             // Aplicar filtro de estado
-            if (isset($_GET['estado']) && $_GET['estado'] !== '') {
+            if (isset($state['estado']) && $state['estado'] !== '') {
                 $sql .= " AND c.estado = ?";
                 $countSql .= " AND c.estado = ?";
-                $params[] = $_GET['estado'];
+                $params[] = $state['estado'];
             }
 
             // Obtener total de registros
@@ -177,11 +173,12 @@ class CarreraController
                 'current_page' => 'carreras',
                 'app_url' => Config::get('app_url'),
                 'session' => $_SESSION,
+                'stateManager' => $stateManager,
                 'filtros' => [
-                    'nombre' => $_GET['nombre'] ?? '',
-                    'tipo_programa' => $_GET['tipo_programa'] ?? '',
-                    'sede' => $_GET['sede'] ?? '',
-                    'estado' => $_GET['estado'] ?? ''
+                    'nombre' => $state['nombre'],
+                    'tipo_programa' => $state['tipo_programa'],
+                    'sede' => $state['sede'],
+                    'estado' => $state['estado']
                 ],
                 'paginacion' => [
                     'current_page' => $currentPage,
@@ -1258,5 +1255,37 @@ class CarreraController
     {
         return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
                strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+    }
+
+    /**
+     * Limpia el estado guardado en sesión y redirige al listado
+     */
+    public function clearState(Request $request, Response $response, array $args = [])
+    {
+        // Verificar autenticación
+        if (!$this->session->get('user_id')) {
+            $this->session->set('error', 'Por favor inicie sesión para acceder a las carreras');
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'biblioges/login')
+                ->withStatus(302);
+        }
+
+        try {
+            // Limpiar el estado guardado en sesión
+            $stateManager = new ListStateManager($this->session, 'carreras');
+            $stateManager->clearState();
+            
+            // Redirigir al listado sin parámetros
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'carreras')
+                ->withStatus(302);
+                
+        } catch (\Exception $e) {
+            error_log('CarreraController clearState: Error: ' . $e->getMessage());
+            $this->session->set('error', 'Error al limpiar los filtros: ' . $e->getMessage());
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'carreras')
+                ->withStatus(302);
+        }
     }
 } 

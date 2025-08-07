@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Config;
 use App\Core\Session;
+use App\Core\ListStateManager;
 use PDO;
 use PDOException;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -18,6 +19,9 @@ class MallaController
 
     public function __construct()
     {
+        // Inicializar sesión
+        $this->session = new Session();
+        
         // Configuración de la base de datos
         $dbConfig = [
             'host' => $_ENV['DB_HOST'] ?? 'localhost',
@@ -38,263 +42,211 @@ class MallaController
             die("Error de conexión: " . $e->getMessage());
         }
 
-        $loader = new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates');
-        $this->twig = new \Twig\Environment($loader, [
-            'cache' => false,
-            'debug' => true
-        ]);
-
-        // Agregar funciones helper para ordenamiento y paginación
-        $baseUrl = Config::get('app_url') . 'mallas';
+        // Usar la instancia global de Twig
+        global $twig;
+        $this->twig = $twig;
         
-        $this->twig->addFunction(new \Twig\TwigFunction('build_sort_url', function ($column, $current_sort = '', $current_direction = 'ASC', $filters = [], $page = 1, $perPage = 10) use ($baseUrl) {
-            $direction = ($current_sort === $column && $current_direction === 'ASC') ? 'DESC' : 'ASC';
-
-            $params = array_merge($filters, [
-                'sort' => $column,
-                'direction' => $direction
-            ]);
-
-            if ($page > 1) {
-                $params['page'] = $page;
-            }
-
-            if ($perPage != 10) { // Solo agregar si no es el valor por defecto
-                $params['per_page'] = $perPage;
-            }
-
-            $query = http_build_query($params);
-            return $baseUrl . ($query ? '?' . $query : '');
-        }));
-
-        $this->twig->addFunction(new \Twig\TwigFunction('build_page_url', function ($page, $sort = '', $direction = 'ASC', $filters = [], $perPage = 10) use ($baseUrl) {
-            $params = $filters;
-
-            if ($sort) {
-                $params['sort'] = $sort;
-            }
-
-            if ($direction) {
-                $params['direction'] = $direction;
-            }
-
-            if ($page > 1) {
-                $params['page'] = $page;
-            }
-
-            if ($perPage != 10) { // Solo agregar si no es el valor por defecto
-                $params['per_page'] = $perPage;
-            }
-
-            $query = http_build_query($params);
-            return $baseUrl . ($query ? '?' . $query : '');
-        }));
-
-        $this->twig->addFunction(new \Twig\TwigFunction('get_sort_icon', function ($column, $current_sort, $current_direction) {
-            if ($current_sort === $column) {
-                return $current_direction === 'ASC' ? 'fa-sort-up' : 'fa-sort-down';
-            }
-            return 'fa-sort';
-        }));
-
-        $this->twig->addFunction(new \Twig\TwigFunction('build_per_page_url', function ($perPage, $sort = '', $direction = 'ASC', $filters = [], $page = 1) use ($baseUrl) {
-            $params = $filters;
-
-            if ($sort) {
-                $params['sort'] = $sort;
-            }
-
-            if ($direction) {
-                $params['direction'] = $direction;
-            }
-
-            if ($perPage != 10) { // Solo agregar si no es el valor por defecto
-                $params['per_page'] = $perPage;
-            }
-
-            if ($page > 1) {
-                $params['page'] = $page;
-            }
-
-            $query = http_build_query($params);
-            return $baseUrl . ($query ? '?' . $query : '');
-        }));
-
-        $this->session = new Session();
         $this->app_url = Config::get('app_url');
     }
 
     public function index(Request $request, Response $response, array $args = [])
     {
-        // Verificar autenticación
-        if (!$this->session->get('user_id')) {
-            $this->session->set('swal', [
-                'icon' => 'error',
-                'title' => 'Error de acceso',
-                'text' => 'Por favor inicie sesión para acceder a las mallas'
-            ]);
+        try {
+            // Verificar autenticación
+            if (!$this->session->get('user_id')) {
+                $this->session->set('error', 'Por favor inicie sesión para acceder a las mallas');
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'login')
+                    ->withStatus(302);
+            }
+
+            // Inicializar el gestor de estado del listado
+            $stateManager = new ListStateManager($this->session, 'mallas');
+            
+            // Obtener parámetros de la URL
+            $urlParams = $_GET;
+            
+            // Obtener estado (combinando sesión y URL)
+            $state = $stateManager->getState($urlParams);
+            
+            // Guardar estado en sesión
+            $stateManager->saveState($state);
+            
+            // Extraer parámetros del estado
+            $page = $state['page'];
+            $perPage = $state['per_page'];
+            $sortColumn = $state['sort'];
+            $sortDirection = $state['direction'];
+            $allowedPerPage = [5, 10, 15, 20];
+            $allowedColumns = ['nombre', 'tipo_programa', 'estado', 'sede'];
+            
+            $offset = ($page - 1) * $perPage;
+
+            // Obtener filtros del estado
+            $tipoPrograma = $state['tipo_programa'] ?? null;
+            $sede = $state['sede'] ?? null;
+            $estado = $state['estado'] ?? null;
+            $busqueda = $state['busqueda'] ?? null;
+
+            // Construir la consulta base para contar total de registros
+            $countSql = "SELECT COUNT(DISTINCT c.id) as total
+            FROM carreras c
+                    LEFT JOIN carreras_espejos ce ON c.id = ce.carrera_id
+                    LEFT JOIN sedes s ON ce.sede_id = s.id
+                    LEFT JOIN unidades u ON ce.id_unidad = u.id
+                    WHERE 1=1";
+
+            // Construir la consulta principal
+            $sql = "SELECT c.*, 
+                    GROUP_CONCAT(DISTINCT ce.codigo_carrera) as codigos_carrera,
+                    GROUP_CONCAT(DISTINCT s.nombre) as sedes,
+                    GROUP_CONCAT(DISTINCT u.nombre) as unidades
+                    FROM carreras c
+                    LEFT JOIN carreras_espejos ce ON c.id = ce.carrera_id
+                    LEFT JOIN sedes s ON ce.sede_id = s.id
+                    LEFT JOIN unidades u ON ce.id_unidad = u.id
+                    WHERE 1=1";
+
+            $params = [];
+
+            // Aplicar filtros (aplicados tanto a countSql como a sql)
+            if (!empty($tipoPrograma)) {
+                $sql .= " AND c.tipo_programa = ?";
+                $countSql .= " AND c.tipo_programa = ?";
+                $params[] = $tipoPrograma;
+            }
+
+            if (!empty($sede)) {
+                $sql .= " AND ce.sede_id = ?";
+                $countSql .= " AND ce.sede_id = ?";
+                $params[] = $sede;
+            }
+
+            if ($estado !== null && $estado !== '') {
+                $sql .= " AND c.estado = ?";
+                $countSql .= " AND c.estado = ?";
+                $params[] = $estado;
+            }
+
+            if (!empty($busqueda)) {
+                $sql .= " AND (c.nombre LIKE ? OR ce.codigo_carrera LIKE ?)";
+                $countSql .= " AND (c.nombre LIKE ? OR ce.codigo_carrera LIKE ?)";
+                $params[] = "%{$busqueda}%";
+                $params[] = "%{$busqueda}%";
+            }
+
+            // Obtener total de registros
+            $stmt = $this->pdo->prepare($countSql);
+            $stmt->execute($params);
+            $totalRecords = $stmt->fetch()['total'];
+
+            // Calcular información de paginación
+            $totalPages = ceil($totalRecords / $perPage);
+            $currentPage = $page;
+
+            // Agregar GROUP BY y ORDER BY a la consulta principal
+            if ($sortColumn === 'sede') {
+                // Para ordenar por sede, usamos MIN() para obtener la primera sede de cada carrera
+                $sql .= " GROUP BY c.id ORDER BY MIN(s.nombre) {$sortDirection} LIMIT {$perPage} OFFSET {$offset}";
+            } else {
+                $sql .= " GROUP BY c.id ORDER BY c.{$sortColumn} {$sortDirection} LIMIT {$perPage} OFFSET {$offset}";
+            }
+
+            // Ejecutar la consulta principal
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            $carreras = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Procesar los resultados para asegurar el formato correcto
+            foreach ($carreras as &$carrera) {
+                // Asegurar que los campos sean arrays
+                $carrera['sedes'] = $carrera['sedes'] ? explode(',', $carrera['sedes']) : [];
+                $carrera['unidades'] = $carrera['unidades'] ? explode(',', $carrera['unidades']) : [];
+                $carrera['codigos_carrera'] = $carrera['codigos_carrera'] ? explode(',', $carrera['codigos_carrera']) : [];
+            }
+
+            // Obtener sedes para el filtro
+            $stmt = $this->pdo->query("SELECT * FROM sedes ORDER BY nombre");
+            $sedes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Obtener usuario actual
+            $stmt = $this->pdo->prepare("SELECT * FROM usuarios WHERE id = ?");
+            $stmt->execute([$this->session->get('user_id')]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // Preparar datos para la vista
+            $viewData = [
+                'carreras' => $carreras,
+                'sedes' => $sedes,
+                'user' => $user,
+                'current_page' => 'mallas',
+                'app_url' => Config::get('app_url'),
+                'session' => $_SESSION,
+                'stateManager' => $stateManager,
+                'filtros' => [
+                    'tipo_programa' => $tipoPrograma,
+                    'sede' => $sede,
+                    'estado' => $estado,
+                    'busqueda' => $busqueda
+                ],
+                'paginacion' => [
+                    'current_page' => $currentPage,
+                    'per_page' => $perPage,
+                    'total_records' => $totalRecords,
+                    'total_pages' => $totalPages,
+                    'has_previous' => $currentPage > 1,
+                    'has_next' => $currentPage < $totalPages,
+                    'previous_page' => $currentPage - 1,
+                    'next_page' => $currentPage + 1,
+                    'allowed_per_page' => $allowedPerPage
+                ],
+                'ordenamiento' => [
+                    'column' => $sortColumn,
+                    'direction' => $sortDirection
+                ]
+            ];
+
+            // Renderizar la vista
+            $html = $this->twig->render('mallas/index.twig', $viewData);
+            
+            $response->getBody()->write($html);
+            return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
+            
+        } catch (\Exception $e) {
+            error_log("Error en MallaController@index: " . $e->getMessage());
+            $this->session->set('error', 'Error al cargar las mallas: ' . $e->getMessage());
             return $response
-                ->withHeader('Location', Config::get('app_url') . 'login')
+                ->withHeader('Location', Config::get('app_url') . 'dashboard')
                 ->withStatus(302);
         }
+    }
 
-        // Obtener mensajes de sesión y limpiarlos
-        $swal = $this->session->get('swal');
-        $this->session->remove('swal');
+    public function clearState(Request $request, Response $response, array $args = [])
+    {
+        try {
+            // Verificar autenticación
+            if (!$this->session->get('user_id')) {
+                $this->session->set('error', 'Por favor inicie sesión para acceder a las mallas');
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'login')
+                    ->withStatus(302);
+            }
 
-        // Parámetros de paginación y ordenamiento
-        $page = max(1, intval($_GET['page'] ?? 1));
-        $perPage = intval($_GET['per_page'] ?? 10);
+            // Limpiar el estado del listado
+            $stateManager = new ListStateManager($this->session, 'mallas');
+            $stateManager->clearState();
 
-        // Validar opciones de registros por página
-        $allowedPerPage = [5, 10, 15, 20];
-        if (!in_array($perPage, $allowedPerPage)) {
-            $perPage = 10;
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'mallas')
+                ->withStatus(302);
+
+        } catch (\Exception $e) {
+            error_log("Error en MallaController@clearState: " . $e->getMessage());
+            $this->session->set('error', 'Error al limpiar los filtros: ' . $e->getMessage());
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'mallas')
+                ->withStatus(302);
         }
-
-        $offset = ($page - 1) * $perPage;
-
-        // Parámetros de ordenamiento
-        $sortColumn = $_GET['sort'] ?? 'nombre';
-        $sortDirection = strtoupper($_GET['direction'] ?? 'ASC');
-
-        // Validar columnas permitidas para ordenamiento
-        $allowedColumns = ['nombre', 'tipo_programa', 'estado', 'sede'];
-        if (!in_array($sortColumn, $allowedColumns)) {
-            $sortColumn = 'nombre';
-        }
-
-        // Validar dirección de ordenamiento
-        if (!in_array($sortDirection, ['ASC', 'DESC'])) {
-            $sortDirection = 'ASC';
-        }
-
-        // Obtener filtros
-        $filtros = [
-            'tipo_programa' => $_GET['tipo_programa'] ?? '',
-            'sede' => $_GET['sede'] ?? '',
-            'estado' => $_GET['estado'] ?? '',
-            'busqueda' => $_GET['busqueda'] ?? ''
-        ];
-
-        // Construir la consulta base para contar total de registros
-        $countSql = "SELECT COUNT(DISTINCT c.id) as total
-        FROM carreras c
-                LEFT JOIN carreras_espejos ce ON c.id = ce.carrera_id
-                LEFT JOIN sedes s ON ce.sede_id = s.id
-                LEFT JOIN unidades u ON ce.id_unidad = u.id
-                WHERE 1=1";
-
-        // Construir la consulta principal
-        $sql = "SELECT c.*, 
-                GROUP_CONCAT(DISTINCT ce.codigo_carrera) as codigos_carrera,
-                GROUP_CONCAT(DISTINCT s.nombre) as sedes,
-                GROUP_CONCAT(DISTINCT u.nombre) as unidades
-                FROM carreras c
-                LEFT JOIN carreras_espejos ce ON c.id = ce.carrera_id
-                LEFT JOIN sedes s ON ce.sede_id = s.id
-                LEFT JOIN unidades u ON ce.id_unidad = u.id
-                WHERE 1=1";
-
-        $params = [];
-
-        // Aplicar filtros (aplicados tanto a countSql como a sql)
-        if (!empty($filtros['tipo_programa'])) {
-            $sql .= " AND c.tipo_programa = ?";
-            $countSql .= " AND c.tipo_programa = ?";
-            $params[] = $filtros['tipo_programa'];
-        }
-
-        if (!empty($filtros['sede'])) {
-            $sql .= " AND ce.sede_id = ?";
-            $countSql .= " AND ce.sede_id = ?";
-            $params[] = $filtros['sede'];
-        }
-
-        if ($filtros['estado'] !== '') {
-            $sql .= " AND c.estado = ?";
-            $countSql .= " AND c.estado = ?";
-            $params[] = $filtros['estado'];
-        }
-
-        if (!empty($filtros['busqueda'])) {
-            $sql .= " AND (c.nombre LIKE ? OR ce.codigo_carrera LIKE ?)";
-            $countSql .= " AND (c.nombre LIKE ? OR ce.codigo_carrera LIKE ?)";
-            $params[] = "%{$filtros['busqueda']}%";
-            $params[] = "%{$filtros['busqueda']}%";
-        }
-
-        // Obtener total de registros
-        $stmt = $this->pdo->prepare($countSql);
-        $stmt->execute($params);
-        $totalRecords = $stmt->fetch()['total'];
-
-        // Calcular información de paginación
-        $totalPages = ceil($totalRecords / $perPage);
-        $currentPage = $page;
-
-        // Agregar GROUP BY y ORDER BY a la consulta principal
-        if ($sortColumn === 'sede') {
-            // Para ordenar por sede, usamos MIN() para obtener la primera sede de cada carrera
-            $sql .= " GROUP BY c.id ORDER BY MIN(s.nombre) {$sortDirection} LIMIT {$perPage} OFFSET {$offset}";
-        } else {
-            $sql .= " GROUP BY c.id ORDER BY c.{$sortColumn} {$sortDirection} LIMIT {$perPage} OFFSET {$offset}";
-        }
-
-        // Ejecutar la consulta principal
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($params);
-        $carreras = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Procesar los resultados para asegurar el formato correcto
-        foreach ($carreras as &$carrera) {
-            // Asegurar que los campos sean arrays
-            $carrera['sedes'] = $carrera['sedes'] ? explode(',', $carrera['sedes']) : [];
-            $carrera['unidades'] = $carrera['unidades'] ? explode(',', $carrera['unidades']) : [];
-            $carrera['codigos_carrera'] = $carrera['codigos_carrera'] ? explode(',', $carrera['codigos_carrera']) : [];
-        }
-
-        // Obtener sedes para el filtro
-        $stmt = $this->pdo->query("SELECT * FROM sedes ORDER BY nombre");
-        $sedes = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Obtener usuario actual
-        $stmt = $this->pdo->prepare("SELECT * FROM usuarios WHERE id = ?");
-        $stmt->execute([$this->session->get('user_id')]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        // Preparar datos para la vista
-        $viewData = [
-            'carreras' => $carreras,
-            'sedes' => $sedes,
-            'user' => $user,
-            'current_page' => 'mallas',
-            'app_url' => Config::get('app_url'),
-            'session' => $_SESSION,
-            'swal' => $swal,
-            'filtros' => $filtros,
-            'paginacion' => [
-                'current_page' => $currentPage,
-                'per_page' => $perPage,
-                'total_records' => $totalRecords,
-                'total_pages' => $totalPages,
-                'has_previous' => $currentPage > 1,
-                'has_next' => $currentPage < $totalPages,
-                'previous_page' => $currentPage - 1,
-                'next_page' => $currentPage + 1,
-                'allowed_per_page' => $allowedPerPage
-            ],
-            'ordenamiento' => [
-                'column' => $sortColumn,
-                'direction' => $sortDirection
-            ]
-        ];
-
-        // Renderizar la vista
-        $html = $this->twig->render('mallas/index.twig', $viewData);
-        
-        $response->getBody()->write($html);
-        return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
     }
 
     public function show(Request $request, Response $response, array $args = [])

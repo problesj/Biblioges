@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\BaseController;
 use App\Core\Session;
+use App\Core\ListStateManager;
 use PDO;
 use PDOException;
 use App\Core\Config;
@@ -95,37 +96,33 @@ class BibliografiaDeclaradaController
         }
 
         try {
-            // Obtener mensajes de sesión y limpiarlos
-            $swal = $this->session->get('swal');
-            $this->session->remove('swal');
-
-            // Obtener parámetros de la solicitud
-            $queryParams = $request ? $request->getQueryParams() : $_GET;
+            // Inicializar el gestor de estado del listado
+            $stateManager = new ListStateManager($this->session, 'bibliografias_declaradas');
             
-            // Parámetros de paginación y ordenamiento
-            $page = max(1, intval($queryParams['page'] ?? 1));
-            $perPage = intval($queryParams['per_page'] ?? 10);
-            // Validar opciones de registros por página
+            // Obtener parámetros de la URL
+            $urlParams = $_GET;
+            
+            // Obtener estado (combinando sesión y URL)
+            $state = $stateManager->getState($urlParams);
+            
+            // Guardar estado en sesión
+            $stateManager->saveState($state);
+            
+            // Extraer parámetros del estado
+            $page = $state['page'];
+            $perPage = $state['per_page'];
+            $sortColumn = $state['sort'];
+            $sortDirection = $state['direction'];
             $allowedPerPage = [5, 10, 15, 20];
-            if (!in_array($perPage, $allowedPerPage)) { $perPage = 10; }
-            $offset = ($page - 1) * $perPage;
-            
-            // Parámetros de ordenamiento
-            $sortColumn = $queryParams['sort'] ?? 'titulo';
-            $sortDirection = strtoupper($queryParams['direction'] ?? 'ASC');
-            // Validar columnas permitidas para ordenamiento
             $allowedColumns = ['titulo', 'tipo', 'estado', 'autores', 'asignaturas', 'anio_publicacion'];
-            if (!in_array($sortColumn, $allowedColumns)) { $sortColumn = 'titulo'; }
-            // Validar dirección de ordenamiento
-            if (!in_array($sortDirection, ['ASC', 'DESC'])) { $sortDirection = 'ASC'; }
             
-            // Inicializar filtros con valores por defecto
-            $filtros = [
-                'busqueda' => $queryParams['busqueda'] ?? '',
-                'tipo_busqueda' => $queryParams['tipo_busqueda'] ?? 'todos',
-                'tipo' => $queryParams['tipo'] ?? '',
-                'estado' => $queryParams['estado'] ?? ''
-            ];
+            $offset = ($page - 1) * $perPage;
+
+            // Obtener filtros del estado
+            $busqueda = $state['busqueda'] ?? null;
+            $tipoBusqueda = $state['tipo_busqueda'] ?? null;
+            $tipo = $state['tipo'] ?? null;
+            $estado = $state['estado'] ?? null;
 
             // Construir la consulta base para contar total de registros
             $countSql = "SELECT COUNT(DISTINCT b.id) as total FROM bibliografias_declaradas b
@@ -148,45 +145,45 @@ class BibliografiaDeclaradaController
             $where = [];
 
             // Aplicar filtros de búsqueda
-            if (!empty($filtros['busqueda'])) {
-                $busqueda = '%' . $filtros['busqueda'] . '%';
-                switch ($filtros['tipo_busqueda']) {
+            if (!empty($busqueda)) {
+                $busquedaParam = '%' . $busqueda . '%';
+                switch ($tipoBusqueda) {
                     case 'titulo':
                         $where[] = "b.titulo LIKE ?";
-                        $params[] = $busqueda;
+                        $params[] = $busquedaParam;
                         break;
                     case 'autor':
                         $where[] = "(a.nombres LIKE ? OR a.apellidos LIKE ?)";
-                        $params[] = $busqueda;
-                        $params[] = $busqueda;
+                        $params[] = $busquedaParam;
+                        $params[] = $busquedaParam;
                         break;
                     case 'editorial':
                         $where[] = "b.editorial LIKE ?";
-                        $params[] = $busqueda;
+                        $params[] = $busquedaParam;
                         break;
                     case 'asignatura':
                         $where[] = "asig.nombre LIKE ?";
-                        $params[] = $busqueda;
+                        $params[] = $busquedaParam;
                         break;
                     default: // 'todos'
                         $where[] = "(b.titulo LIKE ? OR b.editorial LIKE ? OR a.nombres LIKE ? OR a.apellidos LIKE ? OR asig.nombre LIKE ?)";
-                        $params[] = $busqueda;
-                        $params[] = $busqueda;
-                        $params[] = $busqueda;
-                        $params[] = $busqueda;
-                        $params[] = $busqueda;
+                        $params[] = $busquedaParam;
+                        $params[] = $busquedaParam;
+                        $params[] = $busquedaParam;
+                        $params[] = $busquedaParam;
+                        $params[] = $busquedaParam;
                         break;
                 }
             }
 
             // Aplicar otros filtros
-            if (!empty($filtros['tipo'])) {
+            if (!empty($tipo)) {
                 $where[] = "b.tipo = ?";
-                $params[] = $filtros['tipo'];
+                $params[] = $tipo;
             }
-            if (!empty($filtros['estado'])) {
+            if ($estado !== null && $estado !== '') {
                 $where[] = "b.estado = ?";
-                $params[] = $filtros['estado'] === '1' ? 1 : 0;
+                $params[] = $estado === '1' ? 1 : 0;
             }
 
             // Agregar condiciones WHERE si existen
@@ -238,8 +235,13 @@ class BibliografiaDeclaradaController
                 'current_page' => 'bibliografias_declaradas',
                 'app_url' => Config::get('app_url'),
                 'session' => $_SESSION,
-                'swal' => $swal,
-                'filtros' => $filtros,
+                'stateManager' => $stateManager,
+                'filtros' => [
+                    'busqueda' => $busqueda,
+                    'tipo_busqueda' => $tipoBusqueda,
+                    'tipo' => $tipo,
+                    'estado' => $estado
+                ],
                 'paginacion' => [
                     'current_page' => $currentPage,
                     'per_page' => $perPage,
@@ -248,7 +250,8 @@ class BibliografiaDeclaradaController
                     'has_previous' => $currentPage > 1,
                     'has_next' => $currentPage < $totalPages,
                     'previous_page' => $currentPage - 1,
-                    'next_page' => $currentPage + 1
+                    'next_page' => $currentPage + 1,
+                    'allowed_per_page' => $allowedPerPage
                 ],
                 'ordenamiento' => [
                     'column' => $sortColumn,
@@ -262,6 +265,48 @@ class BibliografiaDeclaradaController
             return $this->jsonResponse([
                 'success' => false,
                 'message' => 'Error al listar las bibliografías: ' . $e->getMessage()
+            ])->withStatus(500);
+        }
+    }
+
+    public function clearState(Request $request = null, Response $response = null): Response
+    {
+        // Crear una nueva respuesta si no se proporciona una
+        if (!$response) {
+            $response = new Response();
+        }
+
+        try {
+            // Verificar autenticación
+            if (!$this->session->get('user_id')) {
+                if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                    header('Content-Type: application/json');
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Por favor inicie sesión para acceder a las bibliografías',
+                        'redirect' => Config::get('app_url') . 'login'
+                    ]);
+                    return $response;
+                }
+                
+                $_SESSION['error'] = 'Por favor inicie sesión para acceder a las bibliografías';
+                header('Location: ' . Config::get('app_url') . 'login');
+                exit;
+            }
+
+            // Limpiar el estado del listado
+            $stateManager = new ListStateManager($this->session, 'bibliografias_declaradas');
+            $stateManager->clearState();
+
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'bibliografias-declaradas')
+                ->withStatus(302);
+
+        } catch (\Exception $e) {
+            error_log("Error en BibliografiaDeclaradaController@clearState: " . $e->getMessage());
+            return $this->jsonResponse([
+                'success' => false,
+                'message' => 'Error al limpiar los filtros: ' . $e->getMessage()
             ])->withStatus(500);
         }
     }

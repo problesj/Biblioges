@@ -103,42 +103,51 @@ class DashboardController extends BaseController
             LIMIT 5
         ")->fetchAll();
 
-        // Obtener datos de cobertura básica por carrera usando la misma lógica del reporte
+        // Obtener datos de cobertura básica por carrera usando las tablas de reportes guardados
+        $anioActual = date('Y');
+        
+        // Obtener el año más reciente con datos disponibles
+        $stmt = $this->pdo->query("SELECT MAX(YEAR(fecha_medicion)) as anio_mas_reciente FROM reporte_coberturas_carreras_basicas");
+        $anioMasReciente = $stmt->fetchColumn();
+        
+        // Usar el año más reciente si no hay datos del año actual
+        $anioConsulta = $anioMasReciente ?: $anioActual;
+        
+        // Log para depuración
+        error_log("DashboardController: Obteniendo coberturas básicas para año {$anioConsulta}");
+        
         $coberturaCarreras = $this->pdo->query("
             SELECT 
                 c.nombre as carrera_nombre,
-                ce.codigo_carrera as carrera_codigo,
+                rcb.codigo_carrera as carrera_codigo,
                 ROUND(
-                    CASE 
-                        WHEN COUNT(DISTINCT ab.bibliografia_id) > 0 THEN
-                            (COUNT(DISTINCT CASE WHEN bd.id IS NOT NULL THEN ab.bibliografia_id END) / 
-                             COUNT(DISTINCT ab.bibliografia_id)) * 100
-                        ELSE 0 
-                    END, 1
+                    LEAST(
+                        COUNT(DISTINCT CASE WHEN rcb.no_bib_disponible_basica > 0 THEN rcb.id_bibliografia_declarada END) * 100.0 / 
+                        NULLIF(COUNT(DISTINCT rcb.id_bibliografia_declarada), 0), 
+                        100
+                    ), 2
                 ) as cobertura_basica
-            FROM carreras_espejos ce
-            INNER JOIN carreras c ON c.id = ce.carrera_id
-            INNER JOIN mallas m ON m.carrera_id = c.id
-            INNER JOIN asignaturas_departamentos ad ON ad.asignatura_id = m.asignatura_id
-            INNER JOIN asignaturas_bibliografias ab ON ab.asignatura_id = ad.asignatura_id
-            LEFT JOIN bibliografias_disponibles bd ON bd.bibliografia_declarada_id = ab.bibliografia_id 
-                AND bd.estado = 1
-                AND (
-                    bd.disponibilidad IN ('electronico', 'ambos')
-                    OR (bd.disponibilidad = 'impreso' AND EXISTS (
-                        SELECT 1 FROM bibliografias_disponibles_sedes bds 
-                        WHERE bds.bibliografia_disponible_id = bd.id 
-                        AND bds.ejemplares > 0
-                    ))
-                )
-            WHERE c.tipo_programa = 'P'
-            AND ab.tipo_bibliografia = 'basica'
+            FROM reporte_coberturas_carreras_basicas rcb
+            INNER JOIN carreras c ON c.id = (
+                SELECT ce.carrera_id 
+                FROM carreras_espejos ce 
+                WHERE ce.codigo_carrera = rcb.codigo_carrera 
+                LIMIT 1
+            )
+            WHERE YEAR(rcb.fecha_medicion) = {$anioConsulta}
             AND c.estado = 1
-            GROUP BY ce.codigo_carrera, c.nombre
+            AND c.tipo_programa = 'P'
+            GROUP BY rcb.codigo_carrera, c.nombre
             HAVING cobertura_basica > 0
             ORDER BY cobertura_basica DESC
             LIMIT 10
         ")->fetchAll();
+        
+        // Log para depuración
+        error_log("DashboardController: Coberturas básicas encontradas: " . count($coberturaCarreras));
+        foreach ($coberturaCarreras as $carrera) {
+            error_log("DashboardController: {$carrera['carrera_nombre']} - {$carrera['cobertura_basica']}%");
+        }
 
         // Renderizar la vista
         $body = $this->twig->render('dashboard/index.twig', [

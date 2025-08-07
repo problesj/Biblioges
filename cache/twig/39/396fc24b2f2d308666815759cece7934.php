@@ -421,7 +421,7 @@ class __TwigTemplate_544561dcee3d20c64ebb0d18ac7bfb4a extends Template
                         <a href=\"";
         // line 270
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
-        yield "bibliografias-declaradas\" class=\"btn btn-secondary\">
+        yield "bibliografias-declaradas/clear-state\" class=\"btn btn-secondary\">
                             <i class=\"fas fa-times\"></i> Limpiar Filtros
                         </a>
                     </div>
@@ -1161,7 +1161,7 @@ function changePerPage(perPage) {
                         <button type=\"submit\" class=\"btn btn-primary\">
                             <i class=\"fas fa-filter\"></i> Aplicar Filtros
                         </button>
-                        <a href=\"{{ app_url }}bibliografias-declaradas\" class=\"btn btn-secondary\">
+                        <a href=\"{{ app_url }}bibliografias-declaradas/clear-state\" class=\"btn btn-secondary\">
                             <i class=\"fas fa-times\"></i> Limpiar Filtros
                         </a>
                     </div>

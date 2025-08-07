@@ -70,6 +70,7 @@
                     </div>
 
                     {# Mostrar bibliografías disponibles #}
+                    {% if bibliografias_disponibles|length > 0 %}
                     <div class="mt-4">
                         <h4>Bibliografías Disponibles</h4>
                         <div class="table-responsive">
@@ -84,6 +85,7 @@
                                         <th>Editorial</th>
                                         <th style="text-align:center;">URLs</th>
                                         <th style="text-align:center;">Disponibilidad</th>
+                                        <th style="text-align:center;">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -113,12 +115,31 @@
                                                     <span class="badge bg-info">Ambos</span>
                                                 {% endif %}
                                             </td>
+                                            <td align="center">
+                                                <div class="btn-group" role="group">
+                                                    <a href="{{ app_url }}bibliografias-disponibles/{{ bd.id }}/edit" class="btn btn-sm btn-primary" title="Editar">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-sm btn-danger" title="Eliminar" 
+                                                            onclick="confirmarEliminacion({{ bd.id }}, '{{ bd.titulo|escape('js') }}')">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
                         </div>
                     </div>
+                    {% else %}
+                    <div class="mt-4">
+                        <h4>Bibliografías Disponibles</h4>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> No hay bibliografías disponibles asociadas a esta bibliografía declarada.
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -168,4 +189,49 @@
     </div>
     {% endif %}
 {% endfor %}
+
+<script>
+function confirmarEliminacion(id, titulo) {
+    Swal.fire({
+        title: '¿Está seguro?',
+        text: '¿Está seguro de que desea eliminar la bibliografía disponible "' + titulo + '"?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Crear un formulario temporal para enviar la petición DELETE
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ app_url }}bibliografias-disponibles/' + id;
+            
+            // Agregar campo para simular método DELETE
+            const methodInput = document.createElement('input');
+            methodInput.type = 'hidden';
+            methodInput.name = '_method';
+            methodInput.value = 'DELETE';
+            form.appendChild(methodInput);
+            
+            // Agregar token CSRF si es necesario
+            const csrfToken = '{{ csrf_token() }}';
+            if (csrfToken && csrfToken !== '') {
+                const [csrfName, csrfValue] = csrfToken.split(':');
+                if (csrfName && csrfValue) {
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = csrfName;
+                    csrfInput.value = csrfValue;
+                    form.appendChild(csrfInput);
+                }
+            }
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
+</script>
 {% endblock %} 

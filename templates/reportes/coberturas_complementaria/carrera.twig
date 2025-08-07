@@ -49,7 +49,7 @@
                                     <div class="col-md-4">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="formacion_basica" name="tipos_formacion[]" value="FORMACION_BASICA" 
-                                                   {% if not hay_filtros_aplicados or 'FORMACION_BASICA' in tipos_formacion_seleccionados %}checked{% endif %}>
+                                                   {% if 'FORMACION_BASICA' in tipos_formacion_seleccionados %}checked{% endif %}>
                                             <label class="form-check-label" for="formacion_basica">
                                                 Formación Básica 
                                                 <small class="text-muted">({{ 'FORMACION_BASICA' in tipos_formacion_disponibles ? 'Disponible' : 'No disponible' }})</small>
@@ -57,7 +57,7 @@
                                         </div>
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="formacion_general" name="tipos_formacion[]" value="FORMACION_GENERAL"
-                                                   {% if not hay_filtros_aplicados or 'FORMACION_GENERAL' in tipos_formacion_seleccionados %}checked{% endif %}>
+                                                   {% if 'FORMACION_GENERAL' in tipos_formacion_seleccionados %}checked{% endif %}>
                                             <label class="form-check-label" for="formacion_general">
                                                 Formación General
                                                 <small class="text-muted">({{ 'FORMACION_GENERAL' in tipos_formacion_disponibles ? 'Disponible' : 'No disponible' }})</small>
@@ -65,7 +65,7 @@
                                         </div>
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="formacion_idiomas" name="tipos_formacion[]" value="FORMACION_IDIOMAS"
-                                                   {% if not hay_filtros_aplicados or 'FORMACION_IDIOMAS' in tipos_formacion_seleccionados %}checked{% endif %}>
+                                                   {% if 'FORMACION_IDIOMAS' in tipos_formacion_seleccionados %}checked{% endif %}>
                                             <label class="form-check-label" for="formacion_idiomas">
                                                 Formación Idiomas
                                                 <small class="text-muted">({{ 'FORMACION_IDIOMAS' in tipos_formacion_disponibles ? 'Disponible' : 'No disponible' }})</small>
@@ -75,7 +75,7 @@
                                     <div class="col-md-4">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="formacion_profesional" name="tipos_formacion[]" value="FORMACION_PROFESIONAL"
-                                                   {% if not hay_filtros_aplicados or 'FORMACION_PROFESIONAL' in tipos_formacion_seleccionados %}checked{% endif %}>
+                                                   {% if 'FORMACION_PROFESIONAL' in tipos_formacion_seleccionados %}checked{% endif %}>
                                             <label class="form-check-label" for="formacion_profesional">
                                                 Formación Profesional
                                                 <small class="text-muted">({{ 'FORMACION_PROFESIONAL' in tipos_formacion_disponibles ? 'Disponible' : 'No disponible' }})</small>
@@ -83,7 +83,7 @@
                                         </div>
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="formacion_valores" name="tipos_formacion[]" value="FORMACION_VALORES"
-                                                   {% if not hay_filtros_aplicados or 'FORMACION_VALORES' in tipos_formacion_seleccionados %}checked{% endif %}>
+                                                   {% if 'FORMACION_VALORES' in tipos_formacion_seleccionados %}checked{% endif %}>
                                             <label class="form-check-label" for="formacion_valores">
                                                 Formación Valores
                                                 <small class="text-muted">({{ 'FORMACION_VALORES' in tipos_formacion_disponibles ? 'Disponible' : 'No disponible' }})</small>
@@ -91,7 +91,7 @@
                                         </div>
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="formacion_especialidad" name="tipos_formacion[]" value="FORMACION_ESPECIALIDAD"
-                                                   {% if not hay_filtros_aplicados or 'FORMACION_ESPECIALIDAD' in tipos_formacion_seleccionados %}checked{% endif %}>
+                                                   {% if 'FORMACION_ESPECIALIDAD' in tipos_formacion_seleccionados %}checked{% endif %}>
                                             <label class="form-check-label" for="formacion_especialidad">
                                                 Formación Especialidad
                                                 <small class="text-muted">({{ 'FORMACION_ESPECIALIDAD' in tipos_formacion_disponibles ? 'Disponible' : 'No disponible' }})</small>
@@ -101,7 +101,7 @@
                                     <div class="col-md-4">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="formacion_especial" name="tipos_formacion[]" value="FORMACION_ESPECIAL"
-                                                   {% if not hay_filtros_aplicados or 'FORMACION_ESPECIAL' in tipos_formacion_seleccionados %}checked{% endif %}>
+                                                   {% if 'FORMACION_ESPECIAL' in tipos_formacion_seleccionados %}checked{% endif %}>
                                             <label class="form-check-label" for="formacion_especial">
                                                 Formación Especial
                                                 <small class="text-muted">({{ 'FORMACION_ESPECIAL' in tipos_formacion_disponibles ? 'Disponible' : 'No disponible' }})</small>
@@ -338,54 +338,83 @@ function initializeExportButton() {
         
         // Agregar el evento de clic al botón
         $('#btnExportarExcel').click(function() {
-            // console.log('Botón exportar Excel clickeado');
-            
             var url = '/biblioges/reportes/coberturas-complementaria-excel/{{ carrera.sede_id }}/{{ carrera.carrera_id }}';
             var btn = $(this);
-            // console.log('URL a llamar:', url);
             btn.prop('disabled', true).text('Generando...');
             
             // Agregar parámetros de filtro si existen
             var queryString = window.location.search;
             if (queryString) {
                 url += queryString;
-                // console.log('URL con parámetros:', url);
             }
             
-            // console.log('Iniciando llamada AJAX...');
-            $.ajax({
-                url: url,
-                method: 'GET',
-                dataType: 'json',
-                success: function(data) {
-                    // console.log('Respuesta exitosa recibida:', data);
-                    if (data.url) {
-                        $('#enlaceDescargaExcel').removeClass('d-none').attr('href', data.url).text('Descargar Excel generado');
-                        window.open(data.url, '_blank');
-                    } else {
-                        console.error('No se pudo generar el archivo.');
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error en la llamada AJAX:', error);
-                    console.error('Status:', status);
-                    console.error('Response:', xhr.responseText);
-                    console.error('Status Code:', xhr.status);
-                    
-                    if (xhr.status === 302) {
-                        console.error('Error: Redirección detectada. Posible problema de sesión.');
-                    } else if (xhr.status === 404) {
-                        console.error('Error: Ruta no encontrada.');
-                    } else if (xhr.status === 500) {
-                        console.error('Error del servidor: ' + error);
-                    } else {
-                        console.error('Error al generar el archivo: ' + error + ' (Status: ' + xhr.status + ')');
-                    }
-                },
-                complete: function() {
-                    btn.prop('disabled', false).html('<i class="fas fa-file-excel"></i> Exportar Excel');
+            // Mostrar indicador de carga
+            Swal.fire({
+                title: 'Generando Excel...',
+                text: 'Por favor espere mientras se procesa el archivo',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
                 }
             });
+            
+            // Realizar la petición al servidor
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => {
+                            throw new Error(data.error || 'Error en la generación del archivo');
+                        });
+                    }
+                    
+                    // Cerrar el indicador de carga
+                    Swal.close();
+                    
+                    // Obtener el nombre del archivo del header Content-Disposition
+                    const contentDisposition = response.headers.get('Content-Disposition');
+                    let filename = 'Reporte_Bibliografia_Complementaria.xlsx';
+                    if (contentDisposition) {
+                        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                        if (filenameMatch) {
+                            filename = filenameMatch[1];
+                        }
+                    }
+                    
+                    // Crear blob y descargar
+                    return response.blob().then(blob => {
+                        const url = window.URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = filename;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        window.URL.revokeObjectURL(url);
+                        
+                        // Mostrar mensaje de éxito
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Excel generado!',
+                            text: 'El archivo se ha descargado correctamente',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.close();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'No se pudo generar el archivo Excel: ' + error.message
+                    });
+                })
+                .finally(function() {
+                    btn.prop('disabled', false).html('<i class="fas fa-file-excel"></i> Exportar Excel');
+                });
         });
     } else {
         console.error('Botón exportar Excel NO encontrado con jQuery');

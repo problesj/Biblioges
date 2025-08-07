@@ -8,6 +8,7 @@ use src\Models\Departamento;
 use App\Core\BaseController;
 use App\Core\Response;
 use App\Core\Session;
+use App\Core\ListStateManager;
 use App\Core\Config;
 use PDO;
 use PDOException;
@@ -66,39 +67,33 @@ class AsignaturaController extends BaseController
                     ->withStatus(302);
             }
 
-            // Parámetros de paginación y ordenamiento
-            $page = max(1, intval($_GET['page'] ?? 1));
-            $perPage = intval($_GET['per_page'] ?? 10);
-
-            // Validar opciones de registros por página
+            // Inicializar el gestor de estado del listado
+            $stateManager = new ListStateManager($this->session, 'asignaturas');
+            
+            // Obtener parámetros de la URL
+            $urlParams = $_GET;
+            
+            // Obtener estado (combinando sesión y URL)
+            $state = $stateManager->getState($urlParams);
+            
+            // Guardar estado en sesión
+            $stateManager->saveState($state);
+            
+            // Extraer parámetros del estado
+            $page = $state['page'];
+            $perPage = $state['per_page'];
+            $sortColumn = $state['sort'];
+            $sortDirection = $state['direction'];
             $allowedPerPage = [5, 10, 15, 20];
-            if (!in_array($perPage, $allowedPerPage)) {
-                $perPage = 10;
-            }
-
+            $allowedColumns = ['nombre', 'tipo', 'estado', 'periodicidad', 'unidad'];
+            
             $offset = ($page - 1) * $perPage;
 
-            // Parámetros de ordenamiento
-            $sortColumn = $_GET['sort'] ?? 'nombre';
-            $sortDirection = strtoupper($_GET['direction'] ?? 'ASC');
-
-            // Validar columnas permitidas para ordenamiento
-            $allowedColumns = ['nombre', 'tipo', 'estado', 'periodicidad', 'unidad'];
-            if (!in_array($sortColumn, $allowedColumns)) {
-                $sortColumn = 'nombre';
-            }
-
-            // Validar dirección de ordenamiento
-            if (!in_array($sortDirection, ['ASC', 'DESC'])) {
-                $sortDirection = 'ASC';
-            }
-
-            // Obtener filtros de los query parameters
-            $queryParams = $request->getQueryParams();
-            $nombre = $queryParams['nombre'] ?? null;
-            $tipo = $queryParams['tipo'] ?? null;
-            $unidad = $queryParams['unidad'] ?? null;
-            $estado = $queryParams['estado'] ?? null;
+            // Obtener filtros del estado
+            $nombre = $state['nombre'] ?? null;
+            $tipo = $state['tipo'] ?? null;
+            $unidad = $state['unidad'] ?? null;
+            $estado = $state['estado'] ?? null;
 
             // Construir la consulta base para contar total de registros
             $countQuery = "SELECT COUNT(DISTINCT a.id) as total 
@@ -197,6 +192,7 @@ class AsignaturaController extends BaseController
                 'app_url' => Config::get('app_url'),
                 'session' => $_SESSION,
                 'current_page' => 'asignaturas',
+                'stateManager' => $stateManager,
                 'filtros' => [
                     'nombre' => $nombre,
                     'tipo' => $tipo,
@@ -231,6 +227,34 @@ class AsignaturaController extends BaseController
             $this->session->set('error', 'Error al cargar las asignaturas: ' . $e->getMessage());
             return $response
                 ->withHeader('Location', Config::get('app_url') . 'dashboard')
+                ->withStatus(302);
+        }
+    }
+
+    public function clearState(Request $request, ResponseInterface $response, array $args = [])
+    {
+        try {
+            // Verificar autenticación
+            if (!$this->session->get('user_id')) {
+                $this->session->set('error', 'Por favor inicie sesión para acceder a las asignaturas');
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'login')
+                    ->withStatus(302);
+            }
+
+            // Limpiar el estado del listado
+            $stateManager = new ListStateManager($this->session, 'asignaturas');
+            $stateManager->clearState();
+
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'asignaturas')
+                ->withStatus(302);
+
+        } catch (\Exception $e) {
+            error_log("Error en AsignaturaController@clearState: " . $e->getMessage());
+            $this->session->set('error', 'Error al limpiar los filtros: ' . $e->getMessage());
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'asignaturas')
                 ->withStatus(302);
         }
     }

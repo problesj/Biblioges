@@ -3,6 +3,7 @@
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use App\Controllers\FrontendController;
+use App\Controllers\ReporteController;
 
 /** @var App $app */
 
@@ -12,4 +13,6 @@ $app->get('/carrera/{sede_id}/{carrera_id}', [FrontendController::class, 'showCa
 $app->get('/asignatura/{sede_id}/{carrera_id}/{asignatura_id}', [FrontendController::class, 'showAsignatura']);
 
 // API endpoints
-$app->get('/api/bibliografias-disponibles/{bibliografia_id}', [FrontendController::class, 'apiGetBibliografiasDisponibles']); 
+$app->get('/api/bibliografias-disponibles/{bibliografia_id}', [FrontendController::class, 'apiGetBibliografiasDisponibles']);
+
+ 

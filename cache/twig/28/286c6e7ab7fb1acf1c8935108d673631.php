@@ -463,10 +463,10 @@ class __TwigTemplate_b38bcd4511ce9305f04d4ed195f88289 extends Template
                 <div class=\"col-12\">
                     <div class=\"d-flex gap-2\">
                         <button type=\"submit\" class=\"btn btn-primary\">
-                            <i class=\"fas fa-search\"></i> Buscar
+                            <i class=\"fas fa-filter\"></i> Aplicar Filtros
                         </button>
                         <button type=\"button\" class=\"btn btn-secondary\" onclick=\"limpiarFiltros()\">
-                            <i class=\"fas fa-times\"></i> Limpiar
+                            <i class=\"fas fa-times\"></i> Limpiar Filtros
                         </button>
                     </div>
                 </div>
@@ -915,11 +915,10 @@ function changePerPage(value) {
 }
 
 function limpiarFiltros() {
-    document.getElementById('busqueda').value = '';
-    document.getElementById('disponibilidad').value = '';
-    document.getElementById('estado').value = '';
-    document.getElementById('anio_edicion').value = '';
-    document.getElementById('filtroForm').submit();
+    window.location.href = '";
+        // line 568
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
+        yield "bibliografias-disponibles/clear-state';
 }
 
 function confirmarEliminacion(id) {
@@ -938,7 +937,7 @@ function confirmarEliminacion(id) {
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = '";
-        // line 590
+        // line 586
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "bibliografias-disponibles/' + id + '/delete';
             
@@ -983,7 +982,7 @@ function confirmarEliminacion(id) {
      */
     public function getDebugInfo(): array
     {
-        return array (  942 => 590,  894 => 544,  887 => 540,  883 => 539,  879 => 538,  876 => 537,  874 => 536,  868 => 532,  857 => 531,  853 => 529,  843 => 521,  838 => 518,  827 => 510,  821 => 509,  812 => 503,  806 => 502,  802 => 500,  794 => 497,  791 => 496,  785 => 492,  782 => 491,  780 => 490,  777 => 489,  766 => 486,  759 => 485,  755 => 484,  752 => 483,  749 => 482,  743 => 478,  741 => 477,  736 => 475,  733 => 474,  731 => 473,  728 => 472,  725 => 471,  723 => 470,  714 => 464,  708 => 463,  699 => 457,  693 => 456,  687 => 452,  685 => 451,  678 => 446,  665 => 439,  656 => 435,  648 => 432,  643 => 429,  635 => 425,  633 => 424,  629 => 422,  621 => 418,  619 => 417,  615 => 415,  611 => 413,  607 => 411,  605 => 410,  602 => 409,  600 => 408,  595 => 406,  591 => 405,  587 => 404,  583 => 403,  580 => 402,  576 => 401,  562 => 390,  557 => 388,  550 => 384,  545 => 382,  538 => 378,  533 => 376,  518 => 366,  513 => 363,  504 => 360,  495 => 359,  491 => 358,  481 => 350,  479 => 349,  460 => 333,  456 => 332,  445 => 326,  439 => 325,  427 => 318,  421 => 317,  415 => 316,  406 => 310,  393 => 299,  386 => 295,  383 => 294,  381 => 293,  378 => 292,  371 => 288,  368 => 287,  366 => 286,  358 => 281,  353 => 278,  346 => 277,  72 => 6,  65 => 5,  54 => 3,  43 => 1,);
+        return array (  941 => 586,  920 => 568,  894 => 544,  887 => 540,  883 => 539,  879 => 538,  876 => 537,  874 => 536,  868 => 532,  857 => 531,  853 => 529,  843 => 521,  838 => 518,  827 => 510,  821 => 509,  812 => 503,  806 => 502,  802 => 500,  794 => 497,  791 => 496,  785 => 492,  782 => 491,  780 => 490,  777 => 489,  766 => 486,  759 => 485,  755 => 484,  752 => 483,  749 => 482,  743 => 478,  741 => 477,  736 => 475,  733 => 474,  731 => 473,  728 => 472,  725 => 471,  723 => 470,  714 => 464,  708 => 463,  699 => 457,  693 => 456,  687 => 452,  685 => 451,  678 => 446,  665 => 439,  656 => 435,  648 => 432,  643 => 429,  635 => 425,  633 => 424,  629 => 422,  621 => 418,  619 => 417,  615 => 415,  611 => 413,  607 => 411,  605 => 410,  602 => 409,  600 => 408,  595 => 406,  591 => 405,  587 => 404,  583 => 403,  580 => 402,  576 => 401,  562 => 390,  557 => 388,  550 => 384,  545 => 382,  538 => 378,  533 => 376,  518 => 366,  513 => 363,  504 => 360,  495 => 359,  491 => 358,  481 => 350,  479 => 349,  460 => 333,  456 => 332,  445 => 326,  439 => 325,  427 => 318,  421 => 317,  415 => 316,  406 => 310,  393 => 299,  386 => 295,  383 => 294,  381 => 293,  378 => 292,  371 => 288,  368 => 287,  366 => 286,  358 => 281,  353 => 278,  346 => 277,  72 => 6,  65 => 5,  54 => 3,  43 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -1325,10 +1324,10 @@ function confirmarEliminacion(id) {
                 <div class=\"col-12\">
                     <div class=\"d-flex gap-2\">
                         <button type=\"submit\" class=\"btn btn-primary\">
-                            <i class=\"fas fa-search\"></i> Buscar
+                            <i class=\"fas fa-filter\"></i> Aplicar Filtros
                         </button>
                         <button type=\"button\" class=\"btn btn-secondary\" onclick=\"limpiarFiltros()\">
-                            <i class=\"fas fa-times\"></i> Limpiar
+                            <i class=\"fas fa-times\"></i> Limpiar Filtros
                         </button>
                     </div>
                 </div>
@@ -1555,11 +1554,7 @@ function changePerPage(value) {
 }
 
 function limpiarFiltros() {
-    document.getElementById('busqueda').value = '';
-    document.getElementById('disponibilidad').value = '';
-    document.getElementById('estado').value = '';
-    document.getElementById('anio_edicion').value = '';
-    document.getElementById('filtroForm').submit();
+    window.location.href = '{{ app_url }}bibliografias-disponibles/clear-state';
 }
 
 function confirmarEliminacion(id) {

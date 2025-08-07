@@ -383,7 +383,7 @@ class __TwigTemplate_ed3e3da13d7985b417858c2bf3734227 extends Template
                         <a href=\"";
         // line 256
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
-        yield "carreras\" class=\"btn btn-secondary\">
+        yield "carreras/clear-state\" class=\"btn btn-secondary\">
                             <i class=\"fas fa-times\"></i> Limpiar Filtros
                         </a>
                     </div>
@@ -1216,7 +1216,7 @@ $context["carrera"], "tipo_programa", [], "any", false, false, false, 329) == "O
                         <button type=\"submit\" class=\"btn btn-primary\">
                             <i class=\"fas fa-filter\"></i> Aplicar Filtros
                         </button>
-                        <a href=\"{{ app_url }}carreras\" class=\"btn btn-secondary\">
+                        <a href=\"{{ app_url }}carreras/clear-state\" class=\"btn btn-secondary\">
                             <i class=\"fas fa-times\"></i> Limpiar Filtros
                         </a>
                     </div>

@@ -223,13 +223,7 @@ $(document).ready(function() {
     
     // Limpiar filtros
     $('#btnLimpiarFiltros').click(function() {
-        $('#busqueda').val('');
-        $('#tipo_busqueda').val('todos');
-        $('#filtroEstado').val('');
-        $('#filtroTipo').val('');
-        $('#filtroTipoBibliografia').val('');
-        $('#filtroBibliografiasDisponibles').val('');
-        table.ajax.reload();
+        window.location.href = '{{ app_url }}reportes/listado-bibliografias/clear-state';
     });
     
     // Exportar Excel

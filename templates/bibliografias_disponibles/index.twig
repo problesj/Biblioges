@@ -335,10 +335,10 @@
                 <div class="col-12">
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-search"></i> Buscar
+                            <i class="fas fa-filter"></i> Aplicar Filtros
                         </button>
                         <button type="button" class="btn btn-secondary" onclick="limpiarFiltros()">
-                            <i class="fas fa-times"></i> Limpiar
+                            <i class="fas fa-times"></i> Limpiar Filtros
                         </button>
                     </div>
                 </div>
@@ -565,11 +565,7 @@ function changePerPage(value) {
 }
 
 function limpiarFiltros() {
-    document.getElementById('busqueda').value = '';
-    document.getElementById('disponibilidad').value = '';
-    document.getElementById('estado').value = '';
-    document.getElementById('anio_edicion').value = '';
-    document.getElementById('filtroForm').submit();
+    window.location.href = '{{ app_url }}bibliografias-disponibles/clear-state';
 }
 
 function confirmarEliminacion(id) {

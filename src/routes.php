@@ -98,6 +98,7 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->post('/carreras/{id}/update', [CarreraController::class, 'update']);
     $group->delete('/carreras/{id}', [CarreraController::class, 'delete']);
     $group->post('/carreras/{id}/delete', [CarreraController::class, 'delete']);
+    $group->get('/carreras/clear-state', [CarreraController::class, 'clearState']);
     $group->delete('/carreras/{carrera_id}/codigos/{codigo_id}', [CarreraController::class, 'deleteCodigo']);
     $group->post('/carreras/{carrera_id}/codigos/{codigo_id}/delete', [CarreraController::class, 'deleteCodigo']);
     // Rutas con parámetros al final
@@ -105,6 +106,7 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
 
     // Mallas - Gestión de asignaturas por carrera
     $group->get('/mallas', [MallaController::class, 'index']);
+    $group->get('/mallas/clear-state', [MallaController::class, 'clearState']);
     $group->get('/mallas/{id}', [MallaController::class, 'show']);
     $group->get('/mallas/{id}/edit', [MallaController::class, 'edit']);
     $group->post('/mallas/{id}/update', [MallaController::class, 'update']);
@@ -120,6 +122,7 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->get('/asignaturas/{id}/edit', [AsignaturaController::class, 'edit'])->setName('asignaturas.edit');
     $group->post('/asignaturas/{id}/update', [AsignaturaController::class, 'update'])->setName('asignaturas.update');
     $group->post('/asignaturas/{id}/delete', [AsignaturaController::class, 'destroy'])->setName('asignaturas.destroy');
+    $group->get('/asignaturas/clear-state', [AsignaturaController::class, 'clearState'])->setName('asignaturas.clear-state');
     
     // Asignaturas - Rutas genéricas después
     $group->get('/asignaturas', [AsignaturaController::class, 'index'])->setName('asignaturas.index');
@@ -134,6 +137,7 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     // Rutas para Bibliografías Disponibles
     $group->group('/bibliografias-disponibles', function (RouteCollectorProxy $group) {
         $group->get('', [BibliografiaDisponibleController::class, 'index']);
+        $group->get('/clear-state', [BibliografiaDisponibleController::class, 'clearState']);
         $group->get('/create', [BibliografiaDisponibleController::class, 'create']);
         $group->post('', [BibliografiaDisponibleController::class, 'store']);
         $group->get('/{id}', [BibliografiaDisponibleController::class, 'show']);
@@ -147,6 +151,7 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
 
     // Bibliografías Declaradas
     $group->get('/bibliografias-declaradas', [BibliografiaDeclaradaController::class, 'index'])->setName('bibliografias-declaradas.index');
+    $group->get('/bibliografias-declaradas/clear-state', [BibliografiaDeclaradaController::class, 'clearState'])->setName('bibliografias-declaradas.clear-state');
     $group->get('/bibliografias-declaradas/create', [BibliografiaDeclaradaController::class, 'create'])->setName('bibliografias-declaradas.create');
     $group->post('/bibliografias-declaradas', [BibliografiaDeclaradaController::class, 'store'])->setName('bibliografias-declaradas.store');
     $group->post('/bibliografias-declaradas/forzar', [BibliografiaDeclaradaController::class, 'storeForzar'])->setName('bibliografias-declaradas.storeForzar');
@@ -216,6 +221,7 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     // Rutas para Reportes
     $group->get('/reportes/bibliografias', [ReporteController::class, 'bibliografias']);
     $group->get('/reportes/listado-bibliografias', [ReporteController::class, 'bibliografiasDeclaradas']);
+    $group->get('/reportes/listado-bibliografias/clear-state', [ReporteController::class, 'clearStateBibliografias']);
     $group->get('/reportes/listado-bibliografias/data', [ReporteController::class, 'getBibliografiasDeclaradas']);
     $group->get('/reportes/listado-bibliografias/exportar', [ReporteController::class, 'exportarBibliografiasDeclaradas']);
     $group->get('/reportes/ejemplares', [ReporteController::class, 'ejemplares']);
@@ -231,12 +237,21 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->get('/reportes/cobertura/asignatura/{codigo}', [ReporteController::class, 'coberturaAsignatura']);
     $group->get('/reportes/cobertura/carrera/{id}', [ReporteController::class, 'coberturaCarrera']);
     $group->get('/reportes/coberturas', [ReporteController::class, 'coberturaBasica']);
+    $group->get('/reportes/coberturas/clear-state', [ReporteController::class, 'clearState']);
     $group->get('/reportes/coberturas-excel', [ReporteController::class, 'exportarCoberturasExcel']);
     $group->get('/reportes/coberturas/{sede_id}/{carrera_id}', [ReporteController::class, 'reporteBibliografiaBasica']);
     $group->get('/reportes/coberturas/{sede_id}/{carrera_id}/{asignatura_codigo}', [ReporteController::class, 'reporteTitulosBibliografiaBasica']);
     $group->get('/reportes/coberturas-expandido/{sede_id}/{carrera_id}', [ReporteController::class, 'reporteBibliografiaBasicaExpandido']);
-    $group->get('/reportes/coberturas-excel/{sede_id}/{carrera_id}', [ReporteController::class, 'exportarBibliografiaBasicaExcel']);
-    $group->get('/reportes/coberturas-expandido-excel/{sede_id}/{carrera_id}', [ReporteController::class, 'exportarBibliografiaBasicaExpandidoExcel']);
+    $group->get('/reportes/coberturas-excel/{sede_id}/{carrera_id}', function ($request, $response, $args) {
+        global $twig;
+        $controller = new \App\Controllers\ReporteController();
+        return $controller->exportarBibliografiaBasicaExcel($request, $response, $args);
+    });
+    $group->get('/reportes/coberturas-expandido-excel/{sede_id}/{carrera_id}', function ($request, $response, $args) {
+        global $twig;
+        $controller = new \App\Controllers\ReporteController();
+        return $controller->exportarBibliografiaBasicaExpandidoExcel($request, $response, $args);
+    });
     $group->post('/reportes/guardar-cobertura-basica/{sede_id}/{carrera_id}', [ReporteController::class, 'guardarCoberturaBasica']);
     $group->post('/reportes/guardar-filtros-formacion/{sede_id}/{carrera_id}', [ReporteController::class, 'guardarFiltrosFormacion']);
     $group->get('/reportes/cargar-filtros-formacion/{sede_id}/{carrera_id}', [ReporteController::class, 'cargarFiltrosFormacion']);
@@ -246,8 +261,16 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->get('/reportes/coberturas-complementaria/{sede_id}/{carrera_id}', [ReporteController::class, 'reporteBibliografiaComplementaria']);
     $group->get('/reportes/coberturas-complementaria/{sede_id}/{carrera_id}/{asignatura_codigo}', [ReporteController::class, 'reporteTitulosBibliografiaComplementaria']);
     $group->get('/reportes/coberturas-complementaria-expandido/{sede_id}/{carrera_id}', [ReporteController::class, 'reporteBibliografiaComplementariaExpandido']);
-    $group->get('/reportes/coberturas-complementaria-excel/{sede_id}/{carrera_id}', [ReporteController::class, 'exportarBibliografiaComplementariaExcel']);
-    $group->get('/reportes/coberturas-complementaria-expandido-excel/{sede_id}/{carrera_id}', [ReporteController::class, 'exportarBibliografiaComplementariaExpandidoExcel']);
+    $group->get('/reportes/coberturas-complementaria-excel/{sede_id}/{carrera_id}', function ($request, $response, $args) {
+        global $twig;
+        $controller = new \App\Controllers\ReporteController();
+        return $controller->exportarBibliografiaComplementariaExcel($request, $response, $args);
+    });
+    $group->get('/reportes/coberturas-complementaria-expandido-excel/{sede_id}/{carrera_id}', function ($request, $response, $args) {
+        global $twig;
+        $controller = new \App\Controllers\ReporteController();
+        return $controller->exportarBibliografiaComplementariaExpandidoExcel($request, $response, $args);
+    });
     $group->post('/reportes/guardar-cobertura-complementaria/{sede_id}/{carrera_id}', [ReporteController::class, 'guardarCoberturaComplementaria']);
 
     // Rutas para Reporte Fusionado de Coberturas

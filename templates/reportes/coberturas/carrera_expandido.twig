@@ -46,7 +46,7 @@
                                     <div class="col-md-4">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="formacion_basica" name="tipos_formacion[]" value="FORMACION_BASICA" 
-                                                   {% if not hay_filtros_aplicados or 'FORMACION_BASICA' in tipos_formacion_seleccionados %}checked{% endif %}>
+                                                   {% if (not hay_filtros_aplicados and not todos_filtros_guardados_en_cero) or 'FORMACION_BASICA' in tipos_formacion_seleccionados %}checked{% endif %}>
                                             <label class="form-check-label" for="formacion_basica">
                                                 Formación Básica 
                                                 <small class="text-muted">({{ 'FORMACION_BASICA' in tipos_formacion_disponibles ? 'Disponible' : 'No disponible' }})</small>
@@ -54,7 +54,7 @@
                                         </div>
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="formacion_general" name="tipos_formacion[]" value="FORMACION_GENERAL"
-                                                   {% if not hay_filtros_aplicados or 'FORMACION_GENERAL' in tipos_formacion_seleccionados %}checked{% endif %}>
+                                                   {% if (not hay_filtros_aplicados and not todos_filtros_guardados_en_cero) or 'FORMACION_GENERAL' in tipos_formacion_seleccionados %}checked{% endif %}>
                                             <label class="form-check-label" for="formacion_general">
                                                 Formación General
                                                 <small class="text-muted">({{ 'FORMACION_GENERAL' in tipos_formacion_disponibles ? 'Disponible' : 'No disponible' }})</small>
@@ -62,7 +62,7 @@
                                         </div>
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="formacion_idiomas" name="tipos_formacion[]" value="FORMACION_IDIOMAS"
-                                                   {% if not hay_filtros_aplicados or 'FORMACION_IDIOMAS' in tipos_formacion_seleccionados %}checked{% endif %}>
+                                                   {% if (not hay_filtros_aplicados and not todos_filtros_guardados_en_cero) or 'FORMACION_IDIOMAS' in tipos_formacion_seleccionados %}checked{% endif %}>
                                             <label class="form-check-label" for="formacion_idiomas">
                                                 Formación Idiomas
                                                 <small class="text-muted">({{ 'FORMACION_IDIOMAS' in tipos_formacion_disponibles ? 'Disponible' : 'No disponible' }})</small>
@@ -72,7 +72,7 @@
                                     <div class="col-md-4">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="formacion_profesional" name="tipos_formacion[]" value="FORMACION_PROFESIONAL"
-                                                   {% if not hay_filtros_aplicados or 'FORMACION_PROFESIONAL' in tipos_formacion_seleccionados %}checked{% endif %}>
+                                                   {% if (not hay_filtros_aplicados and not todos_filtros_guardados_en_cero) or 'FORMACION_PROFESIONAL' in tipos_formacion_seleccionados %}checked{% endif %}>
                                             <label class="form-check-label" for="formacion_profesional">
                                                 Formación Profesional
                                                 <small class="text-muted">({{ 'FORMACION_PROFESIONAL' in tipos_formacion_disponibles ? 'Disponible' : 'No disponible' }})</small>
@@ -80,7 +80,7 @@
                                         </div>
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="formacion_valores" name="tipos_formacion[]" value="FORMACION_VALORES"
-                                                   {% if not hay_filtros_aplicados or 'FORMACION_VALORES' in tipos_formacion_seleccionados %}checked{% endif %}>
+                                                   {% if (not hay_filtros_aplicados and not todos_filtros_guardados_en_cero) or 'FORMACION_VALORES' in tipos_formacion_seleccionados %}checked{% endif %}>
                                             <label class="form-check-label" for="formacion_valores">
                                                 Formación Valores
                                                 <small class="text-muted">({{ 'FORMACION_VALORES' in tipos_formacion_disponibles ? 'Disponible' : 'No disponible' }})</small>
@@ -88,7 +88,7 @@
                                         </div>
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="formacion_especialidad" name="tipos_formacion[]" value="FORMACION_ESPECIALIDAD"
-                                                   {% if not hay_filtros_aplicados or 'FORMACION_ESPECIALIDAD' in tipos_formacion_seleccionados %}checked{% endif %}>
+                                                   {% if (not hay_filtros_aplicados and not todos_filtros_guardados_en_cero) or 'FORMACION_ESPECIALIDAD' in tipos_formacion_seleccionados %}checked{% endif %}>
                                             <label class="form-check-label" for="formacion_especialidad">
                                                 Formación Especialidad
                                                 <small class="text-muted">({{ 'FORMACION_ESPECIALIDAD' in tipos_formacion_disponibles ? 'Disponible' : 'No disponible' }})</small>
@@ -98,7 +98,7 @@
                                     <div class="col-md-4">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="formacion_especial" name="tipos_formacion[]" value="FORMACION_ESPECIAL"
-                                                   {% if not hay_filtros_aplicados or 'FORMACION_ESPECIAL' in tipos_formacion_seleccionados %}checked{% endif %}>
+                                                   {% if (not hay_filtros_aplicados and not todos_filtros_guardados_en_cero) or 'FORMACION_ESPECIAL' in tipos_formacion_seleccionados %}checked{% endif %}>
                                             <label class="form-check-label" for="formacion_especial">
                                                 Formación Especial
                                                 <small class="text-muted">({{ 'FORMACION_ESPECIAL' in tipos_formacion_disponibles ? 'Disponible' : 'No disponible' }})</small>
@@ -484,37 +484,48 @@ function exportarExcel() {
     fetch(exportUrl)
         .then(response => {
             if (!response.ok) {
-                throw new Error('Error en la generación del archivo');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.error) {
-                throw new Error(data.error);
+                return response.json().then(data => {
+                    throw new Error(data.error || 'Error en la generación del archivo');
+                });
             }
             
             // Cerrar el indicador de carga
             Swal.close();
             
-            // Crear enlace de descarga
-            const link = document.createElement('a');
-            link.href = data.url;
-            link.download = '';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            // Obtener el nombre del archivo del header Content-Disposition
+            const contentDisposition = response.headers.get('Content-Disposition');
+            let filename = 'Reporte_Expandido_Bibliografia_Basica.xlsx';
+            if (contentDisposition) {
+                const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                if (filenameMatch) {
+                    filename = filenameMatch[1];
+                }
+            }
             
-            // Mostrar mensaje de éxito
-            Swal.fire({
-                icon: 'success',
-                title: '¡Excel generado!',
-                text: 'El archivo se ha descargado correctamente',
-                timer: 2000,
-                showConfirmButton: false
+            // Crear blob y descargar
+            return response.blob().then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+                
+                // Mostrar mensaje de éxito
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Excel generado!',
+                    text: 'El archivo se ha descargado correctamente',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
             });
         })
         .catch(error => {
             console.error('Error:', error);
+            Swal.close();
             Swal.fire({
                 icon: 'error',
                 title: 'Error',

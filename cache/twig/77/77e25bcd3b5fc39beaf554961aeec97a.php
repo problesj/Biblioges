@@ -554,7 +554,7 @@ class __TwigTemplate_5fa5fe05ac3a42744178ebc0320b3e53 extends Template
                         <a href=\"";
         // line 445
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
-        yield "reportes/coberturas\" class=\"btn btn-secondary\">
+        yield "reportes/coberturas/clear-state\" class=\"btn btn-secondary\">
                             <i class=\"fas fa-times\"></i> Limpiar Filtros
                         </a>
                         <button type=\"button\" id=\"exportarExcel\" class=\"btn btn-success\">
@@ -1539,7 +1539,7 @@ $context["carrera"], "tipo_programa", [], "any", false, false, false, 539) == "O
                         <button type=\"submit\" class=\"btn btn-primary\">
                             <i class=\"fas fa-filter\"></i> Aplicar Filtros
                         </button>
-                        <a href=\"{{ app_url }}reportes/coberturas\" class=\"btn btn-secondary\">
+                        <a href=\"{{ app_url }}reportes/coberturas/clear-state\" class=\"btn btn-secondary\">
                             <i class=\"fas fa-times\"></i> Limpiar Filtros
                         </a>
                         <button type=\"button\" id=\"exportarExcel\" class=\"btn btn-success\">

@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\BaseController;
 use App\Core\Session;
+use App\Core\ListStateManager;
 use PDO;
 use PDOException;
 use App\Core\Config;
@@ -60,21 +61,33 @@ class BibliografiaDisponibleController extends BaseController
     public function index(Request $request, Response $response): Response
     {
         try {
-            // Obtener parámetros de paginación y ordenamiento
-            $page = (int)($request->getQueryParams()['page'] ?? 1);
-            $perPage = (int)($request->getQueryParams()['per_page'] ?? 10);
-            $sortColumn = $request->getQueryParams()['sort'] ?? 'titulo';
-            $sortDirection = $request->getQueryParams()['direction'] ?? 'ASC';
-
-            // Validar parámetros
+            // Inicializar el gestor de estado del listado
+            $stateManager = new ListStateManager($this->session, 'bibliografias_disponibles');
+            
+            // Obtener parámetros de la URL
+            $urlParams = $_GET;
+            
+            // Obtener estado (combinando sesión y URL)
+            $state = $stateManager->getState($urlParams);
+            
+            // Guardar estado en sesión
+            $stateManager->saveState($state);
+            
+            // Extraer parámetros del estado
+            $page = $state['page'];
+            $perPage = $state['per_page'];
+            $sortColumn = $state['sort'];
+            $sortDirection = $state['direction'];
             $allowedPerPage = [5, 10, 15, 20];
-            $perPage = in_array($perPage, $allowedPerPage) ? $perPage : 10;
             $allowedColumns = ['titulo', 'editorial', 'autores'];
-            $sortColumn = in_array($sortColumn, $allowedColumns) ? $sortColumn : 'titulo';
-            $sortDirection = in_array(strtoupper($sortDirection), ['ASC', 'DESC']) ? strtoupper($sortDirection) : 'ASC';
-
-            // Calcular offset
+            
             $offset = ($page - 1) * $perPage;
+
+            // Obtener filtros del estado
+            $busqueda = $state['busqueda'] ?? null;
+            $disponibilidad = $state['disponibilidad'] ?? null;
+            $estado = $state['estado'] ?? null;
+            $anioEdicion = $state['anio_edicion'] ?? null;
 
             // Construir consulta base
             $baseQuery = "
@@ -91,7 +104,6 @@ class BibliografiaDisponibleController extends BaseController
             $whereConditions = [];
 
             // Filtro por búsqueda
-            $busqueda = $request->getQueryParams()['busqueda'] ?? '';
             if (!empty($busqueda)) {
                 $whereConditions[] = "(bd.titulo LIKE ? OR bd.editorial LIKE ? OR a.nombres LIKE ? OR a.apellidos LIKE ?)";
                 $filters[] = "%{$busqueda}%";
@@ -101,21 +113,18 @@ class BibliografiaDisponibleController extends BaseController
             }
 
             // Filtro por disponibilidad
-            $disponibilidad = $request->getQueryParams()['disponibilidad'] ?? '';
             if (!empty($disponibilidad)) {
                 $whereConditions[] = "bd.disponibilidad = ?";
                 $filters[] = $disponibilidad;
             }
 
             // Filtro por estado
-            $estado = $request->getQueryParams()['estado'] ?? '';
-            if ($estado !== '') {
+            if ($estado !== null && $estado !== '') {
                 $whereConditions[] = "bd.estado = ?";
                 $filters[] = $estado;
             }
 
             // Filtro por año de edición
-            $anioEdicion = $request->getQueryParams()['anio_edicion'] ?? '';
             if (!empty($anioEdicion)) {
                 $whereConditions[] = "bd.anio_edicion = ?";
                 $filters[] = $anioEdicion;
@@ -177,6 +186,7 @@ class BibliografiaDisponibleController extends BaseController
             // Preparar datos para la vista
             $viewData = [
                 'bibliografias' => $bibliografias,
+                'stateManager' => $stateManager,
                 'paginacion' => [
                     'current_page' => $currentPage,
                     'per_page' => $perPage,
@@ -219,6 +229,46 @@ class BibliografiaDisponibleController extends BaseController
             error_log('Error al renderizar la plantilla: ' . $e->getMessage());
             error_log('Stack trace: ' . $e->getTraceAsString());
             throw $e;
+        }
+    }
+
+    public function clearState(Request $request, Response $response): Response
+    {
+        try {
+            // Verificar autenticación
+            if (!$this->session->get('user_id')) {
+                if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                    header('Content-Type: application/json');
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Por favor inicie sesión para acceder a las bibliografías',
+                        'redirect' => Config::get('app_url') . 'login'
+                    ]);
+                    return $response;
+                }
+                
+                $_SESSION['error'] = 'Por favor inicie sesión para acceder a las bibliografías';
+                header('Location: ' . Config::get('app_url') . 'login');
+                exit;
+            }
+
+            // Limpiar el estado del listado
+            $stateManager = new ListStateManager($this->session, 'bibliografias_disponibles');
+            $stateManager->clearState();
+
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'bibliografias-disponibles')
+                ->withStatus(302);
+
+        } catch (\Exception $e) {
+            error_log("Error en BibliografiaDisponibleController@clearState: " . $e->getMessage());
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withStatus(500)
+                ->withBody($response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Error al limpiar los filtros: ' . $e->getMessage()
+                ])));
         }
     }
 
