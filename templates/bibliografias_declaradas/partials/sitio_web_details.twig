@@ -27,6 +27,14 @@
         <p><strong>Fecha de Consulta:</strong> {{ bibliografia.fecha_consulta|date('d/m/Y') }}</p>
     {% endif %}
     <p><strong>Formato:</strong> {{ bibliografia.formato|title }}</p>
+    {% if bibliografia.doi %}
+        <p>
+            <strong>DOI:</strong> {{ bibliografia.doi }}
+            {% if bibliografia.doi_link %}
+                - <a href="{{ bibliografia.doi_link }}" target="_blank">{{ bibliografia.doi_link }}</a>
+            {% endif %}
+        </p>
+    {% endif %}
 </div>
 
 {% if bibliografia.url %}

@@ -711,6 +711,15 @@ class BibliografiaDeclaradaController
             
             // Obtener la bibliografía declarada
             $bibliografia = $this->obtenerBibliografiaCompleta($id);
+            // Construir enlace de DOI si corresponde
+            if (is_array($bibliografia) && !empty($bibliografia['doi'])) {
+                $doiValue = trim((string) $bibliografia['doi']);
+                // Normalizar por si viene con prefijo completo usando delimitador '#'
+                $doiValue = preg_replace('#^https?://(?:dx\.)?doi\.org/#i', '', $doiValue);
+                $bibliografia['doi_link'] = 'https://doi.org/' . $doiValue;
+            } else {
+                $bibliografia['doi_link'] = null;
+            }
             
             // Obtener las asignaturas vinculadas
             $asignaturas = $this->obtenerAsignaturasVinculadas($id);

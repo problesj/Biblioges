@@ -27,6 +27,14 @@
     {% if bibliografia.descripcion %}
         <p><strong>Descripción:</strong> {{ bibliografia.descripcion }}</p>
     {% endif %}
+    {% if bibliografia.doi %}
+        <p>
+            <strong>DOI:</strong> {{ bibliografia.doi }}
+            {% if bibliografia.doi_link %}
+                - <a href="{{ bibliografia.doi_link }}" target="_blank">{{ bibliografia.doi_link }}</a>
+            {% endif %}
+        </p>
+    {% endif %}
 </div>
 
 {% if bibliografia.url %}

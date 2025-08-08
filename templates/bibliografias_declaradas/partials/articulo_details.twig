@@ -26,6 +26,14 @@
     <p><strong>Cronología:</strong> {{ bibliografia.cronologia }}</p>
     <p><strong>Año de Publicación:</strong> {{ bibliografia.anio_publicacion }}</p>
     <p><strong>Editorial:</strong> {{ bibliografia.editorial }}</p>
+    {% if bibliografia.doi %}
+        <p>
+            <strong>DOI:</strong> {{ bibliografia.doi }}
+            {% if bibliografia.doi_link %}
+                - <a href="{{ bibliografia.doi_link }}" target="_blank">{{ bibliografia.doi_link }}</a>
+            {% endif %}
+        </p>
+    {% endif %}
 </div>
 
 {% if bibliografia.url %}

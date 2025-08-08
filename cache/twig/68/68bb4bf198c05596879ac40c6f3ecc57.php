@@ -98,29 +98,54 @@ class __TwigTemplate_2b445c56bd5613935367dcf4306fb4ac extends Template
         // line 28
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "editorial", [], "any", false, false, false, 28), "html", null, true);
         yield "</p>
-</div>
+    ";
+        // line 29
+        if (CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "doi", [], "any", false, false, false, 29)) {
+            // line 30
+            yield "        <p>
+            <strong>DOI:</strong> ";
+            // line 31
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "doi", [], "any", false, false, false, 31), "html", null, true);
+            yield "
+            ";
+            // line 32
+            if (CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "doi_link", [], "any", false, false, false, 32)) {
+                // line 33
+                yield "                - <a href=\"";
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "doi_link", [], "any", false, false, false, 33), "html", null, true);
+                yield "\" target=\"_blank\">";
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "doi_link", [], "any", false, false, false, 33), "html", null, true);
+                yield "</a>
+            ";
+            }
+            // line 35
+            yield "        </p>
+    ";
+        }
+        // line 37
+        yield "</div>
 
 ";
-        // line 31
-        if (CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "url", [], "any", false, false, false, 31)) {
-            // line 32
+        // line 39
+        if (CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "url", [], "any", false, false, false, 39)) {
+            // line 40
             yield "    <div class=\"mb-3\">
         <h4>Enlaces:</h4>
         <div class=\"d-flex align-items-center\">
             <div class=\"me-3 text-break\" style=\"max-width: 70%;\">
                 <a href=\"";
-            // line 36
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "url", [], "any", false, false, false, 36), "html", null, true);
+            // line 44
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "url", [], "any", false, false, false, 44), "html", null, true);
             yield "\" target=\"_blank\" class=\"text-primary\">
                     ";
-            // line 37
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "url", [], "any", false, false, false, 37), "html", null, true);
+            // line 45
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "url", [], "any", false, false, false, 45), "html", null, true);
             yield "
                 </a>
             </div>
             <a href=\"";
-            // line 40
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "url", [], "any", false, false, false, 40), "html", null, true);
+            // line 48
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "url", [], "any", false, false, false, 48), "html", null, true);
             yield "\" target=\"_blank\" class=\"btn btn-sm btn-info\">
                 <i class=\"fas fa-external-link-alt\"></i> Abrir enlace
             </a>
@@ -128,22 +153,22 @@ class __TwigTemplate_2b445c56bd5613935367dcf4306fb4ac extends Template
     </div>
 ";
         }
-        // line 46
+        // line 54
         yield "
 ";
-        // line 47
-        if (CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "nota", [], "any", false, false, false, 47)) {
-            // line 48
+        // line 55
+        if (CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "nota", [], "any", false, false, false, 55)) {
+            // line 56
             yield "    <div class=\"mb-3\">
         <h4>Nota:</h4>
         <p>";
-            // line 50
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "nota", [], "any", false, false, false, 50), "html", null, true);
+            // line 58
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "nota", [], "any", false, false, false, 58), "html", null, true);
             yield "</p>
     </div>
 ";
         }
-        // line 52
+        // line 60
         yield " ";
         yield from [];
     }
@@ -169,7 +194,7 @@ class __TwigTemplate_2b445c56bd5613935367dcf4306fb4ac extends Template
      */
     public function getDebugInfo(): array
     {
-        return array (  147 => 52,  141 => 50,  137 => 48,  135 => 47,  132 => 46,  123 => 40,  117 => 37,  113 => 36,  107 => 32,  105 => 31,  99 => 28,  95 => 27,  91 => 26,  87 => 25,  83 => 24,  76 => 19,  65 => 17,  61 => 16,  52 => 10,  42 => 2,);
+        return array (  172 => 60,  166 => 58,  162 => 56,  160 => 55,  157 => 54,  148 => 48,  142 => 45,  138 => 44,  132 => 40,  130 => 39,  126 => 37,  122 => 35,  114 => 33,  112 => 32,  108 => 31,  105 => 30,  103 => 29,  99 => 28,  95 => 27,  91 => 26,  87 => 25,  83 => 24,  76 => 19,  65 => 17,  61 => 16,  52 => 10,  42 => 2,);
     }
 
     public function getSourceContext(): Source
@@ -202,6 +227,14 @@ class __TwigTemplate_2b445c56bd5613935367dcf4306fb4ac extends Template
     <p><strong>Cronología:</strong> {{ bibliografia.cronologia }}</p>
     <p><strong>Año de Publicación:</strong> {{ bibliografia.anio_publicacion }}</p>
     <p><strong>Editorial:</strong> {{ bibliografia.editorial }}</p>
+    {% if bibliografia.doi %}
+        <p>
+            <strong>DOI:</strong> {{ bibliografia.doi }}
+            {% if bibliografia.doi_link %}
+                - <a href=\"{{ bibliografia.doi_link }}\" target=\"_blank\">{{ bibliografia.doi_link }}</a>
+            {% endif %}
+        </p>
+    {% endif %}
 </div>
 
 {% if bibliografia.url %}
