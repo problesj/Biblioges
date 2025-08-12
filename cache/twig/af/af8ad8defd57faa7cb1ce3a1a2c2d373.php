@@ -75,70 +75,80 @@ class __TwigTemplate_2dd1edec0520a2dde0a37f937f33aee3 extends Template
         // line 8
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "nombre", [], "any", false, false, false, 8), "html", null, true);
         yield "</h1>
-        <a href=\"";
-        // line 9
+        <div>
+            <a href=\"";
+        // line 10
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "mallas/";
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "id", [], "any", false, false, false, 9), "html", null, true);
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "id", [], "any", false, false, false, 10), "html", null, true);
+        yield "/fusion-asignaturas\" class=\"btn btn-warning me-2\">
+                <i class=\"fas fa-object-group\"></i> Fusionar Asignaturas
+            </a>
+            <a href=\"";
+        // line 13
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
+        yield "mallas/";
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "id", [], "any", false, false, false, 13), "html", null, true);
         yield "\" class=\"btn btn-secondary\">
-            <i class=\"fas fa-arrow-left\"></i> Volver
-        </a>
+                <i class=\"fas fa-arrow-left\"></i> Volver
+            </a>
+        </div>
     </div>
 
     ";
-        // line 14
+        // line 19
         if (($context["swal"] ?? null)) {
-            // line 15
+            // line 20
             yield "    <script>
         Swal.fire({
             icon: '";
-            // line 17
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "icon", [], "any", false, false, false, 17), "html", null, true);
+            // line 22
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "icon", [], "any", false, false, false, 22), "html", null, true);
             yield "',
             title: '";
-            // line 18
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "title", [], "any", false, false, false, 18), "html", null, true);
+            // line 23
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "title", [], "any", false, false, false, 23), "html", null, true);
             yield "',
             text: '";
-            // line 19
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "text", [], "any", false, false, false, 19), "html", null, true);
+            // line 24
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "text", [], "any", false, false, false, 24), "html", null, true);
             yield "',
             confirmButtonText: 'Aceptar'
         });
     </script>
     ";
         }
-        // line 24
+        // line 29
         yield "
     ";
-        // line 25
+        // line 30
         if (($context["success"] ?? null)) {
-            // line 26
+            // line 31
             yield "    <div class=\"alert alert-success alert-dismissible fade show\" role=\"alert\">
         ";
-            // line 27
+            // line 32
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["success"] ?? null), "html", null, true);
             yield "
         <button type=\"button\" class=\"btn-close\" data-bs-dismiss=\"alert\" aria-label=\"Close\"></button>
     </div>
     ";
         }
-        // line 31
+        // line 36
         yield "
     ";
-        // line 32
+        // line 37
         if (($context["error"] ?? null)) {
-            // line 33
+            // line 38
             yield "    <div class=\"alert alert-danger alert-dismissible fade show\" role=\"alert\">
         ";
-            // line 34
+            // line 39
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["error"] ?? null), "html", null, true);
             yield "
         <button type=\"button\" class=\"btn-close\" data-bs-dismiss=\"alert\" aria-label=\"Close\"></button>
     </div>
     ";
         }
-        // line 38
+        // line 43
         yield "
     <!-- Información de la Carrera -->
     <div class=\"card shadow mb-4\">
@@ -149,52 +159,52 @@ class __TwigTemplate_2dd1edec0520a2dde0a37f937f33aee3 extends Template
             <div class=\"row\">
                 <div class=\"col-md-4\">
                     <p><strong>Nombre:</strong> ";
-        // line 47
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "nombre", [], "any", false, false, false, 47), "html", null, true);
+        // line 52
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "nombre", [], "any", false, false, false, 52), "html", null, true);
         yield "</p>
                 </div>
                 <div class=\"col-md-4\">
                     <p><strong>Tipo de Programa:</strong>
                         ";
-        // line 51
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "tipo_programa", [], "any", false, false, false, 51) == "P")) {
-            // line 52
+        // line 56
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "tipo_programa", [], "any", false, false, false, 56) == "P")) {
+            // line 57
             yield "                            Pregrado
                         ";
-        } elseif ((CoreExtension::getAttribute($this->env, $this->source,         // line 53
-($context["carrera"] ?? null), "tipo_programa", [], "any", false, false, false, 53) == "G")) {
-            // line 54
+        } elseif ((CoreExtension::getAttribute($this->env, $this->source,         // line 58
+($context["carrera"] ?? null), "tipo_programa", [], "any", false, false, false, 58) == "G")) {
+            // line 59
             yield "                            Postgrado
                         ";
-        } elseif ((CoreExtension::getAttribute($this->env, $this->source,         // line 55
-($context["carrera"] ?? null), "tipo_programa", [], "any", false, false, false, 55) == "O")) {
-            // line 56
+        } elseif ((CoreExtension::getAttribute($this->env, $this->source,         // line 60
+($context["carrera"] ?? null), "tipo_programa", [], "any", false, false, false, 60) == "O")) {
+            // line 61
             yield "                            Otro
                         ";
         } else {
-            // line 58
+            // line 63
             yield "                            ";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "tipo_programa", [], "any", false, false, false, 58), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "tipo_programa", [], "any", false, false, false, 63), "html", null, true);
             yield "
                         ";
         }
-        // line 60
+        // line 65
         yield "                    </p>
                 </div>
                 <div class=\"col-md-4\">
                     <p><strong>Estado:</strong>
                         ";
-        // line 64
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "estado", [], "any", false, false, false, 64) == 1)) {
-            // line 65
+        // line 69
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "estado", [], "any", false, false, false, 69) == 1)) {
+            // line 70
             yield "                            <span class=\"badge bg-success\">Activo</span>
                         ";
         } else {
-            // line 67
+            // line 72
             yield "                            <span class=\"badge bg-danger\">Inactivo</span>
                         ";
         }
-        // line 69
+        // line 74
         yield "                    </p>
                 </div>
             </div>
@@ -220,31 +230,31 @@ class __TwigTemplate_2dd1edec0520a2dde0a37f937f33aee3 extends Template
                     </thead>
                     <tbody>
                         ";
-        // line 93
+        // line 98
         $context['_parent'] = $context;
-        $context['_seq'] = CoreExtension::ensureTraversable(range(0, (Twig\Extension\CoreExtension::length($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "codigos_carrera", [], "any", false, false, false, 93)) - 1)));
+        $context['_seq'] = CoreExtension::ensureTraversable(range(0, (Twig\Extension\CoreExtension::length($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "codigos_carrera", [], "any", false, false, false, 98)) - 1)));
         foreach ($context['_seq'] as $context["_key"] => $context["i"]) {
-            // line 94
+            // line 99
             yield "                        <tr>
                             <td>";
-            // line 95
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v0 = CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "codigos_carrera", [], "any", false, false, false, 95)) && is_array($_v0) || $_v0 instanceof ArrayAccess ? ($_v0[$context["i"]] ?? null) : null), "html", null, true);
+            // line 100
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v0 = CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "codigos_carrera", [], "any", false, false, false, 100)) && is_array($_v0) || $_v0 instanceof ArrayAccess ? ($_v0[$context["i"]] ?? null) : null), "html", null, true);
             yield "</td>
                             <td>";
-            // line 96
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v1 = CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "vigencias_desde", [], "any", false, false, false, 96)) && is_array($_v1) || $_v1 instanceof ArrayAccess ? ($_v1[$context["i"]] ?? null) : null), "html", null, true);
+            // line 101
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v1 = CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "vigencias_desde", [], "any", false, false, false, 101)) && is_array($_v1) || $_v1 instanceof ArrayAccess ? ($_v1[$context["i"]] ?? null) : null), "html", null, true);
             yield "</td>
                             <td>";
-            // line 97
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v2 = CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "vigencias_hasta", [], "any", false, false, false, 97)) && is_array($_v2) || $_v2 instanceof ArrayAccess ? ($_v2[$context["i"]] ?? null) : null), "html", null, true);
+            // line 102
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v2 = CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "vigencias_hasta", [], "any", false, false, false, 102)) && is_array($_v2) || $_v2 instanceof ArrayAccess ? ($_v2[$context["i"]] ?? null) : null), "html", null, true);
             yield "</td>
                             <td>";
-            // line 98
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v3 = CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "sedes", [], "any", false, false, false, 98)) && is_array($_v3) || $_v3 instanceof ArrayAccess ? ($_v3[$context["i"]] ?? null) : null), "html", null, true);
+            // line 103
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v3 = CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "sedes", [], "any", false, false, false, 103)) && is_array($_v3) || $_v3 instanceof ArrayAccess ? ($_v3[$context["i"]] ?? null) : null), "html", null, true);
             yield "</td>
                             <td>";
-            // line 99
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v4 = CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "unidades", [], "any", false, false, false, 99)) && is_array($_v4) || $_v4 instanceof ArrayAccess ? ($_v4[$context["i"]] ?? null) : null), "html", null, true);
+            // line 104
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v4 = CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "unidades", [], "any", false, false, false, 104)) && is_array($_v4) || $_v4 instanceof ArrayAccess ? ($_v4[$context["i"]] ?? null) : null), "html", null, true);
             yield "</td>
                         </tr>
                         ";
@@ -252,7 +262,7 @@ class __TwigTemplate_2dd1edec0520a2dde0a37f937f33aee3 extends Template
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_key'], $context['i'], $context['_parent']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 102
+        // line 107
         yield "                    </tbody>
                 </table>
             </div>
@@ -272,22 +282,22 @@ class __TwigTemplate_2dd1edec0520a2dde0a37f937f33aee3 extends Template
                     <select class=\"form-select\" id=\"sede\">
                         <option value=\"\">Seleccione una sede</option>
                         ";
-        // line 120
+        // line 125
         $context['_parent'] = $context;
         $context['_seq'] = CoreExtension::ensureTraversable(($context["sedes"] ?? null));
         foreach ($context['_seq'] as $context["_key"] => $context["sede"]) {
-            // line 121
+            // line 126
             yield "                            <option value=\"";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["sede"], "id", [], "any", false, false, false, 121), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["sede"], "id", [], "any", false, false, false, 126), "html", null, true);
             yield "\">";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["sede"], "nombre", [], "any", false, false, false, 121), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["sede"], "nombre", [], "any", false, false, false, 126), "html", null, true);
             yield "</option>
                         ";
         }
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_key'], $context['sede'], $context['_parent']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 123
+        // line 128
         yield "                    </select>
                 </div>
                 <div class=\"col-md-6\">
@@ -366,22 +376,22 @@ class __TwigTemplate_2dd1edec0520a2dde0a37f937f33aee3 extends Template
                                     </thead>
                                     <tbody id=\"asignaturas-vinculadas\">
                                         ";
-        // line 200
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "asignaturas", [], "any", true, true, false, 200) && (Twig\Extension\CoreExtension::length($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "asignaturas", [], "any", false, false, false, 200)) > 0))) {
-            // line 201
+        // line 205
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "asignaturas", [], "any", true, true, false, 205) && (Twig\Extension\CoreExtension::length($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "asignaturas", [], "any", false, false, false, 205)) > 0))) {
+            // line 206
             yield "                                            ";
             $context['_parent'] = $context;
-            $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "asignaturas", [], "any", false, false, false, 201));
+            $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "asignaturas", [], "any", false, false, false, 206));
             foreach ($context['_seq'] as $context["_key"] => $context["asignatura"]) {
-                // line 202
+                // line 207
                 yield "                                            <tr data-id=\"";
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 202), "html", null, true);
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 207), "html", null, true);
                 yield "\">
                                                 <td>
                                                     ";
-                // line 204
+                // line 209
                 $context['_parent'] = $context;
-                $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "codigos", [], "any", false, false, false, 204));
+                $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "codigos", [], "any", false, false, false, 209));
                 $context['loop'] = [
                   'parent' => $context['_parent'],
                   'index0' => 0,
@@ -396,13 +406,13 @@ class __TwigTemplate_2dd1edec0520a2dde0a37f937f33aee3 extends Template
                     $context['loop']['last'] = 1 === $length;
                 }
                 foreach ($context['_seq'] as $context["_key"] => $context["codigo"]) {
-                    // line 205
+                    // line 210
                     yield "                                                        ";
                     yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($context["codigo"], "html", null, true);
-                    if ( !CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "last", [], "any", false, false, false, 205)) {
+                    if ( !CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "last", [], "any", false, false, false, 210)) {
                         yield "<br>";
                     }
-                    // line 206
+                    // line 211
                     yield "                                                    ";
                     ++$context['loop']['index0'];
                     ++$context['loop']['index'];
@@ -416,32 +426,32 @@ class __TwigTemplate_2dd1edec0520a2dde0a37f937f33aee3 extends Template
                 $_parent = $context['_parent'];
                 unset($context['_seq'], $context['_key'], $context['codigo'], $context['_parent'], $context['loop']);
                 $context = array_intersect_key($context, $_parent) + $_parent;
-                // line 207
+                // line 212
                 yield "                                                </td>
                                                 <td>";
-                // line 208
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "nombre", [], "any", false, false, false, 208), "html", null, true);
+                // line 213
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "nombre", [], "any", false, false, false, 213), "html", null, true);
                 yield "</td>
                                                 <td class=\"text-center\">";
-                // line 209
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "tipo", [], "any", false, false, false, 209), "html", null, true);
+                // line 214
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "tipo", [], "any", false, false, false, 214), "html", null, true);
                 yield "</td>
                                                 <td class=\"text-center\">";
-                // line 210
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "periodicidad", [], "any", false, false, false, 210), "html", null, true);
+                // line 215
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "periodicidad", [], "any", false, false, false, 215), "html", null, true);
                 yield "</td>
                                                 <td class=\"text-center\">
                                                     <select class=\"form-select form-select-sm\" style=\"width: 80px;\">
                                                         ";
-                // line 213
+                // line 218
                 $context['_parent'] = $context;
                 $context['_seq'] = CoreExtension::ensureTraversable(range(1, 10));
                 foreach ($context['_seq'] as $context["_key"] => $context["i"]) {
-                    // line 214
+                    // line 219
                     yield "                                                            <option value=\"";
                     yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($context["i"], "html", null, true);
                     yield "\" ";
-                    if ((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "semestre", [], "any", false, false, false, 214) == $context["i"])) {
+                    if ((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "semestre", [], "any", false, false, false, 219) == $context["i"])) {
                         yield "selected";
                     }
                     yield ">";
@@ -452,7 +462,7 @@ class __TwigTemplate_2dd1edec0520a2dde0a37f937f33aee3 extends Template
                 $_parent = $context['_parent'];
                 unset($context['_seq'], $context['_key'], $context['i'], $context['_parent']);
                 $context = array_intersect_key($context, $_parent) + $_parent;
-                // line 216
+                // line 221
                 yield "                                                    </select>
                                                 </td>
                                                 <td class=\"text-center\">
@@ -464,16 +474,16 @@ class __TwigTemplate_2dd1edec0520a2dde0a37f937f33aee3 extends Template
             $_parent = $context['_parent'];
             unset($context['_seq'], $context['_key'], $context['asignatura'], $context['_parent']);
             $context = array_intersect_key($context, $_parent) + $_parent;
-            // line 223
+            // line 228
             yield "                                        ";
         } else {
-            // line 224
+            // line 229
             yield "                                            <tr id=\"no-asignaturas-message\">
                                                 <td colspan=\"6\" class=\"text-center\">No hay asignaturas vinculadas</td>
                                             </tr>
                                         ";
         }
-        // line 228
+        // line 233
         yield "                                    </tbody>
                                 </table>
                             </div>
@@ -487,7 +497,7 @@ class __TwigTemplate_2dd1edec0520a2dde0a37f937f33aee3 extends Template
     <!-- Botones de acción -->
     <div class=\"d-flex gap-2 mb-4\">
         <a href=\"";
-        // line 240
+        // line 245
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "mallas\" class=\"btn btn-secondary\">
             <i class=\"fas fa-arrow-left\"></i> Volver
@@ -499,7 +509,7 @@ class __TwigTemplate_2dd1edec0520a2dde0a37f937f33aee3 extends Template
 </div>
 
 ";
-        // line 249
+        // line 254
         yield from $this->unwrap()->yieldBlock('scripts', $context, $blocks);
         yield from [];
     }
@@ -510,12 +520,12 @@ class __TwigTemplate_2dd1edec0520a2dde0a37f937f33aee3 extends Template
     public function block_scripts(array $context, array $blocks = []): iterable
     {
         $macros = $this->macros;
-        // line 250
+        // line 255
         yield "<script>
 document.addEventListener('DOMContentLoaded', function() {
     // Definir la variable app_url dentro del scope de DOMContentLoaded
     const app_url = \"";
-        // line 253
+        // line 258
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "\";
     
@@ -888,8 +898,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (result.isConfirmed) {
                 // Enviar datos al servidor
                 fetch(`\${app_url}api/mallas/";
-        // line 623
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "id", [], "any", false, false, false, 623), "html", null, true);
+        // line 628
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "id", [], "any", false, false, false, 628), "html", null, true);
         yield "`, {
                     method: 'POST',
                     headers: {
@@ -900,8 +910,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     body: JSON.stringify({ 
                         asignaturas: asignaturas,
                         carrera_id: ";
-        // line 632
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "id", [], "any", false, false, false, 632), "html", null, true);
+        // line 637
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "id", [], "any", false, false, false, 637), "html", null, true);
         yield "
                     })
                 })
@@ -920,8 +930,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             confirmButtonText: 'Aceptar'
                         }).then(() => {
                             window.location.href = `\${app_url}mallas/";
-        // line 649
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "id", [], "any", false, false, false, 649), "html", null, true);
+        // line 654
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "id", [], "any", false, false, false, 654), "html", null, true);
         yield "`;
                         });
                     } else {
@@ -975,7 +985,7 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     public function getDebugInfo(): array
     {
-        return array (  924 => 649,  904 => 632,  892 => 623,  519 => 253,  514 => 250,  503 => 249,  491 => 240,  477 => 228,  471 => 224,  468 => 223,  456 => 216,  441 => 214,  437 => 213,  431 => 210,  427 => 209,  423 => 208,  420 => 207,  406 => 206,  400 => 205,  383 => 204,  377 => 202,  372 => 201,  370 => 200,  291 => 123,  280 => 121,  276 => 120,  256 => 102,  247 => 99,  243 => 98,  239 => 97,  235 => 96,  231 => 95,  228 => 94,  224 => 93,  198 => 69,  194 => 67,  190 => 65,  188 => 64,  182 => 60,  176 => 58,  172 => 56,  170 => 55,  167 => 54,  165 => 53,  162 => 52,  160 => 51,  153 => 47,  142 => 38,  135 => 34,  132 => 33,  130 => 32,  127 => 31,  120 => 27,  117 => 26,  115 => 25,  112 => 24,  104 => 19,  100 => 18,  96 => 17,  92 => 15,  90 => 14,  80 => 9,  76 => 8,  72 => 6,  65 => 5,  53 => 3,  42 => 1,);
+        return array (  934 => 654,  914 => 637,  902 => 628,  529 => 258,  524 => 255,  513 => 254,  501 => 245,  487 => 233,  481 => 229,  478 => 228,  466 => 221,  451 => 219,  447 => 218,  441 => 215,  437 => 214,  433 => 213,  430 => 212,  416 => 211,  410 => 210,  393 => 209,  387 => 207,  382 => 206,  380 => 205,  301 => 128,  290 => 126,  286 => 125,  266 => 107,  257 => 104,  253 => 103,  249 => 102,  245 => 101,  241 => 100,  238 => 99,  234 => 98,  208 => 74,  204 => 72,  200 => 70,  198 => 69,  192 => 65,  186 => 63,  182 => 61,  180 => 60,  177 => 59,  175 => 58,  172 => 57,  170 => 56,  163 => 52,  152 => 43,  145 => 39,  142 => 38,  140 => 37,  137 => 36,  130 => 32,  127 => 31,  125 => 30,  122 => 29,  114 => 24,  110 => 23,  106 => 22,  102 => 20,  100 => 19,  89 => 13,  81 => 10,  76 => 8,  72 => 6,  65 => 5,  53 => 3,  42 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -988,9 +998,14 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class=\"container-fluid\">
     <div class=\"d-flex justify-content-between align-items-center mb-4\">
         <h1 class=\"h3 mb-0 text-gray-800\">Editar Malla - {{ carrera.nombre }}</h1>
-        <a href=\"{{ app_url }}mallas/{{ carrera.id }}\" class=\"btn btn-secondary\">
-            <i class=\"fas fa-arrow-left\"></i> Volver
-        </a>
+        <div>
+            <a href=\"{{ app_url }}mallas/{{ carrera.id }}/fusion-asignaturas\" class=\"btn btn-warning me-2\">
+                <i class=\"fas fa-object-group\"></i> Fusionar Asignaturas
+            </a>
+            <a href=\"{{ app_url }}mallas/{{ carrera.id }}\" class=\"btn btn-secondary\">
+                <i class=\"fas fa-arrow-left\"></i> Volver
+            </a>
+        </div>
     </div>
 
     {% if swal %}

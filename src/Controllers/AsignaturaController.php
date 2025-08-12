@@ -358,10 +358,52 @@ class AsignaturaController extends BaseController
             $stmt->execute([$user_id]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
+            // Obtener bibliografías declaradas vinculadas a la asignatura
+            $stmt = $this->db->prepare("
+                SELECT 
+                    bd.id,
+                    bd.titulo,
+                    bd.tipo,
+                    bd.anio_publicacion,
+                    bd.editorial,
+                    bd.edicion,
+                    bd.url,
+                    bd.nota,
+                    bd.formato,
+                    bd.isbn,
+                    bd.doi,
+                    bd.estado,
+                    ab.tipo_bibliografia,
+                    (SELECT COUNT(*) FROM bibliografias_disponibles bd2 WHERE bd2.bibliografia_declarada_id = bd.id) as total_disponibles
+                FROM asignaturas_bibliografias ab
+                JOIN bibliografias_declaradas bd ON ab.bibliografia_id = bd.id
+                WHERE ab.asignatura_id = ?
+                ORDER BY ab.tipo_bibliografia, bd.titulo
+            ");
+            $stmt->execute([$id]);
+            $bibliografias = $stmt->fetchAll();
+
+            // Agrupar bibliografías por tipo
+            $bibliografiasAgrupadas = [
+                'basica' => [],
+                'complementaria' => [],
+                'otro' => []
+            ];
+
+            foreach ($bibliografias as $bib) {
+                $tipo = strtolower($bib['tipo_bibliografia']);
+                if (isset($bibliografiasAgrupadas[$tipo])) {
+                    $bibliografiasAgrupadas[$tipo][] = $bib;
+                } else {
+                    $bibliografiasAgrupadas['otro'][] = $bib;
+                }
+            }
+
             // Renderizar la vista
             $html = $this->twig->render('asignaturas/show.twig', [
                 'asignatura' => $asignatura,
                 'user' => $user,
+                'bibliografias' => $bibliografiasAgrupadas,
                 'app_url' => Config::get('app_url'),
                 'session' => $_SESSION,
                 'current_page' => 'asignaturas'

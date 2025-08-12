@@ -3732,19 +3732,23 @@ class BibliografiaDeclaradaController
                 $idMms = $bibliografia['catalogo_id'];
                 error_log('ID MMS para registro local: ' . $idMms);
 
-                $stmt = $this->pdo->prepare("SELECT id_mms FROM bibliografias_disponibles WHERE id_mms = ?");
+                $stmt = $this->pdo->prepare("SELECT id, id_mms FROM bibliografias_disponibles WHERE id_mms = ?");
                 $stmt->execute([$idMms]);
                 $idMms_duplicado = $stmt->fetch(PDO::FETCH_ASSOC);
 
                 $cont_procesados++;
+                $esActualizacion = false;
+                $bibliografiaDisponibleId = null;
+                
                 if ($idMms_duplicado) {
-                    error_log('Error: El ID MMS ya existe en la base de datos');
+                    error_log('ID MMS duplicado encontrado, procediendo a actualizar información de la bibliografía ID: ' . $idMms_duplicado['id']);
                     $cont_duplicados++;
-                    continue;
+                    $esActualizacion = true;
+                    $bibliografiaDisponibleId = $idMms_duplicado['id'];
                 }
 
-                //Se procesa la bibliografía si no existe en la base de datos
-                if (empty($idMms_duplicado)) {
+                //Se procesa la bibliografía (nueva o actualización)
+                if (empty($idMms_duplicado) || $esActualizacion) {
                     $context = $bibliografia['context'];
                     $adaptor = $bibliografia['adaptor'];
                     
@@ -3864,31 +3868,63 @@ class BibliografiaDeclaradaController
                     
                     error_log('Disponibilidad determinada: ' . $disponibilidad);
                     
-                    // Insertar bibliografía
-                    error_log('Preparando inserción de bibliografía...');
-                    $stmt = $this->pdo->prepare("
-                        INSERT INTO bibliografias_disponibles (
-                            bibliografia_declarada_id, titulo, anio_edicion, editorial,
-                            url_catalogo, url_acceso, disponibilidad, id_mms, estado
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ");
-                    
-                    $params = [
-                        $bibliografiaDeclaradaId,
-                        $titulo,
-                        $anio,
-                        $editorial,
-                        $url_catalogo,
-                        $url_acceso,
-                        $disponibilidad,
-                        $idMms,
-                        1
-                    ];
-                    
-                    //error_log('Parámetros para insertar bibliografía: ' . json_encode($params));
-                    $stmt->execute($params);
-                    $bibliografiaId = $this->pdo->lastInsertId();
-                    error_log('ID de bibliografía guardada: ' . $bibliografiaId);
+                    // Insertar o actualizar bibliografía
+                    if ($esActualizacion) {
+                        error_log('Actualizando bibliografía existente con ID: ' . $bibliografiaDisponibleId);
+                        $stmt = $this->pdo->prepare("
+                            UPDATE bibliografias_disponibles 
+                            SET titulo = ?, anio_edicion = ?, editorial = ?,
+                                url_catalogo = ?, url_acceso = ?, disponibilidad = ?, estado = ?
+                            WHERE id = ?
+                        ");
+                        
+                        $params = [
+                            $titulo,
+                            $anio,
+                            $editorial,
+                            $url_catalogo,
+                            $url_acceso,
+                            $disponibilidad,
+                            1,
+                            $bibliografiaDisponibleId
+                        ];
+                        
+                        $stmt->execute($params);
+                        $bibliografiaId = $bibliografiaDisponibleId;
+                        error_log('Bibliografía actualizada con ID: ' . $bibliografiaId);
+                        
+                        // Limpiar autores y ejemplares existentes para reinsertarlos
+                        $stmt = $this->pdo->prepare("DELETE FROM bibliografias_disponibles_autores WHERE bibliografia_disponible_id = ?");
+                        $stmt->execute([$bibliografiaId]);
+                        
+                        $stmt = $this->pdo->prepare("DELETE FROM bibliografias_disponibles_sedes WHERE bibliografia_disponible_id = ?");
+                        $stmt->execute([$bibliografiaId]);
+                        
+                    } else {
+                        error_log('Insertando nueva bibliografía...');
+                        $stmt = $this->pdo->prepare("
+                            INSERT INTO bibliografias_disponibles (
+                                bibliografia_declarada_id, titulo, anio_edicion, editorial,
+                                url_catalogo, url_acceso, disponibilidad, id_mms, estado
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ");
+                        
+                        $params = [
+                            $bibliografiaDeclaradaId,
+                            $titulo,
+                            $anio,
+                            $editorial,
+                            $url_catalogo,
+                            $url_acceso,
+                            $disponibilidad,
+                            $idMms,
+                            1
+                        ];
+                        
+                        $stmt->execute($params);
+                        $bibliografiaId = $this->pdo->lastInsertId();
+                        error_log('Nueva bibliografía insertada con ID: ' . $bibliografiaId);
+                    }
                     
                     // Procesar autores
                     if (!empty($bibliografia['autores'])) {
@@ -3998,9 +4034,10 @@ class BibliografiaDeclaradaController
             
             // Preparar respuesta exitosa
             $cont_bibguardadas = $cont_procesados - $cont_duplicados;
+            $cont_actualizadas = $cont_duplicados; // Los duplicados ahora son actualizaciones
             $response = [
                 'success' => true,
-                'message' => $cont_bibguardadas . ' Bibliografías guardadas correctamente. Se encontraron ' . $cont_duplicados . ' duplicados.',
+                'message' => $cont_bibguardadas . ' Bibliografías guardadas correctamente. Se actualizaron ' . $cont_actualizadas . ' bibliografías existentes.',
                 'ejemplares_por_sede' => $ejemplaresPorSede ?? []
             ];
             
@@ -4337,6 +4374,70 @@ class BibliografiaDeclaradaController
             $_SESSION['error'] = 'Error al crear la bibliografía: ' . $e->getMessage();
             header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas/create');
             return new Response();
+        }
+    }
+
+    /**
+     * Obtiene las bibliografías disponibles de una bibliografía declarada específica
+     * Endpoint: GET /api/bibliografias-declaradas/{id}/disponibles
+     */
+    public function getBibliografiasDisponibles(Request $request, Response $response, array $args = []): Response
+    {
+        try {
+            // Verificar autenticación
+            if (!$this->session->get('user_id')) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Por favor inicie sesión para acceder a esta información'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(401);
+            }
+
+            $bibliografiaId = $args['id'] ?? null;
+            
+            if (!$bibliografiaId) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'ID de bibliografía no proporcionado'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+            }
+
+            // Obtener bibliografías disponibles
+            $stmt = $this->pdo->prepare("
+                SELECT 
+                    bd.id,
+                    bd.titulo,
+                    bd.anio_edicion,
+                    bd.editorial,
+                    bd.url_acceso,
+                    bd.url_catalogo,
+                    bd.disponibilidad,
+                    bd.id_mms,
+                    bd.ejemplares_digitales,
+                    bd.estado,
+                    bd.fecha_creacion
+                FROM bibliografias_disponibles bd
+                WHERE bd.bibliografia_declarada_id = ?
+                ORDER BY bd.titulo, bd.anio_edicion DESC
+            ");
+            $stmt->execute([$bibliografiaId]);
+            $bibliografias = $stmt->fetchAll();
+
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'bibliografias' => $bibliografias,
+                'total' => count($bibliografias)
+            ]));
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (\Exception $e) {
+            error_log("Error en getBibliografiasDisponibles: " . $e->getMessage());
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Error al obtener las bibliografías disponibles: ' . $e->getMessage()
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
         }
     }
 } 

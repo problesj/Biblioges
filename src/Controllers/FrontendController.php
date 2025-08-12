@@ -304,9 +304,8 @@ class FrontendController
                 break;
             case 'tesis':
                 $stmt = $this->pdo->prepare("
-                    SELECT t.carrera_id, c.nombre as carrera_nombre 
+                    SELECT t.nombre_carrera as carrera_nombre 
                     FROM tesis t 
-                    LEFT JOIN carreras c ON t.carrera_id = c.id 
                     WHERE t.bibliografia_id = :id
                 ");
                 break;

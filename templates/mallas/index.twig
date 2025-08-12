@@ -45,8 +45,8 @@
     }
     
     .mallas-table thead th:last-child {
-        min-width: 120px !important;
-        width: 120px !important;
+        min-width: 150px !important;
+        width: 150px !important;
     }
     
     .mallas-table thead th a {
@@ -97,6 +97,28 @@
     .mallas-table tbody td:first-child {
         font-weight: 500 !important;
         color: #495057 !important;
+    }
+    
+    /* Estilos para el botón de fusionar asignaturas */
+    .btn-warning.btn-sm {
+        background-color: #ffc107 !important;
+        border-color: #ffc107 !important;
+        color: #212529 !important;
+        font-size: 0.75rem !important;
+        padding: 0.25rem 0.5rem !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .btn-warning.btn-sm:hover {
+        background-color: #e0a800 !important;
+        border-color: #d39e00 !important;
+        color: #212529 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
+    }
+    
+    .btn-warning.btn-sm:active {
+        transform: translateY(0) !important;
     }
     
     .mallas-table tbody td:nth-child(2) {
@@ -374,6 +396,9 @@
                                     </a>
                                     <a href="{{ app_url }}mallas/{{ carrera.id }}/edit" class="btn btn-sm btn-primary" title="Editar Malla">
                                         <i class="fas fa-sitemap"></i>
+                                    </a>
+                                    <a href="{{ app_url }}mallas/{{ carrera.id }}/fusion-asignaturas" class="btn btn-sm btn-warning" title="Fusionar Asignaturas">
+                                        <i class="fas fa-object-group"></i>
                                     </a>
                                 </div>
                             </td>

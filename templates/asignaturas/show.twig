@@ -102,9 +102,339 @@
             </div>
         </div>
     {% endif %}
+
+    <!-- Bibliografías Declaradas -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Bibliografías Declaradas</h6>
+        </div>
+        <div class="card-body">
+            <!-- Pestañas de navegación -->
+            <ul class="nav nav-tabs" id="bibliografiasTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="basica-tab" data-bs-toggle="tab" data-bs-target="#basica" type="button" role="tab" aria-controls="basica" aria-selected="true">
+                        Básica <span class="badge bg-primary ms-1">{{ bibliografias.basica|length }}</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="complementaria-tab" data-bs-toggle="tab" data-bs-target="#complementaria" type="button" role="tab" aria-controls="complementaria" aria-selected="false">
+                        Complementaria <span class="badge bg-success ms-1">{{ bibliografias.complementaria|length }}</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="otro-tab" data-bs-toggle="tab" data-bs-target="#otro" type="button" role="tab" aria-controls="otro" aria-selected="false">
+                        Otro <span class="badge bg-secondary ms-1">{{ bibliografias.otro|length }}</span>
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Contenido de las pestañas -->
+            <div class="tab-content mt-3" id="bibliografiasTabsContent">
+                <!-- Pestaña Básica -->
+                <div class="tab-pane fade show active" id="basica" role="tabpanel" aria-labelledby="basica-tab">
+                    {% if bibliografias.basica|length > 0 %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Título</th>
+                                        <th>Tipo</th>
+                                        <th>Año</th>
+                                        <th>Editorial</th>
+                                        <th class="text-center">Formato</th>
+                                        <th class="text-center"># Bib. Disponibles</th>
+                                        <th class="text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for bib in bibliografias.basica %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ bib.titulo }}</strong>
+                                                {% if bib.edicion %}<br><small class="text-muted">Edición: {{ bib.edicion }}</small>{% endif %}
+                                                {% if bib.isbn %}<br><small class="text-muted">ISBN: {{ bib.isbn }}</small>{% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">{{ bib.tipo|title }}</span>
+                                            </td>
+                                            <td>{{ bib.anio_publicacion ?: 'N/A' }}</td>
+                                            <td>{{ bib.editorial ?: 'N/A' }}</td>
+                                            <td class="text-center">
+                                                <span class="badge bg-secondary">{{ bib.formato|title }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-warning">{{ bib.total_disponibles }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                {% if bib.total_disponibles > 0 %}
+                                                    <button class="btn btn-sm btn-primary" onclick="mostrarBibliografiasDisponibles({{ bib.id }}, '{{ bib.titulo|e('js') }}')">
+                                                        <i class="fas fa-eye"></i> Ver Disponibles
+                                                    </button>
+                                                {% else %}
+                                                    <span class="text-muted">Sin Bib. Disponibles</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-book fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No hay bibliografías básicas declaradas para esta asignatura.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Pestaña Complementaria -->
+                <div class="tab-pane fade" id="complementaria" role="tabpanel" aria-labelledby="complementaria-tab">
+                    {% if bibliografias.complementaria|length > 0 %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Título</th>
+                                        <th>Tipo</th>
+                                        <th>Año</th>
+                                        <th>Editorial</th>
+                                        <th class="text-center">Formato</th>
+                                        <th class="text-center"># Bib. Disponibles</th>
+                                        <th class="text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for bib in bibliografias.complementaria %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ bib.titulo }}</strong>
+                                                {% if bib.edicion %}<br><small class="text-muted">Edición: {{ bib.edicion }}</small>{% endif %}
+                                                {% if bib.isbn %}<br><small class="text-muted">ISBN: {{ bib.isbn }}</small>{% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">{{ bib.tipo|title }}</span>
+                                            </td>
+                                            <td>{{ bib.anio_publicacion ?: 'N/A' }}</td>
+                                            <td>{{ bib.editorial ?: 'N/A' }}</td>
+                                            <td class="text-center">
+                                                <span class="badge bg-secondary">{{ bib.formato|title }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-warning">{{ bib.total_disponibles }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                {% if bib.total_disponibles > 0 %}
+                                                    <button class="btn btn-sm btn-primary" onclick="mostrarBibliografiasDisponibles({{ bib.id }}, '{{ bib.titulo|e('js') }}')">
+                                                        <i class="fas fa-eye"></i> Ver Disponibles
+                                                    </button>
+                                                {% else %}
+                                                    <span class="text-muted">Sin Bib. Disponibles</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-book fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No hay bibliografías complementarias declaradas para esta asignatura.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Pestaña Otro -->
+                <div class="tab-pane fade" id="otro" role="tabpanel" aria-labelledby="otro-tab">
+                    {% if bibliografias.otro|length > 0 %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Título</th>
+                                        <th>Tipo</th>
+                                        <th>Año</th>
+                                        <th>Editorial</th>
+                                        <th class="text-center">Formato</th>
+                                        <th class="text-center"># Bib. Disponibles</th>
+                                        <th class="text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for bib in bibliografias.otro %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ bib.titulo }}</strong>
+                                                {% if bib.edicion %}<br><small class="text-muted">Edición: {{ bib.edicion }}</small>{% endif %}
+                                                {% if bib.isbn %}<br><small class="text-muted">ISBN: {{ bib.isbn }}</small>{% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">{{ bib.tipo|title }}</span>
+                                            </td>
+                                            <td>{{ bib.anio_publicacion ?: 'N/A' }}</td>
+                                            <td>{{ bib.editorial ?: 'N/A' }}</td>
+                                            <td class="text-center">
+                                                <span class="badge bg-secondary">{{ bib.formato|title }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-warning">{{ bib.total_disponibles }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                {% if bib.total_disponibles > 0 %}
+                                                    <button class="btn btn-sm btn-primary" onclick="mostrarBibliografiasDisponibles({{ bib.id }}, '{{ bib.titulo|e('js') }}')">
+                                                        <i class="fas fa-eye"></i> Ver Disponibles
+                                                    </button>
+                                                {% else %}
+                                                    <span class="text-muted">Sin Bib. Disponibles</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-book fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No hay otras bibliografías declaradas para esta asignatura.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para mostrar bibliografías disponibles -->
+<div class="modal fade" id="modalBibliografiasDisponibles" tabindex="-1" aria-labelledby="modalBibliografiasDisponiblesLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalBibliografiasDisponiblesLabel">Bibliografías Disponibles</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="modalBibliografiasDisponiblesBody">
+                <!-- El contenido se cargará dinámicamente -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script src="/js/asignaturas.js"></script>
+<script>
+function mostrarBibliografiasDisponibles(bibliografiaId, titulo) {
+    // Mostrar loading en el modal
+    document.getElementById('modalBibliografiasDisponiblesLabel').textContent = `Bibliografías Disponibles - ${titulo}`;
+    document.getElementById('modalBibliografiasDisponiblesBody').innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2">Cargando bibliografías disponibles...</p>
+        </div>
+    `;
+    
+    // Mostrar el modal
+    const modal = new bootstrap.Modal(document.getElementById('modalBibliografiasDisponibles'));
+    modal.show();
+    
+    // Cargar las bibliografías disponibles via AJAX
+    fetch(`${window.location.origin}/biblioges/api/bibliografias-declaradas/${bibliografiaId}/disponibles`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            mostrarBibliografiasDisponiblesEnModal(data.bibliografias, titulo);
+        } else {
+            document.getElementById('modalBibliografiasDisponiblesBody').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Error al cargar las bibliografías disponibles: ${data.message}
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('modalBibliografiasDisponiblesBody').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle"></i>
+                Error de conexión al cargar las bibliografías disponibles.
+            </div>
+        `;
+    });
+}
+
+function mostrarBibliografiasDisponiblesEnModal(bibliografias, titulo) {
+    if (bibliografias.length === 0) {
+        document.getElementById('modalBibliografiasDisponiblesBody').innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-info-circle fa-3x text-muted mb-3"></i>
+                <p class="text-muted">No hay bibliografías disponibles para "${titulo}".</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = `
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Título</th>
+                        <th>Año</th>
+                        <th>Editorial</th>
+                        <th>Disponibilidad</th>
+                        <th>Ejemplares</th>
+                        <th>Enlaces</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    bibliografias.forEach(bib => {
+        const disponibilidadClass = bib.disponibilidad === 'disponible' ? 'bg-success' : 
+                                  bib.disponibilidad === 'limitada' ? 'bg-warning' : 'bg-danger';
+        
+                 html += `
+             <tr>
+                 <td>
+                     <strong>${bib.titulo}</strong>
+                     ${bib.anio_edicion ? `<br><small class="text-muted">Año: ${bib.anio_edicion}</small>` : ''}
+                 </td>
+                <td>${bib.anio_edicion || 'N/A'}</td>
+                <td>${bib.editorial || 'N/A'}</td>
+                <td>
+                    <span class="badge ${disponibilidadClass}">${bib.disponibilidad || 'N/A'}</span>
+                </td>
+                <td>
+                    ${bib.ejemplares_digitales ? `<span class="badge bg-info">${bib.ejemplares_digitales}</span>` : 'N/A'}
+                </td>
+                <td>
+                    ${bib.url_acceso ? `<a href="${bib.url_acceso}" target="_blank" class="btn btn-sm btn-success me-1"><i class="fas fa-external-link-alt"></i> Acceso</a>` : ''}
+                    ${bib.url_catalogo ? `<a href="${bib.url_catalogo}" target="_blank" class="btn btn-sm btn-info"><i class="fas fa-search"></i> Catálogo</a>` : ''}
+                    ${!bib.url_acceso && !bib.url_catalogo ? '<span class="text-muted">Sin enlaces</span>' : ''}
+                </td>
+            </tr>
+        `;
+    });
+    
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    document.getElementById('modalBibliografiasDisponiblesBody').innerHTML = html;
+}
+</script>
 {% endblock %} 

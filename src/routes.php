@@ -87,6 +87,11 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     // API para obtener asignaturas por unidad
     $group->get('/api/asignaturas/unidad/{unidadId}', [AsignaturaController::class, 'getAsignaturasByUnidad']);
 
+    // API para mallas - Rutas específicas primero (antes de las variables)
+    $group->post('/api/mallas/bibliografias-fusion', [MallaController::class, 'getBibliografiasParaFusion']);
+    $group->post('/api/mallas/mallas-vinculadas-fusion', [MallaController::class, 'getMallasVinculadasParaFusion']);
+    $group->post('/api/mallas/procesar-fusion', [MallaController::class, 'procesarFusionAsignaturas']);
+    
     // API para actualizar mallas
     $group->post('/api/mallas/{id}', [MallaController::class, 'update']);
 
@@ -111,6 +116,9 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->get('/mallas/{id}/edit', [MallaController::class, 'edit']);
     $group->post('/mallas/{id}/update', [MallaController::class, 'update']);
     $group->post('/mallas/{id}/delete', [MallaController::class, 'delete']);
+    
+    // Fusión de asignaturas
+    $group->get('/mallas/{carrera_id}/fusion-asignaturas', [MallaController::class, 'showFusionAsignaturas']);
 
     // Asignaturas - Rutas específicas primero
     $group->get('/asignaturas/vinculacion', [AsignaturaController::class, 'vinculacion'])->setName('asignaturas.vinculacion');
@@ -173,7 +181,10 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->get('/bibliografias-declaradas/{id}/buscarCatalogo', [BibliografiaDeclaradaController::class, 'buscarCatalogo']);
     $group->post('/bibliografias-declaradas/{id}/buscarCatalogo/api', [BibliografiaDeclaradaController::class, 'apiBuscarCatalogo']);
     $group->post('/bibliografias-declaradas/{id}/buscarGoogle/api', [BibliografiaDeclaradaController::class, 'apiBuscarGoogle']);
-    $group->post('/bibliografias-declaradas/{id}/guardar-seleccionadas', [BibliografiaDeclaradaController::class, 'guardarBibliografiasSeleccionadas']);
+$group->post('/bibliografias-declaradas/{id}/guardar-seleccionadas', [BibliografiaDeclaradaController::class, 'guardarBibliografiasSeleccionadas']);
+
+// API para obtener bibliografías disponibles de una bibliografía declarada
+$group->get('/api/bibliografias-declaradas/{id}/disponibles', [BibliografiaDeclaradaController::class, 'getBibliografiasDisponibles']);
 
     // Rutas para el módulo de autores
     $group->get('/autores', [src\Controllers\AutorController::class, 'index']);
