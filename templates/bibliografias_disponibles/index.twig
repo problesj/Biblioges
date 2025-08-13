@@ -237,6 +237,10 @@
         background-color: #36b9cc !important;
     }
     
+    .badge.bg-danger {
+        background-color: #e74a3b !important;
+    }
+    
     /* Estilos para botones de acción */
     .btn-sm {
         padding: 0.25rem 0.5rem !important;
@@ -392,6 +396,12 @@
                                 </th>
                                 <th class="text-center">Año Edición</th>
                                 <th class="text-center">Disponibilidad</th>
+                                <th class="text-center">
+                                    <a href="{{ build_sort_url('estado', ordenamiento.column, ordenamiento.direction, filtros, paginacion.current_page, paginacion.per_page) }}">
+                                        Estado
+                                        <i class="fas {{ get_sort_icon('estado', ordenamiento.column, ordenamiento.direction) }}"></i>
+                                    </a>
+                                </th>
                                 <th class="text-center">URL Acceso</th>
                                 <th class="text-center">URL Catálogo</th>
                                 <th class="text-center">Acciones</th>
@@ -411,6 +421,13 @@
                                         <span class="badge bg-success">Electrónico</span>
                                     {% else %}
                                         <span class="badge bg-info">Ambos</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if bibliografia.estado == 1 %}
+                                        <span class="badge bg-success">Activo</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inactivo</span>
                                     {% endif %}
                                 </td>
                                 <td class="text-center">
@@ -569,6 +586,8 @@ function limpiarFiltros() {
 }
 
 function confirmarEliminacion(id) {
+    console.log('Iniciando eliminación para ID:', id);
+    
     Swal.fire({
         title: '¿Está seguro?',
         text: "¿Está seguro de que desea eliminar esta bibliografía disponible?",
@@ -580,10 +599,15 @@ function confirmarEliminacion(id) {
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) {
+            console.log('Confirmado, creando formulario...');
+            
             // Crear un formulario temporal para enviar la petición POST
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = '{{ app_url }}bibliografias-disponibles/' + id + '/delete';
+            const actionUrl = '{{ app_url }}bibliografias-disponibles/' + id + '/delete';
+            form.action = actionUrl;
+            
+            console.log('URL de acción del formulario:', actionUrl);
             
             // Agregar el token CSRF si existe
             const csrfToken = document.querySelector('meta[name="csrf-token"]');
@@ -595,7 +619,16 @@ function confirmarEliminacion(id) {
                 form.appendChild(csrfInput);
             }
             
+            // Agregar un campo oculto para debug
+            const debugInput = document.createElement('input');
+            debugInput.type = 'hidden';
+            debugInput.name = 'debug_action';
+            debugInput.value = 'delete_bibliografia_disponible';
+            form.appendChild(debugInput);
+            
             document.body.appendChild(form);
+            console.log('Formulario creado, enviando...');
+            console.log('Formulario HTML:', form.outerHTML);
             form.submit();
         }
     });

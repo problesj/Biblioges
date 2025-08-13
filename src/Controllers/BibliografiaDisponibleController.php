@@ -79,7 +79,7 @@ class BibliografiaDisponibleController extends BaseController
             $sortColumn = $state['sort'];
             $sortDirection = $state['direction'];
             $allowedPerPage = [5, 10, 15, 20];
-            $allowedColumns = ['titulo', 'editorial', 'autores'];
+            $allowedColumns = ['titulo', 'editorial', 'autores', 'estado'];
             
             $offset = ($page - 1) * $perPage;
 
@@ -148,6 +148,9 @@ class BibliografiaDisponibleController extends BaseController
                     break;
                 case 'autores':
                     $baseQuery .= " ORDER BY MIN(a.apellidos) " . $sortDirection . ", MIN(a.nombres) " . $sortDirection;
+                    break;
+                case 'estado':
+                    $baseQuery .= " ORDER BY bd.estado " . $sortDirection;
                     break;
                 default:
                     $baseQuery .= " ORDER BY bd.titulo ASC";
@@ -880,14 +883,23 @@ class BibliografiaDisponibleController extends BaseController
      */
     public function destroy(Request $request, Response $response, array $args): Response
     {
+        error_log('BibliografiaDisponibleController@destroy: Iniciando eliminación');
+        error_log('ID recibido: ' . ($args['id'] ?? 'NO_ID'));
+        error_log('Método HTTP: ' . $request->getMethod());
+        error_log('URI: ' . $request->getUri()->getPath());
+        
         try {
             $bibliografia = BibliografiaDisponible::findOrFail($args['id']);
+            error_log('Bibliografía encontrada: ' . $bibliografia->id);
+            
             $bibliografia->delete();
+            error_log('Bibliografía eliminada exitosamente');
             
             $_SESSION['success'] = 'Bibliografía disponible eliminada exitosamente';
             header('Location: ' . Config::get('app_url') . 'bibliografias-disponibles');
             exit;
         } catch (\Exception $e) {
+            error_log('Error al eliminar bibliografía: ' . $e->getMessage());
             $_SESSION['error'] = 'Error al eliminar la bibliografía disponible: ' . $e->getMessage();
             header('Location: ' . Config::get('app_url') . 'bibliografias-disponibles');
             exit;

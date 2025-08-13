@@ -148,13 +148,14 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
         $group->get('/clear-state', [BibliografiaDisponibleController::class, 'clearState']);
         $group->get('/create', [BibliografiaDisponibleController::class, 'create']);
         $group->post('', [BibliografiaDisponibleController::class, 'store']);
-        $group->get('/{id}', [BibliografiaDisponibleController::class, 'show']);
+        $group->post('/{id}/delete', [BibliografiaDisponibleController::class, 'destroy']);
+        $group->post('/{id}/update', [BibliografiaDisponibleController::class, 'update']);
+        $group->post('/{id}/vincular', [BibliografiaDisponibleController::class, 'vincularBibliografiaDisponible']);
         $group->get('/{id}/edit', [BibliografiaDisponibleController::class, 'edit']);
         $group->put('/{id}', [BibliografiaDisponibleController::class, 'update']);
-        $group->post('/{id}/update', [BibliografiaDisponibleController::class, 'update']);
         $group->delete('/{id}', [BibliografiaDisponibleController::class, 'destroy']);
-        $group->post('/{id}/delete', [BibliografiaDisponibleController::class, 'destroy']);
-        $group->post('/{id}/vincular', [BibliografiaDisponibleController::class, 'vincularBibliografiaDisponible']);
+        $group->post('/{id}', [BibliografiaDisponibleController::class, 'destroy']);
+        $group->get('/{id}', [BibliografiaDisponibleController::class, 'show']);
     });
 
     // Bibliografías Declaradas
