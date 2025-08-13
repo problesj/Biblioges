@@ -32,10 +32,16 @@ ini_set('error_log_charset', 'UTF-8');
 ini_set('session.cookie_httponly', 1);
 ini_set('session.cookie_secure', 0);
 ini_set('session.cookie_samesite', 'Lax');
-ini_set('session.gc_maxlifetime', 3600);
-ini_set('session.cookie_lifetime', 3600);
+
+// Usar configuración del .env para la duración de sesión
+$sessionLifetime = $_ENV['SESSION_LIFETIME'] ?? 7200; // Por defecto 2 horas si no está definido
+ini_set('session.gc_maxlifetime', $sessionLifetime);
+ini_set('session.cookie_lifetime', $sessionLifetime);
 ini_set('session.use_strict_mode', 1);
 ini_set('session.save_path', __DIR__ . '/../storage/framework/sessions');
+
+// Log para verificar la configuración de sesión aplicada
+error_log('Configuración de sesión: SESSION_LIFETIME=' . $sessionLifetime . ' segundos (' . ($sessionLifetime/60) . ' minutos)');
 
 // Iniciar sesión si no está iniciada
 if (session_status() === PHP_SESSION_NONE) {
