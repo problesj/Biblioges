@@ -11,6 +11,8 @@ Sistema web para la gestión de bibliografías universitarias, permitiendo la ad
 - **Ordenamiento dinámico** por múltiples columnas (ascendente/descendente)
 - **Filtros de búsqueda** con múltiples criterios
 - **Validación de datos** en tiempo real
+- **Fusión inteligente de asignaturas** con preservación de referencias
+- **Vinculación de asignaturas electivas** con interfaz dual y búsqueda avanzada
 
 ### Autenticación y Seguridad
 - **Integración con Active Directory** (LDAP)
@@ -31,6 +33,8 @@ Sistema web para la gestión de bibliografías universitarias, permitiendo la ad
 - **Notificaciones en tiempo real** con SweetAlert2
 - **Iconografía FontAwesome** para mejor UX
 - **Temas personalizables** con Bootstrap 5
+- **Interfaz dual para vinculación** con paneles sincronizados
+- **Botones de acción inteligentes** que se mantienen visibles durante el scroll
 
 ### Rendimiento y Optimización
 - **Caché de consultas** para mejorar tiempos de respuesta
@@ -38,6 +42,13 @@ Sistema web para la gestión de bibliografías universitarias, permitiendo la ad
 - **Optimización de imágenes** automática
 - **Lazy loading** para contenido pesado
 - **Consultas SQL optimizadas** con índices apropiados
+
+### Búsqueda y Filtrado Avanzado
+- **Búsqueda inteligente** que ignora acentos, mayúsculas y caracteres especiales
+- **Normalización de términos** para búsquedas flexibles y precisas
+- **Filtrado en tiempo real** con actualización instantánea de resultados
+- **Búsqueda por múltiples criterios** (nombre, código, tipo, estado)
+- **Contadores de resultados** en tiempo real para mejor navegación
 
 ## Requerimientos del Sistema
 
@@ -463,11 +474,50 @@ ls -la public/exports/
 - **Nuevo:** Búsquedas integradas con Google Scholar y Google Books
 - **Nuevo:** Detección automática de metadatos académicos
 
+### Gestión de Asignaturas y Mallas Curriculares
+- **Fusión de Asignaturas:** Sistema inteligente para combinar asignaturas duplicadas
+  - Detección automática de duplicados por nombre, código y contenido
+  - Algoritmo de similitud para identificar variaciones de la misma asignatura
+  - Preservación de todas las referencias y bibliografías durante la fusión
+  - Historial completo de fusiones realizadas
+  - Validación antes de ejecutar la fusión para evitar pérdida de datos
+- **Vinculación de Asignaturas Electivas:** Sistema para conectar asignaturas de formación general
+  - Interfaz dual con paneles de asignaturas disponibles y vinculadas
+  - Búsqueda avanzada por nombre y código (ignora acentos, mayúsculas y caracteres especiales)
+  - Filtrado por tipo de asignatura (Formación General, Formación Especializada, etc.)
+  - Botones de acción inteligentes que se mantienen visibles durante el scroll
+  - Gestión de relaciones entre asignaturas electivas y regulares
+  - Contadores de resultados en tiempo real
+  - **Funcionalidades específicas:**
+    - Selección de asignatura electiva desde dropdown con códigos
+    - Filtrado por tipo de asignatura a vincular
+    - Búsqueda en tiempo real en ambos paneles
+    - Selección múltiple con checkboxes individuales y "seleccionar todo"
+    - Botones de acción (Vincular/Desvincular) con iconos intuitivos
+    - Posicionamiento inteligente de botones (inicial en tope, sticky durante scroll)
+    - Interfaz responsive que se adapta a diferentes tamaños de pantalla
+
 ### Gestión de Autores Avanzada
 - **Nuevo:** Algoritmo ultra-optimizado para detección de duplicados
 - **Nuevo:** Sistema de variaciones y alias de autores
 - **Nuevo:** Fusión automática de registros duplicados
 - **Nuevo:** Preservación de referencias durante fusión
+
+### Mejoras Técnicas en Vinculación de Asignaturas
+- **Sistema de posicionamiento híbrido:**
+  - Posición inicial en la parte superior de los paneles
+  - Modo sticky durante el scroll dentro del área de los paneles
+  - Modo fijo cuando el scroll va más allá de los paneles
+- **Búsqueda y filtrado optimizado:**
+  - Normalización de términos de búsqueda (UTF-8, acentos, caracteres especiales)
+  - Filtrado en memoria para mejor rendimiento
+  - Actualización en tiempo real de resultados
+  - Preservación de listas originales durante el filtrado
+- **Interfaz de usuario mejorada:**
+  - Transiciones CSS suaves entre estados
+  - Indicadores visuales de estado de los botones
+  - Responsive design para dispositivos móviles
+  - Accesibilidad mejorada con tooltips y labels descriptivos
 
 ### APIs de Google Integradas
 - **Google Scholar API:** Búsqueda académica avanzada
@@ -562,6 +612,54 @@ Para una navegación completa de toda la documentación técnica:
 - **Requerimientos del Sistema:** `docs/REQUERIMIENTOS_SISTEMA.md`
 - **Configuración Apache:** `docs/APACHE_CONFIGURACION_ACTUAL.md`
 - **Configuración HTTP/HTTPS:** `docs/APACHE_HTTP_HTTPS_CONFIGURATION.md`
+
+## Uso y Funcionamiento
+
+### Vinculación de Asignaturas Electivas
+
+#### Acceso al Módulo:
+1. Navegar a **Asignaturas** → **Vincular Asignaturas Electivas**
+2. Seleccionar una **Asignatura Electiva** desde el dropdown
+3. Elegir el **Tipo de Asignatura a Vincular** (Formación General, etc.)
+
+#### Funcionalidades Principales:
+- **Panel Izquierdo - Asignaturas Disponibles:**
+  - Lista de asignaturas que pueden ser vinculadas
+  - Búsqueda en tiempo real por nombre o código
+  - Selección múltiple con checkboxes
+  - Contador de resultados visible
+
+- **Panel Derecho - Asignaturas Vinculadas:**
+  - Lista de asignaturas ya conectadas
+  - Misma funcionalidad de búsqueda y selección
+  - Contador de asignaturas vinculadas
+
+- **Botones de Acción (Centro):**
+  - **Vincular** (→): Mueve asignaturas seleccionadas al panel derecho
+  - **Desvincular** (←): Mueve asignaturas seleccionadas al panel izquierdo
+  - Se mantienen visibles durante el scroll para mejor accesibilidad
+
+#### Características de Búsqueda:
+- **Ignora mayúsculas/minúsculas**
+- **Ignora acentos y caracteres especiales** (ñ, ü, etc.)
+- **Búsqueda por nombre o código**
+- **Filtrado en tiempo real**
+- **Resultados instantáneos**
+
+### Fusión de Asignaturas
+
+#### Proceso de Fusión:
+1. **Detección automática** de asignaturas duplicadas
+2. **Validación** de similitud y contenido
+3. **Selección** de asignatura principal y secundaria
+4. **Ejecución** de la fusión con preservación de datos
+5. **Verificación** de resultados y referencias
+
+#### Características de Seguridad:
+- **Preservación completa** de bibliografías y referencias
+- **Historial detallado** de todas las fusiones realizadas
+- **Validación previa** para evitar pérdida de datos
+- **Rollback automático** en caso de errores
 
 ## Contacto y Soporte
 

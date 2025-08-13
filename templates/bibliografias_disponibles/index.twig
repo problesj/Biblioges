@@ -311,7 +311,11 @@
                 <div class="col-md-6">
                     <label for="busqueda" class="form-label">Buscar</label>
                     <input type="text" class="form-control" id="busqueda" name="busqueda" 
-                           placeholder="Buscar por título, editorial o autor..." value="{{ filtros.busqueda|default('') }}">
+                           placeholder="Buscar por título, editorial o autor (ignora acentos, mayúsculas y orden de palabras)..." value="{{ filtros.busqueda|default('') }}">
+                    <small class="form-text text-muted">
+                        <i class="fas fa-info-circle"></i>
+                        La búsqueda ignora acentos, mayúsculas/minúsculas y permite palabras en cualquier orden.
+                    </small>
                 </div>
                 <div class="col-md-2">
                     <label for="disponibilidad" class="form-label">Disponibilidad</label>
@@ -580,6 +584,39 @@ function changePerPage(value) {
     url.searchParams.set('page', '1'); // Reset a la primera página
     window.location.href = url.toString();
 }
+
+// Manejar envío del formulario de filtros
+document.getElementById('filtroForm').addEventListener('submit', function(e) {
+    const currentUrl = new URL(window.location);
+    const formData = new FormData(this);
+    
+    // Limpiar parámetros existentes
+    currentUrl.search = '';
+    
+    // Agregar solo los filtros que tienen valor
+    for (let [key, value] of formData.entries()) {
+        if (value && value.trim() !== '') {
+            currentUrl.searchParams.set(key, value);
+        }
+    }
+    
+    // Resetear paginación al aplicar filtros
+    currentUrl.searchParams.set('page', '1');
+    
+    // Redirigir a la nueva URL
+    window.location.href = currentUrl.toString();
+    e.preventDefault();
+});
+
+// Manejar cambio de filtros en tiempo real (opcional)
+document.querySelectorAll('select[name="disponibilidad"], select[name="estado"]').forEach(select => {
+    select.addEventListener('change', function() {
+        // Solo aplicar automáticamente si no es el campo de búsqueda (que requiere confirmación del usuario)
+        if (this.name !== 'busqueda') {
+            document.getElementById('filtroForm').dispatchEvent(new Event('submit'));
+        }
+    });
+});
 
 function limpiarFiltros() {
     window.location.href = '{{ app_url }}bibliografias-disponibles/clear-state';

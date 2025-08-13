@@ -306,93 +306,108 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
         // line 224
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "asignaturas\" class=\"row g-3\">
-                <div class=\"col-md-4\">
+                <div class=\"col-md-3\">
                     <label for=\"nombre\" class=\"form-label\">Nombre</label>
                     <input type=\"text\" class=\"form-control\" id=\"nombre\" name=\"nombre\" value=\"";
         // line 227
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "nombre", [], "any", true, true, false, 227)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "nombre", [], "any", false, false, false, 227), "")) : ("")), "html", null, true);
-        yield "\" placeholder=\"Buscar por nombre...\">
+        yield "\" placeholder=\"Buscar por nombre (ignora acentos, mayúsculas y orden de palabras)...\">
+                    <small class=\"form-text text-muted\">
+                        <i class=\"fas fa-info-circle\"></i>
+                        La búsqueda ignora acentos, mayúsculas/minúsculas y permite palabras en cualquier orden.
+                    </small>
                 </div>
-                <div class=\"col-md-4\">
+                <div class=\"col-md-3\">
+                    <label for=\"codigo\" class=\"form-label\">Código</label>
+                    <input type=\"text\" class=\"form-control\" id=\"codigo\" name=\"codigo\" value=\"";
+        // line 235
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "codigo", [], "any", true, true, false, 235)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "codigo", [], "any", false, false, false, 235), "")) : ("")), "html", null, true);
+        yield "\" placeholder=\"Buscar por código de asignatura...\">
+                    <small class=\"form-text text-muted\">
+                        <i class=\"fas fa-info-circle\"></i>
+                        Ej: MAT-101, FIS-201, etc.
+                    </small>
+                </div>
+                <div class=\"col-md-3\">
                     <label for=\"tipo\" class=\"form-label\">Tipo</label>
                     <select class=\"form-select\" id=\"tipo\" name=\"tipo\">
                         <option value=\"\">Todos los tipos</option>
                         <option value=\"REGULAR\" ";
-        // line 233
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 233) == "REGULAR")) {
+        // line 245
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 245) == "REGULAR")) {
             yield "selected";
         }
         yield ">Regular</option>
                         <option value=\"FORMACION_BASICA\" ";
-        // line 234
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 234) == "FORMACION_BASICA")) {
+        // line 246
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 246) == "FORMACION_BASICA")) {
             yield "selected";
         }
         yield ">Formación Básica</option>
                         <option value=\"FORMACION_GENERAL\" ";
-        // line 235
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 235) == "FORMACION_GENERAL")) {
+        // line 247
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 247) == "FORMACION_GENERAL")) {
             yield "selected";
         }
         yield ">Formación General</option>
                         <option value=\"FORMACION_IDIOMAS\" ";
-        // line 236
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 236) == "FORMACION_IDIOMAS")) {
+        // line 248
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 248) == "FORMACION_IDIOMAS")) {
             yield "selected";
         }
         yield ">Formación Idiomas</option>
                         <option value=\"FORMACION_PROFESIONAL\" ";
-        // line 237
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 237) == "FORMACION_PROFESIONAL")) {
+        // line 249
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 249) == "FORMACION_PROFESIONAL")) {
             yield "selected";
         }
         yield ">Formación Profesional</option>
                         <option value=\"FORMACION_VALORES\" ";
-        // line 238
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 238) == "FORMACION_VALORES")) {
+        // line 250
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 250) == "FORMACION_VALORES")) {
             yield "selected";
         }
         yield ">Formación Valores</option>
                         <option value=\"FORMACION_ESPECIALIDAD\" ";
-        // line 239
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 239) == "FORMACION_ESPECIALIDAD")) {
+        // line 251
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 251) == "FORMACION_ESPECIALIDAD")) {
             yield "selected";
         }
         yield ">Formación Especialidad</option>
                         <option value=\"FORMACION_ELECTIVA\" ";
-        // line 240
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 240) == "FORMACION_ELECTIVA")) {
+        // line 252
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 252) == "FORMACION_ELECTIVA")) {
             yield "selected";
         }
         yield ">Formación Electiva</option>
                         <option value=\"FORMACION_ESPECIAL\" ";
-        // line 241
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 241) == "FORMACION_ESPECIAL")) {
+        // line 253
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "tipo", [], "any", false, false, false, 253) == "FORMACION_ESPECIAL")) {
             yield "selected";
         }
         yield ">Formación Especial</option>
                     </select>
                 </div>
-                <div class=\"col-md-4\">
+                <div class=\"col-md-3\">
                     <label for=\"unidad\" class=\"form-label\">Unidad</label>
                     <select class=\"form-select\" id=\"unidad\" name=\"unidad\" style=\"font-size: 0.85rem;\">
                         <option value=\"\">Todas las unidades</option>
                         ";
-        // line 248
+        // line 260
         $context['_parent'] = $context;
         $context['_seq'] = CoreExtension::ensureTraversable(($context["unidades"] ?? null));
         foreach ($context['_seq'] as $context["_key"] => $context["unidad"]) {
-            // line 249
+            // line 261
             yield "                            <option value=\"";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "id", [], "any", false, false, false, 249), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "id", [], "any", false, false, false, 261), "html", null, true);
             yield "\" ";
-            if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "unidad", [], "any", false, false, false, 249) == CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "id", [], "any", false, false, false, 249))) {
+            if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "unidad", [], "any", false, false, false, 261) == CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "id", [], "any", false, false, false, 261))) {
                 yield "selected";
             }
             yield " style=\"font-size: 0.85rem;\">
                                 ";
-            // line 250
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "unidad_completa", [], "any", false, false, false, 250), "html", null, true);
+            // line 262
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["unidad"], "unidad_completa", [], "any", false, false, false, 262), "html", null, true);
             yield "
                             </option>
                         ";
@@ -400,22 +415,22 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_key'], $context['unidad'], $context['_parent']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 253
+        // line 265
         yield "                    </select>
                 </div>
-                <div class=\"col-md-4\">
+                <div class=\"col-md-3\">
                     <label for=\"estado\" class=\"form-label\">Estado</label>
                     <select class=\"form-select\" id=\"estado\" name=\"estado\">
                         <option value=\"\">Todos</option>
                         <option value=\"1\" ";
-        // line 259
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "estado", [], "any", false, false, false, 259) == "1")) {
+        // line 271
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "estado", [], "any", false, false, false, 271) == "1")) {
             yield "selected";
         }
         yield ">Activo</option>
                         <option value=\"0\" ";
-        // line 260
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "estado", [], "any", false, false, false, 260) == "0")) {
+        // line 272
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["filtros"] ?? null), "estado", [], "any", false, false, false, 272) == "0")) {
             yield "selected";
         }
         yield ">Inactivo</option>
@@ -428,7 +443,7 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
                             <i class=\"fas fa-filter\"></i> Aplicar Filtros
                         </button>
                         <a href=\"";
-        // line 269
+        // line 281
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "asignaturas/clear-state\" class=\"btn btn-secondary\">
                             <i class=\"fas fa-times\"></i> Limpiar Filtros
@@ -449,20 +464,20 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
                     <label for=\"per_page\" class=\"form-label mb-0\">Registros por página:</label>
                     <select id=\"per_page\" class=\"form-select form-select-sm\" style=\"width: auto;\">
                         ";
-        // line 287
+        // line 299
         $context['_parent'] = $context;
-        $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "allowed_per_page", [], "any", false, false, false, 287));
+        $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "allowed_per_page", [], "any", false, false, false, 299));
         foreach ($context['_seq'] as $context["_key"] => $context["option"]) {
-            // line 288
+            // line 300
             yield "                            <option value=\"";
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($context["option"], "html", null, true);
             yield "\" ";
-            if ((CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "per_page", [], "any", false, false, false, 288) == $context["option"])) {
+            if ((CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "per_page", [], "any", false, false, false, 300) == $context["option"])) {
                 yield "selected";
             }
             yield ">
                                 ";
-            // line 289
+            // line 301
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($context["option"], "html", null, true);
             yield "
                             </option>
@@ -471,15 +486,15 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_key'], $context['option'], $context['_parent']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 292
+        // line 304
         yield "                    </select>
                 </div>
                 <div class=\"records-counter\">
                     Mostrando ";
-        // line 295
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "per_page", [], "any", false, false, false, 295), "html", null, true);
+        // line 307
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "per_page", [], "any", false, false, false, 307), "html", null, true);
         yield " de ";
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "total_records", [], "any", false, false, false, 295), "html", null, true);
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "total_records", [], "any", false, false, false, 307), "html", null, true);
         yield " registros
                 </div>
             </div>
@@ -491,62 +506,62 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
                         <tr>
                             <th>
                                 <a href=\"";
-        // line 305
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('build_sort_url')->getCallable()("nombre", CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 305), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 305), ($context["filtros"] ?? null), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "current_page", [], "any", false, false, false, 305), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "per_page", [], "any", false, false, false, 305)), "html", null, true);
+        // line 317
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('build_sort_url')->getCallable()("nombre", CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 317), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 317), ($context["filtros"] ?? null), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "current_page", [], "any", false, false, false, 317), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "per_page", [], "any", false, false, false, 317)), "html", null, true);
         yield "\">
                                     Nombre
                                     <i class=\"fas ";
-        // line 307
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('get_sort_icon')->getCallable()("nombre", CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 307), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 307)), "html", null, true);
+        // line 319
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('get_sort_icon')->getCallable()("nombre", CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 319), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 319)), "html", null, true);
         yield "\"></i>
                                 </a>
                             </th>
                             <th>
                                 <a href=\"";
-        // line 311
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('build_sort_url')->getCallable()("tipo", CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 311), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 311), ($context["filtros"] ?? null), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "current_page", [], "any", false, false, false, 311), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "per_page", [], "any", false, false, false, 311)), "html", null, true);
+        // line 323
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('build_sort_url')->getCallable()("tipo", CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 323), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 323), ($context["filtros"] ?? null), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "current_page", [], "any", false, false, false, 323), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "per_page", [], "any", false, false, false, 323)), "html", null, true);
         yield "\">
                                     Tipo
                                     <i class=\"fas ";
-        // line 313
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('get_sort_icon')->getCallable()("tipo", CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 313), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 313)), "html", null, true);
+        // line 325
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('get_sort_icon')->getCallable()("tipo", CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 325), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 325)), "html", null, true);
         yield "\"></i>
                                 </a>
                             </th>
                             <th>Vigencia</th>
                             <th>
                                 <a href=\"";
-        // line 318
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('build_sort_url')->getCallable()("periodicidad", CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 318), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 318), ($context["filtros"] ?? null), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "current_page", [], "any", false, false, false, 318), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "per_page", [], "any", false, false, false, 318)), "html", null, true);
+        // line 330
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('build_sort_url')->getCallable()("periodicidad", CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 330), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 330), ($context["filtros"] ?? null), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "current_page", [], "any", false, false, false, 330), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "per_page", [], "any", false, false, false, 330)), "html", null, true);
         yield "\">
                                     Periodicidad
                                     <i class=\"fas ";
-        // line 320
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('get_sort_icon')->getCallable()("periodicidad", CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 320), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 320)), "html", null, true);
+        // line 332
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('get_sort_icon')->getCallable()("periodicidad", CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 332), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 332)), "html", null, true);
         yield "\"></i>
                                 </a>
                             </th>
                             <th class=\"text-center\">
                                 <a href=\"";
-        // line 324
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('build_sort_url')->getCallable()("estado", CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 324), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 324), ($context["filtros"] ?? null), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "current_page", [], "any", false, false, false, 324), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "per_page", [], "any", false, false, false, 324)), "html", null, true);
+        // line 336
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('build_sort_url')->getCallable()("estado", CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 336), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 336), ($context["filtros"] ?? null), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "current_page", [], "any", false, false, false, 336), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "per_page", [], "any", false, false, false, 336)), "html", null, true);
         yield "\">
                                     Estado
                                     <i class=\"fas ";
-        // line 326
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('get_sort_icon')->getCallable()("estado", CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 326), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 326)), "html", null, true);
+        // line 338
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('get_sort_icon')->getCallable()("estado", CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 338), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 338)), "html", null, true);
         yield "\"></i>
                                 </a>
                             </th>
                             <th class=\"text-center\">
                                 <a href=\"";
-        // line 330
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('build_sort_url')->getCallable()("unidad", CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 330), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 330), ($context["filtros"] ?? null), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "current_page", [], "any", false, false, false, 330), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "per_page", [], "any", false, false, false, 330)), "html", null, true);
+        // line 342
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('build_sort_url')->getCallable()("unidad", CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 342), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 342), ($context["filtros"] ?? null), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "current_page", [], "any", false, false, false, 342), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "per_page", [], "any", false, false, false, 342)), "html", null, true);
         yield "\">
                                     Unidades
                                     <i class=\"fas ";
-        // line 332
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('get_sort_icon')->getCallable()("unidad", CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 332), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 332)), "html", null, true);
+        // line 344
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('get_sort_icon')->getCallable()("unidad", CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 344), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 344)), "html", null, true);
         yield "\"></i>
                                 </a>
                             </th>
@@ -555,69 +570,69 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
                     </thead>
                     <tbody>
                         ";
-        // line 339
+        // line 351
         $context['_parent'] = $context;
         $context['_seq'] = CoreExtension::ensureTraversable(($context["asignaturas"] ?? null));
         $context['_iterated'] = false;
         foreach ($context['_seq'] as $context["_key"] => $context["asignatura"]) {
-            // line 340
+            // line 352
             yield "                        <tr>
                             <td>";
-            // line 341
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "nombre", [], "any", false, false, false, 341), "html", null, true);
+            // line 353
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "nombre", [], "any", false, false, false, 353), "html", null, true);
             yield "</td>
                             <td>";
-            // line 342
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "tipo", [], "any", false, false, false, 342), "html", null, true);
+            // line 354
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "tipo", [], "any", false, false, false, 354), "html", null, true);
             yield "</td>
                             <td>";
-            // line 343
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "vigencia_desde", [], "any", false, false, false, 343), "html", null, true);
+            // line 355
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "vigencia_desde", [], "any", false, false, false, 355), "html", null, true);
             yield " - ";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "vigencia_hasta", [], "any", false, false, false, 343), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "vigencia_hasta", [], "any", false, false, false, 355), "html", null, true);
             yield "</td>
                             <td>";
-            // line 344
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "periodicidad", [], "any", false, false, false, 344), "html", null, true);
+            // line 356
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "periodicidad", [], "any", false, false, false, 356), "html", null, true);
             yield "</td>
                             <td>
                                 <span class=\"badge bg-";
-            // line 346
-            yield (((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "estado", [], "any", false, false, false, 346) == "1")) ? ("success") : ("danger"));
+            // line 358
+            yield (((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "estado", [], "any", false, false, false, 358) == "1")) ? ("success") : ("danger"));
             yield "\">
                                     ";
-            // line 347
-            yield (((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "estado", [], "any", false, false, false, 347) == "1")) ? ("Activo") : ("Inactivo"));
+            // line 359
+            yield (((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "estado", [], "any", false, false, false, 359) == "1")) ? ("Activo") : ("Inactivo"));
             yield "
                                 </span>
                             </td>
                             <td style=\"white-space: pre-line\">";
-            // line 350
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "unidades", [], "any", true, true, false, 350)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "unidades", [], "any", false, false, false, 350), "Sin unidad")) : ("Sin unidad")), "html", null, true);
+            // line 362
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "unidades", [], "any", true, true, false, 362)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "unidades", [], "any", false, false, false, 362), "Sin unidad")) : ("Sin unidad")), "html", null, true);
             yield "</td>
                             <td>
                                 <div class=\"btn-group\">
                                     <a href=\"";
-            // line 353
+            // line 365
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
             yield "asignaturas/";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 353), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 365), "html", null, true);
             yield "\" class=\"btn btn-sm btn-primary\" title=\"Ver\">
                                         <i class=\"fas fa-eye\"></i>
                                     </a>
                                     <a href=\"";
-            // line 356
+            // line 368
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
             yield "asignaturas/";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 356), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 368), "html", null, true);
             yield "/edit\" class=\"btn btn-sm btn-warning\" title=\"Editar\">
                                         <i class=\"fas fa-edit\"></i>
                                     </a>
                                     <form action=\"";
-            // line 359
+            // line 371
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
             yield "asignaturas/";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 359), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 371), "html", null, true);
             yield "/delete\" method=\"POST\" class=\"d-inline delete-form\">
                                         <button type=\"submit\" class=\"btn btn-sm btn-danger\" title=\"Eliminar\">
                                             <i class=\"fas fa-trash\"></i>
@@ -629,9 +644,9 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
                         ";
             $context['_iterated'] = true;
         }
-        // line 367
+        // line 379
         if (!$context['_iterated']) {
-            // line 368
+            // line 380
             yield "                        <tr>
                             <td colspan=\"7\" class=\"text-center\">No se encontraron asignaturas</td>
                         </tr>
@@ -640,162 +655,162 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_key'], $context['asignatura'], $context['_parent'], $context['_iterated']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 372
+        // line 384
         yield "                    </tbody>
                 </table>
             </div>
 
             <!-- Paginación -->
             ";
-        // line 377
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "total_pages", [], "any", false, false, false, 377) > 1)) {
-            // line 378
+        // line 389
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "total_pages", [], "any", false, false, false, 389) > 1)) {
+            // line 390
             yield "            <nav aria-label=\"Navegación de páginas\">
                 <ul class=\"pagination justify-content-center\">
                     <!-- Botón Anterior -->
                     ";
-            // line 381
-            if (CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "has_previous", [], "any", false, false, false, 381)) {
-                // line 382
+            // line 393
+            if (CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "has_previous", [], "any", false, false, false, 393)) {
+                // line 394
                 yield "                        <li class=\"page-item\">
                             <a class=\"page-link\" href=\"";
-                // line 383
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('build_page_url')->getCallable()(CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "previous_page", [], "any", false, false, false, 383), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 383), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 383), ($context["filtros"] ?? null), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "per_page", [], "any", false, false, false, 383)), "html", null, true);
+                // line 395
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('build_page_url')->getCallable()(CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "previous_page", [], "any", false, false, false, 395), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 395), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 395), ($context["filtros"] ?? null), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "per_page", [], "any", false, false, false, 395)), "html", null, true);
                 yield "\">
                                 <i class=\"fas fa-chevron-left\"></i> Anterior
                             </a>
                         </li>
                     ";
             } else {
-                // line 388
+                // line 400
                 yield "                        <li class=\"page-item disabled\">
                             <span class=\"page-link\"><i class=\"fas fa-chevron-left\"></i> Anterior</span>
                         </li>
                     ";
             }
-            // line 392
+            // line 404
             yield "
                     <!-- Números de página -->
                     ";
-            // line 394
-            $context["start_page"] = max(1, (CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "current_page", [], "any", false, false, false, 394) - 2));
-            // line 395
+            // line 406
+            $context["start_page"] = max(1, (CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "current_page", [], "any", false, false, false, 406) - 2));
+            // line 407
             yield "                    ";
-            $context["end_page"] = min(CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "total_pages", [], "any", false, false, false, 395), (CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "current_page", [], "any", false, false, false, 395) + 2));
-            // line 396
+            $context["end_page"] = min(CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "total_pages", [], "any", false, false, false, 407), (CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "current_page", [], "any", false, false, false, 407) + 2));
+            // line 408
             yield "
                     ";
-            // line 397
+            // line 409
             if ((($context["start_page"] ?? null) > 1)) {
-                // line 398
+                // line 410
                 yield "                        <li class=\"page-item\">
                             <a class=\"page-link\" href=\"";
-                // line 399
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('build_page_url')->getCallable()(1, CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 399), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 399), ($context["filtros"] ?? null), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "per_page", [], "any", false, false, false, 399)), "html", null, true);
+                // line 411
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('build_page_url')->getCallable()(1, CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 411), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 411), ($context["filtros"] ?? null), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "per_page", [], "any", false, false, false, 411)), "html", null, true);
                 yield "\">1</a>
                         </li>
                         ";
-                // line 401
+                // line 413
                 if ((($context["start_page"] ?? null) > 2)) {
-                    // line 402
+                    // line 414
                     yield "                            <li class=\"page-item disabled\">
                                 <span class=\"page-link\">...</span>
-                            </li>
-                        ";
-                }
-                // line 406
-                yield "                    ";
-            }
-            // line 407
-            yield "
-                    ";
-            // line 408
-            $context['_parent'] = $context;
-            $context['_seq'] = CoreExtension::ensureTraversable(range(($context["start_page"] ?? null), ($context["end_page"] ?? null)));
-            foreach ($context['_seq'] as $context["_key"] => $context["page_num"]) {
-                // line 409
-                yield "                        ";
-                if (($context["page_num"] == CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "current_page", [], "any", false, false, false, 409))) {
-                    // line 410
-                    yield "                            <li class=\"page-item active\">
-                                <span class=\"page-link\">";
-                    // line 411
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($context["page_num"], "html", null, true);
-                    yield "</span>
-                            </li>
-                        ";
-                } else {
-                    // line 414
-                    yield "                            <li class=\"page-item\">
-                                <a class=\"page-link\" href=\"";
-                    // line 415
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('build_page_url')->getCallable()($context["page_num"], CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 415), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 415), ($context["filtros"] ?? null), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "per_page", [], "any", false, false, false, 415)), "html", null, true);
-                    yield "\">";
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($context["page_num"], "html", null, true);
-                    yield "</a>
                             </li>
                         ";
                 }
                 // line 418
                 yield "                    ";
             }
-            $_parent = $context['_parent'];
-            unset($context['_seq'], $context['_key'], $context['page_num'], $context['_parent']);
-            $context = array_intersect_key($context, $_parent) + $_parent;
             // line 419
             yield "
                     ";
             // line 420
-            if ((($context["end_page"] ?? null) < CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "total_pages", [], "any", false, false, false, 420))) {
+            $context['_parent'] = $context;
+            $context['_seq'] = CoreExtension::ensureTraversable(range(($context["start_page"] ?? null), ($context["end_page"] ?? null)));
+            foreach ($context['_seq'] as $context["_key"] => $context["page_num"]) {
                 // line 421
                 yield "                        ";
-                if ((($context["end_page"] ?? null) < (CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "total_pages", [], "any", false, false, false, 421) - 1))) {
+                if (($context["page_num"] == CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "current_page", [], "any", false, false, false, 421))) {
                     // line 422
+                    yield "                            <li class=\"page-item active\">
+                                <span class=\"page-link\">";
+                    // line 423
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($context["page_num"], "html", null, true);
+                    yield "</span>
+                            </li>
+                        ";
+                } else {
+                    // line 426
+                    yield "                            <li class=\"page-item\">
+                                <a class=\"page-link\" href=\"";
+                    // line 427
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('build_page_url')->getCallable()($context["page_num"], CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 427), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 427), ($context["filtros"] ?? null), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "per_page", [], "any", false, false, false, 427)), "html", null, true);
+                    yield "\">";
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($context["page_num"], "html", null, true);
+                    yield "</a>
+                            </li>
+                        ";
+                }
+                // line 430
+                yield "                    ";
+            }
+            $_parent = $context['_parent'];
+            unset($context['_seq'], $context['_key'], $context['page_num'], $context['_parent']);
+            $context = array_intersect_key($context, $_parent) + $_parent;
+            // line 431
+            yield "
+                    ";
+            // line 432
+            if ((($context["end_page"] ?? null) < CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "total_pages", [], "any", false, false, false, 432))) {
+                // line 433
+                yield "                        ";
+                if ((($context["end_page"] ?? null) < (CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "total_pages", [], "any", false, false, false, 433) - 1))) {
+                    // line 434
                     yield "                            <li class=\"page-item disabled\">
                                 <span class=\"page-link\">...</span>
                             </li>
                         ";
                 }
-                // line 426
+                // line 438
                 yield "                        <li class=\"page-item\">
                             <a class=\"page-link\" href=\"";
-                // line 427
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('build_page_url')->getCallable()(CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "total_pages", [], "any", false, false, false, 427), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 427), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 427), ($context["filtros"] ?? null), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "per_page", [], "any", false, false, false, 427)), "html", null, true);
+                // line 439
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('build_page_url')->getCallable()(CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "total_pages", [], "any", false, false, false, 439), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 439), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 439), ($context["filtros"] ?? null), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "per_page", [], "any", false, false, false, 439)), "html", null, true);
                 yield "\">";
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "total_pages", [], "any", false, false, false, 427), "html", null, true);
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "total_pages", [], "any", false, false, false, 439), "html", null, true);
                 yield "</a>
                         </li>
                     ";
             }
-            // line 430
+            // line 442
             yield "
                     <!-- Botón Siguiente -->
                     ";
-            // line 432
-            if (CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "has_next", [], "any", false, false, false, 432)) {
-                // line 433
+            // line 444
+            if (CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "has_next", [], "any", false, false, false, 444)) {
+                // line 445
                 yield "                        <li class=\"page-item\">
                             <a class=\"page-link\" href=\"";
-                // line 434
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('build_page_url')->getCallable()(CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "next_page", [], "any", false, false, false, 434), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 434), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 434), ($context["filtros"] ?? null), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "per_page", [], "any", false, false, false, 434)), "html", null, true);
+                // line 446
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getFunction('build_page_url')->getCallable()(CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "next_page", [], "any", false, false, false, 446), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "column", [], "any", false, false, false, 446), CoreExtension::getAttribute($this->env, $this->source, ($context["ordenamiento"] ?? null), "direction", [], "any", false, false, false, 446), ($context["filtros"] ?? null), CoreExtension::getAttribute($this->env, $this->source, ($context["paginacion"] ?? null), "per_page", [], "any", false, false, false, 446)), "html", null, true);
                 yield "\">
                                 Siguiente <i class=\"fas fa-chevron-right\"></i>
                             </a>
                         </li>
                     ";
             } else {
-                // line 439
+                // line 451
                 yield "                        <li class=\"page-item disabled\">
                             <span class=\"page-link\">Siguiente <i class=\"fas fa-chevron-right\"></i></span>
                         </li>
                     ";
             }
-            // line 443
+            // line 455
             yield "                </ul>
             </nav>
             ";
         }
-        // line 446
+        // line 458
         yield "        </div>
     </div>
 </div>
@@ -820,14 +835,14 @@ class __TwigTemplate_1e815bd89ad0d729e990e1c9122cd56e extends Template
         yield from [];
     }
 
-    // line 468
+    // line 480
     /**
      * @return iterable<null|scalar|\Stringable>
      */
     public function block_scripts(array $context, array $blocks = []): iterable
     {
         $macros = $this->macros;
-        // line 469
+        // line 481
         yield "<script>
 document.addEventListener('DOMContentLoaded', function() {
     // Manejar el envío del formulario de eliminación
@@ -926,14 +941,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Mostrar mensajes de éxito o error si existen y limpiarlos
     ";
-        // line 566
-        if (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "success", [], "any", false, false, false, 566)) {
-            // line 567
+        // line 578
+        if (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "success", [], "any", false, false, false, 578)) {
+            // line 579
             yield "        Swal.fire({
             title: '¡Éxito!',
             text: '";
-            // line 569
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "success", [], "any", false, false, false, 569), "html", null, true);
+            // line 581
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "success", [], "any", false, false, false, 581), "html", null, true);
             yield "',
             icon: 'success',
             confirmButtonColor: '#28a745',
@@ -941,7 +956,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }).then(() => {
             // Limpiar el mensaje de sesión
             fetch('";
-            // line 575
+            // line 587
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
             yield "clear-session-messages', {
                 method: 'POST',
@@ -952,17 +967,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     ";
         }
-        // line 583
+        // line 595
         yield "
     ";
-        // line 584
-        if (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "error", [], "any", false, false, false, 584)) {
-            // line 585
+        // line 596
+        if (CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "error", [], "any", false, false, false, 596)) {
+            // line 597
             yield "        Swal.fire({
             title: 'Error',
             text: '";
-            // line 587
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "error", [], "any", false, false, false, 587), "html", null, true);
+            // line 599
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["session"] ?? null), "error", [], "any", false, false, false, 599), "html", null, true);
             yield "',
             icon: 'error',
             confirmButtonColor: '#d33',
@@ -970,7 +985,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }).then(() => {
             // Limpiar el mensaje de sesión
             fetch('";
-            // line 593
+            // line 605
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
             yield "clear-session-messages', {
                 method: 'POST',
@@ -981,8 +996,56 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     ";
         }
-        // line 601
-        yield "});
+        // line 613
+        yield "
+    // Manejar cambio de registros por página
+    document.getElementById('per_page').addEventListener('change', function() {
+        const perPage = this.value;
+        const currentUrl = new URL(window.location);
+        
+        // Actualizar parámetro per_page
+        currentUrl.searchParams.set('per_page', perPage);
+        
+        // Resetear a la primera página cuando se cambia el número de registros
+        currentUrl.searchParams.set('page', '1');
+        
+        // Redirigir a la nueva URL
+        window.location.href = currentUrl.toString();
+    });
+
+    // Manejar envío del formulario de filtros
+    document.querySelector('form[method=\"GET\"]').addEventListener('submit', function(e) {
+        const currentUrl = new URL(window.location);
+        const formData = new FormData(this);
+        
+        // Limpiar parámetros existentes
+        currentUrl.search = '';
+        
+        // Agregar solo los filtros que tienen valor
+        for (let [key, value] of formData.entries()) {
+            if (value && value.trim() !== '') {
+                currentUrl.searchParams.set(key, value);
+            }
+        }
+        
+        // Resetear paginación al aplicar filtros
+        currentUrl.searchParams.set('page', '1');
+        
+        // Redirigir a la nueva URL
+        window.location.href = currentUrl.toString();
+        e.preventDefault();
+    });
+
+    // Manejar cambio de filtros en tiempo real (opcional)
+    document.querySelectorAll('select[name=\"tipo\"], select[name=\"unidad\"], select[name=\"estado\"]').forEach(select => {
+        select.addEventListener('change', function() {
+            // Solo aplicar automáticamente si no son los campos de texto (que requieren confirmación del usuario)
+            if (this.name !== 'nombre' && this.name !== 'codigo') {
+                document.querySelector('form[method=\"GET\"]').dispatchEvent(new Event('submit'));
+            }
+        });
+    });
+});
 </script>
 ";
         yield from [];
@@ -1009,7 +1072,7 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     public function getDebugInfo(): array
     {
-        return array (  985 => 601,  974 => 593,  965 => 587,  961 => 585,  959 => 584,  956 => 583,  945 => 575,  936 => 569,  932 => 567,  930 => 566,  831 => 469,  824 => 468,  799 => 446,  794 => 443,  788 => 439,  780 => 434,  777 => 433,  775 => 432,  771 => 430,  763 => 427,  760 => 426,  754 => 422,  751 => 421,  749 => 420,  746 => 419,  740 => 418,  732 => 415,  729 => 414,  723 => 411,  720 => 410,  717 => 409,  713 => 408,  710 => 407,  707 => 406,  701 => 402,  699 => 401,  694 => 399,  691 => 398,  689 => 397,  686 => 396,  683 => 395,  681 => 394,  677 => 392,  671 => 388,  663 => 383,  660 => 382,  658 => 381,  653 => 378,  651 => 377,  644 => 372,  635 => 368,  633 => 367,  618 => 359,  610 => 356,  602 => 353,  596 => 350,  590 => 347,  586 => 346,  581 => 344,  575 => 343,  571 => 342,  567 => 341,  564 => 340,  559 => 339,  549 => 332,  544 => 330,  537 => 326,  532 => 324,  525 => 320,  520 => 318,  512 => 313,  507 => 311,  500 => 307,  495 => 305,  480 => 295,  475 => 292,  466 => 289,  457 => 288,  453 => 287,  432 => 269,  418 => 260,  412 => 259,  404 => 253,  395 => 250,  386 => 249,  382 => 248,  370 => 241,  364 => 240,  358 => 239,  352 => 238,  346 => 237,  340 => 236,  334 => 235,  328 => 234,  322 => 233,  313 => 227,  307 => 224,  292 => 212,  286 => 209,  280 => 205,  273 => 204,  72 => 6,  65 => 5,  54 => 3,  43 => 1,);
+        return array (  1000 => 613,  989 => 605,  980 => 599,  976 => 597,  974 => 596,  971 => 595,  960 => 587,  951 => 581,  947 => 579,  945 => 578,  846 => 481,  839 => 480,  814 => 458,  809 => 455,  803 => 451,  795 => 446,  792 => 445,  790 => 444,  786 => 442,  778 => 439,  775 => 438,  769 => 434,  766 => 433,  764 => 432,  761 => 431,  755 => 430,  747 => 427,  744 => 426,  738 => 423,  735 => 422,  732 => 421,  728 => 420,  725 => 419,  722 => 418,  716 => 414,  714 => 413,  709 => 411,  706 => 410,  704 => 409,  701 => 408,  698 => 407,  696 => 406,  692 => 404,  686 => 400,  678 => 395,  675 => 394,  673 => 393,  668 => 390,  666 => 389,  659 => 384,  650 => 380,  648 => 379,  633 => 371,  625 => 368,  617 => 365,  611 => 362,  605 => 359,  601 => 358,  596 => 356,  590 => 355,  586 => 354,  582 => 353,  579 => 352,  574 => 351,  564 => 344,  559 => 342,  552 => 338,  547 => 336,  540 => 332,  535 => 330,  527 => 325,  522 => 323,  515 => 319,  510 => 317,  495 => 307,  490 => 304,  481 => 301,  472 => 300,  468 => 299,  447 => 281,  433 => 272,  427 => 271,  419 => 265,  410 => 262,  401 => 261,  397 => 260,  385 => 253,  379 => 252,  373 => 251,  367 => 250,  361 => 249,  355 => 248,  349 => 247,  343 => 246,  337 => 245,  324 => 235,  313 => 227,  307 => 224,  292 => 212,  286 => 209,  280 => 205,  273 => 204,  72 => 6,  65 => 5,  54 => 3,  43 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -1238,11 +1301,23 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <div class=\"card-body\">
             <form method=\"GET\" action=\"{{ app_url }}asignaturas\" class=\"row g-3\">
-                <div class=\"col-md-4\">
+                <div class=\"col-md-3\">
                     <label for=\"nombre\" class=\"form-label\">Nombre</label>
-                    <input type=\"text\" class=\"form-control\" id=\"nombre\" name=\"nombre\" value=\"{{ filtros.nombre|default('') }}\" placeholder=\"Buscar por nombre...\">
+                    <input type=\"text\" class=\"form-control\" id=\"nombre\" name=\"nombre\" value=\"{{ filtros.nombre|default('') }}\" placeholder=\"Buscar por nombre (ignora acentos, mayúsculas y orden de palabras)...\">
+                    <small class=\"form-text text-muted\">
+                        <i class=\"fas fa-info-circle\"></i>
+                        La búsqueda ignora acentos, mayúsculas/minúsculas y permite palabras en cualquier orden.
+                    </small>
                 </div>
-                <div class=\"col-md-4\">
+                <div class=\"col-md-3\">
+                    <label for=\"codigo\" class=\"form-label\">Código</label>
+                    <input type=\"text\" class=\"form-control\" id=\"codigo\" name=\"codigo\" value=\"{{ filtros.codigo|default('') }}\" placeholder=\"Buscar por código de asignatura...\">
+                    <small class=\"form-text text-muted\">
+                        <i class=\"fas fa-info-circle\"></i>
+                        Ej: MAT-101, FIS-201, etc.
+                    </small>
+                </div>
+                <div class=\"col-md-3\">
                     <label for=\"tipo\" class=\"form-label\">Tipo</label>
                     <select class=\"form-select\" id=\"tipo\" name=\"tipo\">
                         <option value=\"\">Todos los tipos</option>
@@ -1257,7 +1332,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <option value=\"FORMACION_ESPECIAL\" {% if filtros.tipo == 'FORMACION_ESPECIAL' %}selected{% endif %}>Formación Especial</option>
                     </select>
                 </div>
-                <div class=\"col-md-4\">
+                <div class=\"col-md-3\">
                     <label for=\"unidad\" class=\"form-label\">Unidad</label>
                     <select class=\"form-select\" id=\"unidad\" name=\"unidad\" style=\"font-size: 0.85rem;\">
                         <option value=\"\">Todas las unidades</option>
@@ -1268,7 +1343,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         {% endfor %}
                     </select>
                 </div>
-                <div class=\"col-md-4\">
+                <div class=\"col-md-3\">
                     <label for=\"estado\" class=\"form-label\">Estado</label>
                     <select class=\"form-select\" id=\"estado\" name=\"estado\">
                         <option value=\"\">Todos</option>
@@ -1614,6 +1689,54 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     {% endif %}
+
+    // Manejar cambio de registros por página
+    document.getElementById('per_page').addEventListener('change', function() {
+        const perPage = this.value;
+        const currentUrl = new URL(window.location);
+        
+        // Actualizar parámetro per_page
+        currentUrl.searchParams.set('per_page', perPage);
+        
+        // Resetear a la primera página cuando se cambia el número de registros
+        currentUrl.searchParams.set('page', '1');
+        
+        // Redirigir a la nueva URL
+        window.location.href = currentUrl.toString();
+    });
+
+    // Manejar envío del formulario de filtros
+    document.querySelector('form[method=\"GET\"]').addEventListener('submit', function(e) {
+        const currentUrl = new URL(window.location);
+        const formData = new FormData(this);
+        
+        // Limpiar parámetros existentes
+        currentUrl.search = '';
+        
+        // Agregar solo los filtros que tienen valor
+        for (let [key, value] of formData.entries()) {
+            if (value && value.trim() !== '') {
+                currentUrl.searchParams.set(key, value);
+            }
+        }
+        
+        // Resetear paginación al aplicar filtros
+        currentUrl.searchParams.set('page', '1');
+        
+        // Redirigir a la nueva URL
+        window.location.href = currentUrl.toString();
+        e.preventDefault();
+    });
+
+    // Manejar cambio de filtros en tiempo real (opcional)
+    document.querySelectorAll('select[name=\"tipo\"], select[name=\"unidad\"], select[name=\"estado\"]').forEach(select => {
+        select.addEventListener('change', function() {
+            // Solo aplicar automáticamente si no son los campos de texto (que requieren confirmación del usuario)
+            if (this.name !== 'nombre' && this.name !== 'codigo') {
+                document.querySelector('form[method=\"GET\"]').dispatchEvent(new Event('submit'));
+            }
+        });
+    });
 });
 </script>
 {% endblock %} ", "asignaturas/index.twig", "/var/www/html/biblioges/templates/asignaturas/index.twig");

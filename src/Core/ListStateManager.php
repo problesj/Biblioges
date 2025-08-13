@@ -21,6 +21,15 @@ class ListStateManager
         $sessionKey = "list_state_{$this->listName}";
         $savedState = $this->session->get($sessionKey, []);
         
+        // Verificar si han cambiado los filtros (excluyendo paginación y ordenamiento)
+        $filtersChanged = $this->haveFiltersChanged($savedState, $urlParams);
+        
+        // Si los filtros cambiaron, resetear la paginación
+        if ($filtersChanged) {
+            unset($savedState['page']);
+            unset($savedState['per_page']);
+        }
+        
         // Combinar estado guardado con parámetros de URL
         $state = array_merge($savedState, $urlParams);
         
@@ -119,6 +128,7 @@ class ListStateManager
                 $defaults['allowed_columns'] = ['nombre', 'tipo', 'estado', 'periodicidad', 'unidad'];
                 $defaults['filters'] = [
                     'nombre' => '',
+                    'codigo' => '',
                     'tipo' => '',
                     'unidad' => '',
                     'estado' => ''
@@ -367,5 +377,28 @@ class ListStateManager
         }
         
         return $activeFilters;
+    }
+
+    /**
+     * Verifica si han cambiado los filtros (excluyendo paginación y ordenamiento)
+     */
+    private function haveFiltersChanged(array $savedState, array $urlParams): bool
+    {
+        $defaults = $this->getDefaults();
+        
+        foreach ($defaults['filters'] as $filterKey => $defaultValue) {
+            $savedValue = $savedState[$filterKey] ?? $defaultValue;
+            $urlValue = $urlParams[$filterKey] ?? $defaultValue;
+            
+            // Comparar valores, considerando que cadenas vacías y null son equivalentes
+            $savedValue = $savedValue === '' ? null : $savedValue;
+            $urlValue = $urlValue === '' ? null : $urlValue;
+            
+            if ($savedValue !== $urlValue) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 }

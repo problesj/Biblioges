@@ -91,6 +91,7 @@ class AsignaturaController extends BaseController
 
             // Obtener filtros del estado
             $nombre = $state['nombre'] ?? null;
+            $codigo = $state['codigo'] ?? null;
             $tipo = $state['tipo'] ?? null;
             $unidad = $state['unidad'] ?? null;
             $estado = $state['estado'] ?? null;
@@ -119,8 +120,35 @@ class AsignaturaController extends BaseController
             $where = [];
 
             if ($nombre) {
-                $where[] = "a.nombre LIKE ?";
-                $params[] = "%{$nombre}%";
+                // Normalizar el texto de búsqueda: convertir a minúsculas y remover acentos
+                $searchTerm = $this->normalizeSearchTerm($nombre);
+                
+                // Dividir el término de búsqueda en palabras individuales
+                $searchWords = array_filter(explode(' ', $searchTerm));
+                
+                if (!empty($searchWords)) {
+                    $nombreConditions = [];
+                    foreach ($searchWords as $word) {
+                        if (!empty($word)) {
+                            // Usar una función más simple y eficiente para MySQL
+                            $nombreConditions[] = "LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(a.nombre, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), 'ñ', 'n')) LIKE ?";
+                            $params[] = '%' . $word . '%';
+                        }
+                    }
+                    
+                    if (!empty($nombreConditions)) {
+                        $where[] = "(" . implode(' AND ', $nombreConditions) . ")";
+                    }
+                }
+            }
+
+            if ($codigo) {
+                // Normalizar el código de búsqueda: convertir a mayúsculas y remover espacios
+                $searchCodigo = $this->normalizeCodigo($codigo);
+                
+                // Buscar en el código de asignatura
+                $where[] = "ad.codigo_asignatura LIKE ?";
+                $params[] = "%{$searchCodigo}%";
             }
 
             if ($tipo) {
@@ -195,6 +223,7 @@ class AsignaturaController extends BaseController
                 'stateManager' => $stateManager,
                 'filtros' => [
                     'nombre' => $nombre,
+                    'codigo' => $codigo,
                     'tipo' => $tipo,
                     'unidad' => $unidad,
                     'estado' => $estado
@@ -1361,12 +1390,15 @@ class AsignaturaController extends BaseController
 
             // Obtener asignaturas vinculadas del tipo especificado
             $stmt = $this->db->prepare("
-                SELECT DISTINCT a.id, a.nombre, a.tipo
+                SELECT DISTINCT a.id, a.nombre, a.tipo,
+                       GROUP_CONCAT(ad.codigo_asignatura ORDER BY ad.codigo_asignatura ASC SEPARATOR ', ') as codigos
                 FROM asignaturas a
                 JOIN asignaturas_formacion af ON a.id = af.asignatura_regular_id
+                LEFT JOIN asignaturas_departamentos ad ON a.id = ad.asignatura_id
                 WHERE af.asignatura_formacion_id = ?
                 AND a.tipo = ?
                 AND a.estado = 1
+                GROUP BY a.id, a.nombre, a.tipo
                 ORDER BY a.nombre
             ");
             $stmt->execute([$asignaturaFormacionId, $tipo]);
@@ -1374,8 +1406,10 @@ class AsignaturaController extends BaseController
 
             // Obtener asignaturas no vinculadas del tipo especificado
             $stmt = $this->db->prepare("
-                SELECT DISTINCT a.id, a.nombre, a.tipo
+                SELECT DISTINCT a.id, a.nombre, a.tipo,
+                       GROUP_CONCAT(ad.codigo_asignatura ORDER BY ad.codigo_asignatura ASC SEPARATOR ', ') as codigos
                 FROM asignaturas a
+                LEFT JOIN asignaturas_departamentos ad ON a.id = ad.asignatura_id
                 WHERE a.tipo = ?
                 AND a.estado = 1
                 AND a.id NOT IN (
@@ -1384,10 +1418,20 @@ class AsignaturaController extends BaseController
                     WHERE asignatura_formacion_id = ?
                 )
                 AND a.id != ?  -- Evitar que una asignatura se vincule a sí misma
+                GROUP BY a.id, a.nombre, a.tipo
                 ORDER BY a.nombre
             ");
             $stmt->execute([$tipo, $asignaturaFormacionId, $asignaturaFormacionId]);
             $no_vinculadas = $stmt->fetchAll();
+
+            // Procesar los códigos para que sean arrays
+            foreach ($vinculadas as &$asignatura) {
+                $asignatura['codigos'] = $asignatura['codigos'] ? explode(', ', $asignatura['codigos']) : [];
+            }
+            
+            foreach ($no_vinculadas as &$asignatura) {
+                $asignatura['codigos'] = $asignatura['codigos'] ? explode(', ', $asignatura['codigos']) : [];
+            }
 
             $response->getBody()->write(json_encode([
                 'success' => true,
@@ -1597,5 +1641,46 @@ class AsignaturaController extends BaseController
                 ->withHeader('Content-Type', 'application/json; charset=utf-8')
                 ->withStatus(500);
         }
+    }
+
+    /**
+     * Normaliza el término de búsqueda para ignorar acentos, mayúsculas y caracteres especiales
+     */
+    private function normalizeSearchTerm(string $term): string
+    {
+        // Convertir a minúsculas
+        $term = mb_strtolower($term, 'UTF-8');
+        
+        // Reemplazar acentos y caracteres especiales
+        $replacements = [
+            'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u',
+            'à' => 'a', 'è' => 'e', 'ì' => 'i', 'ò' => 'o', 'ù' => 'u',
+            'ä' => 'a', 'ë' => 'e', 'ï' => 'i', 'ö' => 'o', 'ü' => 'u',
+            'â' => 'a', 'ê' => 'e', 'î' => 'i', 'ô' => 'o', 'û' => 'u',
+            'ã' => 'a', 'õ' => 'o', 'ñ' => 'n',
+            'ç' => 'c', 'ş' => 's', 'ţ' => 't'
+        ];
+        
+        $term = strtr($term, $replacements);
+        
+        // Remover caracteres especiales y múltiples espacios
+        $term = preg_replace('/[^a-z0-9\s]/', ' ', $term);
+        $term = preg_replace('/\s+/', ' ', $term);
+        
+        return trim($term);
+    }
+
+    /**
+     * Normaliza el código de asignatura para la búsqueda
+     */
+    private function normalizeCodigo(string $codigo): string
+    {
+        // Convertir a mayúsculas y remover espacios extra
+        $codigo = strtoupper(trim($codigo));
+        
+        // Remover caracteres especiales excepto letras, números y guiones
+        $codigo = preg_replace('/[^A-Z0-9\-]/', '', $codigo);
+        
+        return $codigo;
     }
 } 

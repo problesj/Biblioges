@@ -105,11 +105,29 @@ class BibliografiaDisponibleController extends BaseController
 
             // Filtro por búsqueda
             if (!empty($busqueda)) {
-                $whereConditions[] = "(bd.titulo LIKE ? OR bd.editorial LIKE ? OR a.nombres LIKE ? OR a.apellidos LIKE ?)";
-                $filters[] = "%{$busqueda}%";
-                $filters[] = "%{$busqueda}%";
-                $filters[] = "%{$busqueda}%";
-                $filters[] = "%{$busqueda}%";
+                // Normalizar el texto de búsqueda: convertir a minúsculas y remover acentos
+                $searchTerm = $this->normalizeSearchTerm($busqueda);
+                
+                // Dividir el término de búsqueda en palabras individuales
+                $searchWords = array_filter(explode(' ', $searchTerm));
+                
+                if (!empty($searchWords)) {
+                    $searchConditions = [];
+                    foreach ($searchWords as $word) {
+                        if (!empty($word)) {
+                            // Usar una función más simple y eficiente para MySQL
+                            $searchConditions[] = "(LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(bd.titulo, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), 'ñ', 'n')) LIKE ? OR LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(bd.editorial, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), 'ñ', 'n')) LIKE ? OR LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(a.nombres, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), 'ñ', 'n')) LIKE ? OR LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(a.apellidos, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), 'ñ', 'n')) LIKE ?)";
+                            $filters[] = '%' . $word . '%';
+                            $filters[] = '%' . $word . '%';
+                            $filters[] = '%' . $word . '%';
+                            $filters[] = '%' . $word . '%';
+                        }
+                    }
+                    
+                    if (!empty($searchConditions)) {
+                        $whereConditions[] = "(" . implode(' AND ', $searchConditions) . ")";
+                    }
+                }
             }
 
             // Filtro por disponibilidad
@@ -212,20 +230,20 @@ class BibliografiaDisponibleController extends BaseController
                 'current_page' => 'bibliografias-disponibles'
             ];
 
-            // Limpiar mensajes de sesión
-            if (isset($_SESSION['success'])) {
-                unset($_SESSION['success']);
-            }
-            if (isset($_SESSION['error'])) {
-                unset($_SESSION['error']);
-            }
-
             // Renderizar la plantilla
             $content = $this->twig->render('bibliografias_disponibles/index.twig', $viewData);
             
             // Establecer el contenido en la respuesta
             header('Content-Type: text/html; charset=utf-8');
             echo $content;
+            
+            // Limpiar mensajes de sesión DESPUÉS de renderizar la vista
+            if (isset($_SESSION['success'])) {
+                unset($_SESSION['success']);
+            }
+            if (isset($_SESSION['error'])) {
+                unset($_SESSION['error']);
+            }
             
             return $response;
         } catch (\Exception $e) {
@@ -1009,5 +1027,32 @@ class BibliografiaDisponibleController extends BaseController
             header('Location: ' . Config::get('app_url') . 'bibliografias-disponibles');
             exit;
         }
+    }
+
+    /**
+     * Normaliza el término de búsqueda para ignorar acentos, mayúsculas y caracteres especiales
+     */
+    private function normalizeSearchTerm(string $term): string
+    {
+        // Convertir a minúsculas
+        $term = mb_strtolower($term, 'UTF-8');
+        
+        // Reemplazar acentos y caracteres especiales
+        $replacements = [
+            'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u',
+            'à' => 'a', 'è' => 'e', 'ì' => 'i', 'ò' => 'o', 'ù' => 'u',
+            'ä' => 'a', 'ë' => 'e', 'ï' => 'i', 'ö' => 'o', 'ü' => 'u',
+            'â' => 'a', 'ê' => 'e', 'î' => 'i', 'ô' => 'o', 'û' => 'u',
+            'ã' => 'a', 'õ' => 'o', 'ñ' => 'n',
+            'ç' => 'c', 'ş' => 's', 'ţ' => 't'
+        ];
+        
+        $term = strtr($term, $replacements);
+        
+        // Remover caracteres especiales y múltiples espacios
+        $term = preg_replace('/[^a-z0-9\s]/', ' ', $term);
+        $term = preg_replace('/\s+/', ' ', $term);
+        
+        return trim($term);
     }
 } 

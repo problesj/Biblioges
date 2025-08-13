@@ -146,33 +146,80 @@ class BibliografiaDeclaradaController
 
             // Aplicar filtros de búsqueda
             if (!empty($busqueda)) {
-                $busquedaParam = '%' . $busqueda . '%';
-                switch ($tipoBusqueda) {
-                    case 'titulo':
-                        $where[] = "b.titulo LIKE ?";
-                        $params[] = $busquedaParam;
-                        break;
-                    case 'autor':
-                        $where[] = "(a.nombres LIKE ? OR a.apellidos LIKE ?)";
-                        $params[] = $busquedaParam;
-                        $params[] = $busquedaParam;
-                        break;
-                    case 'editorial':
-                        $where[] = "b.editorial LIKE ?";
-                        $params[] = $busquedaParam;
-                        break;
-                    case 'asignatura':
-                        $where[] = "asig.nombre LIKE ?";
-                        $params[] = $busquedaParam;
-                        break;
-                    default: // 'todos'
-                        $where[] = "(b.titulo LIKE ? OR b.editorial LIKE ? OR a.nombres LIKE ? OR a.apellidos LIKE ? OR asig.nombre LIKE ?)";
-                        $params[] = $busquedaParam;
-                        $params[] = $busquedaParam;
-                        $params[] = $busquedaParam;
-                        $params[] = $busquedaParam;
-                        $params[] = $busquedaParam;
-                        break;
+                // Normalizar el texto de búsqueda: convertir a minúsculas y remover acentos
+                $searchTerm = $this->normalizeSearchTerm($busqueda);
+                
+                // Dividir el término de búsqueda en palabras individuales
+                $searchWords = array_filter(explode(' ', $searchTerm));
+                
+                if (!empty($searchWords)) {
+                    switch ($tipoBusqueda) {
+                        case 'titulo':
+                            $conditions = [];
+                            foreach ($searchWords as $word) {
+                                if (!empty($word)) {
+                                    $conditions[] = "LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(b.titulo, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), 'ñ', 'n')) LIKE ?";
+                                    $params[] = '%' . $word . '%';
+                                }
+                            }
+                            if (!empty($conditions)) {
+                                $where[] = "(" . implode(' AND ', $conditions) . ")";
+                            }
+                            break;
+                        case 'autor':
+                            $conditions = [];
+                            foreach ($searchWords as $word) {
+                                if (!empty($word)) {
+                                    $conditions[] = "(LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(a.nombres, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), 'ñ', 'n')) LIKE ? OR LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(a.apellidos, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), 'ñ', 'n')) LIKE ?)";
+                                    $params[] = '%' . $word . '%';
+                                    $params[] = '%' . $word . '%';
+                                }
+                            }
+                            if (!empty($conditions)) {
+                                $where[] = "(" . implode(' AND ', $conditions) . ")";
+                            }
+                            break;
+                        case 'editorial':
+                            $conditions = [];
+                            foreach ($searchWords as $word) {
+                                if (!empty($word)) {
+                                    $conditions[] = "LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(b.editorial, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), 'ñ', 'n')) LIKE ?";
+                                    $params[] = '%' . $word . '%';
+                                }
+                            }
+                            if (!empty($conditions)) {
+                                $where[] = "(" . implode(' AND ', $conditions) . ")";
+                            }
+                            break;
+                        case 'asignatura':
+                            $conditions = [];
+                            foreach ($searchWords as $word) {
+                                if (!empty($word)) {
+                                    $conditions[] = "LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(asig.nombre, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), 'ñ', 'n')) LIKE ?";
+                                    $params[] = '%' . $word . '%';
+                                }
+                            }
+                            if (!empty($conditions)) {
+                                $where[] = "(" . implode(' AND ', $conditions) . ")";
+                            }
+                            break;
+                        default: // 'todos'
+                            $conditions = [];
+                            foreach ($searchWords as $word) {
+                                if (!empty($word)) {
+                                    $conditions[] = "(LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(b.titulo, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), 'ñ', 'n')) LIKE ? OR LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(b.editorial, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), 'ñ', 'n')) LIKE ? OR LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(a.nombres, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), 'ñ', 'n')) LIKE ? OR LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(a.apellidos, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), 'ñ', 'n')) LIKE ? OR LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(asig.nombre, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), 'ñ', 'n')) LIKE ?)";
+                                    $params[] = '%' . $word . '%';
+                                    $params[] = '%' . $word . '%';
+                                    $params[] = '%' . $word . '%';
+                                    $params[] = '%' . $word . '%';
+                                    $params[] = '%' . $word . '%';
+                                }
+                            }
+                            if (!empty($conditions)) {
+                                $where[] = "(" . implode(' AND ', $conditions) . ")";
+                            }
+                            break;
+                    }
                 }
             }
 
@@ -4439,5 +4486,32 @@ class BibliografiaDeclaradaController
             ]));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
         }
+    }
+
+    /**
+     * Normaliza el término de búsqueda para ignorar acentos, mayúsculas y caracteres especiales
+     */
+    private function normalizeSearchTerm(string $term): string
+    {
+        // Convertir a minúsculas
+        $term = mb_strtolower($term, 'UTF-8');
+        
+        // Reemplazar acentos y caracteres especiales
+        $replacements = [
+            'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u',
+            'à' => 'a', 'è' => 'e', 'ì' => 'i', 'ò' => 'o', 'ù' => 'u',
+            'ä' => 'a', 'ë' => 'e', 'ï' => 'i', 'ö' => 'o', 'ü' => 'u',
+            'â' => 'a', 'ê' => 'e', 'î' => 'i', 'ô' => 'o', 'û' => 'u',
+            'ã' => 'a', 'õ' => 'o', 'ñ' => 'n',
+            'ç' => 'c', 'ş' => 's', 'ţ' => 't'
+        ];
+        
+        $term = strtr($term, $replacements);
+        
+        // Remover caracteres especiales y múltiples espacios
+        $term = preg_replace('/[^a-z0-9\s]/', ' ', $term);
+        $term = preg_replace('/\s+/', ' ', $term);
+        
+        return trim($term);
     }
 } 

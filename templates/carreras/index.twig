@@ -212,7 +212,11 @@
                     <div class="col-md-3">
                         <div class="form-group">
                             <label for="nombre">Nombre de la Carrera</label>
-                            <input type="text" class="form-control" id="nombre" name="nombre" value="{{ filtros.nombre }}" placeholder="Buscar por nombre...">
+                            <input type="text" class="form-control" id="nombre" name="nombre" value="{{ filtros.nombre }}" placeholder="Buscar por nombre (ignora acentos, mayúsculas y orden de palabras)...">
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle"></i>
+                                La búsqueda ignora acentos, mayúsculas/minúsculas y permite palabras en cualquier orden.
+                            </small>
                         </div>
                     </div>
                     <div class="col-md-3">
@@ -540,6 +544,39 @@
         
         // Redirigir a la nueva URL
         window.location.href = currentUrl.toString();
+    });
+
+    // Manejar envío del formulario de filtros
+    document.querySelector('form[method="GET"]').addEventListener('submit', function(e) {
+        const currentUrl = new URL(window.location);
+        const formData = new FormData(this);
+        
+        // Limpiar parámetros existentes
+        currentUrl.search = '';
+        
+        // Agregar solo los filtros que tienen valor
+        for (let [key, value] of formData.entries()) {
+            if (value && value.trim() !== '') {
+                currentUrl.searchParams.set(key, value);
+            }
+        }
+        
+        // Resetear paginación al aplicar filtros
+        currentUrl.searchParams.set('page', '1');
+        
+        // Redirigir a la nueva URL
+        window.location.href = currentUrl.toString();
+        e.preventDefault();
+    });
+
+    // Manejar cambio de filtros en tiempo real (opcional)
+    document.querySelectorAll('select[name="tipo_programa"], select[name="sede"], select[name="estado"]').forEach(select => {
+        select.addEventListener('change', function() {
+            // Solo aplicar automáticamente si no es el campo de nombre (que requiere confirmación del usuario)
+            if (this.name !== 'nombre') {
+                document.querySelector('form[method="GET"]').dispatchEvent(new Event('submit'));
+            }
+        });
     });
 </script>
 {% endblock %} 

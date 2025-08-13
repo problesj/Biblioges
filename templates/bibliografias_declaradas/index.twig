@@ -229,7 +229,7 @@
                 <!-- Fila de búsqueda -->
                 <div class="col-12 mb-3">
                     <div class="input-group">
-                        <input type="text" class="form-control" id="busqueda" name="busqueda" placeholder="Buscar..." value="{{ filtros.busqueda|default('') }}">
+                        <input type="text" class="form-control" id="busqueda" name="busqueda" placeholder="Buscar (ignora acentos, mayúsculas y orden de palabras)..." value="{{ filtros.busqueda|default('') }}">
                         <select class="form-select" id="tipo_busqueda" name="tipo_busqueda" style="max-width: 150px;">
                             <option value="todos" {% if filtros.tipo_busqueda|default('todos') == 'todos' %}selected{% endif %}>Todos</option>
                             <option value="titulo" {% if filtros.tipo_busqueda|default('') == 'titulo' %}selected{% endif %}>Título</option>
@@ -240,6 +240,10 @@
                             <i class="fas fa-search"></i> Buscar
                         </button>
                     </div>
+                    <small class="form-text text-muted">
+                        <i class="fas fa-info-circle"></i>
+                        La búsqueda ignora acentos, mayúsculas/minúsculas y permite palabras en cualquier orden.
+                    </small>
                 </div>
 
                 <!-- Fila de filtros -->
@@ -512,5 +516,38 @@ function changePerPage(perPage) {
     url.searchParams.set('page', '1'); // Reset to first page
     window.location.href = url.toString();
 }
+
+// Manejar envío del formulario de filtros
+document.querySelector('form[method="GET"]').addEventListener('submit', function(e) {
+    const currentUrl = new URL(window.location);
+    const formData = new FormData(this);
+    
+    // Limpiar parámetros existentes
+    currentUrl.search = '';
+    
+    // Agregar solo los filtros que tienen valor
+    for (let [key, value] of formData.entries()) {
+        if (value && value.trim() !== '') {
+            currentUrl.searchParams.set(key, value);
+        }
+    }
+    
+    // Resetear paginación al aplicar filtros
+    currentUrl.searchParams.set('page', '1');
+    
+    // Redirigir a la nueva URL
+    window.location.href = currentUrl.toString();
+    e.preventDefault();
+});
+
+// Manejar cambio de filtros en tiempo real (opcional)
+document.querySelectorAll('select[name="tipo"], select[name="estado"]').forEach(select => {
+    select.addEventListener('change', function() {
+        // Solo aplicar automáticamente si no es el campo de búsqueda (que requiere confirmación del usuario)
+        if (this.name !== 'busqueda' && this.name !== 'tipo_busqueda') {
+            document.querySelector('form[method="GET"]').dispatchEvent(new Event('submit'));
+        }
+    });
+});
 </script>
 {% endblock %} 

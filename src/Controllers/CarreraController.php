@@ -105,9 +105,31 @@ class CarreraController
 
             // Aplicar filtros desde el estado
             if (!empty($state['nombre'])) {
-                $sql .= " AND c.nombre LIKE ?";
-                $countSql .= " AND c.nombre LIKE ?";
-                $params[] = '%' . $state['nombre'] . '%';
+                // Normalizar el texto de búsqueda: convertir a minúsculas y remover acentos
+                $searchTerm = $this->normalizeSearchTerm($state['nombre']);
+                
+                // Dividir el término de búsqueda en palabras individuales
+                $searchWords = array_filter(explode(' ', $searchTerm));
+                
+                if (!empty($searchWords)) {
+                    $sql .= " AND (";
+                    $countSql .= " AND (";
+                    
+                    $conditions = [];
+                    foreach ($searchWords as $index => $word) {
+                        if (!empty($word)) {
+                            // Usar una función más simple y eficiente para MySQL
+                            $conditions[] = "LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(c.nombre, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), 'ñ', 'n')) LIKE ?";
+                            $params[] = '%' . $word . '%';
+                        }
+                    }
+                    
+                    $sql .= implode(' AND ', $conditions);
+                    $countSql .= implode(' AND ', $conditions);
+                    
+                    $sql .= ")";
+                    $countSql .= ")";
+                }
             }
 
             // Aplicar filtro de tipo de programa
@@ -1287,5 +1309,32 @@ class CarreraController
                 ->withHeader('Location', Config::get('app_url') . 'carreras')
                 ->withStatus(302);
         }
+    }
+
+    /**
+     * Normaliza el término de búsqueda para ignorar acentos, mayúsculas y caracteres especiales
+     */
+    private function normalizeSearchTerm(string $term): string
+    {
+        // Convertir a minúsculas
+        $term = mb_strtolower($term, 'UTF-8');
+        
+        // Reemplazar acentos y caracteres especiales
+        $replacements = [
+            'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u',
+            'à' => 'a', 'è' => 'e', 'ì' => 'i', 'ò' => 'o', 'ù' => 'u',
+            'ä' => 'a', 'ë' => 'e', 'ï' => 'i', 'ö' => 'o', 'ü' => 'u',
+            'â' => 'a', 'ê' => 'e', 'î' => 'i', 'ô' => 'o', 'û' => 'u',
+            'ã' => 'a', 'õ' => 'o', 'ñ' => 'n',
+            'ç' => 'c', 'ş' => 's', 'ţ' => 't'
+        ];
+        
+        $term = strtr($term, $replacements);
+        
+        // Remover caracteres especiales y múltiples espacios
+        $term = preg_replace('/[^a-z0-9\s]/', ' ', $term);
+        $term = preg_replace('/\s+/', ' ', $term);
+        
+        return trim($term);
     }
 } 
