@@ -840,7 +840,7 @@ class BibliografiaDeclaradaController
         }
 
             $autores = Autor::orderBy('apellidos')->orderBy('nombres')->get();
-            $editoriales = BibliografiaDeclarada::distinct()->pluck('editorial')->filter();
+            $editoriales = $this->getEditoriales();
             $revistas = Articulo::distinct()->pluck('titulo_revista')->filter();
             $carreras = Carrera::where('estado', true)->orderBy('nombre')->get();
             
@@ -2662,31 +2662,61 @@ class BibliografiaDeclaradaController
             $source = '';
             $message = '';
 
-            // Seguir la lógica: 1. Google Scholar, 2. Google Books, 3. Google tradicional
-            if ($fuente === 'scholar' || $fuente === '') {
-                // 1. Buscar en Google Scholar
-                $googleResults = $this->buscarEnGoogleScholar($titulo, $autor, $busquedaAdicional);
-                if (!empty($googleResults)) {
-                    $source = 'google_scholar';
-                    $message = 'Resultados obtenidos de Google Scholar';
+            // Seguir la lógica: 1. Semantic Scholar, 2. Google Scholar, 3. Google Books, 4. Google tradicional
+            if ($fuente === 'semantic_scholar' || $fuente === '') {
+                // 1. Buscar en Semantic Scholar
+                try {
+                    $googleResults = $this->buscarEnSemanticScholar($titulo, $autor, $busquedaAdicional);
+                    if (!empty($googleResults)) {
+                        $source = 'semantic_scholar';
+                        $message = 'Resultados obtenidos de Semantic Scholar';
+                    }
+                } catch (\Exception $e) {
+                    // Si Semantic Scholar falla, continuar con las siguientes fuentes
+                    error_log('Error en Semantic Scholar: ' . $e->getMessage());
+                    $googleResults = [];
+                }
+            }
+
+            if (empty($googleResults) && ($fuente === 'scholar' || $fuente === '')) {
+                // 2. Si no hay resultados en Semantic Scholar, buscar en Google Scholar
+                try {
+                    $googleResults = $this->buscarEnGoogleScholar($titulo, $autor, $busquedaAdicional);
+                    if (!empty($googleResults)) {
+                        $source = 'google_scholar';
+                        $message = 'Resultados obtenidos de Google Scholar';
+                    }
+                } catch (\Exception $e) {
+                    error_log('Error en Google Scholar: ' . $e->getMessage());
+                    $googleResults = [];
                 }
             }
 
             if (empty($googleResults) && ($fuente === 'books' || $fuente === '')) {
-                // 2. Si no hay resultados en Scholar, buscar en Google Books
-                $googleResults = $this->buscarEnGoogleBooks($titulo, $autor, $busquedaAdicional);
-                if (!empty($googleResults)) {
-                    $source = 'google_books';
-                    $message = 'Resultados obtenidos de Google Books';
+                // 3. Si no hay resultados en Scholar, buscar en Google Books
+                try {
+                    $googleResults = $this->buscarEnGoogleBooks($titulo, $autor, $busquedaAdicional);
+                    if (!empty($googleResults)) {
+                        $source = 'google_books';
+                        $message = 'Resultados obtenidos de Google Books';
+                    }
+                } catch (\Exception $e) {
+                    error_log('Error en Google Books: ' . $e->getMessage());
+                    $googleResults = [];
                 }
             }
 
             if (empty($googleResults) && $fuente === '') {
-                // 3. Si no hay resultados en Books, buscar en Google tradicional
-                $googleResults = $this->buscarEnGoogleTradicional($titulo, $autor, $busquedaAdicional);
-                if (!empty($googleResults)) {
-                    $source = 'google_tradicional';
-                    $message = 'Resultados obtenidos de Google';
+                // 4. Si no hay resultados en Books, buscar en Google tradicional
+                try {
+                    $googleResults = $this->buscarEnGoogleTradicional($titulo, $autor, $busquedaAdicional);
+                    if (!empty($googleResults)) {
+                        $source = 'google_tradicional';
+                        $message = 'Resultados obtenidos de Google';
+                    }
+                } catch (\Exception $e) {
+                    error_log('Error en Google Tradicional: ' . $e->getMessage());
+                    $googleResults = [];
                 }
             }
 
@@ -2889,6 +2919,139 @@ class BibliografiaDeclaradaController
             
         } catch (\Exception $e) {
             error_log('Error en buscarEnGoogleBooks: ' . $e->getMessage());
+            return [];
+        }
+    }
+    
+    private function buscarEnSemanticScholar($titulo, $autor, $busquedaAdicional) {
+        try {
+            // Construir la consulta de búsqueda para Semantic Scholar
+            $query = '';
+            $searchTerms = [];
+            
+            if (!empty($titulo)) {
+                $searchTerms[] = '"' . $titulo . '"';
+            }
+            
+            if (!empty($autor)) {
+                $searchTerms[] = $autor;
+            }
+            
+            if (!empty($busquedaAdicional)) {
+                $searchTerms[] = $busquedaAdicional;
+            }
+            
+            if (empty($searchTerms)) {
+                return [];
+            }
+            
+            $query = implode(' ', $searchTerms);
+            
+            // Usar Semantic Scholar API
+            $url = "https://api.semanticscholar.org/graph/v1/paper/search?" .
+                   "query=" . urlencode($query) .
+                   "&limit=10" .
+                   "&fields=title,authors,year,abstract,venue,url,citationCount,publicationVenue";
+            
+            $headers = [
+                'Accept: application/json',
+                'User-Agent: Biblioges/1.0'
+            ];
+            
+            // Agregar API key si está configurada
+            $apiKey = $_ENV['SEMANTIC_SCHOLAR_API_KEY'] ?? null;
+            if ($apiKey) {
+                $headers[] = 'x-api-key: ' . $apiKey;
+            }
+            
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            
+            if (curl_errno($ch)) {
+                throw new \Exception('Error en la petición cURL a Semantic Scholar: ' . curl_error($ch));
+            }
+            
+            curl_close($ch);
+            
+            if ($httpCode === 429) {
+                throw new \Exception('Límite de velocidad excedido para Semantic Scholar API. Para obtener mayor velocidad, solicite una API key gratuita en: https://www.semanticscholar.org/product/api#api-key-form');
+            } elseif ($httpCode === 403) {
+                throw new \Exception('Acceso denegado a Semantic Scholar API. Verifique la configuración de la API key.');
+            } elseif ($httpCode === 504) {
+                throw new \Exception('Timeout en Semantic Scholar API. El servicio puede estar temporalmente sobrecargado.');
+            } elseif ($httpCode !== 200) {
+                throw new \Exception('Error al consultar Semantic Scholar API: ' . $httpCode);
+            }
+            
+            $data = json_decode($response, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new \Exception('Error al decodificar la respuesta de Semantic Scholar: ' . json_last_error_msg());
+            }
+            
+            $results = [];
+            if (isset($data['data']) && is_array($data['data'])) {
+                foreach ($data['data'] as $item) {
+                    // Procesar autores correctamente
+                    $authors = [];
+                    if (isset($item['authors']) && is_array($item['authors'])) {
+                        foreach ($item['authors'] as $author) {
+                            if (isset($author['name']) && !empty(trim($author['name']))) {
+                                // Limpiar y formatear el nombre del autor
+                                $authorName = $this->limpiarYFormatearAutor($author['name']);
+                                if (!empty($authorName)) {
+                                    $authors[] = $authorName;
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Procesar venue/editorial
+                    $venue = '';
+                    if (isset($item['venue']) && !empty(trim($item['venue']))) {
+                        $venue = trim($item['venue']);
+                    } elseif (isset($item['publicationVenue']) && isset($item['publicationVenue']['name']) && !empty(trim($item['publicationVenue']['name']))) {
+                        $venue = trim($item['publicationVenue']['name']);
+                    }
+                    
+                    // Procesar año
+                    $anio = '';
+                    if (isset($item['year']) && !empty($item['year']) && is_numeric($item['year'])) {
+                        $anio = (int)$item['year'];
+                        // Validar que el año sea razonable (entre 1900 y año actual + 1)
+                        $anioActual = (int)date('Y');
+                        if ($anio < 1900 || $anio > $anioActual + 1) {
+                            $anio = '';
+                        }
+                    }
+                    
+                    $results[] = [
+                        'catalogo_id' => 'semantic_scholar_' . md5($item['paperId'] ?? ''),
+                        'sourcerecordid' => $item['paperId'] ?? '',
+                        'titulo' => $this->limpiarTitulo($item['title'] ?? 'Sin título'),
+                        'autores' => implode('; ', $authors),
+                        'anio' => $anio,
+                        'editorial' => $venue,
+                        'url' => $item['url'] ?? '',
+                        'context' => 'PC',
+                        'adaptor' => 'Semantic Scholar',
+                        'formato' => 'Artículo',
+                        'disponibilidad' => 'electronico', // Semantic Scholar siempre es electrónico
+                        'snippet' => $this->limpiarAbstract($item['abstract'] ?? ''),
+                        'citationCount' => $item['citationCount'] ?? 0
+                    ];
+                }
+            }
+            
+            return $results;
+            
+        } catch (\Exception $e) {
+            error_log('Error en buscarEnSemanticScholar: ' . $e->getMessage());
             return [];
         }
     }
@@ -3631,6 +3794,14 @@ class BibliografiaDeclaradaController
             return null;
         }
         
+        // Para Semantic Scholar, usar la función de limpieza específica
+        if ($adaptor === 'Semantic Scholar') {
+            $autor = $this->limpiarYFormatearAutor($autor);
+            if (empty($autor)) {
+                return null;
+            }
+        }
+        
         // Extraer apellido y nombre
         $apellidos = '';
         $nombres = '';
@@ -3656,6 +3827,17 @@ class BibliografiaDeclaradaController
             if (count($partes) >= 2) {
                 $apellidos = trim($partes[0]);
                 $nombres = trim($partes[1]);
+            } else {
+                $nombres = $autor;
+            }
+        } else if ($adaptor === 'Semantic Scholar') {
+            // Para Semantic Scholar, el autor ya está limpio y formateado
+            // Intentar separar por el último espacio (apellido, nombre)
+            $palabras = explode(' ', $autor);
+            if (count($palabras) >= 2) {
+                // Tomar la última palabra como apellido y el resto como nombres
+                $apellidos = array_pop($palabras);
+                $nombres = implode(' ', $palabras);
             } else {
                 $nombres = $autor;
             }
@@ -3905,6 +4087,12 @@ class BibliografiaDeclaradaController
                         $disponibilidad = 'electronico';
                         $url_acceso = $bibliografia['url'];
                         $url_catalogo = '';
+                    } else if ($adaptor === 'Semantic Scholar') {
+                        // Para Semantic Scholar, siempre marcar como electrónico
+                        $disponibilidad = 'electronico';
+                        $url_acceso = $bibliografia['url'];
+                        $url_catalogo = '';
+                        error_log('Resultado de Semantic Scholar procesado - Disponibilidad: electronico, URL: ' . $url_acceso);
                     } else if ($adaptor === 'Google Scholar' || $adaptor === 'Google Books' || $adaptor === 'Google Books (Respaldo)') {
                         // Para resultados de Google, siempre marcar como electrónico y usar la URL del resultado
                         $disponibilidad = 'electronico';
@@ -4513,5 +4701,143 @@ class BibliografiaDeclaradaController
         $term = preg_replace('/\s+/', ' ', $term);
         
         return trim($term);
+    }
+
+    /**
+     * Limpia y formatea el nombre del autor
+     */
+    private function limpiarYFormatearAutor(string $autor): string
+    {
+        // Limpiar espacios extra y caracteres especiales
+        $autor = trim($autor);
+        $autor = preg_replace('/\s+/', ' ', $autor); // Múltiples espacios a uno solo
+        
+        // Remover caracteres problemáticos al inicio y final
+        $autor = trim($autor, ',.;: ');
+        
+        // Si el autor está vacío después de la limpieza, retornar vacío
+        if (empty($autor)) {
+            return '';
+        }
+        
+        // Remover partes que parecen ubicaciones (después de punto y coma)
+        if (strpos($autor, ';') !== false) {
+            $partes = explode(';', $autor);
+            $autor = trim($partes[0]); // Solo tomar la primera parte
+        }
+        
+        // Remover partes que parecen ubicaciones (después de coma)
+        if (strpos($autor, ',') !== false) {
+            $partes = explode(',', $autor);
+            $autor = trim($partes[0]); // Solo tomar la primera parte
+        }
+        
+        // Si el autor está vacío después de la limpieza adicional, retornar vacío
+        if (empty($autor)) {
+            return '';
+        }
+        
+        // Formatear nombres: Primera letra de cada palabra en mayúscula
+        $palabras = explode(' ', $autor);
+        $palabrasFormateadas = [];
+        
+        foreach ($palabras as $palabra) {
+            $palabra = trim($palabra);
+            if (!empty($palabra)) {
+                // Convertir a minúsculas primero
+                $palabra = mb_strtolower($palabra, 'UTF-8');
+                // Primera letra en mayúscula
+                $palabra = mb_convert_case($palabra, MB_CASE_TITLE, 'UTF-8');
+                $palabrasFormateadas[] = $palabra;
+            }
+        }
+        
+        return implode(' ', $palabrasFormateadas);
+    }
+
+    /**
+     * Limpia el título del artículo
+     */
+    private function limpiarTitulo(string $titulo): string
+    {
+        // Limpiar espacios extra
+        $titulo = trim($titulo);
+        $titulo = preg_replace('/\s+/', ' ', $titulo);
+        
+        // Remover caracteres problemáticos al inicio y final
+        $titulo = trim($titulo, '"\'.,;: ');
+        
+        return $titulo;
+    }
+
+    /**
+     * Limpia el abstract del artículo
+     */
+    private function limpiarAbstract(string $abstract): string
+    {
+        // Limpiar espacios extra
+        $abstract = trim($abstract);
+        $abstract = preg_replace('/\s+/', ' ', $abstract);
+        
+        // Limitar longitud si es muy largo
+        if (mb_strlen($abstract, 'UTF-8') > 500) {
+            $abstract = mb_substr($abstract, 0, 500, 'UTF-8') . '...';
+        }
+        
+        return $abstract;
+    }
+
+    /**
+     * Busca editoriales por término de búsqueda.
+     */
+    public function buscarEditoriales(Request $request, Response $response, array $args = []): Response
+    {
+        try {
+            // Verificar autenticación
+            if (!$this->session->get('user_id')) {
+                return $this->jsonResponse([
+                    'success' => false,
+                    'message' => 'Por favor inicie sesión para acceder a las bibliografías',
+                    'redirect' => Config::get('app_url') . 'login'
+                ]);
+            }
+
+            // Obtener el término de búsqueda
+            $query = $request->getQueryParams()['q'] ?? '';
+            
+            if (empty($query)) {
+                return $this->jsonResponse([
+                    'success' => true,
+                    'editoriales' => []
+                ]);
+            }
+
+            // Buscar editoriales que coincidan con el término
+            $stmt = $this->pdo->prepare("
+                SELECT DISTINCT editorial 
+                FROM bibliografias_declaradas 
+                WHERE editorial IS NOT NULL 
+                AND editorial != '' 
+                AND LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(editorial, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), 'ñ', 'n')) 
+                LIKE LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(?, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), 'ñ', 'n'))
+                ORDER BY editorial 
+                LIMIT 20
+            ");
+            
+            $searchTerm = '%' . $query . '%';
+            $stmt->execute([$searchTerm]);
+            $editoriales = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+            return $this->jsonResponse([
+                'success' => true,
+                'editoriales' => $editoriales
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->jsonResponse([
+                'success' => false,
+                'message' => 'Error al buscar editoriales: ' . $e->getMessage()
+            ]);
+        }
     }
 } 

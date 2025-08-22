@@ -182,10 +182,13 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->get('/bibliografias-declaradas/{id}/buscarCatalogo', [BibliografiaDeclaradaController::class, 'buscarCatalogo']);
     $group->post('/bibliografias-declaradas/{id}/buscarCatalogo/api', [BibliografiaDeclaradaController::class, 'apiBuscarCatalogo']);
     $group->post('/bibliografias-declaradas/{id}/buscarGoogle/api', [BibliografiaDeclaradaController::class, 'apiBuscarGoogle']);
-$group->post('/bibliografias-declaradas/{id}/guardar-seleccionadas', [BibliografiaDeclaradaController::class, 'guardarBibliografiasSeleccionadas']);
+    $group->post('/bibliografias-declaradas/{id}/guardar-seleccionadas', [BibliografiaDeclaradaController::class, 'guardarBibliografiasSeleccionadas']);
 
-// API para obtener bibliografías disponibles de una bibliografía declarada
-$group->get('/api/bibliografias-declaradas/{id}/disponibles', [BibliografiaDeclaradaController::class, 'getBibliografiasDisponibles']);
+    // API para obtener bibliografías disponibles de una bibliografía declarada
+    $group->get('/api/bibliografias-declaradas/{id}/disponibles', [BibliografiaDeclaradaController::class, 'getBibliografiasDisponibles']);
+    
+    // API para buscar editoriales
+    $group->get('/api/editoriales/buscar', [BibliografiaDeclaradaController::class, 'buscarEditoriales']);
 
     // Rutas para el módulo de autores
     $group->get('/autores', [src\Controllers\AutorController::class, 'index']);

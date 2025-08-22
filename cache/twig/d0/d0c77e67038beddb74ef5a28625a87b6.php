@@ -413,6 +413,9 @@ document.getElementById('searchForm').addEventListener('submit', async function(
                             <i class=\"fas fa-info-circle\"></i> No se encontraron resultados en el catálogo
                         </div>
                         <div>
+                            <button type=\"button\" class=\"btn btn-primary me-2\" onclick=\"buscarEnSemanticScholar()\">
+                                <i class=\"fas fa-search\"></i> Buscar en Semantic Scholar
+                            </button>
                             <button type=\"button\" class=\"btn btn-warning me-2\" onclick=\"buscarEnGoogleScholar()\">
                                 <i class=\"fas fa-graduation-cap\"></i> Buscar en Google Scholar
                             </button>
@@ -553,6 +556,55 @@ async function saveSelectedResults() {
     }
 }
 
+async function buscarEnSemanticScholar() {
+    const resultsDiv = document.getElementById('searchResults');
+    resultsDiv.innerHTML = '<div class=\"text-center\"><div class=\"spinner-border\" role=\"status\"><span class=\"sr-only\">Buscando...</span></div><p class=\"mt-2\">Buscando en Semantic Scholar...</p></div>';
+
+    const formData = {
+        titulo: document.getElementById('titulo').value,
+        autor: document.getElementById('autor').value,
+        busqueda_adicional: document.getElementById('busqueda_adicional').value,
+        tipo_recurso: document.getElementById('tipo_recurso').value,
+        fuente: 'semantic_scholar'
+    };
+
+    try {
+        const response = await fetch('";
+        // line 414
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
+        yield "bibliografias-declaradas/";
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 414), "html", null, true);
+        yield "/buscarGoogle/api', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: \${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Error al buscar en Semantic Scholar');
+        }
+
+        mostrarResultadosGoogle(data, 'Semantic Scholar');
+    } catch (error) {
+        console.error('Error:', error);
+        resultsDiv.innerHTML = `
+            <div class=\"alert alert-danger\">
+                <i class=\"fas fa-exclamation-triangle\"></i> \${error.message}
+            </div>
+        `;
+    }
+}
+
 async function buscarEnGoogleScholar() {
     const resultsDiv = document.getElementById('searchResults');
     resultsDiv.innerHTML = '<div class=\"text-center\"><div class=\"spinner-border\" role=\"status\"><span class=\"sr-only\">Buscando...</span></div><p class=\"mt-2\">Buscando en Google Scholar...</p></div>';
@@ -567,10 +619,10 @@ async function buscarEnGoogleScholar() {
 
     try {
         const response = await fetch('";
-        // line 411
+        // line 458
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "bibliografias-declaradas/";
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 411), "html", null, true);
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 458), "html", null, true);
         yield "/buscarGoogle/api', {
             method: 'POST',
             headers: {
@@ -616,10 +668,10 @@ async function buscarEnGoogleBooks() {
 
     try {
         const response = await fetch('";
-        // line 455
+        // line 502
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "bibliografias-declaradas/";
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 455), "html", null, true);
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografia"] ?? null), "id", [], "any", false, false, false, 502), "html", null, true);
         yield "/buscarGoogle/api', {
             method: 'POST',
             headers: {
@@ -761,7 +813,7 @@ function mostrarResultadosGoogle(data, fuente) {
      */
     public function getDebugInfo(): array
     {
-        return array (  620 => 455,  571 => 411,  309 => 154,  290 => 137,  283 => 136,  239 => 95,  233 => 91,  229 => 89,  227 => 88,  224 => 87,  222 => 86,  219 => 85,  217 => 84,  198 => 68,  189 => 62,  167 => 42,  161 => 40,  159 => 39,  154 => 38,  152 => 37,  147 => 36,  145 => 35,  140 => 34,  138 => 33,  134 => 32,  130 => 31,  125 => 30,  123 => 29,  118 => 28,  116 => 27,  110 => 24,  106 => 23,  100 => 20,  96 => 19,  92 => 18,  88 => 17,  84 => 16,  72 => 6,  65 => 5,  53 => 3,  42 => 1,);
+        return array (  672 => 502,  623 => 458,  574 => 414,  309 => 154,  290 => 137,  283 => 136,  239 => 95,  233 => 91,  229 => 89,  227 => 88,  224 => 87,  222 => 86,  219 => 85,  217 => 84,  198 => 68,  189 => 62,  167 => 42,  161 => 40,  159 => 39,  154 => 38,  152 => 37,  147 => 36,  145 => 35,  140 => 34,  138 => 33,  134 => 32,  130 => 31,  125 => 30,  123 => 29,  118 => 28,  116 => 27,  110 => 24,  106 => 23,  100 => 20,  96 => 19,  92 => 18,  88 => 17,  84 => 16,  72 => 6,  65 => 5,  53 => 3,  42 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -1023,6 +1075,9 @@ document.getElementById('searchForm').addEventListener('submit', async function(
                             <i class=\"fas fa-info-circle\"></i> No se encontraron resultados en el catálogo
                         </div>
                         <div>
+                            <button type=\"button\" class=\"btn btn-primary me-2\" onclick=\"buscarEnSemanticScholar()\">
+                                <i class=\"fas fa-search\"></i> Buscar en Semantic Scholar
+                            </button>
                             <button type=\"button\" class=\"btn btn-warning me-2\" onclick=\"buscarEnGoogleScholar()\">
                                 <i class=\"fas fa-graduation-cap\"></i> Buscar en Google Scholar
                             </button>
@@ -1160,6 +1215,50 @@ async function saveSelectedResults() {
             text: error.message || 'Error al guardar las bibliografías',
             confirmButtonText: 'Aceptar'
         });
+    }
+}
+
+async function buscarEnSemanticScholar() {
+    const resultsDiv = document.getElementById('searchResults');
+    resultsDiv.innerHTML = '<div class=\"text-center\"><div class=\"spinner-border\" role=\"status\"><span class=\"sr-only\">Buscando...</span></div><p class=\"mt-2\">Buscando en Semantic Scholar...</p></div>';
+
+    const formData = {
+        titulo: document.getElementById('titulo').value,
+        autor: document.getElementById('autor').value,
+        busqueda_adicional: document.getElementById('busqueda_adicional').value,
+        tipo_recurso: document.getElementById('tipo_recurso').value,
+        fuente: 'semantic_scholar'
+    };
+
+    try {
+        const response = await fetch('{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/buscarGoogle/api', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: \${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Error al buscar en Semantic Scholar');
+        }
+
+        mostrarResultadosGoogle(data, 'Semantic Scholar');
+    } catch (error) {
+        console.error('Error:', error);
+        resultsDiv.innerHTML = `
+            <div class=\"alert alert-danger\">
+                <i class=\"fas fa-exclamation-triangle\"></i> \${error.message}
+            </div>
+        `;
     }
 }
 

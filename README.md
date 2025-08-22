@@ -195,6 +195,9 @@ GOOGLE_SEARCH_ENGINE_ID=tu_search_engine_id
 GOOGLE_SCHOLAR_ENABLED=true
 GOOGLE_BOOKS_ENABLED=true
 GOOGLE_CUSTOM_SEARCH_ENABLED=false
+
+# Configuración de Semantic Scholar API
+SEMANTIC_SCHOLAR_API_KEY=tu_api_key_semantic_scholar
 ```
 
 #### Inicializar la base de datos:

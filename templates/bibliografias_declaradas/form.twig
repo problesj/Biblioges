@@ -8,6 +8,8 @@
     {% endif %}
 {% endblock %}
 
+
+
 {% block content %}
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -104,12 +106,13 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label for="editorial" class="form-label">Editorial</label>
-                            <select class="form-select" id="editorial" name="editorial">
+                            <input type="text" class="form-control" id="buscarEditorial" placeholder="Buscar editorial..." style="font-size: 0.9rem;">
+                            <select class="form-select" id="editorial" name="editorial" style="margin-top: 0.5rem;" size="5">
                                 <option value="">Seleccione una editorial</option>
                                 {% for editorial in editoriales %}
                                     <option value="{{ editorial }}" {% if bibliografia.editorial == editorial %}selected{% endif %}>{{ editorial }}</option>
                                 {% endfor %}
-                                <option value="otra">Otra...</option>
+                                <option value="otra">Otra editorial...</option>
                             </select>
                         </div>
 
@@ -356,8 +359,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const tipoSelect = document.getElementById('tipo');
     const camposEspecificos = document.getElementById('camposEspecificos');
     const tipoCampos = document.querySelectorAll('.tipo-campo');
-    const editorialSelect = document.getElementById('editorial');
-    const nuevaEditorialContainer = document.getElementById('nuevaEditorialContainer');
+                const editorialSelect = document.getElementById('editorial');
+            const nuevaEditorialContainer = document.getElementById('nuevaEditorialContainer');
+            const buscarEditorial = document.getElementById('buscarEditorial');
     const tituloRevistaSelect = document.getElementById('titulo_revista');
     const nuevaRevistaContainer = document.getElementById('nuevaRevistaContainer');
     const nombreCarreraSelect = document.getElementById('nombre_carrera');
@@ -414,12 +418,59 @@ document.addEventListener('DOMContentLoaded', function() {
     // Mostrar campos específicos cuando cambie el tipo
     tipoSelect.addEventListener('change', mostrarCamposEspecificos);
     
-    // Manejar la visibilidad de la nueva editorial
-    editorialSelect.addEventListener('change', function() {
-        nuevaEditorialContainer.style.display = this.value === 'otra' ? 'block' : 'none';
-    });
+                // Funcionalidad de búsqueda de editoriales
+            function filtrarEditoriales(termino) {
+                const opciones = editorialSelect.options;
+                const terminoNormalizado = normalizarTexto(termino.trim());
+                
+                // Mostrar todas las opciones si no hay término de búsqueda
+                if (terminoNormalizado === '') {
+                    for (let i = 0; i < opciones.length; i++) {
+                        opciones[i].style.display = '';
+                    }
+                    return;
+                }
+                
+                // Filtrar opciones
+                for (let i = 0; i < opciones.length; i++) {
+                    const opcion = opciones[i];
+                    const textoEditorial = normalizarTexto(opcion.textContent);
+                    
+                    if (textoEditorial.includes(terminoNormalizado)) {
+                        opcion.style.display = '';
+                    } else {
+                        opcion.style.display = 'none';
+                    }
+                }
+            }
+            
+            // Evento para buscar al escribir
+            buscarEditorial.addEventListener('input', function() {
+                filtrarEditoriales(this.value);
+            });
+            
+            // Limpiar búsqueda cuando se hace clic en el campo
+            buscarEditorial.addEventListener('focus', function() {
+                if (this.value === '') {
+                    filtrarEditoriales('');
+                }
+            });
+            
+            // Limpiar búsqueda cuando se presiona Escape
+            buscarEditorial.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    this.value = '';
+                    filtrarEditoriales('');
+                    this.blur();
+                }
+            });
     
-    // Manejar la visibilidad de la nueva revista
+                // Manejar la visibilidad de la nueva editorial
+            editorialSelect.addEventListener('change', function() {
+                nuevaEditorialContainer.style.display = this.value === 'otra' ? 'block' : 'none';
+            });
+
+            // Manejar la visibilidad de la nueva revista
     if (tituloRevistaSelect) {
         tituloRevistaSelect.addEventListener('change', function() {
             nuevaRevistaContainer.style.display = this.value === 'otra' ? 'block' : 'none';

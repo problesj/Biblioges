@@ -5,6 +5,8 @@ RewriteBase /biblioges/
 RewriteCond %{REQUEST_URI} \.(css|js|jpg|jpeg|png|gif|ico|woff|woff2|ttf|eot)$ [NC]
 RewriteRule ^ - [L]
 
+
+
 # Redirigir todo lo demás a index.php
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d

@@ -255,6 +255,9 @@ document.getElementById('searchForm').addEventListener('submit', async function(
                             <i class="fas fa-info-circle"></i> No se encontraron resultados en el catálogo
                         </div>
                         <div>
+                            <button type="button" class="btn btn-primary me-2" onclick="buscarEnSemanticScholar()">
+                                <i class="fas fa-search"></i> Buscar en Semantic Scholar
+                            </button>
                             <button type="button" class="btn btn-warning me-2" onclick="buscarEnGoogleScholar()">
                                 <i class="fas fa-graduation-cap"></i> Buscar en Google Scholar
                             </button>
@@ -392,6 +395,50 @@ async function saveSelectedResults() {
             text: error.message || 'Error al guardar las bibliografías',
             confirmButtonText: 'Aceptar'
         });
+    }
+}
+
+async function buscarEnSemanticScholar() {
+    const resultsDiv = document.getElementById('searchResults');
+    resultsDiv.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"><span class="sr-only">Buscando...</span></div><p class="mt-2">Buscando en Semantic Scholar...</p></div>';
+
+    const formData = {
+        titulo: document.getElementById('titulo').value,
+        autor: document.getElementById('autor').value,
+        busqueda_adicional: document.getElementById('busqueda_adicional').value,
+        tipo_recurso: document.getElementById('tipo_recurso').value,
+        fuente: 'semantic_scholar'
+    };
+
+    try {
+        const response = await fetch('{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/buscarGoogle/api', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Error al buscar en Semantic Scholar');
+        }
+
+        mostrarResultadosGoogle(data, 'Semantic Scholar');
+    } catch (error) {
+        console.error('Error:', error);
+        resultsDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle"></i> ${error.message}
+            </div>
+        `;
     }
 }
 
