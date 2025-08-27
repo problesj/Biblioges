@@ -4109,9 +4109,13 @@ class BibliografiaDeclaradaController
                         $stmt = $this->pdo->prepare("
                             UPDATE bibliografias_disponibles 
                             SET titulo = ?, anio_edicion = ?, editorial = ?,
-                                url_catalogo = ?, url_acceso = ?, disponibilidad = ?, estado = ?
+                                url_catalogo = ?, url_acceso = ?, disponibilidad = ?, 
+                                ejemplares_digitales = ?, estado = ?
                             WHERE id = ?
                         ");
+                        
+                        // Establecer ejemplares_digitales = 0 para disponibilidad electrónica
+                        $ejemplaresDigitales = ($disponibilidad === 'electronico' || $disponibilidad === 'ambos') ? 0 : null;
                         
                         $params = [
                             $titulo,
@@ -4120,6 +4124,7 @@ class BibliografiaDeclaradaController
                             $url_catalogo,
                             $url_acceso,
                             $disponibilidad,
+                            $ejemplaresDigitales,
                             1,
                             $bibliografiaDisponibleId
                         ];
@@ -4140,9 +4145,13 @@ class BibliografiaDeclaradaController
                         $stmt = $this->pdo->prepare("
                             INSERT INTO bibliografias_disponibles (
                                 bibliografia_declarada_id, titulo, anio_edicion, editorial,
-                                url_catalogo, url_acceso, disponibilidad, id_mms, estado
-                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                url_catalogo, url_acceso, disponibilidad, id_mms, 
+                                ejemplares_digitales, estado
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         ");
+                        
+                        // Establecer ejemplares_digitales = 0 para disponibilidad electrónica
+                        $ejemplaresDigitales = ($disponibilidad === 'electronico' || $disponibilidad === 'ambos') ? 0 : null;
                         
                         $params = [
                             $bibliografiaDeclaradaId,
@@ -4153,6 +4162,7 @@ class BibliografiaDeclaradaController
                             $url_acceso,
                             $disponibilidad,
                             $idMms,
+                            $ejemplaresDigitales,
                             1
                         ];
                         
