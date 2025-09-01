@@ -49,6 +49,36 @@ class CarreraController
         $this->twig = $twig;
     }
 
+    /**
+     * Normaliza el nombre de la carrera: convierte a mayúsculas y quita acentos
+     * 
+     * @param string $nombre
+     * @return string
+     */
+    private function normalizarNombreCarrera(string $nombre): string
+    {
+        // Convertir a mayúsculas
+        $nombre = mb_strtoupper($nombre, 'UTF-8');
+        
+        // Reemplazar acentos y caracteres especiales
+        $replacements = [
+            'Á' => 'A', 'É' => 'E', 'Í' => 'I', 'Ó' => 'O', 'Ú' => 'U',
+            'À' => 'A', 'È' => 'E', 'Ì' => 'I', 'Ò' => 'O', 'Ù' => 'U',
+            'Ä' => 'A', 'Ë' => 'E', 'Ï' => 'I', 'Ö' => 'O', 'Ü' => 'U',
+            'Â' => 'A', 'Ê' => 'E', 'Î' => 'I', 'Ô' => 'O', 'Û' => 'U',
+            'Ã' => 'A', 'Õ' => 'O', 'Ñ' => 'N',
+            'Ç' => 'C', 'Ş' => 'S', 'Ţ' => 'T'
+        ];
+        
+        $nombre = strtr($nombre, $replacements);
+        
+        // Remover caracteres especiales y múltiples espacios
+        $nombre = preg_replace('/[^A-Z0-9\s]/', ' ', $nombre);
+        $nombre = preg_replace('/\s+/', ' ', $nombre);
+        
+        return trim($nombre);
+    }
+
     public function index(Request $request, Response $response, array $args = [])
     {
         // Verificar autenticación
@@ -305,6 +335,9 @@ class CarreraController
             $nombre = $parsedBody['nombre'] ?? '';
             $tipo_programa = $parsedBody['tipo_programa'] ?? '';
             $estado = $parsedBody['estado'] ?? 1;
+            
+            // Normalizar el nombre de la carrera (mayúsculas sin acentos)
+            $nombre = $this->normalizarNombreCarrera($nombre);
             $codigos = $parsedBody['codigos'] ?? [];
             $sedes = $parsedBody['sedes'] ?? [];
             $unidades = $parsedBody['unidades'] ?? [];
@@ -793,6 +826,10 @@ class CarreraController
             $nombre = $parsedBody['nombre'] ?? '';
             $tipo_programa = $parsedBody['tipo_programa'] ?? '';
             $estado = $parsedBody['estado'] ?? 1;
+            
+            // Normalizar el nombre de la carrera (mayúsculas sin acentos)
+            $nombre = $this->normalizarNombreCarrera($nombre);
+            
             $codigos = $parsedBody['codigos'] ?? [];
             $sedes = $parsedBody['sedes'] ?? [];
             $unidades = $parsedBody['unidades'] ?? [];
