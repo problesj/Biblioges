@@ -18,273 +18,6 @@ use PDOException;
 class ReporteController extends BaseController
 {
     protected $pdo;
-    
-    /**
-     * Convierte valores especiales de ejemplares a números para la base de datos
-     */
-    private function convertirValorEspecialANumero($valor)
-    {
-        // Si ya es un número, devolverlo
-        if (is_numeric($valor)) {
-            return (int) $valor;
-        }
-        
-        // Convertir strings especiales a números
-        switch ($valor) {
-            case 'Sin ejemplares impresos':
-            case 'Sin ejemplares digitales':
-                return -1;
-            case 'Sin ejemplares disponibles':
-                return -2;
-            case 'Ilimitado':
-                return 0;
-            default:
-                return 0;
-        }
-    }
-
-    /**
-     * Calcula ejemplares impresos y digitales para una asignatura según la nueva lógica especificada
-     */
-    private function calcularEjemplaresAsignatura($bibliografiaDetallada, $sedeId) {
-        $titulosDeclarados = $bibliografiaDetallada->count();
-        $titulosDisponibles = 0;
-        $ejemplaresImpresos = 0;
-        $ejemplaresDigitales = 0;
-        $tieneEjemplaresDigitalesIlimitados = false;
-        $tieneEjemplaresDigitalesDisponibles = false;
-        $todasLasBibliografiasDeclaradasTienenDigitalesIlimitados = true;
-        $totalBibliografiasDeclaradas = 0;
-        
-        // Si no hay bibliografías declaradas, asignar valores especiales
-        if ($titulosDeclarados == 0) {
-            return [
-                'titulos_declarados' => 0,
-                'titulos_disponibles' => 0,
-                'ejemplares_impresos' => -2, // -2 indica "Sin información"
-                'ejemplares_digitales' => -2, // -2 indica "Sin información"
-                'cobertura_basica' => 0
-            ];
-        }
-        
-        foreach ($bibliografiaDetallada as $bibliografia) {
-            $totalBibliografiasDeclaradas++;
-            
-            // Ejemplares impresos
-            $ejemImp = DB::table('vw_bib_declarada_sede_noejem')
-                ->where('id_bib_declarada', $bibliografia->id)
-                ->where('id_sede', $sedeId)
-                ->value('no_ejem_imp_sede') ?? 0;
-            $ejemplaresImpresos += $ejemImp;
-            
-            // Ejemplares digitales
-            $bibliografiasDigitales = DB::table('bibliografias_disponibles')
-                ->where('bibliografia_declarada_id', $bibliografia->id)
-                ->whereIn('disponibilidad', ['ambos', 'electronico'])
-                ->get();
-            
-            if ($bibliografiasDigitales->isEmpty()) {
-                // No hay bibliografías digitales disponibles para esta bibliografía declarada
-                $ejemDig = -1; // -1 indica "Sin ejemplares digitales"
-                $todasLasBibliografiasDeclaradasTienenDigitalesIlimitados = false;
-            } else {
-                $tieneEjemplaresDigitalesDisponibles = true;
-                $ejemDig = $bibliografiasDigitales->pluck('ejemplares_digitales');
-                
-                // Verificar si alguna bibliografía tiene ejemplares ilimitados (0) o > 0
-                if ($ejemDig->contains(0) || $ejemDig->sum() > 0) {
-                    $tieneEjemplaresDigitalesIlimitados = true;
-                }
-                
-                // Verificar si esta bibliografía declarada tiene ejemplares digitales ilimitados
-                if (!$ejemDig->contains(0)) {
-                    $todasLasBibliografiasDeclaradasTienenDigitalesIlimitados = false;
-                }
-                
-                $ejemDig = $ejemDig->contains(0) ? 0 : $ejemDig->sum();
-            }
-            // Solo sumar valores positivos para evitar acumular indicadores negativos
-            if ($ejemDig > 0) {
-                $ejemplaresDigitales += $ejemDig;
-            }
-            
-            // Disponibilidad
-            $disponible = DB::table('bibliografias_disponibles')
-                ->where('bibliografia_declarada_id', $bibliografia->id)
-                ->where('estado', 1)
-                ->where(function ($query) use ($sedeId) {
-                    $query->whereIn('disponibilidad', ['electronico', 'ambos'])
-                          ->orWhere(function ($q) use ($sedeId) {
-                              $q->where('disponibilidad', 'impreso')
-                                ->whereExists(function ($sub) use ($sedeId) {
-                                    $sub->select(DB::raw(1))
-                                        ->from('bibliografias_disponibles_sedes')
-                                        ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
-                                        ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
-                                        ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
-                                });
-                          });
-                })
-                ->exists();
-            if ($disponible) {
-                $titulosDisponibles++;
-            }
-        }
-        
-        // Aplicar valores especiales después del cálculo
-        if ($ejemplaresImpresos == 0) {
-            $ejemplaresImpresos = -1; // -1 indica "Sin ejemplares impresos"
-        }
-        
-        // Si no hay títulos disponibles, asignar -2 para ambos
-        if ($titulosDisponibles == 0) {
-            $ejemplaresImpresos = -2; // -2 indica "Sin información"
-            $ejemplaresDigitales = -2; // -2 indica "Sin información"
-        } else {
-            // Si hay títulos disponibles, verificar el estado de ejemplares digitales
-            if ($tieneEjemplaresDigitalesDisponibles && $tieneEjemplaresDigitalesIlimitados) {
-                // Si TODAS las bibliografías declaradas tienen ejemplares digitales ilimitados, mostrar "Ilimitado"
-                if ($todasLasBibliografiasDeclaradasTienenDigitalesIlimitados && $totalBibliografiasDeclaradas > 0) {
-                    $ejemplaresDigitales = 0; // 0 indica "Ilimitado"
-                } else {
-                    $ejemplaresDigitales = -3; // -3 indica "Ilimitado parcialmente"
-                }
-            } elseif (!$tieneEjemplaresDigitalesDisponibles) {
-                $ejemplaresDigitales = -1; // -1 indica "Sin ejemplares digitales"
-            }
-        }
-        
-        $coberturaBasica = $titulosDeclarados > 0 ? round(($titulosDisponibles / $titulosDeclarados) * 100, 2) : 0;
-        
-        return [
-            'titulos_declarados' => $titulosDeclarados,
-            'titulos_disponibles' => $titulosDisponibles,
-            'ejemplares_impresos' => $ejemplaresImpresos,
-            'ejemplares_digitales' => $ejemplaresDigitales,
-            'cobertura_basica' => $coberturaBasica
-        ];
-    }
-
-    /**
-     * Convierte valores especiales de ejemplares a texto legible para exportación
-     */
-    private function convertirValorEspecial($valor, $tipo = 'digitales', $titulosDisponibles = 0) {
-        if ($valor == -2) {
-            return 'Sin información';
-        } elseif ($valor == -3) {
-            return 'Ilimitado parcialmente';
-        } elseif ($valor == -1) {
-            return $tipo == 'digitales' ? 'Sin ejemplares digitales' : 'Sin ejemplares impresos';
-        } elseif ($valor == 0 && $titulosDisponibles > 0) {
-            return 'Ilimitado';
-        } else {
-            return $valor;
-        }
-    }
-
-    /**
-     * Calcula ejemplares para reporte expandido usando la misma lógica que el reporte web
-     */
-    private function calcularEjemplaresExpandido($bibliografiaId, $sedeId) {
-        // Obtener bibliografías disponibles para esta bibliografía declarada
-        $bibliografiasDisponibles = DB::table("bibliografias_disponibles")
-            ->where("bibliografia_declarada_id", $bibliografiaId)
-            ->where("estado", 1)
-            ->select("disponibilidad", "ejemplares_digitales")
-            ->get();
-
-        // Usar la nueva lógica para calcular ejemplares
-        $resultado = $this->calcularEjemplaresNuevaLogica($bibliografiaId, $sedeId, $bibliografiasDisponibles);
-        
-        return [
-            'ejemplares_impresos' => $resultado["ejemplares_impresos"],
-            'ejemplares_digitales' => $resultado["ejemplares_digitales"],
-            'disponible' => $resultado["disponible"]
-        ];
-    }
-
-    /**
-     * Calcula ejemplares impresos y digitales según la nueva lógica especificada
-     */
-    private function calcularEjemplaresNuevaLogica($bibliografiaId, $sedeId, $bibliografiasDisponibles) {
-        $ejemplaresImpresos = 0;
-        $ejemplaresDigitales = 0;
-        $disponible = false;
-        $tieneEjemplaresDigitalesIlimitados = false;
-        $tieneEjemplaresDigitalesDisponibles = false;
-        
-        // Si no hay bibliografías disponibles, no está disponible
-        if ($bibliografiasDisponibles->isEmpty()) {
-            return [
-                'ejemplares_impresos' => -2, // -2 indica "Sin información"
-                'ejemplares_digitales' => -2, // -2 indica "Sin información"
-                'disponible' => false
-            ];
-        }
-        
-        // Calcular ejemplares impresos: sumar bibliografías con disponibilidad "impreso" y "ambos"
-        $bibliografiasImpresas = $bibliografiasDisponibles->whereIn('disponibilidad', ['impreso', 'ambos']);
-        if ($bibliografiasImpresas->isNotEmpty()) {
-            // Obtener ejemplares impresos de la bibliografía declarada para la sede
-            $ejemplaresImpresos = DB::table('vw_bib_declarada_sede_noejem')
-                ->where('id_bib_declarada', $bibliografiaId)
-                ->where('id_sede', $sedeId)
-                ->value('no_ejem_imp_sede') ?? 0;
-        }
-        
-        // Calcular ejemplares digitales: considerar bibliografías con disponibilidad "ambos" y "electronico"
-        $bibliografiasDigitales = $bibliografiasDisponibles->whereIn('disponibilidad', ['ambos', 'electronico']);
-        
-        if ($bibliografiasDigitales->isNotEmpty()) {
-            $tieneEjemplaresDigitalesDisponibles = true;
-            
-            // Verificar si alguna bibliografía digital tiene ejemplares_digitales = 0 (ilimitado) o > 0
-            $ejemplaresDigitalesValues = $bibliografiasDigitales->pluck('ejemplares_digitales');
-            if ($ejemplaresDigitalesValues->contains(0) || $ejemplaresDigitalesValues->sum() > 0) {
-                $tieneEjemplaresDigitalesIlimitados = true;
-            }
-            
-            // Verificar si alguna bibliografía digital tiene ejemplares_digitales = 0 (ilimitado)
-            $tieneIlimitado = $bibliografiasDigitales->where('ejemplares_digitales', 0)->isNotEmpty();
-            
-            if ($tieneIlimitado) {
-                $ejemplaresDigitales = 0; // 0 indica "Ilimitado"
-            } else {
-                // Sumar ejemplares digitales de las bibliografías con ejemplares específicos
-                $ejemplaresDigitales = $bibliografiasDigitales->where('ejemplares_digitales', '>', 0)->sum('ejemplares_digitales');
-            }
-        }
-        
-        // Determinar disponibilidad
-        $disponible = $ejemplaresImpresos > 0 || $ejemplaresDigitales > 0 || $ejemplaresDigitales == 0;
-        
-        // Aplicar valores especiales para mostrar en la interfaz
-        if ($ejemplaresImpresos == 0) {
-            $ejemplaresImpresos = -1; // -1 indica "Sin ejemplares impresos"
-        }
-        
-        // Aplicar lógica para ejemplares digitales
-        if (!$tieneEjemplaresDigitalesDisponibles) {
-            $ejemplaresDigitales = -1; // -1 indica "Sin ejemplares digitales"
-        } elseif ($tieneEjemplaresDigitalesDisponibles && $tieneEjemplaresDigitalesIlimitados) {
-            // Si hay ejemplares digitales disponibles e ilimitados, verificar si es parcialmente ilimitado
-            $tieneIlimitado = $bibliografiasDigitales->where('ejemplares_digitales', 0)->isNotEmpty();
-            $tieneLimitado = $bibliografiasDigitales->where('ejemplares_digitales', '>', 0)->isNotEmpty();
-            
-            if ($tieneIlimitado && $tieneLimitado) {
-                $ejemplaresDigitales = -3; // -3 indica "Ilimitado parcialmente"
-            } else if ($tieneIlimitado && !$tieneLimitado) {
-                $ejemplaresDigitales = 0; // 0 indica "Ilimitado"
-            }
-            // Si solo tiene limitados, mantener el valor calculado anteriormente
-        }
-        
-        return [
-            'ejemplares_impresos' => $ejemplaresImpresos,
-            'ejemplares_digitales' => $ejemplaresDigitales,
-            'disponible' => $disponible
-        ];
-    }
 
     public function __construct()
     {
@@ -1607,13 +1340,53 @@ class ReporteController extends BaseController
                     )
                     ->get();
             }
-            // Calcular valores por bibliografía usando la nueva función
-            $resultado = $this->calcularEjemplaresAsignatura($bibliografiaDetallada, $sedeId);
-            $asignatura->titulos_declarados = $resultado['titulos_declarados'];
-            $asignatura->titulos_disponibles = $resultado['titulos_disponibles'];
-            $asignatura->ejemplares_impresos = $resultado['ejemplares_impresos'];
-            $asignatura->ejemplares_digitales = $resultado['ejemplares_digitales'];
-            $asignatura->cobertura_basica = $resultado['cobertura_basica'];
+            // Calcular valores por bibliografía
+            $titulosDeclarados = $bibliografiaDetallada->count();
+            $titulosDisponibles = 0;
+            $ejemplaresImpresos = 0;
+            $ejemplaresDigitales = 0;
+            foreach ($bibliografiaDetallada as $bibliografia) {
+                // Ejemplares impresos
+                $ejemImp = DB::table('vw_bib_declarada_sede_noejem')
+                    ->where('id_bib_declarada', $bibliografia->id)
+                    ->where('id_sede', $sedeId)
+                    ->value('no_ejem_imp_sede') ?? 0;
+                $ejemplaresImpresos += $ejemImp;
+                // Ejemplares digitales
+                $ejemDig = DB::table('bibliografias_disponibles')
+                    ->where('bibliografia_declarada_id', $bibliografia->id)
+                    ->where('disponibilidad', '!=', 'impreso')
+                    ->pluck('ejemplares_digitales');
+                $ejemDig = $ejemDig->contains(0) ? 0 : $ejemDig->sum();
+                $ejemplaresDigitales += $ejemDig;
+                // Disponibilidad
+                $disponible = DB::table('bibliografias_disponibles')
+                    ->where('bibliografia_declarada_id', $bibliografia->id)
+                    ->where('estado', 1)
+                    ->where(function ($query) use ($sedeId) {
+                        $query->whereIn('disponibilidad', ['electronico', 'ambos'])
+                              ->orWhere(function ($q) use ($sedeId) {
+                                  $q->where('disponibilidad', 'impreso')
+                                    ->whereExists(function ($sub) use ($sedeId) {
+                                        $sub->select(DB::raw(1))
+                                            ->from('bibliografias_disponibles_sedes')
+                                            ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
+                                            ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
+                                            ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
+                                    });
+                              });
+                    })
+                    ->exists();
+                if ($disponible) {
+                    $titulosDisponibles++;
+                }
+            }
+            $coberturaBasica = $titulosDeclarados > 0 ? round(($titulosDisponibles / $titulosDeclarados) * 100, 2) : 0;
+            $asignatura->titulos_declarados = $titulosDeclarados;
+            $asignatura->titulos_disponibles = $titulosDisponibles;
+            $asignatura->ejemplares_impresos = $ejemplaresImpresos;
+            $asignatura->ejemplares_digitales = $ejemplaresDigitales;
+            $asignatura->cobertura_basica = $coberturaBasica;
         }
 
         // Calcular totales de la carrera considerando títulos declarados únicos (sin duplicados)
@@ -1670,13 +1443,8 @@ class ReporteController extends BaseController
         
         // Sumar ejemplares de todas las asignaturas (estos sí se suman)
         foreach ($asignaturas as $asig) {
-            // Solo sumar valores positivos (ignorar -1 y -2)
-            if (($asig->ejemplares_impresos ?? 0) > 0) {
-                $totalesCarrera['ejemplares_impresos'] += $asig->ejemplares_impresos;
-            }
-            if (($asig->ejemplares_digitales ?? 0) > 0) {
-                $totalesCarrera['ejemplares_digitales'] += $asig->ejemplares_digitales;
-            }
+            $totalesCarrera['ejemplares_impresos'] += $asig->ejemplares_impresos ?? 0;
+            $totalesCarrera['ejemplares_digitales'] += $asig->ejemplares_digitales ?? 0;
             }
         
         $totalesCarrera['titulos_declarados'] = $titulosDeclaradosUnicos;
@@ -1731,17 +1499,6 @@ class ReporteController extends BaseController
         $asignaturaCodigo = $args['asignatura_codigo'];
         
         error_log('ReporteController@reporteTitulosBibliografiaBasica: Sede ID: ' . $sedeId . ', Carrera ID: ' . $carreraId . ', Asignatura: ' . $asignaturaCodigo);
-
-        // Obtener datos de sesión
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        $sessionData = [
-            'user_id' => $_SESSION['user_id'] ?? null,
-            'user_email' => $_SESSION['user_email'] ?? null,
-            'user_nombre' => $_SESSION['user_nombre'] ?? null,
-            'user_rol' => $_SESSION['user_rol'] ?? null
-        ];
 
         // Obtener información de la sede, carrera y asignatura usando la vista vw_mallas con la nueva estructura
         $carrera = DB::table('vw_mallas')
@@ -1884,17 +1641,109 @@ class ReporteController extends BaseController
                 ->select('disponibilidad', 'ejemplares_digitales')
                 ->get();
 
-            // Usar la nueva lógica para calcular ejemplares
-            $resultado = $this->calcularEjemplaresNuevaLogica($bibliografia->id, $sedeId, $bibliografiasDisponibles);
-            $ejemplaresImpresos = $resultado['ejemplares_impresos'];
-            $ejemplaresDigitales = $resultado['ejemplares_digitales'];
-            $disponible = $resultado['disponible'];
+            // Obtener ejemplares impresos por sede
+            $ejemplaresImpresosSede = DB::table('vw_bib_declarada_sede_noejem')
+                ->where('id_bib_declarada', $bibliografia->id)
+                ->where('id_sede', $sedeId)
+                ->value('no_ejem_imp_sede') ?? 0;
+
+            // Inicializar variables
+            $ejemplaresImpresos = 0;
+            $ejemplaresDigitales = 0;
+            $disponible = false;
+
+            // Verificar si hay bibliografías disponibles
+            if ($bibliografiasDisponibles->isEmpty() && $ejemplaresImpresosSede == 0) {
+                // No hay bibliografías disponibles ni ejemplares impresos
+                $ejemplaresImpresos = -2; // -2 indica "Sin ejemplares disponibles"
+                $ejemplaresDigitales = -2; // -2 indica "Sin ejemplares disponibles"
+                $disponible = false;
+            } else {
+                // Siempre considerar los ejemplares impresos de la sede si existen
+                if ($ejemplaresImpresosSede > 0) {
+                    $ejemplaresImpresos = $ejemplaresImpresosSede;
+                }
+                
+                // Inicializar variables si no se han establecido
+                $ejemplaresImpresos = $ejemplaresImpresos ?? 0;
+                $ejemplaresDigitales = 0;
+                $disponible = false;
+                
+                // Verificar qué tipos de disponibilidad existen
+                $tieneImpreso = $bibliografiasDisponibles->where('disponibilidad', 'impreso')->isNotEmpty();
+            $tieneElectronico = $bibliografiasDisponibles->where('disponibilidad', 'electronico')->isNotEmpty();
+            $tieneAmbos = $bibliografiasDisponibles->where('disponibilidad', 'ambos')->isNotEmpty();
+
+            if ($tieneImpreso && !$tieneElectronico && !$tieneAmbos) {
+                // Solo disponibilidad impreso
+                $ejemplaresImpresos = $ejemplaresImpresosSede;
+                $ejemplaresDigitales = -1; // -1 indica "Sin ejemplares digitales"
+                $disponible = $ejemplaresImpresos > 0;
+                
+            } elseif ($tieneImpreso && !$tieneElectronico && $tieneAmbos) {
+                // Disponibilidad impreso y ambos
+                $ejemplaresImpresos = $ejemplaresImpresosSede;
+                
+                // Sumar ejemplares digitales de las bibliografías con disponibilidad "ambos"
+                $ejemplaresDigitalesAmbos = $bibliografiasDisponibles
+                    ->where('disponibilidad', 'ambos')
+                    ->pluck('ejemplares_digitales');
+                
+                $ejemplaresDigitales = $ejemplaresDigitalesAmbos->contains(0) ? 0 : $ejemplaresDigitalesAmbos->sum();
+                $disponible = $ejemplaresImpresos > 0 || $ejemplaresDigitales > 0 || $ejemplaresDigitales == 0;
+                
+            } elseif ($tieneImpreso && $tieneElectronico && !$tieneAmbos) {
+                // Disponibilidad impreso y electrónico
+                $ejemplaresImpresos = $ejemplaresImpresosSede;
+                
+                // Sumar ejemplares digitales de las bibliografías con disponibilidad "electronico"
+                $ejemplaresDigitalesElectronico = $bibliografiasDisponibles
+                    ->where('disponibilidad', 'electronico')
+                    ->pluck('ejemplares_digitales');
+                
+                $ejemplaresDigitales = $ejemplaresDigitalesElectronico->contains(0) ? 0 : $ejemplaresDigitalesElectronico->sum();
+                $disponible = $ejemplaresImpresos > 0 || $ejemplaresDigitales > 0 || $ejemplaresDigitales == 0;
+                
+            } elseif (!$tieneImpreso && $tieneElectronico && !$tieneAmbos) {
+                // Solo disponibilidad electrónico
+                $ejemplaresImpresos = -1; // -1 indica "Sin ejemplares impresos"
+                
+                // Sumar ejemplares digitales de las bibliografías con disponibilidad "electronico"
+                $ejemplaresDigitalesElectronico = $bibliografiasDisponibles
+                    ->where('disponibilidad', 'electronico')
+                    ->pluck('ejemplares_digitales');
+                
+                $ejemplaresDigitales = $ejemplaresDigitalesElectronico->contains(0) ? 0 : $ejemplaresDigitalesElectronico->sum();
+                $disponible = $ejemplaresDigitales > 0 || $ejemplaresDigitales == 0;
+                
+            } else {
+                // Casos mixtos o sin disponibilidad
+                $ejemplaresImpresos = $ejemplaresImpresosSede;
+                $ejemplaresDigitales = 0;
+                $disponible = $ejemplaresImpresos > 0;
+            }
+            }
+
+            error_log('ReporteController@reporteTitulosBibliografiaBasica: Ejemplares impresos para ' . $bibliografia->titulo . ': ' . $ejemplaresImpresos);
+            error_log('ReporteController@reporteTitulosBibliografiaBasica: Ejemplares digitales para ' . $bibliografia->titulo . ': ' . $ejemplaresDigitales);
+            error_log('ReporteController@reporteTitulosBibliografiaBasica: Disponible para ' . $bibliografia->titulo . ': ' . ($disponible ? 'Sí' : 'No'));
 
             // Asignar valores a la bibliografía
             $bibliografia->ejemplares_impresos = $ejemplaresImpresos;
             $bibliografia->ejemplares_digitales = $ejemplaresDigitales;
             $bibliografia->disponible = $disponible;
         }
+
+        // Obtener datos de sesión para la plantilla
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        $sessionData = [
+            'user_id' => $_SESSION['user_id'] ?? null,
+            'user_email' => $_SESSION['user_email'] ?? null,
+            'user_nombre' => $_SESSION['user_nombre'] ?? null,
+            'user_rol' => $_SESSION['user_rol'] ?? null
+        ];
 
         $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
         $template = $view->load('reportes/coberturas/asignatura.twig');
@@ -1922,17 +1771,6 @@ class ReporteController extends BaseController
         $asignaturaCodigo = $args['asignatura_codigo'];
         
         error_log('ReporteController@reporteTitulosBibliografiaComplementaria: Sede ID: ' . $sedeId . ', Carrera ID: ' . $carreraId . ', Asignatura: ' . $asignaturaCodigo);
-
-        // Obtener datos de sesión
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        $sessionData = [
-            'user_id' => $_SESSION['user_id'] ?? null,
-            'user_email' => $_SESSION['user_email'] ?? null,
-            'user_nombre' => $_SESSION['user_nombre'] ?? null,
-            'user_rol' => $_SESSION['user_rol'] ?? null
-        ];
 
         // Obtener información de la sede, carrera y asignatura usando la vista vw_mallas con la nueva estructura
         $carrera = DB::table('vw_mallas')
@@ -2065,11 +1903,83 @@ class ReporteController extends BaseController
                 ->select('disponibilidad', 'ejemplares_digitales')
                 ->get();
 
-            // Usar la nueva lógica para calcular ejemplares
-            $resultado = $this->calcularEjemplaresNuevaLogica($bibliografia->id, $sedeId, $bibliografiasDisponibles);
-            $ejemplaresImpresos = $resultado['ejemplares_impresos'];
-            $ejemplaresDigitales = $resultado['ejemplares_digitales'];
-            $disponible = $resultado['disponible'];
+            // Obtener ejemplares impresos por sede
+            $ejemplaresImpresosSede = DB::table('vw_bib_declarada_sede_noejem')
+                ->where('id_bib_declarada', $bibliografia->id)
+                ->where('id_sede', $sedeId)
+                ->value('no_ejem_imp_sede') ?? 0;
+
+            // Verificar si hay bibliografías disponibles
+            if ($bibliografiasDisponibles->isEmpty() && $ejemplaresImpresosSede == 0) {
+                // No hay bibliografías disponibles ni ejemplares impresos
+                $ejemplaresImpresos = -2; // -2 indica "Sin ejemplares disponibles"
+                $ejemplaresDigitales = -2; // -2 indica "Sin ejemplares disponibles"
+                $disponible = false;
+            } else {
+                // Siempre considerar los ejemplares impresos de la sede si existen
+                if ($ejemplaresImpresosSede > 0) {
+                    $ejemplaresImpresos = $ejemplaresImpresosSede;
+                }
+                
+                // Inicializar variables
+                $ejemplaresImpresos = $ejemplaresImpresos ?? 0;
+                $ejemplaresDigitales = 0;
+                $disponible = false;
+
+                // Verificar qué tipos de disponibilidad existen
+            $tieneImpreso = $bibliografiasDisponibles->where('disponibilidad', 'impreso')->isNotEmpty();
+            $tieneElectronico = $bibliografiasDisponibles->where('disponibilidad', 'electronico')->isNotEmpty();
+            $tieneAmbos = $bibliografiasDisponibles->where('disponibilidad', 'ambos')->isNotEmpty();
+
+            if ($tieneImpreso && !$tieneElectronico && !$tieneAmbos) {
+                // Solo disponibilidad impreso
+                $ejemplaresImpresos = $ejemplaresImpresosSede;
+                $ejemplaresDigitales = -1; // -1 indica "Sin ejemplares digitales"
+                $disponible = $ejemplaresImpresos > 0;
+                
+            } elseif ($tieneImpreso && !$tieneElectronico && $tieneAmbos) {
+                // Disponibilidad impreso y ambos
+                $ejemplaresImpresos = $ejemplaresImpresosSede;
+                
+                // Sumar ejemplares digitales de las bibliografías con disponibilidad "ambos"
+                $ejemplaresDigitalesAmbos = $bibliografiasDisponibles
+                    ->where('disponibilidad', 'ambos')
+                    ->pluck('ejemplares_digitales');
+                
+                $ejemplaresDigitales = $ejemplaresDigitalesAmbos->contains(0) ? 0 : $ejemplaresDigitalesAmbos->sum();
+                $disponible = $ejemplaresImpresos > 0 || $ejemplaresDigitales > 0 || $ejemplaresDigitales == 0;
+                
+            } elseif ($tieneImpreso && $tieneElectronico && !$tieneAmbos) {
+                // Disponibilidad impreso y electrónico
+                $ejemplaresImpresos = $ejemplaresImpresosSede;
+                
+                // Sumar ejemplares digitales de las bibliografías con disponibilidad "electronico"
+                $ejemplaresDigitalesElectronico = $bibliografiasDisponibles
+                    ->where('disponibilidad', 'electronico')
+                    ->pluck('ejemplares_digitales');
+                
+                $ejemplaresDigitales = $ejemplaresDigitalesElectronico->contains(0) ? 0 : $ejemplaresDigitalesElectronico->sum();
+                $disponible = $ejemplaresImpresos > 0 || $ejemplaresDigitales > 0 || $ejemplaresDigitales == 0;
+                
+            } elseif (!$tieneImpreso && $tieneElectronico && !$tieneAmbos) {
+                // Solo disponibilidad electrónico
+                $ejemplaresImpresos = -1; // -1 indica "Sin ejemplares impresos"
+                
+                // Sumar ejemplares digitales de las bibliografías con disponibilidad "electronico"
+                $ejemplaresDigitalesElectronico = $bibliografiasDisponibles
+                    ->where('disponibilidad', 'electronico')
+                    ->pluck('ejemplares_digitales');
+                
+                $ejemplaresDigitales = $ejemplaresDigitalesElectronico->contains(0) ? 0 : $ejemplaresDigitalesElectronico->sum();
+                $disponible = $ejemplaresDigitales > 0 || $ejemplaresDigitales == 0;
+                
+            } else {
+                // Casos mixtos o sin disponibilidad
+                $ejemplaresImpresos = $ejemplaresImpresosSede;
+                $ejemplaresDigitales = 0;
+                $disponible = $ejemplaresImpresos > 0;
+            }
+            }
 
             error_log('ReporteController@reporteTitulosBibliografiaComplementaria: Ejemplares impresos para ' . $bibliografia->titulo . ': ' . $ejemplaresImpresos);
             error_log('ReporteController@reporteTitulosBibliografiaComplementaria: Ejemplares digitales para ' . $bibliografia->titulo . ': ' . $ejemplaresDigitales);
@@ -2394,18 +2304,39 @@ class ReporteController extends BaseController
                             $tituloDeclarado .= ' - ' . $primerAutor->nombre_completo;
                         }
                         
-                        // Obtener bibliografías disponibles para esta bibliografía declarada
-                        $bibliografiasDisponibles = DB::table("bibliografias_disponibles")
-                            ->where("bibliografia_declarada_id", $bibliografia->id)
-                            ->where("estado", 1)
-                            ->select("disponibilidad", "ejemplares_digitales")
-                            ->get();
+                        // # Ejemplares impresos (suma de ejemplares de la sede)
+                        $ejemplaresImpresos = DB::table('vw_bib_declarada_sede_noejem')
+                            ->where('id_bib_declarada', $bibliografia->id)
+                            ->where('id_sede', $sedeId)
+                            ->value('no_ejem_imp_sede') ?? 0;
+                            
+                        // # Ejemplares digitales (usar bibliografias_disponibles)
+                        $ejemplaresDigitales = DB::table('bibliografias_disponibles')
+                            ->where('bibliografia_declarada_id', $bibliografia->id)
+                            ->where('disponibilidad', '!=', 'impreso')
+                            ->pluck('ejemplares_digitales');
 
-                        // Usar la nueva lógica para calcular ejemplares
-                        $resultado = $this->calcularEjemplaresNuevaLogica($bibliografia->id, $sedeId, $bibliografiasDisponibles);
-                        $ejemplaresImpresos = $resultado["ejemplares_impresos"];
-                        $ejemplaresDigitales = $resultado["ejemplares_digitales"];
-                        $disponible = $resultado["disponible"];
+                        // Si hay algún 0, el resultado es 0 (Ilimitado)
+                        $ejemplaresDigitales = $ejemplaresDigitales->contains(0) ? 0 : $ejemplaresDigitales->sum();
+                        
+                        // Disponibilidad
+                        $disponible = DB::table('bibliografias_disponibles')
+                            ->where('bibliografia_declarada_id', $bibliografia->id)
+                            ->where('estado', 1)
+                            ->where(function ($query) use ($sedeId) {
+                                $query->whereIn('disponibilidad', ['electronico', 'ambos'])
+                                      ->orWhere(function ($q) use ($sedeId) {
+                                          $q->where('disponibilidad', 'impreso')
+                                            ->whereExists(function ($sub) use ($sedeId) {
+                                                $sub->select(DB::raw(1))
+                                                    ->from('bibliografias_disponibles_sedes')
+                                                    ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
+                                                    ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
+                                                    ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
+                                            });
+                                      });
+                            })
+                            ->exists();
                         
                         // Calcular cobertura (siempre será 100% si está disponible, 0% si no)
                         $cobertura = $disponible ? 100 : 0;
@@ -2630,13 +2561,53 @@ class ReporteController extends BaseController
                     )
                     ->get();
             }
-            // Calcular valores por bibliografía usando la nueva función
-            $resultado = $this->calcularEjemplaresAsignatura($bibliografiaDetallada, $sedeId);
-            $asignatura->titulos_declarados = $resultado['titulos_declarados'];
-            $asignatura->titulos_disponibles = $resultado['titulos_disponibles'];
-            $asignatura->ejemplares_impresos = $resultado['ejemplares_impresos'];
-            $asignatura->ejemplares_digitales = $resultado['ejemplares_digitales'];
-            $asignatura->cobertura_basica = $resultado['cobertura_basica'];
+            // Calcular valores por bibliografía
+            $titulosDeclarados = $bibliografiaDetallada->count();
+            $titulosDisponibles = 0;
+            $ejemplaresImpresos = 0;
+            $ejemplaresDigitales = 0;
+            foreach ($bibliografiaDetallada as $bibliografia) {
+                // Ejemplares impresos
+                $ejemImp = DB::table('vw_bib_declarada_sede_noejem')
+                    ->where('id_bib_declarada', $bibliografia->id)
+                    ->where('id_sede', $sedeId)
+                    ->value('no_ejem_imp_sede') ?? 0;
+                $ejemplaresImpresos += $ejemImp;
+                // Ejemplares digitales
+                $ejemDig = DB::table('bibliografias_disponibles')
+                    ->where('bibliografia_declarada_id', $bibliografia->id)
+                    ->where('disponibilidad', '!=', 'impreso')
+                    ->pluck('ejemplares_digitales');
+                $ejemDig = $ejemDig->contains(0) ? 0 : $ejemDig->sum();
+                $ejemplaresDigitales += $ejemDig;
+                // Disponibilidad
+                $disponible = DB::table('bibliografias_disponibles')
+                    ->where('bibliografia_declarada_id', $bibliografia->id)
+                    ->where('estado', 1)
+                    ->where(function ($query) use ($sedeId) {
+                        $query->whereIn('disponibilidad', ['electronico', 'ambos'])
+                              ->orWhere(function ($q) use ($sedeId) {
+                                  $q->where('disponibilidad', 'impreso')
+                                    ->whereExists(function ($sub) use ($sedeId) {
+                                        $sub->select(DB::raw(1))
+                                            ->from('bibliografias_disponibles_sedes')
+                                            ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
+                                            ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
+                                            ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
+                                    });
+                              });
+                    })
+                    ->exists();
+                if ($disponible) {
+                    $titulosDisponibles++;
+                }
+            }
+            $coberturaBasica = $titulosDeclarados > 0 ? round(($titulosDisponibles / $titulosDeclarados) * 100, 2) : 0;
+            $asignatura->titulos_declarados = $titulosDeclarados;
+            $asignatura->titulos_disponibles = $titulosDisponibles;
+            $asignatura->ejemplares_impresos = $ejemplaresImpresos;
+            $asignatura->ejemplares_digitales = $ejemplaresDigitales;
+            $asignatura->cobertura_basica = $coberturaBasica;
         }
 
         // Calcular totales de la carrera considerando títulos declarados únicos (sin duplicados)
@@ -2693,13 +2664,8 @@ class ReporteController extends BaseController
         
         // Sumar ejemplares de todas las asignaturas (estos sí se suman)
         foreach ($asignaturas as $asig) {
-            // Solo sumar valores positivos (ignorar -1 y -2)
-            if (($asig->ejemplares_impresos ?? 0) > 0) {
-                $totalesCarrera['ejemplares_impresos'] += $asig->ejemplares_impresos;
-            }
-            if (($asig->ejemplares_digitales ?? 0) > 0) {
-                $totalesCarrera['ejemplares_digitales'] += $asig->ejemplares_digitales;
-            }
+            $totalesCarrera['ejemplares_impresos'] += $asig->ejemplares_impresos ?? 0;
+            $totalesCarrera['ejemplares_digitales'] += $asig->ejemplares_digitales ?? 0;
             }
         
         $totalesCarrera['titulos_declarados'] = $titulosDeclaradosUnicos;
@@ -2730,12 +2696,16 @@ class ReporteController extends BaseController
             $sheet->setCellValue('D'.$rowNum, $asignatura->estado ?? '');
             $sheet->setCellValue('E'.$rowNum, $asignatura->titulos_declarados ?? '');
             $sheet->setCellValue('F'.$rowNum, $asignatura->titulos_disponibles ?? '');
-            // Ejemplares Impresos: usar función helper
-            $ejemImpStr = $this->convertirValorEspecial($asignatura->ejemplares_impresos ?? 0, 'impresos', $asignatura->titulos_disponibles ?? 0);
-            $sheet->setCellValue('G'.$rowNum, $ejemImpStr);
-            
-            // Ejemplares Digitales: usar función helper
-            $ejemDigStr = $this->convertirValorEspecial($asignatura->ejemplares_digitales ?? 0, 'digitales', $asignatura->titulos_disponibles ?? 0);
+            $sheet->setCellValue('G'.$rowNum, $asignatura->ejemplares_impresos ?? '');
+            // Ejemplares Digitales: lógica especial
+            $ejemDig = $asignatura->ejemplares_digitales;
+            if (($asignatura->titulos_disponibles ?? 0) > 0 && $ejemDig == 0) {
+                $ejemDigStr = 'Ilimitado';
+            } elseif ($ejemDig == 0) {
+                $ejemDigStr = 'Sin información';
+            } else {
+                $ejemDigStr = $ejemDig;
+            }
             $sheet->setCellValue('H'.$rowNum, $ejemDigStr);
             $sheet->setCellValue('I'.$rowNum, ($asignatura->cobertura_basica ?? '') . '%');
             // Centrar columnas D-I
@@ -2748,12 +2718,16 @@ class ReporteController extends BaseController
         $sheet->getStyle('A'.$rowNum.':D'.$rowNum)->getAlignment()->setHorizontal('center');
         $sheet->setCellValue('E'.$rowNum, $totalesCarrera['titulos_declarados']);
         $sheet->setCellValue('F'.$rowNum, $totalesCarrera['titulos_disponibles']);
-        // Totales ejemplares impresos: usar función helper
-        $ejemImpTotStr = $this->convertirValorEspecial($totalesCarrera['ejemplares_impresos'], 'impresos', $totalesCarrera['titulos_disponibles']);
-        $sheet->setCellValue('G'.$rowNum, $ejemImpTotStr);
-        
-        // Totales ejemplares digitales: usar función helper
-        $ejemDigTotStr = $this->convertirValorEspecial($totalesCarrera['ejemplares_digitales'], 'digitales', $totalesCarrera['titulos_disponibles']);
+        $sheet->setCellValue('G'.$rowNum, $totalesCarrera['ejemplares_impresos']);
+        // Totales ejemplares digitales: lógica especial
+        $ejemDigTot = $totalesCarrera['ejemplares_digitales'];
+        if ($totalesCarrera['titulos_disponibles'] > 0 && $ejemDigTot == 0) {
+            $ejemDigTotStr = 'Ilimitado';
+        } elseif ($ejemDigTot == 0) {
+            $ejemDigTotStr = 'Sin información';
+        } else {
+            $ejemDigTotStr = $ejemDigTot;
+        }
         $sheet->setCellValue('H'.$rowNum, $ejemDigTotStr);
         $sheet->setCellValue('I'.$rowNum, $coberturaBasicaTotal.'%');
         // Centrar totales columnas E-I
@@ -2924,11 +2898,39 @@ class ReporteController extends BaseController
                             $tituloDeclarado .= ' - ' . $primerAutor->nombre_completo;
                         }
                         
-                        // Usar la nueva lógica para calcular ejemplares
-                        $resultadoEjemplares = $this->calcularEjemplaresExpandido($bibliografia->id, $sedeId);
-                        $ejemplaresImpresos = $resultadoEjemplares['ejemplares_impresos'];
-                        $ejemplaresDigitales = $resultadoEjemplares['ejemplares_digitales'];
-                        $disponible = $resultadoEjemplares['disponible'];
+                        // # Ejemplares impresos (suma de ejemplares de la sede)
+                        $ejemplaresImpresos = DB::table('vw_bib_declarada_sede_noejem')
+                            ->where('id_bib_declarada', $bibliografia->id)
+                            ->where('id_sede', $sedeId)
+                            ->value('no_ejem_imp_sede') ?? 0;
+                            
+                        // # Ejemplares digitales (usar bibliografias_disponibles)
+                        $ejemplaresDigitales = DB::table('bibliografias_disponibles')
+                            ->where('bibliografia_declarada_id', $bibliografia->id)
+                            ->where('disponibilidad', '!=', 'impreso')
+                            ->pluck('ejemplares_digitales');
+
+                        // Si hay algún 0, el resultado es 0 (Ilimitado)
+                        $ejemplaresDigitales = $ejemplaresDigitales->contains(0) ? 0 : $ejemplaresDigitales->sum();
+                        
+                        // Disponibilidad
+                        $disponible = DB::table('bibliografias_disponibles')
+                            ->where('bibliografia_declarada_id', $bibliografia->id)
+                            ->where('estado', 1)
+                            ->where(function ($query) use ($sedeId) {
+                                $query->whereIn('disponibilidad', ['electronico', 'ambos'])
+                                      ->orWhere(function ($q) use ($sedeId) {
+                                          $q->where('disponibilidad', 'impreso')
+                                            ->whereExists(function ($sub) use ($sedeId) {
+                                                $sub->select(DB::raw(1))
+                                                    ->from('bibliografias_disponibles_sedes')
+                                                    ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
+                                                    ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
+                                                    ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
+                                            });
+                                      });
+                            })
+                            ->exists();
                         
                         // Calcular cobertura (siempre será 100% si está disponible, 0% si no)
                         $cobertura = $disponible ? 100 : 0;
@@ -3042,13 +3044,20 @@ class ReporteController extends BaseController
                 $sheet->setCellValue('C'.$rowNum, $fila['tipo_asignatura']);
                 $sheet->setCellValue('D'.$rowNum, $fila['titulo_declarado']);
                 $sheet->setCellValue('E'.$rowNum, $fila['anio_edicion']);
-                // Ejemplares Impresos: usar función helper
-                $ejemImpStr = $this->convertirValorEspecial($fila['ejemplares_impresos'], 'impresos', $fila['disponible'] ? 1 : 0);
-                $sheet->setCellValue('F'.$rowNum, $ejemImpStr);
-                
-                // Ejemplares Digitales: usar función helper
-                $ejemDigStr = $this->convertirValorEspecial($fila['ejemplares_digitales'], 'digitales', $fila['disponible'] ? 1 : 0);
-                $sheet->setCellValue('G'.$rowNum, $ejemDigStr);
+                if ($fila['ejemplares_impresos'] == 0 && $fila['ejemplares_digitales'] == 0 && !$fila['disponible']) {
+                    $sheet->setCellValue('F'.$rowNum, 'Sin información');
+                    $sheet->setCellValue('G'.$rowNum, 'Sin información');
+                } else {
+                    $sheet->setCellValue('F'.$rowNum, $fila['ejemplares_impresos']);
+                    // Ejemplares Digitales: lógica especial
+                    $ejemDig = $fila['ejemplares_digitales'];
+                    if ($ejemDig == 0) {
+                        $ejemDigStr = 'Ilimitado';
+                    } else {
+                        $ejemDigStr = $ejemDig;
+                    }
+                    $sheet->setCellValue('G'.$rowNum, $ejemDigStr);
+                }
                 $sheet->setCellValue('H'.$rowNum, $fila['cobertura'].'%');
                 // Centrar columnas E, F, G, H
                 $sheet->getStyle('E'.$rowNum.':H'.$rowNum)->getAlignment()->setHorizontal('center');
@@ -3067,12 +3076,16 @@ class ReporteController extends BaseController
             $sheet->getStyle('A'.$rowNum.':C'.$rowNum)->getAlignment()->setHorizontal('center');
             $sheet->setCellValue('D'.$rowNum, $totalesCarrera['titulos_declarados']);
             $sheet->setCellValue('E'.$rowNum, '');
-            // Totales ejemplares impresos: usar función helper
-            $ejemImpTotStr = $this->convertirValorEspecial($totalesCarrera['ejemplares_impresos'], 'impresos', $totalesCarrera['titulos_disponibles']);
-            $sheet->setCellValue('F'.$rowNum, $ejemImpTotStr);
-            
-            // Totales ejemplares digitales: usar función helper
-            $ejemDigTotStr = $this->convertirValorEspecial($totalesCarrera['ejemplares_digitales'], 'digitales', $totalesCarrera['titulos_disponibles']);
+            $sheet->setCellValue('F'.$rowNum, $totalesCarrera['ejemplares_impresos']);
+            // Totales ejemplares digitales: lógica especial
+            $ejemDigTot = $totalesCarrera['ejemplares_digitales'];
+            if ($totalesCarrera['titulos_disponibles'] > 0 && $ejemDigTot == 0) {
+                $ejemDigTotStr = 'Ilimitado';
+            } elseif ($ejemDigTot == 0) {
+                $ejemDigTotStr = 'Sin información';
+            } else {
+                $ejemDigTotStr = $ejemDigTot;
+            }
             $sheet->setCellValue('G'.$rowNum, $ejemDigTotStr);
             $sheet->setCellValue('H'.$rowNum, $coberturaBasicaTotal.'%');
             // Centrar totales columnas D, F, G, H
@@ -3373,13 +3386,48 @@ class ReporteController extends BaseController
                     )
                     ->get();
             }
-            // Calcular valores por bibliografía usando la nueva función
-            $resultado = $this->calcularEjemplaresAsignatura($bibliografiaDetallada, $sedeId);
-            $titulosDeclarados = $resultado['titulos_declarados'];
-            $titulosDisponibles = $resultado['titulos_disponibles'];
-            $ejemplaresImpresos = $resultado['ejemplares_impresos'];
-            $ejemplaresDigitales = $resultado['ejemplares_digitales'];
-            $coberturaComplementaria = $resultado['cobertura_basica'];
+            // Calcular valores por bibliografía
+            $titulosDeclarados = $bibliografiaDetallada->count();
+            $titulosDisponibles = 0;
+            $ejemplaresImpresos = 0;
+            $ejemplaresDigitales = 0;
+            foreach ($bibliografiaDetallada as $bibliografia) {
+                // Ejemplares impresos
+                $ejemImp = DB::table('vw_bib_declarada_sede_noejem')
+                    ->where('id_bib_declarada', $bibliografia->id)
+                    ->where('id_sede', $sedeId)
+                    ->value('no_ejem_imp_sede') ?? 0;
+                $ejemplaresImpresos += $ejemImp;
+                // Ejemplares digitales
+                $ejemDig = DB::table('bibliografias_disponibles')
+                    ->where('bibliografia_declarada_id', $bibliografia->id)
+                    ->where('disponibilidad', '!=', 'impreso')
+                    ->pluck('ejemplares_digitales');
+                $ejemDig = $ejemDig->contains(0) ? 0 : $ejemDig->sum();
+                $ejemplaresDigitales += $ejemDig;
+                // Disponibilidad
+                $disponible = DB::table('bibliografias_disponibles')
+                    ->where('bibliografia_declarada_id', $bibliografia->id)
+                    ->where('estado', 1)
+                    ->where(function ($query) use ($sedeId) {
+                        $query->whereIn('disponibilidad', ['electronico', 'ambos'])
+                              ->orWhere(function ($q) use ($sedeId) {
+                                  $q->where('disponibilidad', 'impreso')
+                                    ->whereExists(function ($sub) use ($sedeId) {
+                                        $sub->select(DB::raw(1))
+                                            ->from('bibliografias_disponibles_sedes')
+                                            ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
+                                            ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
+                                            ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
+                                    });
+                              });
+                    })
+                    ->exists();
+                if ($disponible) {
+                    $titulosDisponibles++;
+                }
+            }
+            $coberturaComplementaria = $titulosDeclarados > 0 ? round(($titulosDisponibles / $titulosDeclarados) * 100, 2) : 0;
             $asignatura->titulos_declarados = $titulosDeclarados;
             $asignatura->titulos_disponibles = $titulosDisponibles;
             $asignatura->ejemplares_impresos = $ejemplaresImpresos;
@@ -3778,18 +3826,39 @@ class ReporteController extends BaseController
                             $tituloDeclarado .= ' - ' . $primerAutor->nombre_completo;
                         }
                         
-                        // Obtener bibliografías disponibles para esta bibliografía declarada
-                        $bibliografiasDisponibles = DB::table('bibliografias_disponibles')
-                            ->where('bibliografia_declarada_id', $bibliografia->id)
-                            ->where('estado', 1)
-                            ->select('disponibilidad', 'ejemplares_digitales')
-                            ->get();
+                        // # Ejemplares impresos (suma de ejemplares de la sede)
+                        $ejemplaresImpresos = DB::table('vw_bib_declarada_sede_noejem')
+                        ->where('id_bib_declarada', $bibliografia->id)
+                        ->where('id_sede', $sedeId)
+                        ->value('no_ejem_imp_sede') ?? 0;
+                            
+                        // # Ejemplares digitales (usar bibliografias_disponibles)
+                        $ejemplaresDigitales = DB::table('bibliografias_disponibles')
+                        ->where('bibliografia_declarada_id', $bibliografia->id)
+                        ->where('disponibilidad', '!=', 'impreso')
+                        ->pluck('ejemplares_digitales');
 
-                        // Usar la nueva lógica para calcular ejemplares
-                        $resultado = $this->calcularEjemplaresNuevaLogica($bibliografia->id, $sedeId, $bibliografiasDisponibles);
-                        $ejemplaresImpresos = $resultado['ejemplares_impresos'];
-                        $ejemplaresDigitales = $resultado['ejemplares_digitales'];
-                        $disponible = $resultado['disponible'];
+                        // Si hay algún 0, el resultado es 0 (Ilimitado)
+                        $ejemplaresDigitales = $ejemplaresDigitales->contains(0) ? 0 : $ejemplaresDigitales->sum();
+                        
+                    // Disponibilidad
+                    $disponible = DB::table('bibliografias_disponibles')
+                        ->where('bibliografia_declarada_id', $bibliografia->id)
+                        ->where('estado', 1)
+                        ->where(function ($query) use ($sedeId) {
+                            $query->whereIn('disponibilidad', ['electronico', 'ambos'])
+                                  ->orWhere(function ($q) use ($sedeId) {
+                                      $q->where('disponibilidad', 'impreso')
+                                        ->whereExists(function ($sub) use ($sedeId) {
+                                            $sub->select(DB::raw(1))
+                                                ->from('bibliografias_disponibles_sedes')
+                                                ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
+                                                ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
+                                                ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
+                                        });
+                                  });
+                        })
+                        ->exists();
                         
                         // Calcular cobertura (siempre será 100% si está disponible, 0% si no)
                         $cobertura = $disponible ? 100 : 0;
@@ -3977,18 +4046,14 @@ class ReporteController extends BaseController
                     
             // Insertar los nuevos detalles
             foreach ($detalles as $detalle) {
-                // Convertir valores especiales a números para la base de datos
-                $ejemplaresImpresos = $this->convertirValorEspecialANumero($detalle['ejemplares_impresos'] ?? 0);
-                $ejemplaresDigitales = $this->convertirValorEspecialANumero($detalle['ejemplares_digitales'] ?? 0);
-                
-                DB::table('reporte_coberturas_carreras_basicas')->insert([
-                    'id_reporte' => $idReporte,
+                        DB::table('reporte_coberturas_carreras_basicas')->insert([
+                            'id_reporte' => $idReporte,
                     'codigo_carrera' => $codigoCarrera,
                     'codigo_asignatura' => $detalle['codigo_asignatura'],
                     'id_bibliografia_declarada' => $detalle['id_bibliografia_declarada'],
-                    'fecha_medicion' => $fechaMedicion,
-                    'no_ejem_imp' => $ejemplaresImpresos,
-                    'no_ejem_dig' => $ejemplaresDigitales,
+                            'fecha_medicion' => $fechaMedicion,
+                    'no_ejem_imp' => $detalle['ejemplares_impresos'] ?? 0,
+                    'no_ejem_dig' => $detalle['ejemplares_digitales'] ?? 0,
                     'no_bib_disponible_basica' => $detalle['disponible'] ?? 0
                 ]);
             }
@@ -4061,18 +4126,14 @@ class ReporteController extends BaseController
                     
             // Insertar los nuevos detalles
             foreach ($detalles as $detalle) {
-                // Convertir valores especiales a números para la base de datos
-                $ejemplaresImpresos = $this->convertirValorEspecialANumero($detalle['ejemplares_impresos'] ?? 0);
-                $ejemplaresDigitales = $this->convertirValorEspecialANumero($detalle['ejemplares_digitales'] ?? 0);
-                
                 DB::table('reporte_coberturas_carreras_complementarias')->insert([
                     'id_reporte' => $idReporte,
                     'codigo_carrera' => $codigoCarrera,
                     'codigo_asignatura' => $detalle['codigo_asignatura'],
                     'id_bibliografia_declarada' => ($detalle['id_bibliografia_declarada'] === '' || is_null($detalle['id_bibliografia_declarada'])) ? null : $detalle['id_bibliografia_declarada'],
                     'fecha_medicion' => $fechaMedicion,
-                    'no_ejem_imp' => $ejemplaresImpresos,
-                    'no_ejem_dig' => $ejemplaresDigitales,
+                    'no_ejem_imp' => $detalle['ejemplares_impresos'] ?? 0,
+                    'no_ejem_dig' => $detalle['ejemplares_digitales'] ?? 0,
                     'no_bib_disponible_complementaria' => $detalle['disponible'] ?? 0
                 ]);
             }
@@ -4186,13 +4247,48 @@ class ReporteController extends BaseController
                         )
                         ->get();
             }
-            // Calcular valores por bibliografía usando la nueva función
-            $resultado = $this->calcularEjemplaresAsignatura($bibliografiaDetallada, $sedeId);
-            $titulosDeclarados = $resultado['titulos_declarados'];
-            $titulosDisponibles = $resultado['titulos_disponibles'];
-            $ejemplaresImpresos = $resultado['ejemplares_impresos'];
-            $ejemplaresDigitales = $resultado['ejemplares_digitales'];
-            $coberturaComplementaria = $resultado['cobertura_basica'];
+            // Calcular valores por bibliografía
+            $titulosDeclarados = $bibliografiaDetallada->count();
+            $titulosDisponibles = 0;
+            $ejemplaresImpresos = 0;
+            $ejemplaresDigitales = 0;
+            foreach ($bibliografiaDetallada as $bibliografia) {
+                // Ejemplares impresos
+                $ejemImp = DB::table('vw_bib_declarada_sede_noejem')
+                                ->where('id_bib_declarada', $bibliografia->id)
+                                ->where('id_sede', $sedeId)
+                                ->value('no_ejem_imp_sede') ?? 0;
+                $ejemplaresImpresos += $ejemImp;
+                // Ejemplares digitales
+                $ejemDig = DB::table('bibliografias_disponibles')
+                                ->where('bibliografia_declarada_id', $bibliografia->id)
+                                ->where('disponibilidad', '!=', 'impreso')
+                                ->pluck('ejemplares_digitales');
+                $ejemDig = $ejemDig->contains(0) ? 0 : $ejemDig->sum();
+                $ejemplaresDigitales += $ejemDig;
+                // Disponibilidad
+                            $disponible = DB::table('bibliografias_disponibles')
+                                ->where('bibliografia_declarada_id', $bibliografia->id)
+                                ->where('estado', 1)
+                                ->where(function ($query) use ($sedeId) {
+                                    $query->whereIn('disponibilidad', ['electronico', 'ambos'])
+                                          ->orWhere(function ($q) use ($sedeId) {
+                                              $q->where('disponibilidad', 'impreso')
+                                                ->whereExists(function ($sub) use ($sedeId) {
+                                                    $sub->select(DB::raw(1))
+                                                        ->from('bibliografias_disponibles_sedes')
+                                                        ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
+                                                        ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
+                                                        ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
+                                            });
+                                          });
+                                })
+                                ->exists();
+                if ($disponible) {
+                    $titulosDisponibles++;
+                }
+            }
+            $coberturaComplementaria = $titulosDeclarados > 0 ? round(($titulosDisponibles / $titulosDeclarados) * 100, 2) : 0;
             $asignatura->titulos_declarados = $titulosDeclarados;
             $asignatura->titulos_disponibles = $titulosDisponibles;
             $asignatura->ejemplares_impresos = $ejemplaresImpresos;
@@ -4252,19 +4348,13 @@ class ReporteController extends BaseController
                     ->sum('no_ejem_imp_sede') ?? 0;
             }
             if ($bibliografiasDisponiblesUnicas->count() > 0) {
-                $bibliografiasDigitalesTotal = DB::table('bibliografias_disponibles')
+                $ejemplaresDigitalesTotal = DB::table('bibliografias_disponibles')
                     ->whereIn('bibliografia_declarada_id', $bibliografiasDisponiblesUnicas)
-                    ->whereIn('disponibilidad', ['ambos', 'electronico'])
-                    ->get();
+                    ->where('disponibilidad', '!=', 'impreso')
+                    ->pluck('ejemplares_digitales');
 
-                if ($bibliografiasDigitalesTotal->isEmpty()) {
-                    // No hay bibliografías digitales disponibles
-                    $totalesCarrera['ejemplares_digitales'] = -1; // -1 indica "Sin ejemplares digitales"
-                } else {
-                    $ejemplaresDigitalesTotal = $bibliografiasDigitalesTotal->pluck('ejemplares_digitales');
-                    // Si hay algún 0, el resultado es 0 (Ilimitado)
-                    $totalesCarrera['ejemplares_digitales'] = $ejemplaresDigitalesTotal->contains(0) ? 0 : $ejemplaresDigitalesTotal->sum();
-                }
+                // Si hay algún 0, el resultado es 0 (Ilimitado)
+                $totalesCarrera['ejemplares_digitales'] = $ejemplaresDigitalesTotal->contains(0) ? 0 : $ejemplaresDigitalesTotal->sum();
             }
             $coberturaComplementariaTotal = $totalesCarrera['titulos_declarados'] > 0 
                 ? round(($totalesCarrera['titulos_disponibles'] / $totalesCarrera['titulos_declarados']) * 100, 2) 
@@ -4292,12 +4382,16 @@ class ReporteController extends BaseController
             $sheet->setCellValue('D'.$rowNum, $asignatura->estado ?? '');
             $sheet->setCellValue('E'.$rowNum, $asignatura->titulos_declarados ?? '');
             $sheet->setCellValue('F'.$rowNum, $asignatura->titulos_disponibles ?? '');
-            // Ejemplares Impresos: usar función helper
-            $ejemImpStr = $this->convertirValorEspecial($asignatura->ejemplares_impresos ?? 0, 'impresos', $asignatura->titulos_disponibles ?? 0);
-            $sheet->setCellValue('G'.$rowNum, $ejemImpStr);
-            
-            // Ejemplares Digitales: usar función helper
-            $ejemDigStr = $this->convertirValorEspecial($asignatura->ejemplares_digitales ?? 0, 'digitales', $asignatura->titulos_disponibles ?? 0);
+            $sheet->setCellValue('G'.$rowNum, $asignatura->ejemplares_impresos ?? '');
+            // Ejemplares Digitales: lógica especial
+            $ejemDig = $asignatura->ejemplares_digitales;
+            if (($asignatura->titulos_disponibles ?? 0) > 0 && $ejemDig == 0) {
+                        $ejemDigStr = 'Ilimitado';
+            } elseif ($ejemDig == 0) {
+                $ejemDigStr = 'Sin información';
+                    } else {
+                        $ejemDigStr = $ejemDig;
+                    }
             $sheet->setCellValue('H'.$rowNum, $ejemDigStr);
             $sheet->setCellValue('I'.$rowNum, ($asignatura->cobertura_complementaria ?? '') . '%');
             // Centrar columnas D-I
@@ -4310,12 +4404,16 @@ class ReporteController extends BaseController
         $sheet->getStyle('A'.$rowNum.':D'.$rowNum)->getAlignment()->setHorizontal('center');
         $sheet->setCellValue('E'.$rowNum, $totalesCarrera['titulos_declarados']);
         $sheet->setCellValue('F'.$rowNum, $totalesCarrera['titulos_disponibles']);
-        // Totales ejemplares impresos: usar función helper
-        $ejemImpTotStr = $this->convertirValorEspecial($totalesCarrera['ejemplares_impresos'], 'impresos', $totalesCarrera['titulos_disponibles']);
-        $sheet->setCellValue('G'.$rowNum, $ejemImpTotStr);
-        
-        // Totales ejemplares digitales: usar función helper
-        $ejemDigTotStr = $this->convertirValorEspecial($totalesCarrera['ejemplares_digitales'], 'digitales', $totalesCarrera['titulos_disponibles']);
+        $sheet->setCellValue('G'.$rowNum, $totalesCarrera['ejemplares_impresos']);
+        // Totales ejemplares digitales: lógica especial
+        $ejemDigTot = $totalesCarrera['ejemplares_digitales'];
+        if ($totalesCarrera['titulos_disponibles'] > 0 && $ejemDigTot == 0) {
+                $ejemDigTotStr = 'Ilimitado';
+            } elseif ($ejemDigTot == 0) {
+                $ejemDigTotStr = 'Sin información';
+            } else {
+                $ejemDigTotStr = $ejemDigTot;
+            }
         $sheet->setCellValue('H'.$rowNum, $ejemDigTotStr);
         $sheet->setCellValue('I'.$rowNum, $coberturaComplementariaTotal.'%');
         // Centrar totales columnas E-I
@@ -4509,11 +4607,39 @@ class ReporteController extends BaseController
                             $tituloDeclarado .= ' - ' . $primerAutor->nombre_completo;
                         }
                         
-                        // Usar la nueva lógica para calcular ejemplares
-                        $resultadoEjemplares = $this->calcularEjemplaresExpandido($bibliografia->id, $sedeId);
-                        $ejemplaresImpresos = $resultadoEjemplares['ejemplares_impresos'];
-                        $ejemplaresDigitales = $resultadoEjemplares['ejemplares_digitales'];
-                        $disponible = $resultadoEjemplares['disponible'];
+                        // # Ejemplares impresos (suma de ejemplares de la sede)
+                        $ejemplaresImpresos = DB::table('vw_bib_declarada_sede_noejem')
+                            ->where('id_bib_declarada', $bibliografia->id)
+                            ->where('id_sede', $sedeId)
+                            ->value('no_ejem_imp_sede') ?? 0;
+                            
+                        // # Ejemplares digitales (usar bibliografias_disponibles)
+                        $ejemplaresDigitales = DB::table('bibliografias_disponibles')
+                            ->where('bibliografia_declarada_id', $bibliografia->id)
+                            ->where('disponibilidad', '!=', 'impreso')
+                            ->pluck('ejemplares_digitales');
+
+                        // Si hay algún 0, el resultado es 0 (Ilimitado)
+                        $ejemplaresDigitales = $ejemplaresDigitales->contains(0) ? 0 : $ejemplaresDigitales->sum();
+                        
+                        // Disponibilidad
+                        $disponible = DB::table('bibliografias_disponibles')
+                            ->where('bibliografia_declarada_id', $bibliografia->id)
+                            ->where('estado', 1)
+                            ->where(function ($query) use ($sedeId) {
+                                $query->whereIn('disponibilidad', ['electronico', 'ambos'])
+                                      ->orWhere(function ($q) use ($sedeId) {
+                                          $q->where('disponibilidad', 'impreso')
+                                            ->whereExists(function ($sub) use ($sedeId) {
+                                                $sub->select(DB::raw(1))
+                                                    ->from('bibliografias_disponibles_sedes')
+                                                    ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
+                                                    ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
+                                                    ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
+                                            });
+                                      });
+                            })
+                            ->exists();
                         
                         // Calcular cobertura (siempre será 100% si está disponible, 0% si no)
                         $cobertura = $disponible ? 100 : 0;
@@ -4640,13 +4766,20 @@ class ReporteController extends BaseController
                 $sheet->setCellValue('C'.$rowNum, $fila['tipo_asignatura']);
                 $sheet->setCellValue('D'.$rowNum, $fila['titulo_declarado']);
                 $sheet->setCellValue('E'.$rowNum, $fila['anio_edicion']);
-                // Ejemplares Impresos: usar función helper
-                $ejemImpStr = $this->convertirValorEspecial($fila['ejemplares_impresos'], 'impresos', $fila['disponible'] ? 1 : 0);
-                $sheet->setCellValue('F'.$rowNum, $ejemImpStr);
-                
-                // Ejemplares Digitales: usar función helper
-                $ejemDigStr = $this->convertirValorEspecial($fila['ejemplares_digitales'], 'digitales', $fila['disponible'] ? 1 : 0);
-                $sheet->setCellValue('G'.$rowNum, $ejemDigStr);
+                if ($fila['ejemplares_impresos'] == 0 && $fila['ejemplares_digitales'] == 0 && !$fila['disponible']) {
+                    $sheet->setCellValue('F'.$rowNum, 'Sin información');
+                    $sheet->setCellValue('G'.$rowNum, 'Sin información');
+            } else {
+                    $sheet->setCellValue('F'.$rowNum, $fila['ejemplares_impresos']);
+                    // Ejemplares Digitales: lógica especial
+                    $ejemDig = $fila['ejemplares_digitales'];
+                    if ($ejemDig == 0) {
+                        $ejemDigStr = 'Ilimitado';
+                    } else {
+                        $ejemDigStr = $ejemDig;
+                    }
+                    $sheet->setCellValue('G'.$rowNum, $ejemDigStr);
+                }
                 $sheet->setCellValue('H'.$rowNum, $fila['cobertura'].'%');
                 // Centrar columnas E, F, G, H
                 $sheet->getStyle('E'.$rowNum.':H'.$rowNum)->getAlignment()->setHorizontal('center');
@@ -4665,12 +4798,16 @@ class ReporteController extends BaseController
             $sheet->getStyle('A'.$rowNum.':C'.$rowNum)->getAlignment()->setHorizontal('center');
             $sheet->setCellValue('D'.$rowNum, $totalesCarrera['titulos_declarados']);
             $sheet->setCellValue('E'.$rowNum, '');
-            // Totales ejemplares impresos: usar función helper
-            $ejemImpTotStr = $this->convertirValorEspecial($totalesCarrera['ejemplares_impresos'], 'impresos', $totalesCarrera['titulos_disponibles']);
-            $sheet->setCellValue('F'.$rowNum, $ejemImpTotStr);
-            
-            // Totales ejemplares digitales: usar función helper
-            $ejemDigTotStr = $this->convertirValorEspecial($totalesCarrera['ejemplares_digitales'], 'digitales', $totalesCarrera['titulos_disponibles']);
+            $sheet->setCellValue('F'.$rowNum, $totalesCarrera['ejemplares_impresos']);
+            // Totales ejemplares digitales: lógica especial
+            $ejemDigTot = $totalesCarrera['ejemplares_digitales'];
+            if ($totalesCarrera['titulos_disponibles'] > 0 && $ejemDigTot == 0) {
+                $ejemDigTotStr = 'Ilimitado';
+            } elseif ($ejemDigTot == 0) {
+                $ejemDigTotStr = 'Sin información';
+            } else {
+                $ejemDigTotStr = $ejemDigTot;
+            }
             $sheet->setCellValue('G'.$rowNum, $ejemDigTotStr);
             $sheet->setCellValue('H'.$rowNum, $coberturaComplementariaTotal.'%');
             // Centrar totales columnas D, F, G, H
@@ -5089,14 +5226,14 @@ class ReporteController extends BaseController
                 // Básica
                 $sheet->setCellValue('C'.$rowNum, $b['titulo_declarado'] ?? '');
                 $sheet->setCellValue('D'.$rowNum, $b['anio_edicion'] ?? '');
-                $sheet->setCellValue('E'.$rowNum, $b ? $this->convertirValorEspecial($b['ejemplares_impresos'], 'impresos', $b['ejemplares_digitales'] ?? 0) : '');
-                $sheet->setCellValue('F'.$rowNum, $b ? $this->convertirValorEspecial($b['ejemplares_digitales'], 'digitales', $b['ejemplares_digitales'] ?? 0) : '');
+                $sheet->setCellValue('E'.$rowNum, $b['ejemplares_impresos'] ?? '');
+                $sheet->setCellValue('F'.$rowNum, $b['ejemplares_digitales'] ?? '');
                 $sheet->setCellValue('G'.$rowNum, isset($b['cobertura']) ? $b['cobertura'].'%' : '');
                 // Complementaria
                 $sheet->setCellValue('H'.$rowNum, $c['titulo_declarado'] ?? '');
                 $sheet->setCellValue('I'.$rowNum, $c['anio_edicion'] ?? '');
-                $sheet->setCellValue('J'.$rowNum, $c ? $this->convertirValorEspecial($c['ejemplares_impresos'], 'impresos', $c['ejemplares_digitales'] ?? 0) : '');
-                $sheet->setCellValue('K'.$rowNum, $c ? $this->convertirValorEspecial($c['ejemplares_digitales'], 'digitales', $c['ejemplares_digitales'] ?? 0) : '');
+                $sheet->setCellValue('J'.$rowNum, $c['ejemplares_impresos'] ?? '');
+                $sheet->setCellValue('K'.$rowNum, $c['ejemplares_digitales'] ?? '');
                 $sheet->setCellValue('L'.$rowNum, isset($c['cobertura']) ? $c['cobertura'].'%' : '');
                 $rowNum++;
             }

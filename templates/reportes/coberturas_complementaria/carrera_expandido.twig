@@ -172,15 +172,21 @@
                                     </td>
                                     <td class="text-center">{{ fila.anio_edicion }}</td>
                                     <td class="text-center">
-                                        {% if fila.ejemplares_impresos == 0 and fila.ejemplares_digitales == 0 and not fila.disponible %}
+                                        {% if fila.ejemplares_impresos == -2 %}
                                             <span class="text-muted">Sin información</span>
+                                        {% elseif fila.ejemplares_impresos == -1 %}
+                                            <span class="text-muted">Sin ejemplares impresos</span>
                                         {% else %}
                                             {{ fila.ejemplares_impresos }}
                                         {% endif %}
                                     </td>
                                     <td class="text-center">
-                                        {% if fila.ejemplares_impresos == 0 and fila.ejemplares_digitales == 0 and not fila.disponible %}
+                                        {% if fila.ejemplares_digitales == -2 %}
                                             <span class="text-muted">Sin información</span>
+                                        {% elseif fila.ejemplares_digitales == -3 %}
+                                            <span class="text-warning">Ilimitado parcialmente</span>
+                                        {% elseif fila.ejemplares_digitales == -1 %}
+                                            <span class="text-muted">Sin ejemplares digitales</span>
                                         {% elseif fila.ejemplares_digitales == 0 %}
                                             <span class="text-success">Ilimitado</span>
                                         {% else %}

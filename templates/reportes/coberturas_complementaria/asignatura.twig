@@ -55,13 +55,12 @@
                     <table class="table table-bordered table-hover">
                         <thead>
                             <tr>
-                                <th>Título</th>
+                                <th>Título Declarado</th>
                                 <th>Tipo</th>
                                 <th>Año</th>
                                 <th>Editorial</th>
                                 <th>Edición</th>
                                 <th>ISBN/DOI</th>
-                                <th>Formato</th>
                                 <th># Ejemplares Impresos</th>
                                 <th># Ejemplares Digitales</th>
                                 <th>Disponibilidad</th>
@@ -107,21 +106,22 @@
                                         <span class="text-muted">No disponible</span>
                                     {% endif %}
                                 </td>
-                                <td>
-                                    {% if bibliografia.formato == 'impreso' %}
-                                        <span class="badge bg-secondary">Impreso</span>
-                                    {% elseif bibliografia.formato == 'electronico' %}
-                                        <span class="badge bg-info">Electrónico</span>
-                                    {% elseif bibliografia.formato == 'ambos' %}
-                                        <span class="badge bg-primary">Ambos</span>
+                                <td class="text-center">
+                                    {% if bibliografia.ejemplares_impresos == -2 %}
+                                        <span class="text-muted">Sin ejemplares disponibles</span>
+                                    {% elseif bibliografia.ejemplares_impresos == -1 %}
+                                        <span class="text-muted">Sin ejemplares impresos</span>
                                     {% else %}
-                                        <span class="badge bg-light text-dark">{{ bibliografia.formato|title }}</span>
+                                        {{ bibliografia.ejemplares_impresos }}
                                     {% endif %}
                                 </td>
-                                <td class="text-center">{{ bibliografia.ejemplares_impresos }}</td>
                                 <td class="text-center">
-                                    {% if bibliografia.ejemplares_digitales == 0 %}
-                                        <span class="text-success">Ilimitado</span>
+                                    {% if bibliografia.ejemplares_digitales == -2 %}
+                                        <span class="text-muted">Sin ejemplares disponibles</span>
+                                    {% elseif bibliografia.ejemplares_digitales == -1 %}
+                                        <span class="text-muted">Sin ejemplares digitales</span>
+                                    {% elseif bibliografia.ejemplares_digitales == 0 %}
+                                        <span class="text-muted">Ilimitado</span>
                                     {% else %}
                                         {{ bibliografia.ejemplares_digitales }}
                                     {% endif %}
@@ -177,8 +177,8 @@ function exportarCSV() {
         '"{{ bibliografia.isbn|replace({'"': '""'}) }}"',
         '"{{ bibliografia.doi|replace({'"': '""'}) }}"',
         '"{{ bibliografia.formato|title }}"',
-        '{{ bibliografia.ejemplares_impresos }}',
-        '{{ bibliografia.ejemplares_digitales == 0 ? "Ilimitado" : bibliografia.ejemplares_digitales }}',
+        '{{ bibliografia.ejemplares_impresos == -2 ? "Sin ejemplares disponibles" : (bibliografia.ejemplares_impresos == -1 ? "Sin ejemplares impresos" : bibliografia.ejemplares_impresos) }}',
+        '{{ bibliografia.ejemplares_digitales == -2 ? "Sin ejemplares disponibles" : (bibliografia.ejemplares_digitales == -1 ? "Sin ejemplares digitales" : (bibliografia.ejemplares_digitales == 0 ? "Ilimitado" : bibliografia.ejemplares_digitales)) }}',
         '"{{ bibliografia.disponible ? "Disponible" : "No disponible" }}"'
     ];
     csvContent += row{{ loop.index }}.join(',') + '\n';

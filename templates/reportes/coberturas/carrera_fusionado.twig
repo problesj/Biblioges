@@ -126,15 +126,63 @@
                                                 {% set b = asignatura.basica[i] is defined ? asignatura.basica[i] : null %}
                                                 <td>{{ b ? b.titulo_declarado : '' }}</td>
                                                 <td class="text-center">{{ b ? b.anio_edicion : '' }}</td>
-                                                <td class="text-center">{{ b ? b.ejemplares_impresos : '' }}</td>
-                                                <td class="text-center">{{ b ? b.ejemplares_digitales : '' }}</td>
+                                                <td class="text-center">
+                                                    {% if b %}
+                                                        {% if b.ejemplares_impresos == -2 %}
+                                                            <span class="text-muted">Sin información</span>
+                                                        {% elseif b.ejemplares_impresos == -1 %}
+                                                            <span class="text-muted">Sin ejemplares impresos</span>
+                                                        {% else %}
+                                                            {{ b.ejemplares_impresos }}
+                                                        {% endif %}
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-center">
+                                                    {% if b %}
+                                                        {% if b.ejemplares_digitales == -2 %}
+                                                            <span class="text-muted">Sin información</span>
+                                                        {% elseif b.ejemplares_digitales == -3 %}
+                                                            <span class="text-warning">Ilimitado parcialmente</span>
+                                                        {% elseif b.ejemplares_digitales == -1 %}
+                                                            <span class="text-muted">Sin ejemplares digitales</span>
+                                                        {% elseif b.ejemplares_digitales == 0 %}
+                                                            <span class="text-success">Ilimitado</span>
+                                                        {% else %}
+                                                            {{ b.ejemplares_digitales }}
+                                                        {% endif %}
+                                                    {% endif %}
+                                                </td>
                                                 <td class="text-center">{{ b ? (b.cobertura ~ '%') : '' }}</td>
                                                 {# Bibliografía complementaria #}
                                                 {% set c = asignatura.complementaria[i] is defined ? asignatura.complementaria[i] : null %}
                                                 <td>{{ c ? c.titulo_declarado : '' }}</td>
                                                 <td class="text-center">{{ c ? c.anio_edicion : '' }}</td>
-                                                <td class="text-center">{{ c ? c.ejemplares_impresos : '' }}</td>
-                                                <td class="text-center">{{ c ? c.ejemplares_digitales : '' }}</td>
+                                                <td class="text-center">
+                                                    {% if c %}
+                                                        {% if c.ejemplares_impresos == -2 %}
+                                                            <span class="text-muted">Sin información</span>
+                                                        {% elseif c.ejemplares_impresos == -1 %}
+                                                            <span class="text-muted">Sin ejemplares impresos</span>
+                                                        {% else %}
+                                                            {{ c.ejemplares_impresos }}
+                                                        {% endif %}
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-center">
+                                                    {% if c %}
+                                                        {% if c.ejemplares_digitales == -2 %}
+                                                            <span class="text-muted">Sin información</span>
+                                                        {% elseif c.ejemplares_digitales == -3 %}
+                                                            <span class="text-warning">Ilimitado parcialmente</span>
+                                                        {% elseif c.ejemplares_digitales == -1 %}
+                                                            <span class="text-muted">Sin ejemplares digitales</span>
+                                                        {% elseif c.ejemplares_digitales == 0 %}
+                                                            <span class="text-success">Ilimitado</span>
+                                                        {% else %}
+                                                            {{ c.ejemplares_digitales }}
+                                                        {% endif %}
+                                                    {% endif %}
+                                                </td>
                                                 <td class="text-center">{{ c ? (c.cobertura ~ '%') : '' }}</td>
                                             </tr>
                                         {% endfor %}
