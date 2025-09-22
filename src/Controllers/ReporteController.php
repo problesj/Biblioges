@@ -166,6 +166,234 @@ class ReporteController extends BaseController
     }
 
     /**
+     * Calcula la cobertura básica en tiempo real para una carrera específica
+     */
+    private function calcularCoberturaBasicaTiempoReal($codigoCarrera, $sedeId, $tiposFormacionFiltro = [])
+    {
+        // Obtener asignaturas regulares de la carrera
+        $asignaturasRegulares = DB::table('vw_mallas')
+            ->where('id_sede', $sedeId)
+            ->where('codigo_carrera', $codigoCarrera)
+            ->where('tipo_asignatura', 'REGULAR')
+            ->select('codigo_asignatura as codigo')
+            ->distinct()
+            ->get();
+
+        // Obtener asignaturas de formación si hay filtros aplicados
+        $asignaturasFormacion = collect();
+        if (!empty($tiposFormacionFiltro)) {
+            $asignaturasFormacion = DB::table('vw_mallas')
+                ->where('id_sede', $sedeId)
+                ->where('codigo_carrera', $codigoCarrera)
+                ->whereIn('tipo_asignatura', $tiposFormacionFiltro)
+                ->whereNotNull('codigo_asignatura_formacion')
+                ->select('codigo_asignatura_formacion as codigo')
+                ->distinct()
+                ->get();
+        }
+
+        // Combinar todas las asignaturas
+        $asignaturas = $asignaturasRegulares->concat($asignaturasFormacion);
+
+        if ($asignaturas->isEmpty()) {
+            return 'Sin información';
+        }
+
+        // Obtener códigos de asignaturas
+        $codigosAsignaturas = $asignaturas->pluck('codigo')->toArray();
+
+        // Contar títulos declarados únicos
+        $titulosDeclarados = DB::table('bibliografias_declaradas')
+            ->join('asignaturas_bibliografias', 'bibliografias_declaradas.id', '=', 'asignaturas_bibliografias.bibliografia_id')
+            ->join('asignaturas', 'asignaturas_bibliografias.asignatura_id', '=', 'asignaturas.id')
+            ->join('asignaturas_departamentos', 'asignaturas.id', '=', 'asignaturas_departamentos.asignatura_id')
+            ->whereIn('asignaturas_departamentos.codigo_asignatura', $codigosAsignaturas)
+            ->where('asignaturas_bibliografias.tipo_bibliografia', 'basica')
+            ->where('asignaturas_bibliografias.estado', 'activa')
+            ->distinct('bibliografias_declaradas.id')
+            ->count('bibliografias_declaradas.id');
+
+        // Contar títulos disponibles únicos con lógica específica por sede
+        $titulosDisponibles = DB::table('bibliografias_declaradas')
+            ->join('asignaturas_bibliografias', 'bibliografias_declaradas.id', '=', 'asignaturas_bibliografias.bibliografia_id')
+            ->join('asignaturas', 'asignaturas_bibliografias.asignatura_id', '=', 'asignaturas.id')
+            ->join('asignaturas_departamentos', 'asignaturas.id', '=', 'asignaturas_departamentos.asignatura_id')
+            ->whereIn('asignaturas_departamentos.codigo_asignatura', $codigosAsignaturas)
+            ->where('asignaturas_bibliografias.tipo_bibliografia', 'basica')
+            ->where('asignaturas_bibliografias.estado', 'activa')
+            ->whereExists(function ($query) use ($sedeId) {
+                $query->select(DB::raw(1))
+                    ->from('bibliografias_disponibles')
+                    ->whereRaw('bibliografias_disponibles.bibliografia_declarada_id = bibliografias_declaradas.id')
+                    ->where('bibliografias_disponibles.estado', 1)
+                    ->where(function ($subQuery) use ($sedeId) {
+                        $subQuery->whereIn('bibliografias_disponibles.disponibilidad', ['electronico', 'ambos'])
+                                ->orWhere(function ($q) use ($sedeId) {
+                                    $q->where('bibliografias_disponibles.disponibilidad', 'impreso')
+                                      ->whereExists(function ($sub) use ($sedeId) {
+                                          $sub->select(DB::raw(1))
+                                              ->from('bibliografias_disponibles_sedes')
+                                              ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
+                                              ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
+                                              ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
+                                      });
+                                });
+                    });
+            })
+            ->distinct('bibliografias_declaradas.id')
+            ->count('bibliografias_declaradas.id');
+
+        // Calcular cobertura
+        if ($titulosDeclarados > 0) {
+            return round(($titulosDisponibles / $titulosDeclarados) * 100, 2);
+        }
+
+        return 0;
+    }
+
+    /**
+     * Calcula la cobertura complementaria en tiempo real para una carrera específica
+     */
+    private function calcularCoberturaComplementariaTiempoReal($codigoCarrera, $sedeId, $tiposFormacionFiltro = [])
+    {
+        // Obtener asignaturas regulares de la carrera
+        $asignaturasRegulares = DB::table('vw_mallas')
+            ->where('id_sede', $sedeId)
+            ->where('codigo_carrera', $codigoCarrera)
+            ->where('tipo_asignatura', 'REGULAR')
+            ->select('codigo_asignatura as codigo')
+            ->distinct()
+            ->get();
+
+        // Obtener asignaturas de formación si hay filtros aplicados
+        $asignaturasFormacion = collect();
+        if (!empty($tiposFormacionFiltro)) {
+            $asignaturasFormacion = DB::table('vw_mallas')
+                ->where('id_sede', $sedeId)
+                ->where('codigo_carrera', $codigoCarrera)
+                ->whereIn('tipo_asignatura', $tiposFormacionFiltro)
+                ->whereNotNull('codigo_asignatura_formacion')
+                ->select('codigo_asignatura_formacion as codigo')
+                ->distinct()
+                ->get();
+        }
+
+        // Combinar todas las asignaturas
+        $asignaturas = $asignaturasRegulares->concat($asignaturasFormacion);
+
+        if ($asignaturas->isEmpty()) {
+            return 'Sin información';
+        }
+
+        // Obtener códigos de asignaturas
+        $codigosAsignaturas = $asignaturas->pluck('codigo')->toArray();
+
+        // Contar títulos declarados únicos
+        $titulosDeclarados = DB::table('bibliografias_declaradas')
+            ->join('asignaturas_bibliografias', 'bibliografias_declaradas.id', '=', 'asignaturas_bibliografias.bibliografia_id')
+            ->join('asignaturas', 'asignaturas_bibliografias.asignatura_id', '=', 'asignaturas.id')
+            ->join('asignaturas_departamentos', 'asignaturas.id', '=', 'asignaturas_departamentos.asignatura_id')
+            ->whereIn('asignaturas_departamentos.codigo_asignatura', $codigosAsignaturas)
+            ->where('asignaturas_bibliografias.tipo_bibliografia', 'complementaria')
+            ->where('asignaturas_bibliografias.estado', 'activa')
+            ->distinct('bibliografias_declaradas.id')
+            ->count('bibliografias_declaradas.id');
+
+        // Contar títulos disponibles únicos con lógica específica por sede
+        $titulosDisponibles = DB::table('bibliografias_declaradas')
+            ->join('asignaturas_bibliografias', 'bibliografias_declaradas.id', '=', 'asignaturas_bibliografias.bibliografia_id')
+            ->join('asignaturas', 'asignaturas_bibliografias.asignatura_id', '=', 'asignaturas.id')
+            ->join('asignaturas_departamentos', 'asignaturas.id', '=', 'asignaturas_departamentos.asignatura_id')
+            ->whereIn('asignaturas_departamentos.codigo_asignatura', $codigosAsignaturas)
+            ->where('asignaturas_bibliografias.tipo_bibliografia', 'complementaria')
+            ->where('asignaturas_bibliografias.estado', 'activa')
+            ->whereExists(function ($query) use ($sedeId) {
+                $query->select(DB::raw(1))
+                    ->from('bibliografias_disponibles')
+                    ->whereRaw('bibliografias_disponibles.bibliografia_declarada_id = bibliografias_declaradas.id')
+                    ->where('bibliografias_disponibles.estado', 1)
+                    ->where(function ($subQuery) use ($sedeId) {
+                        $subQuery->whereIn('bibliografias_disponibles.disponibilidad', ['electronico', 'ambos'])
+                                ->orWhere(function ($q) use ($sedeId) {
+                                    $q->where('bibliografias_disponibles.disponibilidad', 'impreso')
+                                      ->whereExists(function ($sub) use ($sedeId) {
+                                          $sub->select(DB::raw(1))
+                                              ->from('bibliografias_disponibles_sedes')
+                                              ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
+                                              ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
+                                              ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
+                                      });
+                                });
+                    });
+            })
+            ->distinct('bibliografias_declaradas.id')
+            ->count('bibliografias_declaradas.id');
+
+        // Calcular cobertura
+        if ($titulosDeclarados > 0) {
+            return round(($titulosDisponibles / $titulosDeclarados) * 100, 2);
+        }
+
+        return 0;
+    }
+
+    /**
+     * Calcula el total de ejemplares digitales considerando valores especiales
+     */
+    private function calcularTotalEjemplaresDigitales($items) {
+        $tieneEjemplaresDigitalesIlimitados = false;
+        $tieneEjemplaresDigitalesDisponibles = false;
+        $tieneEjemplaresDigitalesLimitados = false;
+        $tieneSinEjemplaresDigitales = false;
+        $tieneSinInformacion = false;
+        $totalEjemplaresLimitados = 0;
+        $totalItems = 0;
+        
+        foreach ($items as $item) {
+            // Manejar tanto objetos como arrays
+            $ejemplaresDigitales = is_array($item) ? ($item['ejemplares_digitales'] ?? 0) : ($item->ejemplares_digitales ?? 0);
+            $totalItems++;
+            
+            if ($ejemplaresDigitales == -2) {
+                // Sin información
+                $tieneSinInformacion = true;
+            } elseif ($ejemplaresDigitales == -1) {
+                // Sin ejemplares digitales
+                $tieneSinEjemplaresDigitales = true;
+            } elseif ($ejemplaresDigitales == -3) {
+                // Ilimitado parcialmente
+                $tieneEjemplaresDigitalesDisponibles = true;
+                $tieneEjemplaresDigitalesIlimitados = true;
+                $tieneEjemplaresDigitalesLimitados = true;
+            } elseif ($ejemplaresDigitales == 0) {
+                // Ilimitado
+                $tieneEjemplaresDigitalesDisponibles = true;
+                $tieneEjemplaresDigitalesIlimitados = true;
+            } elseif ($ejemplaresDigitales > 0) {
+                // Ejemplares limitados
+                $tieneEjemplaresDigitalesDisponibles = true;
+                $tieneEjemplaresDigitalesLimitados = true;
+                $totalEjemplaresLimitados += $ejemplaresDigitales;
+            }
+        }
+        
+        // Determinar el valor final
+        if (!$tieneEjemplaresDigitalesDisponibles) {
+            if ($tieneSinInformacion) {
+                return -2; // Sin información
+            } else {
+                return -1; // Sin ejemplares digitales
+            }
+        } elseif ($tieneEjemplaresDigitalesIlimitados && ($tieneEjemplaresDigitalesLimitados || $tieneSinEjemplaresDigitales || $tieneSinInformacion)) {
+            return -3; // Ilimitado parcialmente
+        } elseif ($tieneEjemplaresDigitalesIlimitados && !$tieneEjemplaresDigitalesLimitados && !$tieneSinEjemplaresDigitales && !$tieneSinInformacion) {
+            return 0; // Ilimitado (solo si TODAS son ilimitadas)
+        } else {
+            return $totalEjemplaresLimitados; // Total de ejemplares limitados
+        }
+    }
+
+    /**
      * Convierte valores especiales de ejemplares a texto legible para exportación
      */
     private function convertirValorEspecial($valor, $tipo = 'digitales', $titulosDisponibles = 0) {
@@ -256,7 +484,8 @@ class ReporteController extends BaseController
         }
         
         // Determinar disponibilidad
-        $disponible = $ejemplaresImpresos > 0 || $ejemplaresDigitales > 0 || $ejemplaresDigitales == 0;
+        // Solo está disponible si tiene ejemplares impresos en la sede O ejemplares digitales disponibles
+        $disponible = $ejemplaresImpresos > 0 || ($tieneEjemplaresDigitalesDisponibles && ($ejemplaresDigitales > 0 || $ejemplaresDigitales == 0));
         
         // Aplicar valores especiales para mostrar en la interfaz
         if ($ejemplaresImpresos == 0) {
@@ -1195,6 +1424,61 @@ class ReporteController extends BaseController
         $estado = $state['estado'] ?? null;
         $nombre = $state['nombre'] ?? null;
         
+        // Obtener filtros de asignaturas de la URL
+        $tiposFormacionFiltro = $urlParams['tipos_formacion'] ?? [];
+        if (!is_array($tiposFormacionFiltro)) {
+            $tiposFormacionFiltro = [$tiposFormacionFiltro];
+        }
+        $tiposFormacionVacio = $urlParams['tipos_formacion_vacio'] ?? null;
+        
+        // Si no hay filtros en la URL, intentar cargar filtros guardados globales
+        if (empty($tiposFormacionFiltro) && !$tiposFormacionVacio) {
+            // Obtener filtros guardados globales (sin carrera específica)
+            $filtrosGuardados = DB::table('filtros_formaciones')
+                ->whereNull('id_carrera_espejo')
+                ->first();
+                
+            if ($filtrosGuardados) {
+                $filtrosMarcados = 0;
+                $tiposFormacionFiltro = [];
+                
+                if ($filtrosGuardados->basica) {
+                    $tiposFormacionFiltro[] = 'FORMACION_BASICA';
+                    $filtrosMarcados++;
+                }
+                if ($filtrosGuardados->general) {
+                    $tiposFormacionFiltro[] = 'FORMACION_GENERAL';
+                    $filtrosMarcados++;
+                }
+                if ($filtrosGuardados->idioma) {
+                    $tiposFormacionFiltro[] = 'FORMACION_IDIOMAS';
+                    $filtrosMarcados++;
+                }
+                if ($filtrosGuardados->profesional) {
+                    $tiposFormacionFiltro[] = 'FORMACION_PROFESIONAL';
+                    $filtrosMarcados++;
+                }
+                if ($filtrosGuardados->valores) {
+                    $tiposFormacionFiltro[] = 'FORMACION_VALORES';
+                    $filtrosMarcados++;
+                }
+                if ($filtrosGuardados->especialidad) {
+                    $tiposFormacionFiltro[] = 'FORMACION_ESPECIALIDAD';
+                    $filtrosMarcados++;
+                }
+                if ($filtrosGuardados->especial) {
+                    $tiposFormacionFiltro[] = 'FORMACION_ESPECIAL';
+                    $filtrosMarcados++;
+                }
+                
+                // Si todos los filtros están en 0, marcar como vacío
+                if ($filtrosMarcados == 0) {
+                    $tiposFormacionFiltro = [];
+                    $tiposFormacionVacio = true;
+                }
+            }
+        }
+        
         // Obtener el año actual
         $anioActual = date('Y');
         
@@ -1269,51 +1553,25 @@ class ReporteController extends BaseController
         
         error_log('ReporteController@coberturaBasica: Total carreras encontradas: ' . count($carreras));
 
-        // Cobertura básica por carrera
+        // Cobertura básica por carrera - Calculada en tiempo real
         $coberturasBasicas = [];
         $carrerasCodigos = array_column($carreras, 'codigo');
         foreach ($carrerasCodigos as $codigoCarrera) {
-            $ultimaFecha = DB::table('reporte_coberturas_carreras_basicas')
-                ->where('codigo_carrera', $codigoCarrera)
-                ->whereYear('fecha_medicion', $anioActual)
-                ->max('fecha_medicion');
-            if ($ultimaFecha) {
-                $cobertura = DB::table('reporte_coberturas_carreras_basicas')
-                    ->select(
-                        DB::raw('COUNT(DISTINCT id_bibliografia_declarada) AS total_declaradas'),
-                        DB::raw('COUNT(DISTINCT CASE WHEN no_bib_disponible_basica > 0 THEN id_bibliografia_declarada END) AS total_disponibles'),
-                        DB::raw('ROUND(LEAST(COUNT(DISTINCT CASE WHEN no_bib_disponible_basica > 0 THEN id_bibliografia_declarada END) * 100.0 / NULLIF(COUNT(DISTINCT id_bibliografia_declarada), 0), 100), 2) AS cobertura')
-                    )
-                    ->where('codigo_carrera', $codigoCarrera)
-                    ->where('fecha_medicion', $ultimaFecha)
-                    ->first();
-                $coberturasBasicas[$codigoCarrera] = $cobertura->cobertura ?? 'Sin información';
-            } else {
-                $coberturasBasicas[$codigoCarrera] = 'Sin información';
-            }
+            // Obtener sede_id para la carrera
+            $carreraInfo = collect($carreras)->firstWhere('codigo', $codigoCarrera);
+            $sedeId = $carreraInfo->sede_id ?? 1; // Default a sede 1 si no se encuentra
+            
+            $coberturasBasicas[$codigoCarrera] = $this->calcularCoberturaBasicaTiempoReal($codigoCarrera, $sedeId, $tiposFormacionFiltro);
         }
 
-        // Cobertura complementaria por carrera
+        // Cobertura complementaria por carrera - Calculada en tiempo real
         $coberturasComplementarias = [];
         foreach ($carrerasCodigos as $codigoCarrera) {
-            $ultimaFecha = DB::table('reporte_coberturas_carreras_complementarias')
-                ->where('codigo_carrera', $codigoCarrera)
-                ->whereYear('fecha_medicion', $anioActual)
-                ->max('fecha_medicion');
-            if ($ultimaFecha) {
-                $cobertura = DB::table('reporte_coberturas_carreras_complementarias')
-                    ->select(
-                        DB::raw('COUNT(DISTINCT id_bibliografia_declarada) AS total_declaradas'),
-                        DB::raw('COUNT(DISTINCT CASE WHEN no_bib_disponible_complementaria > 0 THEN id_bibliografia_declarada END) AS total_disponibles'),
-                        DB::raw('ROUND(LEAST(COUNT(DISTINCT CASE WHEN no_bib_disponible_complementaria > 0 THEN id_bibliografia_declarada END) * 100.0 / NULLIF(COUNT(DISTINCT id_bibliografia_declarada), 0), 100), 2) AS cobertura')
-                    )
-                    ->where('codigo_carrera', $codigoCarrera)
-                    ->where('fecha_medicion', $ultimaFecha)
-                    ->first();
-                $coberturasComplementarias[$codigoCarrera] = $cobertura->cobertura ?? 'Sin información';
-            } else {
-                $coberturasComplementarias[$codigoCarrera] = 'Sin información';
-            }
+            // Obtener sede_id para la carrera
+            $carreraInfo = collect($carreras)->firstWhere('codigo', $codigoCarrera);
+            $sedeId = $carreraInfo->sede_id ?? 1; // Default a sede 1 si no se encuentra
+            
+            $coberturasComplementarias[$codigoCarrera] = $this->calcularCoberturaComplementariaTiempoReal($codigoCarrera, $sedeId, $tiposFormacionFiltro);
         }
 
         // Agregar datos de cobertura a cada carrera
@@ -1352,6 +1610,8 @@ class ReporteController extends BaseController
                 'estado' => $estado ?? '',
                 'nombre' => $nombre ?? ''
             ],
+            'tipos_formacion_seleccionados' => $tiposFormacionFiltro,
+            'hay_filtros_asignaturas' => !empty($tiposFormacionFiltro),
             'paginacion' => [
                 'current_page' => $page,
                 'per_page' => $perPage,
@@ -1674,10 +1934,10 @@ class ReporteController extends BaseController
             if (($asig->ejemplares_impresos ?? 0) > 0) {
                 $totalesCarrera['ejemplares_impresos'] += $asig->ejemplares_impresos;
             }
-            if (($asig->ejemplares_digitales ?? 0) > 0) {
-                $totalesCarrera['ejemplares_digitales'] += $asig->ejemplares_digitales;
             }
-            }
+        
+        // Calcular total de ejemplares digitales considerando valores especiales
+        $totalesCarrera['ejemplares_digitales'] = $this->calcularTotalEjemplaresDigitales($asignaturas);
         
         $totalesCarrera['titulos_declarados'] = $titulosDeclaradosUnicos;
         $totalesCarrera['titulos_disponibles'] = $titulosDisponiblesUnicos;
@@ -2492,8 +2752,10 @@ class ReporteController extends BaseController
         // Sumar ejemplares de todas las filas (estos sí se suman)
         foreach ($datosBibliografia as $fila) {
             $totalesCarrera['ejemplares_impresos'] += $fila['ejemplares_impresos'] ?? 0;
-            $totalesCarrera['ejemplares_digitales'] += is_numeric($fila['ejemplares_digitales']) ? $fila['ejemplares_digitales'] : 0;
         }
+        
+        // Calcular total de ejemplares digitales considerando valores especiales
+        $totalesCarrera['ejemplares_digitales'] = $this->calcularTotalEjemplaresDigitales($datosBibliografia);
         
         $totalesCarrera['titulos_declarados'] = $titulosDeclaradosUnicos;
         $totalesCarrera['titulos_disponibles'] = $titulosDisponiblesUnicos;
@@ -2697,10 +2959,10 @@ class ReporteController extends BaseController
             if (($asig->ejemplares_impresos ?? 0) > 0) {
                 $totalesCarrera['ejemplares_impresos'] += $asig->ejemplares_impresos;
             }
-            if (($asig->ejemplares_digitales ?? 0) > 0) {
-                $totalesCarrera['ejemplares_digitales'] += $asig->ejemplares_digitales;
             }
-            }
+        
+        // Calcular total de ejemplares digitales considerando valores especiales
+        $totalesCarrera['ejemplares_digitales'] = $this->calcularTotalEjemplaresDigitales($asignaturas);
         
         $totalesCarrera['titulos_declarados'] = $titulosDeclaradosUnicos;
         $totalesCarrera['titulos_disponibles'] = $titulosDisponiblesUnicos;
@@ -3442,8 +3704,10 @@ class ReporteController extends BaseController
         // Sumar ejemplares de todas las asignaturas (estos sí se suman)
         foreach ($asignaturas as $asig) {
             $totalesCarrera['ejemplares_impresos'] += $asig->ejemplares_impresos ?? 0;
-            $totalesCarrera['ejemplares_digitales'] += $asig->ejemplares_digitales ?? 0;
         }
+        
+        // Calcular total de ejemplares digitales considerando valores especiales
+        $totalesCarrera['ejemplares_digitales'] = $this->calcularTotalEjemplaresDigitales($asignaturas);
         
         $totalesCarrera['titulos_declarados'] = $titulosDeclaradosUnicos;
         $totalesCarrera['titulos_disponibles'] = $titulosDisponiblesUnicos;
@@ -3886,8 +4150,10 @@ class ReporteController extends BaseController
         // Sumar ejemplares de todas las filas (estos sí se suman)
         foreach ($datosBibliografia as $fila) {
             $totalesCarrera['ejemplares_impresos'] += $fila['ejemplares_impresos'] ?? 0;
-            $totalesCarrera['ejemplares_digitales'] += is_numeric($fila['ejemplares_digitales']) ? $fila['ejemplares_digitales'] : 0;
         }
+        
+        // Calcular total de ejemplares digitales considerando valores especiales
+        $totalesCarrera['ejemplares_digitales'] = $this->calcularTotalEjemplaresDigitales($datosBibliografia);
         
         $totalesCarrera['titulos_declarados'] = $titulosDeclaradosUnicos;
         $totalesCarrera['titulos_disponibles'] = $titulosDisponiblesUnicos;
@@ -4610,8 +4876,10 @@ class ReporteController extends BaseController
         // Sumar ejemplares de todas las filas (estos sí se suman)
         foreach ($datosBibliografia as $fila) {
             $totalesCarrera['ejemplares_impresos'] += $fila['ejemplares_impresos'] ?? 0;
-            $totalesCarrera['ejemplares_digitales'] += is_numeric($fila['ejemplares_digitales']) ? $fila['ejemplares_digitales'] : 0;
         }
+        
+        // Calcular total de ejemplares digitales considerando valores especiales
+        $totalesCarrera['ejemplares_digitales'] = $this->calcularTotalEjemplaresDigitales($datosBibliografia);
         
         $totalesCarrera['titulos_declarados'] = $titulosDeclaradosUnicos;
         $totalesCarrera['titulos_disponibles'] = $titulosDisponiblesUnicos;
@@ -5240,27 +5508,14 @@ class ReporteController extends BaseController
             }
         }
 
-        // Cobertura complementaria por carrera
+        // Cobertura complementaria por carrera - Calculada en tiempo real
         $coberturasComplementarias = [];
         foreach ($carrerasCodigos as $codigoCarrera) {
-            $ultimaFecha = DB::table('reporte_coberturas_carreras_complementarias')
-                ->where('codigo_carrera', $codigoCarrera)
-                ->whereYear('fecha_medicion', $anioActual)
-                ->max('fecha_medicion');
-            if ($ultimaFecha) {
-                $cobertura = DB::table('reporte_coberturas_carreras_complementarias')
-                    ->select(
-                        DB::raw('COUNT(DISTINCT id_bibliografia_declarada) AS total_declaradas'),
-                        DB::raw('COUNT(DISTINCT CASE WHEN no_bib_disponible_complementaria > 0 THEN id_bibliografia_declarada END) AS total_disponibles'),
-                        DB::raw('ROUND(LEAST(COUNT(DISTINCT CASE WHEN no_bib_disponible_complementaria > 0 THEN id_bibliografia_declarada END) * 100.0 / NULLIF(COUNT(DISTINCT id_bibliografia_declarada), 0), 100), 2) AS cobertura')
-                    )
-                    ->where('codigo_carrera', $codigoCarrera)
-                    ->where('fecha_medicion', $ultimaFecha)
-                    ->first();
-                $coberturasComplementarias[$codigoCarrera] = $cobertura->cobertura ?? 'Sin información';
-            } else {
-                $coberturasComplementarias[$codigoCarrera] = 'Sin información';
-            }
+            // Obtener sede_id para la carrera
+            $carreraInfo = collect($carreras)->firstWhere('codigo', $codigoCarrera);
+            $sedeId = $carreraInfo->sede_id ?? 1; // Default a sede 1 si no se encuentra
+            
+            $coberturasComplementarias[$codigoCarrera] = $this->calcularCoberturaComplementariaTiempoReal($codigoCarrera, $sedeId);
         }
 
         // Agregar datos de cobertura a cada carrera
