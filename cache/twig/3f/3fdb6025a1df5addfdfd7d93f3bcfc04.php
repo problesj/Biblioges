@@ -362,24 +362,46 @@ class __TwigTemplate_22c6f3c12a447186507b22fb7e42cdfe extends Template
                 yield "</span>
                                             </td>
                                             <td class=\"text-center\">
-                                                ";
-                // line 169
-                if ((CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "total_disponibles", [], "any", false, false, false, 169) > 0)) {
-                    // line 170
-                    yield "                                                    <button class=\"btn btn-sm btn-primary\" onclick=\"mostrarBibliografiasDisponibles(";
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "id", [], "any", false, false, false, 170), "html", null, true);
+                                                <div class=\"btn-group\" role=\"group\">
+                                                    <a href=\"";
+                // line 170
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
+                yield "bibliografias-declaradas/";
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "id", [], "any", false, false, false, 170), "html", null, true);
+                yield "\" class=\"btn btn-sm btn-info\" title=\"Ver Detalles\">
+                                                        <i class=\"fas fa-info-circle\"></i>
+                                                    </a>
+                                                    <a href=\"";
+                // line 173
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
+                yield "bibliografias-declaradas/";
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "id", [], "any", false, false, false, 173), "html", null, true);
+                yield "/buscarCatalogo\" class=\"btn btn-sm btn-secondary\" title=\"Buscar en Catálogo\">
+                                                        <i class=\"fas fa-search\"></i>
+                                                    </a>
+                                                    ";
+                // line 176
+                if ((CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "total_disponibles", [], "any", false, false, false, 176) > 0)) {
+                    // line 177
+                    yield "                                                        <button class=\"btn btn-sm btn-primary\" onclick=\"mostrarBibliografiasDisponibles(";
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "id", [], "any", false, false, false, 177), "html", null, true);
                     yield ", '";
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "titulo", [], "any", false, false, false, 170), "js"), "html", null, true);
-                    yield "')\">
-                                                        <i class=\"fas fa-eye\"></i> Ver Disponibles
-                                                    </button>
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "titulo", [], "any", false, false, false, 177), "js"), "html", null, true);
+                    yield "')\" title=\"Ver Disponibles\">
+                                                            <i class=\"fas fa-eye\"></i>
+                                                        </button>
+                                                    ";
+                }
+                // line 181
+                yield "                                                </div>
                                                 ";
-                } else {
-                    // line 174
-                    yield "                                                    <span class=\"text-muted\">Sin Bib. Disponibles</span>
+                // line 182
+                if ((CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "total_disponibles", [], "any", false, false, false, 182) == 0)) {
+                    // line 183
+                    yield "                                                    <div class=\"mt-1\"><small class=\"text-muted\">Sin Bib. Disponibles</small></div>
                                                 ";
                 }
-                // line 176
+                // line 185
                 yield "                                            </td>
                                         </tr>
                                     ";
@@ -387,28 +409,28 @@ class __TwigTemplate_22c6f3c12a447186507b22fb7e42cdfe extends Template
             $_parent = $context['_parent'];
             unset($context['_seq'], $context['_key'], $context['bib'], $context['_parent']);
             $context = array_intersect_key($context, $_parent) + $_parent;
-            // line 179
+            // line 188
             yield "                                </tbody>
                             </table>
                         </div>
                     ";
         } else {
-            // line 183
+            // line 192
             yield "                        <div class=\"text-center py-4\">
                             <i class=\"fas fa-book fa-3x text-muted mb-3\"></i>
                             <p class=\"text-muted\">No hay bibliografías básicas declaradas para esta asignatura.</p>
                         </div>
                     ";
         }
-        // line 188
+        // line 197
         yield "                </div>
 
                 <!-- Pestaña Complementaria -->
                 <div class=\"tab-pane fade\" id=\"complementaria\" role=\"tabpanel\" aria-labelledby=\"complementaria-tab\">
                     ";
-        // line 192
-        if ((Twig\Extension\CoreExtension::length($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografias"] ?? null), "complementaria", [], "any", false, false, false, 192)) > 0)) {
-            // line 193
+        // line 201
+        if ((Twig\Extension\CoreExtension::length($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografias"] ?? null), "complementaria", [], "any", false, false, false, 201)) > 0)) {
+            // line 202
             yield "                        <div class=\"table-responsive\">
                             <table class=\"table table-hover\">
                                 <thead class=\"table-light\">
@@ -424,78 +446,100 @@ class __TwigTemplate_22c6f3c12a447186507b22fb7e42cdfe extends Template
                                 </thead>
                                 <tbody>
                                     ";
-            // line 207
+            // line 216
             $context['_parent'] = $context;
-            $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografias"] ?? null), "complementaria", [], "any", false, false, false, 207));
+            $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografias"] ?? null), "complementaria", [], "any", false, false, false, 216));
             foreach ($context['_seq'] as $context["_key"] => $context["bib"]) {
-                // line 208
+                // line 217
                 yield "                                        <tr>
                                             <td>
                                                 <strong>";
-                // line 210
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "titulo", [], "any", false, false, false, 210), "html", null, true);
+                // line 219
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "titulo", [], "any", false, false, false, 219), "html", null, true);
                 yield "</strong>
                                                 ";
-                // line 211
-                if (CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "edicion", [], "any", false, false, false, 211)) {
+                // line 220
+                if (CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "edicion", [], "any", false, false, false, 220)) {
                     yield "<br><small class=\"text-muted\">Edición: ";
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "edicion", [], "any", false, false, false, 211), "html", null, true);
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "edicion", [], "any", false, false, false, 220), "html", null, true);
                     yield "</small>";
                 }
-                // line 212
+                // line 221
                 yield "                                                ";
-                if (CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "isbn", [], "any", false, false, false, 212)) {
+                if (CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "isbn", [], "any", false, false, false, 221)) {
                     yield "<br><small class=\"text-muted\">ISBN: ";
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "isbn", [], "any", false, false, false, 212), "html", null, true);
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "isbn", [], "any", false, false, false, 221), "html", null, true);
                     yield "</small>";
                 }
-                // line 213
+                // line 222
                 yield "                                            </td>
                                             <td>
                                                 <span class=\"badge bg-info\">";
-                // line 215
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::titleCase($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "tipo", [], "any", false, false, false, 215)), "html", null, true);
+                // line 224
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::titleCase($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "tipo", [], "any", false, false, false, 224)), "html", null, true);
                 yield "</span>
                                             </td>
                                             <td>";
-                // line 217
-                yield ((CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "anio_publicacion", [], "any", false, false, false, 217)) ? ($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "anio_publicacion", [], "any", false, false, false, 217), "html", null, true)) : ("N/A"));
+                // line 226
+                yield ((CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "anio_publicacion", [], "any", false, false, false, 226)) ? ($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "anio_publicacion", [], "any", false, false, false, 226), "html", null, true)) : ("N/A"));
                 yield "</td>
                                             <td>";
-                // line 218
-                yield ((CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "editorial", [], "any", false, false, false, 218)) ? ($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "editorial", [], "any", false, false, false, 218), "html", null, true)) : ("N/A"));
+                // line 227
+                yield ((CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "editorial", [], "any", false, false, false, 227)) ? ($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "editorial", [], "any", false, false, false, 227), "html", null, true)) : ("N/A"));
                 yield "</td>
                                             <td class=\"text-center\">
                                                 <span class=\"badge bg-secondary\">";
-                // line 220
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::titleCase($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "formato", [], "any", false, false, false, 220)), "html", null, true);
+                // line 229
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::titleCase($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "formato", [], "any", false, false, false, 229)), "html", null, true);
                 yield "</span>
                                             </td>
                                             <td class=\"text-center\">
                                                 <span class=\"badge bg-warning\">";
-                // line 223
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "total_disponibles", [], "any", false, false, false, 223), "html", null, true);
+                // line 232
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "total_disponibles", [], "any", false, false, false, 232), "html", null, true);
                 yield "</span>
                                             </td>
                                             <td class=\"text-center\">
-                                                ";
-                // line 226
-                if ((CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "total_disponibles", [], "any", false, false, false, 226) > 0)) {
-                    // line 227
-                    yield "                                                    <button class=\"btn btn-sm btn-primary\" onclick=\"mostrarBibliografiasDisponibles(";
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "id", [], "any", false, false, false, 227), "html", null, true);
+                                                <div class=\"btn-group\" role=\"group\">
+                                                    <a href=\"";
+                // line 236
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
+                yield "bibliografias-declaradas/";
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "id", [], "any", false, false, false, 236), "html", null, true);
+                yield "\" class=\"btn btn-sm btn-info\" title=\"Ver Detalles\">
+                                                        <i class=\"fas fa-info-circle\"></i>
+                                                    </a>
+                                                    <a href=\"";
+                // line 239
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
+                yield "bibliografias-declaradas/";
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "id", [], "any", false, false, false, 239), "html", null, true);
+                yield "/buscarCatalogo\" class=\"btn btn-sm btn-secondary\" title=\"Buscar en Catálogo\">
+                                                        <i class=\"fas fa-search\"></i>
+                                                    </a>
+                                                    ";
+                // line 242
+                if ((CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "total_disponibles", [], "any", false, false, false, 242) > 0)) {
+                    // line 243
+                    yield "                                                        <button class=\"btn btn-sm btn-primary\" onclick=\"mostrarBibliografiasDisponibles(";
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "id", [], "any", false, false, false, 243), "html", null, true);
                     yield ", '";
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "titulo", [], "any", false, false, false, 227), "js"), "html", null, true);
-                    yield "')\">
-                                                        <i class=\"fas fa-eye\"></i> Ver Disponibles
-                                                    </button>
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "titulo", [], "any", false, false, false, 243), "js"), "html", null, true);
+                    yield "')\" title=\"Ver Disponibles\">
+                                                            <i class=\"fas fa-eye\"></i>
+                                                        </button>
+                                                    ";
+                }
+                // line 247
+                yield "                                                </div>
                                                 ";
-                } else {
-                    // line 231
-                    yield "                                                    <span class=\"text-muted\">Sin Bib. Disponibles</span>
+                // line 248
+                if ((CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "total_disponibles", [], "any", false, false, false, 248) == 0)) {
+                    // line 249
+                    yield "                                                    <div class=\"mt-1\"><small class=\"text-muted\">Sin Bib. Disponibles</small></div>
                                                 ";
                 }
-                // line 233
+                // line 251
                 yield "                                            </td>
                                         </tr>
                                     ";
@@ -503,28 +547,28 @@ class __TwigTemplate_22c6f3c12a447186507b22fb7e42cdfe extends Template
             $_parent = $context['_parent'];
             unset($context['_seq'], $context['_key'], $context['bib'], $context['_parent']);
             $context = array_intersect_key($context, $_parent) + $_parent;
-            // line 236
+            // line 254
             yield "                                </tbody>
                             </table>
                         </div>
                     ";
         } else {
-            // line 240
+            // line 258
             yield "                        <div class=\"text-center py-4\">
                             <i class=\"fas fa-book fa-3x text-muted mb-3\"></i>
                             <p class=\"text-muted\">No hay bibliografías complementarias declaradas para esta asignatura.</p>
                         </div>
                     ";
         }
-        // line 245
+        // line 263
         yield "                </div>
 
                 <!-- Pestaña Otro -->
                 <div class=\"tab-pane fade\" id=\"otro\" role=\"tabpanel\" aria-labelledby=\"otro-tab\">
                     ";
-        // line 249
-        if ((Twig\Extension\CoreExtension::length($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografias"] ?? null), "otro", [], "any", false, false, false, 249)) > 0)) {
-            // line 250
+        // line 267
+        if ((Twig\Extension\CoreExtension::length($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografias"] ?? null), "otro", [], "any", false, false, false, 267)) > 0)) {
+            // line 268
             yield "                        <div class=\"table-responsive\">
                             <table class=\"table table-hover\">
                                 <thead class=\"table-light\">
@@ -540,78 +584,100 @@ class __TwigTemplate_22c6f3c12a447186507b22fb7e42cdfe extends Template
                                 </thead>
                                 <tbody>
                                     ";
-            // line 264
+            // line 282
             $context['_parent'] = $context;
-            $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografias"] ?? null), "otro", [], "any", false, false, false, 264));
+            $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, ($context["bibliografias"] ?? null), "otro", [], "any", false, false, false, 282));
             foreach ($context['_seq'] as $context["_key"] => $context["bib"]) {
-                // line 265
+                // line 283
                 yield "                                        <tr>
                                             <td>
                                                 <strong>";
-                // line 267
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "titulo", [], "any", false, false, false, 267), "html", null, true);
+                // line 285
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "titulo", [], "any", false, false, false, 285), "html", null, true);
                 yield "</strong>
                                                 ";
-                // line 268
-                if (CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "edicion", [], "any", false, false, false, 268)) {
+                // line 286
+                if (CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "edicion", [], "any", false, false, false, 286)) {
                     yield "<br><small class=\"text-muted\">Edición: ";
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "edicion", [], "any", false, false, false, 268), "html", null, true);
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "edicion", [], "any", false, false, false, 286), "html", null, true);
                     yield "</small>";
                 }
-                // line 269
+                // line 287
                 yield "                                                ";
-                if (CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "isbn", [], "any", false, false, false, 269)) {
+                if (CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "isbn", [], "any", false, false, false, 287)) {
                     yield "<br><small class=\"text-muted\">ISBN: ";
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "isbn", [], "any", false, false, false, 269), "html", null, true);
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "isbn", [], "any", false, false, false, 287), "html", null, true);
                     yield "</small>";
                 }
-                // line 270
+                // line 288
                 yield "                                            </td>
                                             <td>
                                                 <span class=\"badge bg-info\">";
-                // line 272
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::titleCase($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "tipo", [], "any", false, false, false, 272)), "html", null, true);
+                // line 290
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::titleCase($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "tipo", [], "any", false, false, false, 290)), "html", null, true);
                 yield "</span>
                                             </td>
                                             <td>";
-                // line 274
-                yield ((CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "anio_publicacion", [], "any", false, false, false, 274)) ? ($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "anio_publicacion", [], "any", false, false, false, 274), "html", null, true)) : ("N/A"));
+                // line 292
+                yield ((CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "anio_publicacion", [], "any", false, false, false, 292)) ? ($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "anio_publicacion", [], "any", false, false, false, 292), "html", null, true)) : ("N/A"));
                 yield "</td>
                                             <td>";
-                // line 275
-                yield ((CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "editorial", [], "any", false, false, false, 275)) ? ($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "editorial", [], "any", false, false, false, 275), "html", null, true)) : ("N/A"));
+                // line 293
+                yield ((CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "editorial", [], "any", false, false, false, 293)) ? ($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "editorial", [], "any", false, false, false, 293), "html", null, true)) : ("N/A"));
                 yield "</td>
                                             <td class=\"text-center\">
                                                 <span class=\"badge bg-secondary\">";
-                // line 277
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::titleCase($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "formato", [], "any", false, false, false, 277)), "html", null, true);
+                // line 295
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::titleCase($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "formato", [], "any", false, false, false, 295)), "html", null, true);
                 yield "</span>
                                             </td>
                                             <td class=\"text-center\">
                                                 <span class=\"badge bg-warning\">";
-                // line 280
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "total_disponibles", [], "any", false, false, false, 280), "html", null, true);
+                // line 298
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "total_disponibles", [], "any", false, false, false, 298), "html", null, true);
                 yield "</span>
                                             </td>
                                             <td class=\"text-center\">
-                                                ";
-                // line 283
-                if ((CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "total_disponibles", [], "any", false, false, false, 283) > 0)) {
-                    // line 284
-                    yield "                                                    <button class=\"btn btn-sm btn-primary\" onclick=\"mostrarBibliografiasDisponibles(";
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "id", [], "any", false, false, false, 284), "html", null, true);
+                                                <div class=\"btn-group\" role=\"group\">
+                                                    <a href=\"";
+                // line 302
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
+                yield "bibliografias-declaradas/";
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "id", [], "any", false, false, false, 302), "html", null, true);
+                yield "\" class=\"btn btn-sm btn-info\" title=\"Ver Detalles\">
+                                                        <i class=\"fas fa-info-circle\"></i>
+                                                    </a>
+                                                    <a href=\"";
+                // line 305
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
+                yield "bibliografias-declaradas/";
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "id", [], "any", false, false, false, 305), "html", null, true);
+                yield "/buscarCatalogo\" class=\"btn btn-sm btn-secondary\" title=\"Buscar en Catálogo\">
+                                                        <i class=\"fas fa-search\"></i>
+                                                    </a>
+                                                    ";
+                // line 308
+                if ((CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "total_disponibles", [], "any", false, false, false, 308) > 0)) {
+                    // line 309
+                    yield "                                                        <button class=\"btn btn-sm btn-primary\" onclick=\"mostrarBibliografiasDisponibles(";
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "id", [], "any", false, false, false, 309), "html", null, true);
                     yield ", '";
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "titulo", [], "any", false, false, false, 284), "js"), "html", null, true);
-                    yield "')\">
-                                                        <i class=\"fas fa-eye\"></i> Ver Disponibles
-                                                    </button>
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "titulo", [], "any", false, false, false, 309), "js"), "html", null, true);
+                    yield "')\" title=\"Ver Disponibles\">
+                                                            <i class=\"fas fa-eye\"></i>
+                                                        </button>
+                                                    ";
+                }
+                // line 313
+                yield "                                                </div>
                                                 ";
-                } else {
-                    // line 288
-                    yield "                                                    <span class=\"text-muted\">Sin Bib. Disponibles</span>
+                // line 314
+                if ((CoreExtension::getAttribute($this->env, $this->source, $context["bib"], "total_disponibles", [], "any", false, false, false, 314) == 0)) {
+                    // line 315
+                    yield "                                                    <div class=\"mt-1\"><small class=\"text-muted\">Sin Bib. Disponibles</small></div>
                                                 ";
                 }
-                // line 290
+                // line 317
                 yield "                                            </td>
                                         </tr>
                                     ";
@@ -619,20 +685,20 @@ class __TwigTemplate_22c6f3c12a447186507b22fb7e42cdfe extends Template
             $_parent = $context['_parent'];
             unset($context['_seq'], $context['_key'], $context['bib'], $context['_parent']);
             $context = array_intersect_key($context, $_parent) + $_parent;
-            // line 293
+            // line 320
             yield "                                </tbody>
                             </table>
                         </div>
                     ";
         } else {
-            // line 297
+            // line 324
             yield "                        <div class=\"text-center py-4\">
                             <i class=\"fas fa-book fa-3x text-muted mb-3\"></i>
                             <p class=\"text-muted\">No hay otras bibliografías declaradas para esta asignatura.</p>
                         </div>
                     ";
         }
-        // line 302
+        // line 329
         yield "                </div>
             </div>
         </div>
@@ -660,14 +726,14 @@ class __TwigTemplate_22c6f3c12a447186507b22fb7e42cdfe extends Template
         yield from [];
     }
 
-    // line 327
+    // line 354
     /**
      * @return iterable<null|scalar|\Stringable>
      */
     public function block_scripts(array $context, array $blocks = []): iterable
     {
         $macros = $this->macros;
-        // line 328
+        // line 355
         yield "<script src=\"/js/asignaturas.js\"></script>
 <script>
 function mostrarBibliografiasDisponibles(bibliografiaId, titulo) {
@@ -805,7 +871,7 @@ function mostrarBibliografiasDisponiblesEnModal(bibliografias, titulo) {
      */
     public function getDebugInfo(): array
     {
-        return array (  671 => 328,  664 => 327,  636 => 302,  629 => 297,  623 => 293,  615 => 290,  611 => 288,  601 => 284,  599 => 283,  593 => 280,  587 => 277,  582 => 275,  578 => 274,  573 => 272,  569 => 270,  562 => 269,  556 => 268,  552 => 267,  548 => 265,  544 => 264,  528 => 250,  526 => 249,  520 => 245,  513 => 240,  507 => 236,  499 => 233,  495 => 231,  485 => 227,  483 => 226,  477 => 223,  471 => 220,  466 => 218,  462 => 217,  457 => 215,  453 => 213,  446 => 212,  440 => 211,  436 => 210,  432 => 208,  428 => 207,  412 => 193,  410 => 192,  404 => 188,  397 => 183,  391 => 179,  383 => 176,  379 => 174,  369 => 170,  367 => 169,  361 => 166,  355 => 163,  350 => 161,  346 => 160,  341 => 158,  337 => 156,  330 => 155,  324 => 154,  320 => 153,  316 => 151,  312 => 150,  296 => 136,  294 => 135,  282 => 126,  274 => 121,  266 => 116,  253 => 105,  245 => 99,  236 => 96,  230 => 93,  222 => 92,  217 => 90,  213 => 89,  209 => 88,  206 => 87,  202 => 86,  182 => 68,  180 => 67,  172 => 61,  163 => 58,  159 => 57,  155 => 56,  152 => 55,  148 => 54,  121 => 30,  113 => 29,  108 => 27,  100 => 24,  96 => 23,  92 => 22,  76 => 9,  71 => 6,  64 => 5,  53 => 3,  42 => 1,);
+        return array (  737 => 355,  730 => 354,  702 => 329,  695 => 324,  689 => 320,  681 => 317,  677 => 315,  675 => 314,  672 => 313,  662 => 309,  660 => 308,  652 => 305,  644 => 302,  637 => 298,  631 => 295,  626 => 293,  622 => 292,  617 => 290,  613 => 288,  606 => 287,  600 => 286,  596 => 285,  592 => 283,  588 => 282,  572 => 268,  570 => 267,  564 => 263,  557 => 258,  551 => 254,  543 => 251,  539 => 249,  537 => 248,  534 => 247,  524 => 243,  522 => 242,  514 => 239,  506 => 236,  499 => 232,  493 => 229,  488 => 227,  484 => 226,  479 => 224,  475 => 222,  468 => 221,  462 => 220,  458 => 219,  454 => 217,  450 => 216,  434 => 202,  432 => 201,  426 => 197,  419 => 192,  413 => 188,  405 => 185,  401 => 183,  399 => 182,  396 => 181,  386 => 177,  384 => 176,  376 => 173,  368 => 170,  361 => 166,  355 => 163,  350 => 161,  346 => 160,  341 => 158,  337 => 156,  330 => 155,  324 => 154,  320 => 153,  316 => 151,  312 => 150,  296 => 136,  294 => 135,  282 => 126,  274 => 121,  266 => 116,  253 => 105,  245 => 99,  236 => 96,  230 => 93,  222 => 92,  217 => 90,  213 => 89,  209 => 88,  206 => 87,  202 => 86,  182 => 68,  180 => 67,  172 => 61,  163 => 58,  159 => 57,  155 => 56,  152 => 55,  148 => 54,  121 => 30,  113 => 29,  108 => 27,  100 => 24,  96 => 23,  92 => 22,  76 => 9,  71 => 6,  64 => 5,  53 => 3,  42 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -978,12 +1044,21 @@ function mostrarBibliografiasDisponiblesEnModal(bibliografias, titulo) {
                                                 <span class=\"badge bg-warning\">{{ bib.total_disponibles }}</span>
                                             </td>
                                             <td class=\"text-center\">
-                                                {% if bib.total_disponibles > 0 %}
-                                                    <button class=\"btn btn-sm btn-primary\" onclick=\"mostrarBibliografiasDisponibles({{ bib.id }}, '{{ bib.titulo|e('js') }}')\">
-                                                        <i class=\"fas fa-eye\"></i> Ver Disponibles
-                                                    </button>
-                                                {% else %}
-                                                    <span class=\"text-muted\">Sin Bib. Disponibles</span>
+                                                <div class=\"btn-group\" role=\"group\">
+                                                    <a href=\"{{ app_url }}bibliografias-declaradas/{{ bib.id }}\" class=\"btn btn-sm btn-info\" title=\"Ver Detalles\">
+                                                        <i class=\"fas fa-info-circle\"></i>
+                                                    </a>
+                                                    <a href=\"{{ app_url }}bibliografias-declaradas/{{ bib.id }}/buscarCatalogo\" class=\"btn btn-sm btn-secondary\" title=\"Buscar en Catálogo\">
+                                                        <i class=\"fas fa-search\"></i>
+                                                    </a>
+                                                    {% if bib.total_disponibles > 0 %}
+                                                        <button class=\"btn btn-sm btn-primary\" onclick=\"mostrarBibliografiasDisponibles({{ bib.id }}, '{{ bib.titulo|e('js') }}')\" title=\"Ver Disponibles\">
+                                                            <i class=\"fas fa-eye\"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                                {% if bib.total_disponibles == 0 %}
+                                                    <div class=\"mt-1\"><small class=\"text-muted\">Sin Bib. Disponibles</small></div>
                                                 {% endif %}
                                             </td>
                                         </tr>
@@ -1035,12 +1110,21 @@ function mostrarBibliografiasDisponiblesEnModal(bibliografias, titulo) {
                                                 <span class=\"badge bg-warning\">{{ bib.total_disponibles }}</span>
                                             </td>
                                             <td class=\"text-center\">
-                                                {% if bib.total_disponibles > 0 %}
-                                                    <button class=\"btn btn-sm btn-primary\" onclick=\"mostrarBibliografiasDisponibles({{ bib.id }}, '{{ bib.titulo|e('js') }}')\">
-                                                        <i class=\"fas fa-eye\"></i> Ver Disponibles
-                                                    </button>
-                                                {% else %}
-                                                    <span class=\"text-muted\">Sin Bib. Disponibles</span>
+                                                <div class=\"btn-group\" role=\"group\">
+                                                    <a href=\"{{ app_url }}bibliografias-declaradas/{{ bib.id }}\" class=\"btn btn-sm btn-info\" title=\"Ver Detalles\">
+                                                        <i class=\"fas fa-info-circle\"></i>
+                                                    </a>
+                                                    <a href=\"{{ app_url }}bibliografias-declaradas/{{ bib.id }}/buscarCatalogo\" class=\"btn btn-sm btn-secondary\" title=\"Buscar en Catálogo\">
+                                                        <i class=\"fas fa-search\"></i>
+                                                    </a>
+                                                    {% if bib.total_disponibles > 0 %}
+                                                        <button class=\"btn btn-sm btn-primary\" onclick=\"mostrarBibliografiasDisponibles({{ bib.id }}, '{{ bib.titulo|e('js') }}')\" title=\"Ver Disponibles\">
+                                                            <i class=\"fas fa-eye\"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                                {% if bib.total_disponibles == 0 %}
+                                                    <div class=\"mt-1\"><small class=\"text-muted\">Sin Bib. Disponibles</small></div>
                                                 {% endif %}
                                             </td>
                                         </tr>
@@ -1092,12 +1176,21 @@ function mostrarBibliografiasDisponiblesEnModal(bibliografias, titulo) {
                                                 <span class=\"badge bg-warning\">{{ bib.total_disponibles }}</span>
                                             </td>
                                             <td class=\"text-center\">
-                                                {% if bib.total_disponibles > 0 %}
-                                                    <button class=\"btn btn-sm btn-primary\" onclick=\"mostrarBibliografiasDisponibles({{ bib.id }}, '{{ bib.titulo|e('js') }}')\">
-                                                        <i class=\"fas fa-eye\"></i> Ver Disponibles
-                                                    </button>
-                                                {% else %}
-                                                    <span class=\"text-muted\">Sin Bib. Disponibles</span>
+                                                <div class=\"btn-group\" role=\"group\">
+                                                    <a href=\"{{ app_url }}bibliografias-declaradas/{{ bib.id }}\" class=\"btn btn-sm btn-info\" title=\"Ver Detalles\">
+                                                        <i class=\"fas fa-info-circle\"></i>
+                                                    </a>
+                                                    <a href=\"{{ app_url }}bibliografias-declaradas/{{ bib.id }}/buscarCatalogo\" class=\"btn btn-sm btn-secondary\" title=\"Buscar en Catálogo\">
+                                                        <i class=\"fas fa-search\"></i>
+                                                    </a>
+                                                    {% if bib.total_disponibles > 0 %}
+                                                        <button class=\"btn btn-sm btn-primary\" onclick=\"mostrarBibliografiasDisponibles({{ bib.id }}, '{{ bib.titulo|e('js') }}')\" title=\"Ver Disponibles\">
+                                                            <i class=\"fas fa-eye\"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                                {% if bib.total_disponibles == 0 %}
+                                                    <div class=\"mt-1\"><small class=\"text-muted\">Sin Bib. Disponibles</small></div>
                                                 {% endif %}
                                             </td>
                                         </tr>
