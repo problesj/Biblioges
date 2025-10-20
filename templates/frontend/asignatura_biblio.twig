@@ -60,6 +60,14 @@
 {% endblock %}
 
 {% block content %}
+{% if asignatura.tipo_asignatura|lower == 'formacion_electiva' %}
+<section class="container mb-4">
+    <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Asignatura de Formación Electiva:</strong> Esta asignatura no requiere bibliografía específica.
+    </div>
+</section>
+{% else %}
 <section class="container mb-4">
     <div class="card">
         <div class="card-body">
@@ -389,6 +397,7 @@ function mostrarBibliografiasEnModal(bibliografias) {
     document.getElementById('modalContent').innerHTML = html;
 }
 </script>
+{% endif %}
 {% endblock %}
 
 

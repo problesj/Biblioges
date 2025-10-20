@@ -215,7 +215,7 @@
                                                 <td class="text-center">{{ asignatura.periodicidad }}</td>
                                                 <td class="text-center">
                                                     <select class="form-select form-select-sm" style="width: 80px;">
-                                                        {% for i in 1..10 %}
+                                                        {% for i in 1..carrera.cantidad_semestres %}
                                                             <option value="{{ i }}" {% if asignatura.semestre == i %}selected{% endif %}>{{ i }}</option>
                                                         {% endfor %}
                                                     </select>
@@ -466,8 +466,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const selectSemestre = document.createElement('select');
                 selectSemestre.className = 'form-select form-select-sm';
                 
-                // Agregar opciones del 1 al 10
-                for (let i = 1; i <= 10; i++) {
+                // Agregar opciones del 1 al cantidad_semestres de la carrera
+                const cantidadSemestres = {{ carrera.cantidad_semestres|default(10) }};
+                for (let i = 1; i <= cantidadSemestres; i++) {
                     const option = document.createElement('option');
                     option.value = i;
                     option.textContent = i;
@@ -508,7 +509,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Crear el selector de semestre
                 const selectSemestre = document.createElement('select');
                 selectSemestre.className = 'form-select form-select-sm w-100';
-                for (let i = 1; i <= 10; i++) {
+                const cantidadSemestres = {{ carrera.cantidad_semestres|default(10) }};
+                for (let i = 1; i <= cantidadSemestres; i++) {
                     const option = document.createElement('option');
                     option.value = i;
                     option.textContent = i;

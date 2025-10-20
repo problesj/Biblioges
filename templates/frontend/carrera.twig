@@ -118,20 +118,29 @@
                 <div class="course-section">
                     <h3 class="course-title">{{ asignatura.asignatura_nombre }}</h3>
                     <p class="course-code">Código: {{ asignatura.codigo_asignatura }}</p>
-                    {% set asignatura_url = app_url ~ '/asignatura-biblio/' ~ carrera.sede_id ~ '/' ~ asignatura.asignatura_id %}
-                    <div class="mb-2">
-                        <a href="{{ app_url }}/asignatura-biblio/{{ carrera.sede_id }}/{{ asignatura.asignatura_id }}" target="_blank" class="btn btn-primary btn-sm" title="Ver bibliografía completa de la asignatura en nueva ventana">
-                            <i class="fas fa-book me-1"></i>Ver Bibliografía
-                            <i class="fas fa-external-link-alt ms-1" style="font-size: 0.8em;"></i>
-                        </a>
-                    </div>
                     
-                    <div class="bibliography-section">
-                        <h4 class="bibliography-title">
-                            <i class="fas fa-bookmark"></i>
-                            Bibliografía
-                        </h4>
+                    {% if asignatura.tipo_asignatura|lower != 'formacion_electiva' %}
+                        {% set asignatura_url = app_url ~ '/asignatura-biblio/' ~ carrera.sede_id ~ '/' ~ asignatura.asignatura_id %}
+                        <div class="mb-2">
+                            <a href="{{ app_url }}/asignatura-biblio/{{ carrera.sede_id }}/{{ asignatura.asignatura_id }}" target="_blank" class="btn btn-primary btn-sm" title="Ver bibliografía completa de la asignatura en nueva ventana">
+                                <i class="fas fa-book me-1"></i>Ver Bibliografía
+                                <i class="fas fa-external-link-alt ms-1" style="font-size: 0.8em;"></i>
+                            </a>
+                        </div>
                         
+                        <div class="bibliography-section">
+                            <h4 class="bibliography-title">
+                                <i class="fas fa-bookmark"></i>
+                                Bibliografía
+                            </h4>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Asignatura de Formación Electiva:</strong> Esta asignatura no requiere bibliografía específica.
+                        </div>
+                    {% endif %}
+                    
+                    {% if asignatura.tipo_asignatura|lower != 'formacion_electiva' %}
                         <!-- Bibliography Tabs -->
                         <div class="bibliography-tabs">
                             <button class="bib-tab active" onclick="showBibliography('basica', {{ asignatura.asignatura_id }})">
@@ -229,6 +238,7 @@
                             </div>
                         </div>
                     </div>
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>
