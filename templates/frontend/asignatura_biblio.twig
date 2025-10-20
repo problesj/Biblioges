@@ -1,0 +1,394 @@
+{% extends 'frontend/base.twig' %}
+
+{% block title %}{{ asignatura.asignatura_nombre }} - Bibliografías{% endblock %}
+{% block meta %}
+    {% set canonical = app_url ~ '/asignatura-biblio/' ~ asignatura.sede_id ~ '/' ~ asignatura.asignatura_id %}
+    {% set img = asignatura.imagen_url and asignatura.imagen_url != '' ? app_url ~ '/biblioges/' ~ asignatura.imagen_url : assets_url ~ '/images/carreras/default.svg' %}
+    {% set share_title = 'Bibliografía de la carrera/programa ' ~ asignatura.carrera_nombre ~ ' - Sede: ' ~ asignatura.sede_nombre ~ ' - Asignatura: ' ~ asignatura.asignatura_nombre %}
+    {% set share_desc = 'Se detalla la bibliografía de la carrera/programa ' ~ asignatura.carrera_nombre ~ ' de la sede ' ~ asignatura.sede_nombre ~ ', informando bibliografía básica, complementaria u otra y su disponibilidad en formato impreso, electrónico o ambos, de la asignatura ' ~ asignatura.asignatura_nombre ~ '.' %}
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{{ canonical }}">
+    
+    <!-- Basic Meta Tags -->
+    <meta name="description" content="{{ share_desc }}">
+    <meta name="keywords" content="bibliografía, {{ asignatura.carrera_nombre|lower }}, {{ asignatura.sede_nombre|lower }}, {{ asignatura.asignatura_nombre|lower }}, universidad, libros, recursos académicos">
+    <meta name="author" content="Sistema Biblioges">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="{{ canonical }}">
+    <meta property="og:title" content="{{ share_title }}">
+    <meta property="og:description" content="{{ share_desc }}">
+    <meta property="og:image" content="{{ img }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Bibliografía de {{ asignatura.asignatura_nombre }}">
+    <meta property="og:site_name" content="Biblioges">
+    <meta property="og:locale" content="es_ES">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{{ canonical }}">
+    <meta name="twitter:title" content="{{ share_title }}">
+    <meta name="twitter:description" content="{{ share_desc }}">
+    <meta name="twitter:image" content="{{ img }}">
+    <meta name="twitter:image:alt" content="Bibliografía de {{ asignatura.asignatura_nombre }}">
+    
+    <!-- LinkedIn -->
+    <meta property="linkedin:title" content="{{ share_title }}">
+    <meta property="linkedin:description" content="{{ share_desc }}">
+    <meta property="linkedin:image" content="{{ img }}">
+    
+    <!-- WhatsApp -->
+    <meta property="whatsapp:title" content="{{ share_title }}">
+    <meta property="whatsapp:description" content="{{ share_desc }}">
+    <meta property="whatsapp:image" content="{{ img }}">
+    
+    <!-- Telegram -->
+    <meta property="telegram:title" content="{{ share_title }}">
+    <meta property="telegram:description" content="{{ share_desc }}">
+    <meta property="telegram:image" content="{{ img }}">
+    
+    <!-- Additional Meta Tags for better SEO -->
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="msapplication-TileColor" content="#2c3e50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Biblioges">
+{% endblock %}
+
+{% block content %}
+<section class="container mb-4">
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h1 class="h3 mb-1" style="cursor: pointer; color: #2c3e50; transition: color 0.3s ease;" onclick="mostrarDetallesAsignatura()" title="Hacer clic para ver detalles de la asignatura" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='#2c3e50'">
+                        {{ asignatura.asignatura_nombre }}
+                        <i class="fas fa-info-circle ms-2 text-primary" style="font-size: 0.8em;"></i>
+                    </h1>
+                    <div class="text-muted">
+                        {{ asignatura.carrera_nombre }} · {{ asignatura.sede_nombre }}
+                        <small class="text-primary ms-2">
+                            <i class="fas fa-hand-pointer me-1"></i>Hacer clic en el título para ver detalles
+                        </small>
+                    </div>
+                </div>
+                <div class="share-buttons d-flex gap-2">
+                    <span class="fw-semibold me-1">Compartir:</span>
+                    <button class="btn btn-outline-secondary btn-sm" title="Facebook" onclick="shareTo('facebook')"><i class="fab fa-facebook-f"></i></button>
+                    <button class="btn btn-outline-secondary btn-sm" title="X" onclick="shareTo('x')"><i class="fab fa-twitter"></i></button>
+                    <button class="btn btn-outline-secondary btn-sm" title="WhatsApp" onclick="shareTo('whatsapp')"><i class="fab fa-whatsapp"></i></button>
+                    <button class="btn btn-outline-secondary btn-sm" title="Telegram" onclick="shareTo('telegram')"><i class="fab fa-telegram-plane"></i></button>
+                    <button class="btn btn-outline-secondary btn-sm" title="Copiar" onclick="shareTo('copy')"><i class="fas fa-link"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="container">
+    {% if bibliografias|length > 0 %}
+        {% set bibliografiasBasicas = bibliografias|filter(b => b.tipo_bibliografia == 'basica') %}
+        {% if bibliografiasBasicas|length > 0 %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="mb-0"><i class="fas fa-star me-2 text-primary"></i>Básicas</h3>
+            </div>
+            <div class="card-body">
+                {% for bibliografia in bibliografiasBasicas %}
+                <div class="bibliografia-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <i class="fas fa-file-alt"></i>
+                            <span>{{ bibliografia.autores|default('Autor') }}, {{ bibliografia.anio_publicacion|default('Año') }}. {{ bibliografia.titulo }}. {{ bibliografia.editorial|default('Editorial') }}.</span>
+                        </div>
+                        {% if bibliografia.disponibles|length > 0 and bibliografia.tiene_disponibles %}
+                        <button type="button" class="btn btn-primary btn-sm ms-2" 
+                                onclick="mostrarBibliografiasDisponibles({{ bibliografia.id }}, '{{ bibliografia.titulo|e('js') }}')">
+                            <i class="fas fa-list me-1 text-white"></i>
+                            Ver Disponibles
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% set bibliografiasComplementarias = bibliografias|filter(b => b.tipo_bibliografia == 'complementaria') %}
+        {% if bibliografiasComplementarias|length > 0 %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="mb-0"><i class="far fa-star me-2 text-warning"></i>Complementarias</h3>
+            </div>
+            <div class="card-body">
+                {% for bibliografia in bibliografiasComplementarias %}
+                <div class="bibliografia-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <i class="fas fa-file-alt"></i>
+                            <span>{{ bibliografia.autores|default('Autor') }}, {{ bibliografia.anio_publicacion|default('Año') }}. {{ bibliografia.titulo }}. {{ bibliografia.editorial|default('Editorial') }}.</span>
+                        </div>
+                        {% if bibliografia.disponibles|length > 0 and bibliografia.tiene_disponibles %}
+                        <button type="button" class="btn btn-primary btn-sm ms-2" 
+                                onclick="mostrarBibliografiasDisponibles({{ bibliografia.id }}, '{{ bibliografia.titulo|e('js') }}')">
+                            <i class="fas fa-list me-1 text-white"></i>
+                            Ver Disponibles
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% set bibliografiasOtros = bibliografias|filter(b => b.tipo_bibliografia != 'basica' and b.tipo_bibliografia != 'complementaria') %}
+        {% if bibliografiasOtros|length > 0 %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="mb-0"><i class="fas fa-bookmark me-2 text-secondary"></i>Otros</h3>
+            </div>
+            <div class="card-body">
+                {% for bibliografia in bibliografiasOtros %}
+                <div class="bibliografia-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <i class="fas fa-file-alt"></i>
+                            <span>{{ bibliografia.autores|default('Autor') }}, {{ bibliografia.anio_publicacion|default('Año') }}. {{ bibliografia.titulo }}. {{ bibliografia.editorial|default('Editorial') }}.</span>
+                        </div>
+                        {% if bibliografia.disponibles|length > 0 and bibliografia.tiene_disponibles %}
+                        <button type="button" class="btn btn-primary btn-sm ms-2" 
+                                onclick="mostrarBibliografiasDisponibles({{ bibliografia.id }}, '{{ bibliografia.titulo|e('js') }}')">
+                            <i class="fas fa-list me-1 text-white"></i>
+                            Ver Disponibles
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>No hay bibliografías registradas para esta asignatura.
+        </div>
+    {% endif %}
+</section>
+
+<!-- Modal de Detalles de Asignatura -->
+<div class="modal fade" id="modalDetallesAsignatura" tabindex="-1" aria-labelledby="modalDetallesAsignaturaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalDetallesAsignaturaLabel">
+                    <i class="fas fa-book me-2"></i>
+                    Detalles de la Asignatura
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h4>{{ asignatura.asignatura_nombre }}</h4>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Carrera:</strong></p>
+                                <p class="text-muted">{{ asignatura.carrera_nombre }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Sede:</strong></p>
+                                <p class="text-muted">{{ asignatura.sede_nombre }}</p>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Tipo:</strong></p>
+                                <p class="text-muted">{{ asignatura.tipo_asignatura|default('No especificado') }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Bibliografías:</strong></p>
+                                <p class="text-muted">{{ bibliografias|length }} registros</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h6 class="mb-3">Compartir Asignatura</h6>
+                            <div class="d-flex flex-column gap-2">
+                                <button class="btn btn-outline-primary btn-sm" onclick="shareTo('facebook')">
+                                    <i class="fab fa-facebook-f me-2"></i>Facebook
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm" onclick="shareTo('x')">
+                                    <i class="fab fa-twitter me-2"></i>X (Twitter)
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm" onclick="shareTo('whatsapp')">
+                                    <i class="fab fa-whatsapp me-2"></i>WhatsApp
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm" onclick="shareTo('telegram')">
+                                    <i class="fab fa-telegram-plane me-2"></i>Telegram
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm" onclick="shareTo('copy')">
+                                    <i class="fas fa-link me-2"></i>Copiar Enlace
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Bibliografías Disponibles -->
+<div class="modal fade" id="modalBibliografiasDisponibles" tabindex="-1" aria-labelledby="modalBibliografiasDisponiblesLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalBibliografiasDisponiblesLabel">
+                    <i class="fas fa-book me-2"></i>
+                    Bibliografías Disponibles
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modalContent">
+                    <!-- El contenido se cargará dinámicamente -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function mostrarDetallesAsignatura() {
+    const modal = new bootstrap.Modal(document.getElementById('modalDetallesAsignatura'));
+    modal.show();
+}
+
+function mostrarBibliografiasDisponibles(bibliografiaId, titulo) {
+    // Mostrar loading
+    document.getElementById('modalContent').innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2">Cargando bibliografías disponibles...</p>
+        </div>
+    `;
+    
+    // Actualizar título del modal
+    document.getElementById('modalBibliografiasDisponiblesLabel').innerHTML = `
+        <i class="fas fa-book me-2"></i>
+        Bibliografías Disponibles: ${titulo}
+    `;
+    
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('modalBibliografiasDisponibles'));
+    modal.show();
+    
+    // Cargar datos con filtro por sede
+    const sedeId = {{ asignatura.sede_id }};
+    const url = sedeId ? 
+        `${window.location.origin}/api/bibliografias-disponibles/${bibliografiaId}?sede_id=${sedeId}` :
+        `${window.location.origin}/api/bibliografias-disponibles/${bibliografiaId}`;
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                mostrarBibliografiasEnModal(data.bibliografias);
+            } else {
+                document.getElementById('modalContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error al cargar las bibliografías: ${data.message}
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            document.getElementById('modalContent').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error de conexión: ${error.message}
+                </div>
+            `;
+        });
+}
+
+function mostrarBibliografiasEnModal(bibliografias) {
+    if (bibliografias.length === 0) {
+        document.getElementById('modalContent').innerHTML = `
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                No hay bibliografías disponibles para mostrar.
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '<div class="row">';
+    
+    bibliografias.forEach(bib => {
+        html += `
+            <div class="col-12 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">${bib.titulo}</h6>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <p class="mb-1"><strong>Autor(es):</strong> ${bib.autores || 'No especificado'}</p>
+                                <p class="mb-1"><strong>Año:</strong> ${bib.anio_edicion}</p>
+                                <p class="mb-1"><strong>Editorial:</strong> ${bib.editorial || 'No especificada'}</p>
+                                <p class="mb-1"><strong>Disponibilidad:</strong> 
+                                    <span class="badge bg-${bib.disponibilidad === 'electronico' ? 'success' : bib.disponibilidad === 'impreso' ? 'primary' : 'info'}">
+                                        ${bib.disponibilidad}
+                                    </span>
+                                </p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                ${bib.url_acceso ? `
+                                    <a href="${bib.url_acceso}" target="_blank" class="btn btn-success btn-sm mb-1 w-100">
+                                        <i class="fas fa-external-link-alt me-1"></i>
+                                        Acceso Directo
+                                    </a>
+                                ` : ''}
+                                ${bib.url_catalogo ? `
+                                    <a href="${bib.url_catalogo}" target="_blank" class="btn btn-primary btn-sm w-100">
+                                        <i class="fas fa-search me-1"></i>
+                                        Ver en Catálogo
+                                    </a>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    document.getElementById('modalContent').innerHTML = html;
+}
+</script>
+{% endblock %}
+
+

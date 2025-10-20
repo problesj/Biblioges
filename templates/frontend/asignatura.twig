@@ -1,6 +1,23 @@
 {% extends 'frontend/base.twig' %}
 
 {% block title %}{{ asignatura.asignatura_nombre }} - Bibliografías{% endblock %}
+{% block meta %}
+    {% set canonical = app_url ~ '/asignatura/' ~ asignatura.sede_id ~ '/' ~ asignatura.carrera_id ~ '/' ~ asignatura.asignatura_id %}
+    {% set img = asignatura.imagen_url ? (app_url ~ '/biblioges/' ~ asignatura.imagen_url) : (assets_url ~ '/images/carreras/default.svg') %}
+    {% set share_title = 'Bibliografía de la carrera/programa ' ~ asignatura.carrera_nombre ~ ' - Sede: ' ~ asignatura.sede_nombre %}
+    {% set share_desc = 'Se detalla la bibliografía de la carrera/programa ' ~ asignatura.carrera_nombre ~ ' de la sede ' ~ asignatura.sede_nombre ~ ', informando bibliografía básica, complementaria u otra y su disponibilidad en formato impreso, electrónico o ambos.' %}
+    <link rel="canonical" href="{{ canonical }}">
+    <meta name="description" content="{{ share_desc }}">
+    <meta property="og:title" content="{{ share_title }}">
+    <meta property="og:description" content="{{ share_desc }}">
+    <meta property="og:image" content="{{ img }}">
+    <meta property="og:url" content="{{ canonical }}">
+    <meta property="og:type" content="article">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ share_title }}">
+    <meta name="twitter:description" content="{{ share_desc }}">
+    <meta name="twitter:image" content="{{ img }}">
+{% endblock %}
 
 {% block content %}
 <!-- Breadcrumb -->
@@ -61,6 +78,24 @@
                     <div class="stats-card">
                         <div class="stats-number">{{ bibliografias|length }}</div>
                         <div class="stats-label">Bibliografías</div>
+                    </div>
+                    <div class="mt-3 d-flex align-items-center gap-2 flex-wrap share-buttons">
+                        <span class="fw-semibold me-1">Compartir:</span>
+                        <button class="btn btn-outline-secondary" title="Facebook" onclick="shareTo('facebook', { title: '{{ asignatura.asignatura_nombre }}', text: 'Bibliografía · {{ asignatura.carrera_nombre }} · {{ asignatura.sede_nombre }}' })">
+                            <i class="fab fa-facebook-f"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary" title="X" onclick="shareTo('x', { title: '{{ asignatura.asignatura_nombre }}', text: 'Bibliografía · {{ asignatura.carrera_nombre }} · {{ asignatura.sede_nombre }}' })">
+                            <i class="fab fa-twitter"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary" title="WhatsApp" onclick="shareTo('whatsapp', { text: '{{ asignatura.asignatura_nombre }} · {{ asignatura.carrera_nombre }} · {{ asignatura.sede_nombre }}' })">
+                            <i class="fab fa-whatsapp"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary" title="Telegram" onclick="shareTo('telegram', { text: '{{ asignatura.asignatura_nombre }} · {{ asignatura.carrera_nombre }} · {{ asignatura.sede_nombre }}' })">
+                            <i class="fab fa-telegram-plane"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary" title="Copiar enlace" onclick="shareTo('copy', { title: '{{ asignatura.asignatura_nombre }}' })">
+                            <i class="fas fa-link"></i>
+                        </button>
                     </div>
                 </div>
             </div>

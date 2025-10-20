@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Filtros</title>
+    <style>
+        .tab-btn { padding: 10px; margin: 5px; border: 1px solid #ccc; cursor: pointer; }
+        .tab-btn.active { background: #007bff; color: white; }
+        .carrera-item { padding: 10px; margin: 5px; border: 1px solid #ddd; }
+        .fade-in { animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <h1>Prueba de Filtros de Carreras</h1>
+    
+    <!-- Filtros -->
+    <div>
+        <label>Sedes:</label>
+        <select id="sedeSelect">
+            <option value="todas">Todas</option>
+            <option value="1">Antofagasta</option>
+            <option value="2">Coquimbo</option>
+        </select>
+    </div>
+    
+    <div>
+        <label>Carreras:</label>
+        <input type="text" id="carreraSearch" placeholder="¿Qué carrera buscas?">
+    </div>
+    
+    <div>
+        <button id="buscarBtn">CONOCER</button>
+    </div>
+    
+    <!-- Tabs -->
+    <div>
+        <button class="tab-btn active" data-sede="todas">TODAS</button>
+        <button class="tab-btn" data-sede="1">ANTOFAGASTA</button>
+        <button class="tab-btn" data-sede="2">COQUIMBO</button>
+    </div>
+    
+    <!-- Carreras de prueba -->
+    <div id="carrerasContainer">
+        <div class="carrera-item" data-sedes="1,2" data-nombre="ingeniería civil">
+            <h3>Ingeniería Civil</h3>
+            <p>Sedes: Antofagasta, Coquimbo</p>
+        </div>
+        <div class="carrera-item" data-sedes="1" data-nombre="ingeniería comercial">
+            <h3>Ingeniería Comercial</h3>
+            <p>Sede: Antofagasta</p>
+        </div>
+        <div class="carrera-item" data-sedes="2" data-nombre="psicología">
+            <h3>Psicología</h3>
+            <p>Sede: Coquimbo</p>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Iniciando filtros de carreras...');
+        
+        const sedeSelect = document.getElementById('sedeSelect');
+        const carreraSearch = document.getElementById('carreraSearch');
+        const buscarBtn = document.getElementById('buscarBtn');
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const carreraItems = document.querySelectorAll('.carrera-item');
+        
+        // Debug: verificar que los elementos existan
+        console.log('sedeSelect:', sedeSelect);
+        console.log('carreraSearch:', carreraSearch);
+        console.log('buscarBtn:', buscarBtn);
+        console.log('tabButtons:', tabButtons.length);
+        console.log('carreraItems:', carreraItems.length);
+        
+        // Función para filtrar carreras
+        function filtrarCarreras() {
+            console.log('Ejecutando filtro de carreras...');
+            const sedeSeleccionada = sedeSelect ? sedeSelect.value : 'todas';
+            const busqueda = carreraSearch ? carreraSearch.value.toLowerCase() : '';
+            
+            console.log('Sede seleccionada:', sedeSeleccionada);
+            console.log('Búsqueda:', busqueda);
+            
+            carreraItems.forEach(item => {
+                const sedesCarrera = item.getAttribute('data-sedes') ? item.getAttribute('data-sedes').split(',') : [];
+                const nombreCarrera = item.getAttribute('data-nombre') || '';
+                
+                let mostrar = true;
+                
+                // Filtro por sede
+                if (sedeSeleccionada !== 'todas' && !sedesCarrera.includes(sedeSeleccionada)) {
+                    mostrar = false;
+                }
+                
+                // Filtro por búsqueda
+                if (busqueda && !nombreCarrera.includes(busqueda)) {
+                    mostrar = false;
+                }
+                
+                if (mostrar) {
+                    item.style.display = 'block';
+                    item.classList.add('fade-in');
+                } else {
+                    item.style.display = 'none';
+                    item.classList.remove('fade-in');
+                }
+            });
+            
+            console.log('Filtro completado');
+        }
+        
+        // Event listeners
+        if (sedeSelect) {
+            sedeSelect.addEventListener('change', function() {
+                console.log('Cambio en sede select:', this.value);
+                filtrarCarreras();
+            });
+        }
+        
+        if (carreraSearch) {
+            carreraSearch.addEventListener('input', function() {
+                console.log('Búsqueda:', this.value);
+                filtrarCarreras();
+            });
+        }
+        
+        if (buscarBtn) {
+            buscarBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Botón buscar clickeado');
+                filtrarCarreras();
+            });
+        }
+        
+        // Tabs de sedes
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                console.log('Tab clickeado:', this.textContent);
+                // Remover clase active de todos los botones
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                // Agregar clase active al botón clickeado
+                this.classList.add('active');
+                
+                // Filtrar por sede
+                const sedeId = this.getAttribute('data-sede');
+                if (sedeSelect) {
+                    sedeSelect.value = sedeId;
+                }
+                filtrarCarreras();
+            });
+        });
+        
+        console.log('Filtros inicializados correctamente');
+    });
+    </script>
+</body>
+</html>

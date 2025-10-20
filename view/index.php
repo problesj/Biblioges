@@ -79,8 +79,32 @@ $app->add(function ($request, $handler) {
     $uri = $request->getUri();
     $path = $uri->getPath();
     
+    // Si es una imagen o archivo estático, no procesar con Slim
+    if (preg_match('/\.(jpg|jpeg|png|gif|css|js|ico|svg|woff|woff2|ttf|eot)$/i', $path)) {
+        // Devolver 404 para archivos estáticos que no existen
+        $response = new \Slim\Psr7\Response();
+        return $response->withStatus(404);
+    }
+    
+    // Si la ruta contiene uploads, redirigir
+    if (strpos($path, '/biblioges/uploads/') === 0) {
+        $response = new \Slim\Psr7\Response();
+        return $response->withStatus(404);
+    }
+    
+    // Limpiar la ruta base si existe
+    $basePath = '/biblioges/view';
+    if (strpos($path, $basePath) === 0) {
+        $path = substr($path, strlen($basePath));
+    }
+    
     // Establecer PATH_INFO desde la URI de Slim
-    $_SERVER['PATH_INFO'] = $path;
+    $_SERVER['PATH_INFO'] = $path ?: '/';
+    
+    // Debug: registrar ruta procesada
+    error_log("Frontend - Ruta original: " . $uri->getPath());
+    error_log("Frontend - Ruta procesada: " . $path);
+    error_log("Frontend - PATH_INFO establecido: " . $_SERVER['PATH_INFO']);
     
     return $handler->handle($request);
 });

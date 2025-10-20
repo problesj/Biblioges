@@ -5,6 +5,21 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Bibliografías de Carreras{% endblock %}</title>
+    {% block meta %}
+    <link rel="canonical" href="{{ canonical_url|default(app_url) }}">
+    <meta name="description" content="{{ meta_description|default('Consulta bibliografías por carrera y asignatura en la UCN') }}">
+    <!-- Open Graph -->
+    <meta property="og:title" content="{{ og_title|default(block('title')) }}">
+    <meta property="og:description" content="{{ og_description|default(meta_description|default('Consulta bibliografías por carrera y asignatura en la UCN')) }}">
+    <meta property="og:image" content="{{ og_image|default(assets_url ~ '/images/carreras/default.svg') }}">
+    <meta property="og:url" content="{{ og_url|default(canonical_url|default(app_url)) }}">
+    <meta property="og:type" content="{{ og_type|default('website') }}">
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ twitter_title|default(og_title|default(block('title'))) }}">
+    <meta name="twitter:description" content="{{ twitter_description|default(og_description|default(meta_description|default('Consulta bibliografías por carrera y asignatura en la UCN'))) }}">
+    <meta name="twitter:image" content="{{ twitter_image|default(og_image|default(assets_url ~ '/images/carreras/default.svg')) }}">
+    {% endblock %}
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ app_url }}/favicon.ico">
@@ -46,6 +61,183 @@
             color: white;
             padding: 4rem 0;
             margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><defs><linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:rgba(44,62,80,0.8);stop-opacity:1" /><stop offset="100%" style="stop-color:rgba(52,152,219,0.8);stop-opacity:1" /></linearGradient></defs><rect width="1200" height="600" fill="url(%23grad1)"/><circle cx="200" cy="150" r="80" fill="rgba(255,255,255,0.1)"/><circle cx="1000" cy="400" r="120" fill="rgba(255,255,255,0.05)"/><rect x="300" y="200" width="200" height="100" fill="rgba(255,255,255,0.08)" rx="10"/></svg>');
+            background-size: cover;
+            background-position: center;
+            z-index: 1;
+        }
+
+        .hero-section .container {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Filtros de Sede */
+        .filter-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Alineación de formularios */
+        .filter-section .row {
+            align-items: end;
+        }
+        
+        .filter-section .col-md-4 {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .filter-section .form-label {
+            margin-bottom: 0.5rem;
+        }
+        
+        .filter-section .form-control,
+        .filter-section .form-select {
+            height: 3rem;
+        }
+        
+        .filter-section .btn {
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .filter-section .form-label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .filter-section .form-select,
+        .filter-section .form-control {
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .filter-section .form-select:focus,
+        .filter-section .form-control:focus {
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+            border: none;
+        }
+
+        .filter-section .btn-warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .filter-section .btn-warning:hover {
+            background: linear-gradient(135deg, #e67e22, #d35400);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
+        }
+
+        /* Tabs de Filtros */
+        .filter-tabs {
+            margin-bottom: 2rem;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            border-radius: 8px 8px 0 0;
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            color: var(--secondary-color);
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        .tab-btn.active {
+            color: var(--secondary-color);
+            border-bottom-color: var(--secondary-color);
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--secondary-color);
+        }
+
+        /* Animaciones para carreras */
+        .carrera-item {
+            transition: all 0.3s ease;
+        }
+
+        .carrera-item.fade-in {
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive para filtros */
+        @media (max-width: 768px) {
+            .filter-section {
+                padding: 1rem;
+            }
+            
+            .filter-section .row {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .tab-buttons {
+                justify-content: center;
+            }
+            
+            .tab-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
         }
 
         .card {
@@ -201,6 +393,29 @@
             background: var(--primary-color);
             color: white;
             padding: 3rem 0;
+        }
+
+        /* Share buttons (default on light backgrounds) */
+        .share-buttons .btn {
+            color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        .share-buttons .btn i { color: var(--secondary-color); }
+        .share-buttons .btn:hover {
+            background: rgba(52,152,219,0.1);
+            border-color: var(--secondary-color);
+            color: var(--secondary-color);
+        }
+        /* Override for dark header sections */
+        .program-overview .share-buttons .btn {
+            color: #fff;
+            border-color: #fff;
+        }
+        .program-overview .share-buttons .btn i { color: #fff; }
+        .program-overview .share-buttons .btn:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: #fff;
+            color: #fff;
         }
 
         .program-image {
@@ -624,6 +839,59 @@
     
     <!-- Custom JS -->
     <script>
+        // Compartir / copiar URL actual
+        window.shareCurrentPage = async function(shareTitle = document.title, shareText = 'Bibliografías UCN') {
+            const url = window.location.href;
+            if (navigator.share) {
+                try {
+                    await navigator.share({ title: shareTitle, text: shareText, url });
+                    return true;
+                } catch (e) {
+                    // fallback a copiar
+                }
+            }
+            try {
+                await navigator.clipboard.writeText(url);
+                alert('Enlace copiado al portapapeles');
+                return true;
+            } catch (e) {
+                prompt('Copia el enlace:', url);
+                return false;
+            }
+        }
+
+        // Compartir en redes específicas
+        window.shareTo = function(network, opts = {}) {
+            const title = opts.title || document.title;
+            const text = opts.text || 'Bibliografías UCN';
+            const url = opts.url || window.location.href;
+            let shareUrl = '';
+            switch ((network || '').toLowerCase()) {
+                case 'facebook':
+                    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+                    break;
+                case 'twitter':
+                case 'x':
+                    shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+                    break;
+                case 'whatsapp':
+                    shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text + ' ' + url)}`;
+                    break;
+                case 'telegram':
+                    shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+                    break;
+                case 'copy':
+                    return shareCurrentPage(title, text);
+                default:
+                    return shareCurrentPage(title, text);
+            }
+            const w = 600, h = 500;
+            const y = window.top.outerHeight / 2 + window.top.screenY - ( h / 2);
+            const x = window.top.outerWidth / 2 + window.top.screenX - ( w / 2);
+            window.open(shareUrl, 'share-window', `toolbar=0,location=0,status=0,menubar=0,scrollbars=1,resizable=1,width=${w},height=${h},top=${y},left=${x}`);
+            return true;
+        }
+
         // Smooth scrolling para enlaces internos
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
@@ -700,5 +968,6 @@
     </script>
 
     {% block extra_js %}{% endblock %}
+    {% block scripts %}{% endblock %}
 </body>
 </html> 

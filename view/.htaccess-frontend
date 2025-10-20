@@ -1,6 +1,7 @@
 RewriteEngine On
 
-# Servir archivos estáticos directamente (imágenes, CSS, JS, etc.)
+# Configuración específica para el frontend
+# Servir archivos estáticos directamente
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^(.*)$ - [L]
 
@@ -8,7 +9,7 @@ RewriteRule ^(.*)$ - [L]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^(.*)$ - [L]
 
-# Redirigir archivos de uploads a la carpeta principal
+# Redirigir archivos de uploads a la carpeta principal del sistema
 RewriteRule ^biblioges/uploads/(.*)$ /biblioges/uploads/$1 [L,R=301]
 
 # Redirigir todas las demás peticiones a index.php
@@ -49,4 +50,4 @@ RewriteRule ^(.*)$ index.php [QSA,L]
     AddOutputFilterByType DEFLATE application/rss+xml
     AddOutputFilterByType DEFLATE application/javascript
     AddOutputFilterByType DEFLATE application/x-javascript
-</IfModule> 
+</IfModule>

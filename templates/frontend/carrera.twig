@@ -1,6 +1,23 @@
 {% extends 'frontend/base.twig' %}
 
 {% block title %}{{ carrera.carrera_nombre }} - Bibliografía UCN{% endblock %}
+{% block meta %}
+    {% set canonical = app_url ~ '/carrera/' ~ carrera.sede_id ~ '/' ~ carrera.id %}
+    {% set img = carrera.imagen_url ? (app_url ~ '/biblioges/' ~ carrera.imagen_url) : (assets_url ~ '/images/carreras/default.svg') %}
+    {% set share_title = 'Bibliografía de la carrera/programa ' ~ carrera.carrera_nombre ~ ' - Sede: ' ~ carrera.sede_nombre %}
+    {% set share_desc = 'Se detalla la bibliografía de la carrera/programa ' ~ carrera.carrera_nombre ~ ' de la sede ' ~ carrera.sede_nombre ~ ', informando bibliografía básica, complementaria u otra y su disponibilidad en formato impreso, electrónico o ambos.' %}
+    <link rel="canonical" href="{{ canonical }}">
+    <meta name="description" content="{{ share_desc }}">
+    <meta property="og:title" content="{{ share_title }}">
+    <meta property="og:description" content="{{ share_desc }}">
+    <meta property="og:image" content="{{ img }}">
+    <meta property="og:url" content="{{ canonical }}">
+    <meta property="og:type" content="article">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ share_title }}">
+    <meta name="twitter:description" content="{{ share_desc }}">
+    <meta name="twitter:image" content="{{ img }}">
+{% endblock %}
 
 {% block content %}
 <!-- Header -->
@@ -29,6 +46,13 @@
             <div class="col-md-9">
                 <h1 class="program-title">{{ carrera.carrera_nombre }}</h1>
                 <p class="program-description">{{ carrera.descripcion|default('Forma profesionales capaces de optimizar procesos productivos y de servicios.') }}</p>
+                {% if carrera.todas_las_sedes and carrera.todas_las_sedes != carrera.sede_nombre %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Esta carrera se dicta en múltiples sedes:</strong> {{ carrera.todas_las_sedes }}
+                    <br><small>Mostrando información para la sede: <strong>{{ carrera.sede_nombre }}</strong></small>
+                </div>
+                {% endif %}
                 <div class="program-stats">
                     <div class="stat-item">
                         <i class="fas fa-clock"></i>
@@ -36,12 +60,30 @@
                     </div>
                     <div class="stat-item">
                         <i class="fas fa-map-marker-alt"></i>
-                        <span>Sede: {{ carrera.sede_nombre }}</span>
+                        <span>Sede: {{ carrera.sede_nombre }}{% if carrera.todas_las_sedes and carrera.todas_las_sedes != carrera.sede_nombre %} ({{ carrera.todas_las_sedes }}){% endif %}</span>
                     </div>
                     <div class="stat-item">
                         <i class="fas fa-bookmark"></i>
                         <span>Semestres: {{ asignaturas_por_semestre|length }}</span>
                     </div>
+                </div>
+                <div class="mt-3 d-flex align-items-center gap-2 flex-wrap share-buttons">
+                    <span class="fw-semibold me-1">Compartir:</span>
+                    <button class="btn btn-outline-secondary" title="Facebook" onclick="shareTo('facebook', { title: '{{ carrera.carrera_nombre }}', text: 'Bibliografía oficial - {{ carrera.sede_nombre }}' })">
+                        <i class="fab fa-facebook-f"></i>
+                    </button>
+                    <button class="btn btn-outline-secondary" title="X" onclick="shareTo('x', { title: '{{ carrera.carrera_nombre }}', text: 'Bibliografía oficial - {{ carrera.sede_nombre }}' })">
+                        <i class="fab fa-twitter"></i>
+                    </button>
+                    <button class="btn btn-outline-secondary" title="WhatsApp" onclick="shareTo('whatsapp', { text: '{{ carrera.carrera_nombre }} · {{ carrera.sede_nombre }}' })">
+                        <i class="fab fa-whatsapp"></i>
+                    </button>
+                    <button class="btn btn-outline-secondary" title="Telegram" onclick="shareTo('telegram', { text: '{{ carrera.carrera_nombre }} · {{ carrera.sede_nombre }}' })">
+                        <i class="fab fa-telegram-plane"></i>
+                    </button>
+                    <button class="btn btn-outline-secondary" title="Copiar enlace" onclick="shareTo('copy', { title: '{{ carrera.carrera_nombre }}' })">
+                        <i class="fas fa-link"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -76,6 +118,13 @@
                 <div class="course-section">
                     <h3 class="course-title">{{ asignatura.asignatura_nombre }}</h3>
                     <p class="course-code">Código: {{ asignatura.codigo_asignatura }}</p>
+                    {% set asignatura_url = app_url ~ '/asignatura-biblio/' ~ carrera.sede_id ~ '/' ~ asignatura.asignatura_id %}
+                    <div class="mb-2">
+                        <a href="{{ app_url }}/asignatura-biblio/{{ carrera.sede_id }}/{{ asignatura.asignatura_id }}" target="_blank" class="btn btn-primary btn-sm" title="Ver bibliografía completa de la asignatura en nueva ventana">
+                            <i class="fas fa-book me-1"></i>Ver Bibliografía
+                            <i class="fas fa-external-link-alt ms-1" style="font-size: 0.8em;"></i>
+                        </a>
+                    </div>
                     
                     <div class="bibliography-section">
                         <h4 class="bibliography-title">
@@ -112,7 +161,7 @@
                                                 <i class="fas fa-file-alt"></i>
                                                 <span>{{ bibliografia.autores|default('Autor') }}, {{ bibliografia.anio_publicacion|default('Año') }}. {{ bibliografia.titulo }}. {{ bibliografia.editorial|default('Editorial') }}.</span>
                                             </div>
-                                            {% if bibliografia.disponibles|length > 0 %}
+                                            {% if bibliografia.disponibles|length > 0 and bibliografia.tiene_disponibles %}
                                             <button type="button" class="btn btn-primary btn-sm ms-2" 
                                                     onclick="mostrarBibliografiasDisponibles({{ bibliografia.id }}, '{{ bibliografia.titulo|e('js') }}')">
                                                 <i class="fas fa-list me-1 text-white"></i>
@@ -138,7 +187,7 @@
                                                 <i class="fas fa-file-alt"></i>
                                                 <span>{{ bibliografia.autores|default('Autor') }}, {{ bibliografia.anio_publicacion|default('Año') }}. {{ bibliografia.titulo }}. {{ bibliografia.editorial|default('Editorial') }}.</span>
                                             </div>
-                                            {% if bibliografia.disponibles|length > 0 %}
+                                            {% if bibliografia.disponibles|length > 0 and bibliografia.tiene_disponibles %}
                                             <button type="button" class="btn btn-primary btn-sm ms-2" 
                                                     onclick="mostrarBibliografiasDisponibles({{ bibliografia.id }}, '{{ bibliografia.titulo|e('js') }}')">
                                                 <i class="fas fa-list me-1 text-white"></i>
@@ -164,7 +213,7 @@
                                                 <i class="fas fa-file-alt"></i>
                                                 <span>{{ bibliografia.autores|default('Autor') }}, {{ bibliografia.anio_publicacion|default('Año') }}. {{ bibliografia.titulo }}. {{ bibliografia.editorial|default('Editorial') }}.</span>
                                             </div>
-                                            {% if bibliografia.disponibles|length > 0 %}
+                                            {% if bibliografia.disponibles|length > 0 and bibliografia.tiene_disponibles %}
                                             <button type="button" class="btn btn-primary btn-sm ms-2" 
                                                     onclick="mostrarBibliografiasDisponibles({{ bibliografia.id }}, '{{ bibliografia.titulo|e('js') }}')">
                                                 <i class="fas fa-list me-1 text-white"></i>
@@ -229,6 +278,7 @@
     </div>
 </div>
 
+
 <!-- JavaScript para el modal -->
 <script>
 function mostrarBibliografiasDisponibles(bibliografiaId, titulo) {
@@ -252,8 +302,13 @@ function mostrarBibliografiasDisponibles(bibliografiaId, titulo) {
     const modal = new bootstrap.Modal(document.getElementById('modalBibliografiasDisponibles'));
     modal.show();
     
-    // Cargar datos
-    fetch(`${window.location.origin}/api/bibliografias-disponibles/${bibliografiaId}`)
+    // Cargar datos con filtro por sede
+    const sedeId = {{ carrera.sede_id }};
+    const url = sedeId ? 
+        `${window.location.origin}/api/bibliografias-disponibles/${bibliografiaId}?sede_id=${sedeId}` :
+        `${window.location.origin}/api/bibliografias-disponibles/${bibliografiaId}`;
+    
+    fetch(url)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -331,5 +386,6 @@ function mostrarBibliografiasEnModal(bibliografias) {
     html += '</div>';
     document.getElementById('modalContent').innerHTML = html;
 }
+
 </script>
 {% endblock %} 

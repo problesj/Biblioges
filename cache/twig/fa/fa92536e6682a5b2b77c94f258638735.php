@@ -1,0 +1,2147 @@
+<?php
+
+use Twig\Environment;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Extension\CoreExtension;
+use Twig\Extension\SandboxExtension;
+use Twig\Markup;
+use Twig\Sandbox\SecurityError;
+use Twig\Sandbox\SecurityNotAllowedTagError;
+use Twig\Sandbox\SecurityNotAllowedFilterError;
+use Twig\Sandbox\SecurityNotAllowedFunctionError;
+use Twig\Source;
+use Twig\Template;
+use Twig\TemplateWrapper;
+
+/* frontend/base.twig */
+class __TwigTemplate_b61d14249b4a771cd235b86de19fdd03 extends Template
+{
+    private Source $source;
+    /**
+     * @var array<string, Template>
+     */
+    private array $macros = [];
+
+    public function __construct(Environment $env)
+    {
+        parent::__construct($env);
+
+        $this->source = $this->getSourceContext();
+
+        $this->parent = false;
+
+        $this->blocks = [
+            'title' => [$this, 'block_title'],
+            'meta' => [$this, 'block_meta'],
+            'extra_css' => [$this, 'block_extra_css'],
+            'content' => [$this, 'block_content'],
+            'extra_js' => [$this, 'block_extra_js'],
+            'scripts' => [$this, 'block_scripts'],
+        ];
+    }
+
+    protected function doDisplay(array $context, array $blocks = []): iterable
+    {
+        $macros = $this->macros;
+        // line 1
+        yield "<!DOCTYPE html>
+<html lang=\"es\">
+<head>
+    <meta charset=\"UTF-8\">
+    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+    <title>";
+        // line 7
+        yield from $this->unwrap()->yieldBlock('title', $context, $blocks);
+        yield "</title>
+    ";
+        // line 8
+        yield from $this->unwrap()->yieldBlock('meta', $context, $blocks);
+        // line 23
+        yield "    
+    <!-- Favicon -->
+    <link rel=\"icon\" type=\"image/x-icon\" href=\"";
+        // line 25
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
+        yield "/favicon.ico\">
+    
+    <!-- Bootstrap CSS -->
+    <link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css\" rel=\"stylesheet\">
+    
+    <!-- Font Awesome -->
+    <link href=\"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css\" rel=\"stylesheet\">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-gray: #ecf0f1;
+            --dark-gray: #34495e;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: var(--dark-gray);
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 4rem 0;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1200 600\"><defs><linearGradient id=\"grad1\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" style=\"stop-color:rgba(44,62,80,0.8);stop-opacity:1\" /><stop offset=\"100%\" style=\"stop-color:rgba(52,152,219,0.8);stop-opacity:1\" /></linearGradient></defs><rect width=\"1200\" height=\"600\" fill=\"url(%23grad1)\"/><circle cx=\"200\" cy=\"150\" r=\"80\" fill=\"rgba(255,255,255,0.1)\"/><circle cx=\"1000\" cy=\"400\" r=\"120\" fill=\"rgba(255,255,255,0.05)\"/><rect x=\"300\" y=\"200\" width=\"200\" height=\"100\" fill=\"rgba(255,255,255,0.08)\" rx=\"10\"/></svg>');
+            background-size: cover;
+            background-position: center;
+            z-index: 1;
+        }
+
+        .hero-section .container {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Filtros de Sede */
+        .filter-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Alineación de formularios */
+        .filter-section .row {
+            align-items: end;
+        }
+        
+        .filter-section .col-md-4 {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .filter-section .form-label {
+            margin-bottom: 0.5rem;
+        }
+        
+        .filter-section .form-control,
+        .filter-section .form-select {
+            height: 3rem;
+        }
+        
+        .filter-section .btn {
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .filter-section .form-label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .filter-section .form-select,
+        .filter-section .form-control {
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .filter-section .form-select:focus,
+        .filter-section .form-control:focus {
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+            border: none;
+        }
+
+        .filter-section .btn-warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .filter-section .btn-warning:hover {
+            background: linear-gradient(135deg, #e67e22, #d35400);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
+        }
+
+        /* Tabs de Filtros */
+        .filter-tabs {
+            margin-bottom: 2rem;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            border-radius: 8px 8px 0 0;
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            color: var(--secondary-color);
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        .tab-btn.active {
+            color: var(--secondary-color);
+            border-bottom-color: var(--secondary-color);
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--secondary-color);
+        }
+
+        /* Animaciones para carreras */
+        .carrera-item {
+            transition: all 0.3s ease;
+        }
+
+        .carrera-item.fade-in {
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive para filtros */
+        @media (max-width: 768px) {
+            .filter-section {
+                padding: 1rem;
+            }
+            
+            .filter-section .row {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .tab-buttons {
+                justify-content: center;
+            }
+            
+            .tab-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 1.5rem;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--light-gray), #ffffff);
+            border-bottom: 1px solid #e9ecef;
+            border-radius: 15px 15px 0 0 !important;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary-color), #2980b9);
+            border: none;
+            border-radius: 25px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2980b9, var(--secondary-color));
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn-outline-primary {
+            border-color: var(--secondary-color);
+            color: var(--secondary-color);
+            border-radius: 25px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .carrera-card {
+            background: #ffffff;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .carrera-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .carrera-image {
+            height: 200px;
+            overflow: hidden;
+        }
+
+        .carrera-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .carrera-card:hover .carrera-image img {
+            transform: scale(1.05);
+        }
+
+        .carrera-card .card-body {
+            padding: 1.5rem;
+        }
+
+        .carrera-card .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.75rem;
+        }
+
+        .carrera-card .card-text {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .carrera-meta {
+            margin-bottom: 1.5rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .meta-item i {
+            width: 16px;
+            margin-right: 0.5rem;
+            color: var(--secondary-color);
+        }
+
+        .btn-ver-bibliografia {
+            width: 100%;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-ver-bibliografia:hover {
+            transform: translateY(-2px);
+        }
+
+        /* UCN Header */
+        .ucn-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 0;
+        }
+
+        .back-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-link:hover {
+            color: #e3f2fd;
+        }
+
+        /* Program Overview */
+        .program-overview {
+            background: var(--primary-color);
+            color: white;
+            padding: 3rem 0;
+        }
+
+        /* Share buttons (default on light backgrounds) */
+        .share-buttons .btn {
+            color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        .share-buttons .btn i { color: var(--secondary-color); }
+        .share-buttons .btn:hover {
+            background: rgba(52,152,219,0.1);
+            border-color: var(--secondary-color);
+            color: var(--secondary-color);
+        }
+        /* Override for dark header sections */
+        .program-overview .share-buttons .btn {
+            color: #fff;
+            border-color: #fff;
+        }
+        .program-overview .share-buttons .btn i { color: #fff; }
+        .program-overview .share-buttons .btn:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: #fff;
+            color: #fff;
+        }
+
+        .program-image {
+            width: 100%;
+            height: 200px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .program-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .program-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .program-description {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .program-stats {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .stat-item i {
+            font-size: 1.2rem;
+        }
+
+        /* Content Area */
+        .content-area {
+            background: white;
+            padding: 2rem 0;
+        }
+
+        .breadcrumb-nav {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Semester Tabs */
+        .semester-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e9ecef;
+            flex-wrap: wrap;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+
+        .semester-tab {
+            background: none;
+            border: none;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            min-width: fit-content;
+            flex-shrink: 0;
+        }
+
+        .semester-tab.active {
+            color: var(--secondary-color);
+            border-bottom-color: var(--secondary-color);
+        }
+
+        .semester-tab:hover {
+            color: var(--secondary-color);
+        }
+
+        /* Semester Content */
+        .semester-content {
+            display: none;
+        }
+
+        .semester-content.active {
+            display: block;
+        }
+
+        .semester-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+        }
+
+        /* Course Section */
+        .course-section {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .course-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .course-code {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Bibliography Section */
+        .bibliography-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Bibliography Tabs */
+        .bibliography-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .bib-tab {
+            background: none;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .bib-tab.active {
+            color: var(--secondary-color);
+            border-bottom-color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        .bib-tab:hover {
+            color: var(--secondary-color);
+        }
+
+        /* Bibliography Content */
+        .bib-content {
+            display: none;
+        }
+
+        .bib-content.active {
+            display: block;
+        }
+
+        .bibliography-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .bibliography-item i {
+            color: var(--secondary-color);
+            margin-top: 0.2rem;
+        }
+
+        .bibliography-item span {
+            line-height: 1.5;
+        }
+
+        .no-bibliography {
+            color: #666;
+            font-style: italic;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .no-content {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .no-content i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--secondary-color);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .program-stats {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .semester-tabs {
+                flex-wrap: wrap;
+                gap: 0.25rem;
+            }
+
+            .semester-tab {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.8rem;
+            }
+
+            .bibliography-tabs {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .semester-tabs {
+                gap: 0.2rem;
+            }
+
+            .semester-tab {
+                padding: 0.4rem 0.6rem;
+                font-size: 0.75rem;
+            }
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 2rem 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stats-card:hover {
+            border-color: var(--secondary-color);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .stats-label {
+            font-size: 1rem;
+            color: var(--dark-gray);
+            font-weight: 500;
+        }
+
+        .badge {
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+        }
+
+        .badge-basica {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .badge-complementaria {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .semestre-header {
+            background: linear-gradient(135deg, var(--light-gray), #ffffff);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 5px solid var(--secondary-color);
+        }
+
+        .bibliografia-item {
+            border-left: 3px solid var(--secondary-color);
+            padding-left: 1rem;
+            margin-bottom: 1rem;
+            background-color: #ffffff;
+            border-radius: 0 10px 10px 0;
+            padding: 1rem;
+        }
+
+        .footer {
+            background: var(--primary-color);
+            color: white;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+
+        .breadcrumb {
+            background-color: transparent;
+            padding: 0;
+            margin-bottom: 2rem;
+        }
+
+        .breadcrumb-item a {
+            color: var(--secondary-color);
+            text-decoration: none;
+        }
+
+        .breadcrumb-item.active {
+            color: var(--dark-gray);
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #ffffff, var(--light-gray));
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .stats-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+
+        .stats-label {
+            color: var(--dark-gray);
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 2rem 0;
+            }
+            
+            .card {
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
+
+    ";
+        // line 783
+        yield from $this->unwrap()->yieldBlock('extra_css', $context, $blocks);
+        // line 784
+        yield "</head>
+<body>
+    <!-- Navbar -->
+    <nav class=\"navbar navbar-expand-lg navbar-dark\">
+        <div class=\"container\">
+            <a class=\"navbar-brand\" href=\"";
+        // line 789
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
+        yield "\">
+                <i class=\"fas fa-book-open me-2\"></i>
+                Bibliografías UCN
+            </a>
+            
+            <button class=\"navbar-toggler\" type=\"button\" data-bs-toggle=\"collapse\" data-bs-target=\"#navbarNav\">
+                <span class=\"navbar-toggler-icon\"></span>
+            </button>
+            
+            <div class=\"collapse navbar-collapse\" id=\"navbarNav\">
+                <ul class=\"navbar-nav ms-auto\">
+                    <li class=\"nav-item\">
+                        <a class=\"nav-link\" href=\"";
+        // line 801
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
+        yield "\">
+                            <i class=\"fas fa-home me-1\"></i>
+                            Inicio
+                        </a>
+                    </li>
+                    <li class=\"nav-item\">
+                        <a class=\"nav-link\" href=\"";
+        // line 807
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["admin_url"] ?? null), "html", null, true);
+        yield "\">
+                            <i class=\"fas fa-cog me-1\"></i>
+                            Administración
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        ";
+        // line 819
+        yield from $this->unwrap()->yieldBlock('content', $context, $blocks);
+        // line 820
+        yield "    </main>
+
+    <!-- Footer -->
+    <footer class=\"footer\">
+        <div class=\"container\">
+            <div class=\"row\">
+                <div class=\"col-md-6\">
+                    <h5>Bibliografías UCN</h5>
+                    <p>Sistema de consulta de bibliografías de carreras de la Universidad Católica del Norte.</p>
+                </div>
+                <div class=\"col-md-6 text-md-end\">
+                    <p>&copy; ";
+        // line 831
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->extensions['Twig\Extension\CoreExtension']->formatDate("now", "Y"), "html", null, true);
+        yield " Universidad Católica del Norte. Todos los derechos reservados.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js\"></script>
+    
+    <!-- Custom JS -->
+    <script>
+        // Compartir / copiar URL actual
+        window.shareCurrentPage = async function(shareTitle = document.title, shareText = 'Bibliografías UCN') {
+            const url = window.location.href;
+            if (navigator.share) {
+                try {
+                    await navigator.share({ title: shareTitle, text: shareText, url });
+                    return true;
+                } catch (e) {
+                    // fallback a copiar
+                }
+            }
+            try {
+                await navigator.clipboard.writeText(url);
+                alert('Enlace copiado al portapapeles');
+                return true;
+            } catch (e) {
+                prompt('Copia el enlace:', url);
+                return false;
+            }
+        }
+
+        // Compartir en redes específicas
+        window.shareTo = function(network, opts = {}) {
+            const title = opts.title || document.title;
+            const text = opts.text || 'Bibliografías UCN';
+            const url = opts.url || window.location.href;
+            let shareUrl = '';
+            switch ((network || '').toLowerCase()) {
+                case 'facebook':
+                    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=\${encodeURIComponent(url)}`;
+                    break;
+                case 'twitter':
+                case 'x':
+                    shareUrl = `https://twitter.com/intent/tweet?url=\${encodeURIComponent(url)}&text=\${encodeURIComponent(text)}`;
+                    break;
+                case 'whatsapp':
+                    shareUrl = `https://api.whatsapp.com/send?text=\${encodeURIComponent(text + ' ' + url)}`;
+                    break;
+                case 'telegram':
+                    shareUrl = `https://t.me/share/url?url=\${encodeURIComponent(url)}&text=\${encodeURIComponent(text)}`;
+                    break;
+                case 'copy':
+                    return shareCurrentPage(title, text);
+                default:
+                    return shareCurrentPage(title, text);
+            }
+            const w = 600, h = 500;
+            const y = window.top.outerHeight / 2 + window.top.screenY - ( h / 2);
+            const x = window.top.outerWidth / 2 + window.top.screenX - ( w / 2);
+            window.open(shareUrl, 'share-window', `toolbar=0,location=0,status=0,menubar=0,scrollbars=1,resizable=1,width=\${w},height=\${h},top=\${y},left=\${x}`);
+            return true;
+        }
+
+        // Smooth scrolling para enlaces internos
+        document.querySelectorAll('a[href^=\"#\"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Animación para cards al hacer scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(card);
+        });
+
+        // Semester tabs functionality
+        function showSemester(semesterId) {
+            // Hide all semester contents
+            document.querySelectorAll('.semester-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all semester tabs
+            document.querySelectorAll('.semester-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected semester content
+            document.getElementById('semester-' + semesterId).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+        
+        // Bibliography tabs functionality
+        function showBibliography(type, asignaturaId) {
+            // Remove active class from all bibliography tabs for this asignatura
+            document.querySelectorAll(`[onclick*=\"\${asignaturaId}\"]`).forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Hide all bibliography contents for this asignatura
+            document.querySelectorAll(`[id\$=\"-\${asignaturaId}\"]`).forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Show selected bibliography content
+            document.getElementById(type + '-' + asignaturaId).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+    </script>
+
+    ";
+        // line 970
+        yield from $this->unwrap()->yieldBlock('extra_js', $context, $blocks);
+        // line 971
+        yield "    ";
+        yield from $this->unwrap()->yieldBlock('scripts', $context, $blocks);
+        // line 972
+        yield "</body>
+</html> ";
+        yield from [];
+    }
+
+    // line 7
+    /**
+     * @return iterable<null|scalar|\Stringable>
+     */
+    public function block_title(array $context, array $blocks = []): iterable
+    {
+        $macros = $this->macros;
+        yield "Bibliografías de Carreras";
+        yield from [];
+    }
+
+    // line 8
+    /**
+     * @return iterable<null|scalar|\Stringable>
+     */
+    public function block_meta(array $context, array $blocks = []): iterable
+    {
+        $macros = $this->macros;
+        // line 9
+        yield "    <link rel=\"canonical\" href=\"";
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((array_key_exists("canonical_url", $context)) ? (Twig\Extension\CoreExtension::default(($context["canonical_url"] ?? null), ($context["app_url"] ?? null))) : (($context["app_url"] ?? null))), "html", null, true);
+        yield "\">
+    <meta name=\"description\" content=\"";
+        // line 10
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((array_key_exists("meta_description", $context)) ? (Twig\Extension\CoreExtension::default(($context["meta_description"] ?? null), "Consulta bibliografías por carrera y asignatura en la UCN")) : ("Consulta bibliografías por carrera y asignatura en la UCN")), "html", null, true);
+        yield "\">
+    <!-- Open Graph -->
+    <meta property=\"og:title\" content=\"";
+        // line 12
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((array_key_exists("og_title", $context)) ? (Twig\Extension\CoreExtension::default(($context["og_title"] ?? null),         $this->unwrap()->renderBlock("title", $context, $blocks))) : (        $this->unwrap()->renderBlock("title", $context, $blocks))), "html", null, true);
+        yield "\">
+    <meta property=\"og:description\" content=\"";
+        // line 13
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((array_key_exists("og_description", $context)) ? (Twig\Extension\CoreExtension::default(($context["og_description"] ?? null), ((array_key_exists("meta_description", $context)) ? (Twig\Extension\CoreExtension::default(($context["meta_description"] ?? null), "Consulta bibliografías por carrera y asignatura en la UCN")) : ("Consulta bibliografías por carrera y asignatura en la UCN")))) : (((array_key_exists("meta_description", $context)) ? (Twig\Extension\CoreExtension::default(($context["meta_description"] ?? null), "Consulta bibliografías por carrera y asignatura en la UCN")) : ("Consulta bibliografías por carrera y asignatura en la UCN")))), "html", null, true);
+        yield "\">
+    <meta property=\"og:image\" content=\"";
+        // line 14
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((array_key_exists("og_image", $context)) ? (Twig\Extension\CoreExtension::default(($context["og_image"] ?? null), (($context["assets_url"] ?? null) . "/images/carreras/default.svg"))) : ((($context["assets_url"] ?? null) . "/images/carreras/default.svg"))), "html", null, true);
+        yield "\">
+    <meta property=\"og:url\" content=\"";
+        // line 15
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((array_key_exists("og_url", $context)) ? (Twig\Extension\CoreExtension::default(($context["og_url"] ?? null), ((array_key_exists("canonical_url", $context)) ? (Twig\Extension\CoreExtension::default(($context["canonical_url"] ?? null), ($context["app_url"] ?? null))) : (($context["app_url"] ?? null))))) : (((array_key_exists("canonical_url", $context)) ? (Twig\Extension\CoreExtension::default(($context["canonical_url"] ?? null), ($context["app_url"] ?? null))) : (($context["app_url"] ?? null))))), "html", null, true);
+        yield "\">
+    <meta property=\"og:type\" content=\"";
+        // line 16
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((array_key_exists("og_type", $context)) ? (Twig\Extension\CoreExtension::default(($context["og_type"] ?? null), "website")) : ("website")), "html", null, true);
+        yield "\">
+    <!-- Twitter -->
+    <meta name=\"twitter:card\" content=\"summary_large_image\">
+    <meta name=\"twitter:title\" content=\"";
+        // line 19
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((array_key_exists("twitter_title", $context)) ? (Twig\Extension\CoreExtension::default(($context["twitter_title"] ?? null), ((array_key_exists("og_title", $context)) ? (Twig\Extension\CoreExtension::default(($context["og_title"] ?? null),         $this->unwrap()->renderBlock("title", $context, $blocks))) : (        $this->unwrap()->renderBlock("title", $context, $blocks))))) : (((array_key_exists("og_title", $context)) ? (Twig\Extension\CoreExtension::default(($context["og_title"] ?? null),         $this->unwrap()->renderBlock("title", $context, $blocks))) : (        $this->unwrap()->renderBlock("title", $context, $blocks))))), "html", null, true);
+        yield "\">
+    <meta name=\"twitter:description\" content=\"";
+        // line 20
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((array_key_exists("twitter_description", $context)) ? (Twig\Extension\CoreExtension::default(($context["twitter_description"] ?? null), ((array_key_exists("og_description", $context)) ? (Twig\Extension\CoreExtension::default(($context["og_description"] ?? null), ((array_key_exists("meta_description", $context)) ? (Twig\Extension\CoreExtension::default(($context["meta_description"] ?? null), "Consulta bibliografías por carrera y asignatura en la UCN")) : ("Consulta bibliografías por carrera y asignatura en la UCN")))) : (((array_key_exists("meta_description", $context)) ? (Twig\Extension\CoreExtension::default(($context["meta_description"] ?? null), "Consulta bibliografías por carrera y asignatura en la UCN")) : ("Consulta bibliografías por carrera y asignatura en la UCN")))))) : (((array_key_exists("og_description", $context)) ? (Twig\Extension\CoreExtension::default(($context["og_description"] ?? null), ((array_key_exists("meta_description", $context)) ? (Twig\Extension\CoreExtension::default(($context["meta_description"] ?? null), "Consulta bibliografías por carrera y asignatura en la UCN")) : ("Consulta bibliografías por carrera y asignatura en la UCN")))) : (((array_key_exists("meta_description", $context)) ? (Twig\Extension\CoreExtension::default(($context["meta_description"] ?? null), "Consulta bibliografías por carrera y asignatura en la UCN")) : ("Consulta bibliografías por carrera y asignatura en la UCN")))))), "html", null, true);
+        yield "\">
+    <meta name=\"twitter:image\" content=\"";
+        // line 21
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((array_key_exists("twitter_image", $context)) ? (Twig\Extension\CoreExtension::default(($context["twitter_image"] ?? null), ((array_key_exists("og_image", $context)) ? (Twig\Extension\CoreExtension::default(($context["og_image"] ?? null), (($context["assets_url"] ?? null) . "/images/carreras/default.svg"))) : ((($context["assets_url"] ?? null) . "/images/carreras/default.svg"))))) : (((array_key_exists("og_image", $context)) ? (Twig\Extension\CoreExtension::default(($context["og_image"] ?? null), (($context["assets_url"] ?? null) . "/images/carreras/default.svg"))) : ((($context["assets_url"] ?? null) . "/images/carreras/default.svg"))))), "html", null, true);
+        yield "\">
+    ";
+        yield from [];
+    }
+
+    // line 783
+    /**
+     * @return iterable<null|scalar|\Stringable>
+     */
+    public function block_extra_css(array $context, array $blocks = []): iterable
+    {
+        $macros = $this->macros;
+        yield from [];
+    }
+
+    // line 819
+    /**
+     * @return iterable<null|scalar|\Stringable>
+     */
+    public function block_content(array $context, array $blocks = []): iterable
+    {
+        $macros = $this->macros;
+        yield from [];
+    }
+
+    // line 970
+    /**
+     * @return iterable<null|scalar|\Stringable>
+     */
+    public function block_extra_js(array $context, array $blocks = []): iterable
+    {
+        $macros = $this->macros;
+        yield from [];
+    }
+
+    // line 971
+    /**
+     * @return iterable<null|scalar|\Stringable>
+     */
+    public function block_scripts(array $context, array $blocks = []): iterable
+    {
+        $macros = $this->macros;
+        yield from [];
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public function getTemplateName(): string
+    {
+        return "frontend/base.twig";
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public function isTraitable(): bool
+    {
+        return false;
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public function getDebugInfo(): array
+    {
+        return array (  1138 => 971,  1128 => 970,  1118 => 819,  1108 => 783,  1101 => 21,  1097 => 20,  1093 => 19,  1087 => 16,  1083 => 15,  1079 => 14,  1075 => 13,  1071 => 12,  1066 => 10,  1061 => 9,  1054 => 8,  1043 => 7,  1037 => 972,  1034 => 971,  1032 => 970,  890 => 831,  877 => 820,  875 => 819,  860 => 807,  851 => 801,  836 => 789,  829 => 784,  827 => 783,  66 => 25,  62 => 23,  60 => 8,  56 => 7,  48 => 1,);
+    }
+
+    public function getSourceContext(): Source
+    {
+        return new Source("<!DOCTYPE html>
+<html lang=\"es\">
+<head>
+    <meta charset=\"UTF-8\">
+    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+    <title>{% block title %}Bibliografías de Carreras{% endblock %}</title>
+    {% block meta %}
+    <link rel=\"canonical\" href=\"{{ canonical_url|default(app_url) }}\">
+    <meta name=\"description\" content=\"{{ meta_description|default('Consulta bibliografías por carrera y asignatura en la UCN') }}\">
+    <!-- Open Graph -->
+    <meta property=\"og:title\" content=\"{{ og_title|default(block('title')) }}\">
+    <meta property=\"og:description\" content=\"{{ og_description|default(meta_description|default('Consulta bibliografías por carrera y asignatura en la UCN')) }}\">
+    <meta property=\"og:image\" content=\"{{ og_image|default(assets_url ~ '/images/carreras/default.svg') }}\">
+    <meta property=\"og:url\" content=\"{{ og_url|default(canonical_url|default(app_url)) }}\">
+    <meta property=\"og:type\" content=\"{{ og_type|default('website') }}\">
+    <!-- Twitter -->
+    <meta name=\"twitter:card\" content=\"summary_large_image\">
+    <meta name=\"twitter:title\" content=\"{{ twitter_title|default(og_title|default(block('title'))) }}\">
+    <meta name=\"twitter:description\" content=\"{{ twitter_description|default(og_description|default(meta_description|default('Consulta bibliografías por carrera y asignatura en la UCN'))) }}\">
+    <meta name=\"twitter:image\" content=\"{{ twitter_image|default(og_image|default(assets_url ~ '/images/carreras/default.svg')) }}\">
+    {% endblock %}
+    
+    <!-- Favicon -->
+    <link rel=\"icon\" type=\"image/x-icon\" href=\"{{ app_url }}/favicon.ico\">
+    
+    <!-- Bootstrap CSS -->
+    <link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css\" rel=\"stylesheet\">
+    
+    <!-- Font Awesome -->
+    <link href=\"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css\" rel=\"stylesheet\">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-gray: #ecf0f1;
+            --dark-gray: #34495e;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: var(--dark-gray);
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 4rem 0;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1200 600\"><defs><linearGradient id=\"grad1\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" style=\"stop-color:rgba(44,62,80,0.8);stop-opacity:1\" /><stop offset=\"100%\" style=\"stop-color:rgba(52,152,219,0.8);stop-opacity:1\" /></linearGradient></defs><rect width=\"1200\" height=\"600\" fill=\"url(%23grad1)\"/><circle cx=\"200\" cy=\"150\" r=\"80\" fill=\"rgba(255,255,255,0.1)\"/><circle cx=\"1000\" cy=\"400\" r=\"120\" fill=\"rgba(255,255,255,0.05)\"/><rect x=\"300\" y=\"200\" width=\"200\" height=\"100\" fill=\"rgba(255,255,255,0.08)\" rx=\"10\"/></svg>');
+            background-size: cover;
+            background-position: center;
+            z-index: 1;
+        }
+
+        .hero-section .container {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Filtros de Sede */
+        .filter-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Alineación de formularios */
+        .filter-section .row {
+            align-items: end;
+        }
+        
+        .filter-section .col-md-4 {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .filter-section .form-label {
+            margin-bottom: 0.5rem;
+        }
+        
+        .filter-section .form-control,
+        .filter-section .form-select {
+            height: 3rem;
+        }
+        
+        .filter-section .btn {
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .filter-section .form-label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .filter-section .form-select,
+        .filter-section .form-control {
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .filter-section .form-select:focus,
+        .filter-section .form-control:focus {
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+            border: none;
+        }
+
+        .filter-section .btn-warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .filter-section .btn-warning:hover {
+            background: linear-gradient(135deg, #e67e22, #d35400);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
+        }
+
+        /* Tabs de Filtros */
+        .filter-tabs {
+            margin-bottom: 2rem;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            border-radius: 8px 8px 0 0;
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            color: var(--secondary-color);
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        .tab-btn.active {
+            color: var(--secondary-color);
+            border-bottom-color: var(--secondary-color);
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--secondary-color);
+        }
+
+        /* Animaciones para carreras */
+        .carrera-item {
+            transition: all 0.3s ease;
+        }
+
+        .carrera-item.fade-in {
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive para filtros */
+        @media (max-width: 768px) {
+            .filter-section {
+                padding: 1rem;
+            }
+            
+            .filter-section .row {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .tab-buttons {
+                justify-content: center;
+            }
+            
+            .tab-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 1.5rem;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--light-gray), #ffffff);
+            border-bottom: 1px solid #e9ecef;
+            border-radius: 15px 15px 0 0 !important;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary-color), #2980b9);
+            border: none;
+            border-radius: 25px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2980b9, var(--secondary-color));
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn-outline-primary {
+            border-color: var(--secondary-color);
+            color: var(--secondary-color);
+            border-radius: 25px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .carrera-card {
+            background: #ffffff;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .carrera-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .carrera-image {
+            height: 200px;
+            overflow: hidden;
+        }
+
+        .carrera-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .carrera-card:hover .carrera-image img {
+            transform: scale(1.05);
+        }
+
+        .carrera-card .card-body {
+            padding: 1.5rem;
+        }
+
+        .carrera-card .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.75rem;
+        }
+
+        .carrera-card .card-text {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .carrera-meta {
+            margin-bottom: 1.5rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .meta-item i {
+            width: 16px;
+            margin-right: 0.5rem;
+            color: var(--secondary-color);
+        }
+
+        .btn-ver-bibliografia {
+            width: 100%;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-ver-bibliografia:hover {
+            transform: translateY(-2px);
+        }
+
+        /* UCN Header */
+        .ucn-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 0;
+        }
+
+        .back-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-link:hover {
+            color: #e3f2fd;
+        }
+
+        /* Program Overview */
+        .program-overview {
+            background: var(--primary-color);
+            color: white;
+            padding: 3rem 0;
+        }
+
+        /* Share buttons (default on light backgrounds) */
+        .share-buttons .btn {
+            color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        .share-buttons .btn i { color: var(--secondary-color); }
+        .share-buttons .btn:hover {
+            background: rgba(52,152,219,0.1);
+            border-color: var(--secondary-color);
+            color: var(--secondary-color);
+        }
+        /* Override for dark header sections */
+        .program-overview .share-buttons .btn {
+            color: #fff;
+            border-color: #fff;
+        }
+        .program-overview .share-buttons .btn i { color: #fff; }
+        .program-overview .share-buttons .btn:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: #fff;
+            color: #fff;
+        }
+
+        .program-image {
+            width: 100%;
+            height: 200px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .program-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .program-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .program-description {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .program-stats {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .stat-item i {
+            font-size: 1.2rem;
+        }
+
+        /* Content Area */
+        .content-area {
+            background: white;
+            padding: 2rem 0;
+        }
+
+        .breadcrumb-nav {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Semester Tabs */
+        .semester-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e9ecef;
+            flex-wrap: wrap;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+
+        .semester-tab {
+            background: none;
+            border: none;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            min-width: fit-content;
+            flex-shrink: 0;
+        }
+
+        .semester-tab.active {
+            color: var(--secondary-color);
+            border-bottom-color: var(--secondary-color);
+        }
+
+        .semester-tab:hover {
+            color: var(--secondary-color);
+        }
+
+        /* Semester Content */
+        .semester-content {
+            display: none;
+        }
+
+        .semester-content.active {
+            display: block;
+        }
+
+        .semester-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+        }
+
+        /* Course Section */
+        .course-section {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .course-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .course-code {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Bibliography Section */
+        .bibliography-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Bibliography Tabs */
+        .bibliography-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .bib-tab {
+            background: none;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .bib-tab.active {
+            color: var(--secondary-color);
+            border-bottom-color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        .bib-tab:hover {
+            color: var(--secondary-color);
+        }
+
+        /* Bibliography Content */
+        .bib-content {
+            display: none;
+        }
+
+        .bib-content.active {
+            display: block;
+        }
+
+        .bibliography-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .bibliography-item i {
+            color: var(--secondary-color);
+            margin-top: 0.2rem;
+        }
+
+        .bibliography-item span {
+            line-height: 1.5;
+        }
+
+        .no-bibliography {
+            color: #666;
+            font-style: italic;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .no-content {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .no-content i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--secondary-color);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .program-stats {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .semester-tabs {
+                flex-wrap: wrap;
+                gap: 0.25rem;
+            }
+
+            .semester-tab {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.8rem;
+            }
+
+            .bibliography-tabs {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .semester-tabs {
+                gap: 0.2rem;
+            }
+
+            .semester-tab {
+                padding: 0.4rem 0.6rem;
+                font-size: 0.75rem;
+            }
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 2rem 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stats-card:hover {
+            border-color: var(--secondary-color);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .stats-label {
+            font-size: 1rem;
+            color: var(--dark-gray);
+            font-weight: 500;
+        }
+
+        .badge {
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+        }
+
+        .badge-basica {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .badge-complementaria {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .semestre-header {
+            background: linear-gradient(135deg, var(--light-gray), #ffffff);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 5px solid var(--secondary-color);
+        }
+
+        .bibliografia-item {
+            border-left: 3px solid var(--secondary-color);
+            padding-left: 1rem;
+            margin-bottom: 1rem;
+            background-color: #ffffff;
+            border-radius: 0 10px 10px 0;
+            padding: 1rem;
+        }
+
+        .footer {
+            background: var(--primary-color);
+            color: white;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+
+        .breadcrumb {
+            background-color: transparent;
+            padding: 0;
+            margin-bottom: 2rem;
+        }
+
+        .breadcrumb-item a {
+            color: var(--secondary-color);
+            text-decoration: none;
+        }
+
+        .breadcrumb-item.active {
+            color: var(--dark-gray);
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #ffffff, var(--light-gray));
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .stats-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+
+        .stats-label {
+            color: var(--dark-gray);
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 2rem 0;
+            }
+            
+            .card {
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class=\"navbar navbar-expand-lg navbar-dark\">
+        <div class=\"container\">
+            <a class=\"navbar-brand\" href=\"{{ app_url }}\">
+                <i class=\"fas fa-book-open me-2\"></i>
+                Bibliografías UCN
+            </a>
+            
+            <button class=\"navbar-toggler\" type=\"button\" data-bs-toggle=\"collapse\" data-bs-target=\"#navbarNav\">
+                <span class=\"navbar-toggler-icon\"></span>
+            </button>
+            
+            <div class=\"collapse navbar-collapse\" id=\"navbarNav\">
+                <ul class=\"navbar-nav ms-auto\">
+                    <li class=\"nav-item\">
+                        <a class=\"nav-link\" href=\"{{ app_url }}\">
+                            <i class=\"fas fa-home me-1\"></i>
+                            Inicio
+                        </a>
+                    </li>
+                    <li class=\"nav-item\">
+                        <a class=\"nav-link\" href=\"{{ admin_url }}\">
+                            <i class=\"fas fa-cog me-1\"></i>
+                            Administración
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class=\"footer\">
+        <div class=\"container\">
+            <div class=\"row\">
+                <div class=\"col-md-6\">
+                    <h5>Bibliografías UCN</h5>
+                    <p>Sistema de consulta de bibliografías de carreras de la Universidad Católica del Norte.</p>
+                </div>
+                <div class=\"col-md-6 text-md-end\">
+                    <p>&copy; {{ \"now\"|date(\"Y\") }} Universidad Católica del Norte. Todos los derechos reservados.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js\"></script>
+    
+    <!-- Custom JS -->
+    <script>
+        // Compartir / copiar URL actual
+        window.shareCurrentPage = async function(shareTitle = document.title, shareText = 'Bibliografías UCN') {
+            const url = window.location.href;
+            if (navigator.share) {
+                try {
+                    await navigator.share({ title: shareTitle, text: shareText, url });
+                    return true;
+                } catch (e) {
+                    // fallback a copiar
+                }
+            }
+            try {
+                await navigator.clipboard.writeText(url);
+                alert('Enlace copiado al portapapeles');
+                return true;
+            } catch (e) {
+                prompt('Copia el enlace:', url);
+                return false;
+            }
+        }
+
+        // Compartir en redes específicas
+        window.shareTo = function(network, opts = {}) {
+            const title = opts.title || document.title;
+            const text = opts.text || 'Bibliografías UCN';
+            const url = opts.url || window.location.href;
+            let shareUrl = '';
+            switch ((network || '').toLowerCase()) {
+                case 'facebook':
+                    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=\${encodeURIComponent(url)}`;
+                    break;
+                case 'twitter':
+                case 'x':
+                    shareUrl = `https://twitter.com/intent/tweet?url=\${encodeURIComponent(url)}&text=\${encodeURIComponent(text)}`;
+                    break;
+                case 'whatsapp':
+                    shareUrl = `https://api.whatsapp.com/send?text=\${encodeURIComponent(text + ' ' + url)}`;
+                    break;
+                case 'telegram':
+                    shareUrl = `https://t.me/share/url?url=\${encodeURIComponent(url)}&text=\${encodeURIComponent(text)}`;
+                    break;
+                case 'copy':
+                    return shareCurrentPage(title, text);
+                default:
+                    return shareCurrentPage(title, text);
+            }
+            const w = 600, h = 500;
+            const y = window.top.outerHeight / 2 + window.top.screenY - ( h / 2);
+            const x = window.top.outerWidth / 2 + window.top.screenX - ( w / 2);
+            window.open(shareUrl, 'share-window', `toolbar=0,location=0,status=0,menubar=0,scrollbars=1,resizable=1,width=\${w},height=\${h},top=\${y},left=\${x}`);
+            return true;
+        }
+
+        // Smooth scrolling para enlaces internos
+        document.querySelectorAll('a[href^=\"#\"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Animación para cards al hacer scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(card);
+        });
+
+        // Semester tabs functionality
+        function showSemester(semesterId) {
+            // Hide all semester contents
+            document.querySelectorAll('.semester-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all semester tabs
+            document.querySelectorAll('.semester-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected semester content
+            document.getElementById('semester-' + semesterId).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+        
+        // Bibliography tabs functionality
+        function showBibliography(type, asignaturaId) {
+            // Remove active class from all bibliography tabs for this asignatura
+            document.querySelectorAll(`[onclick*=\"\${asignaturaId}\"]`).forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Hide all bibliography contents for this asignatura
+            document.querySelectorAll(`[id\$=\"-\${asignaturaId}\"]`).forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Show selected bibliography content
+            document.getElementById(type + '-' + asignaturaId).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+    {% block scripts %}{% endblock %}
+</body>
+</html> ", "frontend/base.twig", "/var/www/html/biblioges/templates/frontend/base.twig");
+    }
+}
