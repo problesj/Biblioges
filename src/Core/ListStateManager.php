@@ -188,7 +188,8 @@ class ListStateManager
                     'estado' => '',
                     'tipo' => '',
                     'tipo_bibliografia' => '',
-                    'bibliografias_disponibles' => ''
+                    'bibliografias_disponibles' => '',
+                    'carrera_id' => ''
                 ];
                 break;
 

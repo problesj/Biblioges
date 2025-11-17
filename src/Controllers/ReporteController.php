@@ -742,7 +742,7 @@ class ReporteController extends BaseController
             $stateManager->clearState();
 
             return $response
-                ->withHeader('Location', '/reportes/listado-bibliografias')
+                ->withHeader('Location', '/biblioges/reportes/listado-bibliografias')
                 ->withStatus(302);
 
         } catch (\Exception $e) {
@@ -890,6 +890,13 @@ class ReporteController extends BaseController
         $tipo = $state['tipo'] ?? null;
         $tipoBibliografia = $state['tipo_bibliografia'] ?? null;
         $bibliografiasDisponibles = $state['bibliografias_disponibles'] ?? null;
+        $carreraId = !empty($state['carrera_id']) ? (int)$state['carrera_id'] : null;
+        
+        // Obtener lista de carreras para el dropdown
+        $carrerasSql = "SELECT id, nombre FROM carreras WHERE estado = 1 ORDER BY nombre";
+        $carrerasStmt = $this->pdo->prepare($carrerasSql);
+        $carrerasStmt->execute();
+        $carreras = $carrerasStmt->fetchAll(\PDO::FETCH_ASSOC);
         
         // Validar dirección de ordenamiento
         if (!in_array($sortDirection, ['ASC', 'DESC'])) {
@@ -984,6 +991,20 @@ class ReporteController extends BaseController
             }
         }
         
+        // Filtro por carrera: filtrar bibliografías asociadas a asignaturas de la carrera seleccionada
+        if ($carreraId !== null && $carreraId > 0) {
+            $carreraFilterSql = " AND EXISTS (
+                SELECT 1 
+                FROM asignaturas_bibliografias ab3
+                INNER JOIN mallas m ON ab3.asignatura_id = m.asignatura_id
+                WHERE ab3.bibliografia_id = bd.id 
+                AND m.carrera_id = ?
+            )";
+            $sql .= $carreraFilterSql;
+            $countSql .= $carreraFilterSql;
+            $params[] = $carreraId;
+        }
+        
         // Agregar GROUP BY para la consulta principal
         $sql .= " GROUP BY bd.id, bd.titulo, bd.tipo, bd.anio_publicacion, bd.editorial, bd.estado";
         
@@ -1011,13 +1032,15 @@ class ReporteController extends BaseController
             'session' => $sessionData,
             'app_url' => app_url(),
             'current_page' => 'listado-bibliografias',
+            'carreras' => $carreras,
             'filtros' => [
                 'busqueda' => $busqueda ?? '',
                 'tipo_busqueda' => $tipoBusqueda ?? 'todos',
                 'estado' => $estado ?? '',
                 'tipo' => $tipo ?? '',
                 'tipo_bibliografia' => $tipoBibliografia ?? '',
-                'bibliografias_disponibles' => $bibliografiasDisponibles ?? ''
+                'bibliografias_disponibles' => $bibliografiasDisponibles ?? '',
+                'carrera_id' => $carreraId ? (string)$carreraId : ''
             ],
             'paginacion' => [
                 'current_page' => $page,
@@ -1195,6 +1218,7 @@ class ReporteController extends BaseController
         $tipo = $params['tipo'] ?? '';
         $tipoBibliografia = $params['tipo_bibliografia'] ?? '';
         $bibliografiasDisponibles = $params['bibliografias_disponibles'] ?? '';
+        $carreraId = !empty($params['carrera_id']) ? (int)$params['carrera_id'] : null;
         
         $query = DB::table('bibliografias_declaradas as bd')
             ->select([
@@ -1270,6 +1294,17 @@ class ReporteController extends BaseController
             } elseif ($bibliografiasDisponibles === 'sin_disponibles') {
                 $query->having('num_bibliografias_disponibles', '=', 0);
             }
+        }
+        
+        // Filtro por carrera: filtrar bibliografías asociadas a asignaturas de la carrera seleccionada
+        if ($carreraId !== null && $carreraId > 0) {
+            $query->whereExists(function($q) use ($carreraId) {
+                $q->select(DB::raw(1))
+                  ->from('asignaturas_bibliografias as ab3')
+                  ->join('mallas as m', 'ab3.asignatura_id', '=', 'm.asignatura_id')
+                  ->whereRaw('ab3.bibliografia_id = bd.id')
+                  ->where('m.carrera_id', $carreraId);
+            });
         }
         
         $data = $query->orderBy('bd.titulo')->get();

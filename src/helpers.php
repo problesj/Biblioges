@@ -80,6 +80,8 @@ function build_sort_url($column, $current_sort = '', $current_direction = 'ASC',
         $section = 'bibliografias-declaradas';
     } elseif ($currentSection === 'mallas') {
         $section = 'mallas';
+    } elseif ($currentSection === 'listado-bibliografias' || (isset($pathParts[count($pathParts) - 2]) && $pathParts[count($pathParts) - 2] === 'reportes')) {
+        $section = 'reportes/listado-bibliografias';
     } else {
         $section = 'carreras'; // Por defecto
     }
@@ -123,6 +125,8 @@ function build_page_url($page, $sort = '', $direction = 'ASC', $filters = [], $p
         $section = 'bibliografias-declaradas';
     } elseif ($currentSection === 'mallas') {
         $section = 'mallas';
+    } elseif ($currentSection === 'listado-bibliografias' || (isset($pathParts[count($pathParts) - 2]) && $pathParts[count($pathParts) - 2] === 'reportes')) {
+        $section = 'reportes/listado-bibliografias';
     } else {
         $section = 'carreras'; // Por defecto
     }
@@ -177,6 +181,8 @@ function build_per_page_url($perPage, $sort = '', $direction = 'ASC', $filters =
         $section = 'bibliografias-declaradas';
     } elseif ($currentSection === 'mallas') {
         $section = 'mallas';
+    } elseif ($currentSection === 'listado-bibliografias' || (isset($pathParts[count($pathParts) - 2]) && $pathParts[count($pathParts) - 2] === 'reportes')) {
+        $section = 'reportes/listado-bibliografias';
     } else {
         $section = 'carreras'; // Por defecto
     }

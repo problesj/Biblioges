@@ -449,6 +449,17 @@
                             </select>
                         </div>
                     </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="carrera_id">Carrera</label>
+                            <select class="form-control" id="carrera_id" name="carrera_id">
+                                <option value="">Todas</option>
+                                {% for carrera in carreras %}
+                                    <option value="{{ carrera.id }}" {% if filtros.carrera_id != '' and (filtros.carrera_id == carrera.id or filtros.carrera_id == (carrera.id ~ '')) %}selected{% endif %}>{{ carrera.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
                 </div>
                 <div class="row mt-3">
                     <div class="col-12">
@@ -456,7 +467,7 @@
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-filter"></i> Aplicar Filtros
                             </button>
-                            <a href="{{ app_url }}reportes/listado-bibliografias" class="btn btn-secondary">
+                            <a href="{{ app_url }}reportes/listado-bibliografias/clear-state" class="btn btn-secondary">
                                 <i class="fas fa-times"></i> Limpiar Filtros
                             </a>
                             <button type="button" id="exportarExcel" class="btn btn-success">
@@ -674,6 +685,7 @@
         const estado = currentUrl.searchParams.get('estado') || '';
         const tipoBibliografia = currentUrl.searchParams.get('tipo_bibliografia') || '';
         const bibliografiasDisponibles = currentUrl.searchParams.get('bibliografias_disponibles') || '';
+        const carreraId = currentUrl.searchParams.get('carrera_id') || '';
         
         // Construir la URL de exportación con los filtros
         let exportUrl = '{{ app_url }}reportes/listado-bibliografias/exportar?';
@@ -685,6 +697,7 @@
         if (estado) exportUrl += 'estado=' + encodeURIComponent(estado) + '&';
         if (tipoBibliografia) exportUrl += 'tipo_bibliografia=' + encodeURIComponent(tipoBibliografia) + '&';
         if (bibliografiasDisponibles) exportUrl += 'bibliografias_disponibles=' + encodeURIComponent(bibliografiasDisponibles) + '&';
+        if (carreraId) exportUrl += 'carrera_id=' + encodeURIComponent(carreraId) + '&';
         
         // Remover el último '&' si existe
         exportUrl = exportUrl.replace(/&$/, '');
