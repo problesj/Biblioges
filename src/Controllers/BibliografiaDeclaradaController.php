@@ -484,10 +484,6 @@ class BibliografiaDeclaradaController
             return new Response();
         }
         
-        // Generar nuevo token para la siguiente solicitud
-        $newToken = bin2hex(random_bytes(32));
-        $this->session->set('form_token', $newToken);
-        
         // Decodificar los autores
         $autores = json_decode($datos['autores'] ?? '[]', true);
         //error_log('Autores decodificados: ' . print_r($autores, true));
@@ -499,7 +495,7 @@ class BibliografiaDeclaradaController
                 $duplicados = $this->buscarDuplicados($titulo);
                 
                 if (!empty($duplicados)) {
-                    // Si es AJAX, devolver los duplicados para que el frontend los muestre
+                    // Si es AJAX, devolver los duplicados para que el frontend los muestre (no rotar token: el usuario puede elegir "Sí, continuar" y enviar a /forzar con el mismo token)
                     if ($esAjax) {
                         return $this->jsonResponse([
                             'success' => false,
@@ -517,6 +513,10 @@ class BibliografiaDeclaradaController
                     return new Response();
                 }
             }
+            
+            // Rotar token solo cuando se va a realizar el alta (no al devolver duplicados)
+            $newToken = bin2hex(random_bytes(32));
+            $this->session->set('form_token', $newToken);
             
             $this->pdo->beginTransaction();
             
@@ -1531,11 +1531,11 @@ class BibliografiaDeclaradaController
                     throw new \Exception('Esta asignatura ya está vinculada a esta bibliografía');
                 }
 
-                // Insertar la nueva vinculación
+                // Insertar la nueva vinculación (fecha_creacion y fecha_actualizacion se actualizan explícitamente)
             $stmt = $this->pdo->prepare("
                 INSERT INTO asignaturas_bibliografias 
-                    (asignatura_id, bibliografia_id, tipo_bibliografia, estado) 
-                    VALUES (?, ?, ?, 'activa')
+                    (asignatura_id, bibliografia_id, tipo_bibliografia, estado, fecha_creacion, fecha_actualizacion) 
+                    VALUES (?, ?, ?, 'activa', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
             ");
             $stmt->execute([
                     $data['asignatura_id'],
@@ -1763,11 +1763,11 @@ class BibliografiaDeclaradaController
                         continue;
                     }
 
-                    // Insertar la nueva vinculación
+                    // Insertar la nueva vinculación (fecha_creacion y fecha_actualizacion se actualizan explícitamente)
                     $stmt = $this->pdo->prepare("
                         INSERT INTO asignaturas_bibliografias 
-                        (bibliografia_id, asignatura_id, tipo_bibliografia) 
-                        VALUES (:bibliografia_id, :asignatura_id, :tipo_bibliografia)
+                        (bibliografia_id, asignatura_id, tipo_bibliografia, fecha_creacion, fecha_actualizacion) 
+                        VALUES (:bibliografia_id, :asignatura_id, :tipo_bibliografia, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                     ");
                     
                     $stmt->execute([

@@ -417,7 +417,7 @@ class AsignaturaController extends BaseController
             $stmt->execute([$user_id]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            // Obtener bibliografías declaradas vinculadas a la asignatura
+            // Obtener bibliografías declaradas vinculadas a la asignatura (incluye fechas de la vinculación en asignaturas_bibliografias)
             $stmt = $this->db->prepare("
                 SELECT 
                     bd.id,
@@ -433,6 +433,8 @@ class AsignaturaController extends BaseController
                     bd.doi,
                     bd.estado,
                     ab.tipo_bibliografia,
+                    ab.fecha_creacion AS fecha_vinculacion_creacion,
+                    ab.fecha_actualizacion AS fecha_vinculacion_actualizacion,
                     (SELECT COUNT(*) FROM bibliografias_disponibles bd2 WHERE bd2.bibliografia_declarada_id = bd.id) as total_disponibles
                 FROM asignaturas_bibliografias ab
                 JOIN bibliografias_declaradas bd ON ab.bibliografia_id = bd.id

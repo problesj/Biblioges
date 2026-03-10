@@ -686,9 +686,9 @@ class __TwigTemplate_7a47c0b419c07b80ebec47e1f4188e86 extends Template
         // line 348
         yield "<script src=\"https://cdn.jsdelivr.net/npm/sweetalert2@11\"></script>
 <script>
-// Variables globales
-let isFormSubmitting = false;
-let tempAutorId = 1;
+// Variables globales (var para evitar error si el bloque scripts se renderiza más de una vez)
+var isFormSubmitting = false;
+var tempAutorId = 1;
 
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('bibliografiaForm');
@@ -1598,9 +1598,9 @@ document.addEventListener('DOMContentLoaded', function() {
 {% block scripts %}
 <script src=\"https://cdn.jsdelivr.net/npm/sweetalert2@11\"></script>
 <script>
-// Variables globales
-let isFormSubmitting = false;
-let tempAutorId = 1;
+// Variables globales (var para evitar error si el bloque scripts se renderiza más de una vez)
+var isFormSubmitting = false;
+var tempAutorId = 1;
 
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('bibliografiaForm');

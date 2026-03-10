@@ -143,6 +143,7 @@
                                         <th>Editorial</th>
                                         <th class="text-center">Formato</th>
                                         <th class="text-center"># Bib. Disponibles</th>
+                                        <th class="text-center">Última actualización</th>
                                         <th class="text-center">Acciones</th>
                                     </tr>
                                 </thead>
@@ -164,6 +165,9 @@
                                             </td>
                                             <td class="text-center">
                                                 <span class="badge bg-warning">{{ bib.total_disponibles }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <small>{% if bib.fecha_vinculacion_actualizacion %}{{ bib.fecha_vinculacion_actualizacion|date('d/m/Y H:i') }}{% elseif bib.fecha_vinculacion_creacion %}{{ bib.fecha_vinculacion_creacion|date('d/m/Y H:i') }}{% else %}N/A{% endif %}</small>
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group" role="group">
@@ -209,6 +213,7 @@
                                         <th>Editorial</th>
                                         <th class="text-center">Formato</th>
                                         <th class="text-center"># Bib. Disponibles</th>
+                                        <th class="text-center">Última actualización</th>
                                         <th class="text-center">Acciones</th>
                                     </tr>
                                 </thead>
@@ -230,6 +235,9 @@
                                             </td>
                                             <td class="text-center">
                                                 <span class="badge bg-warning">{{ bib.total_disponibles }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <small>{% if bib.fecha_vinculacion_actualizacion %}{{ bib.fecha_vinculacion_actualizacion|date('d/m/Y H:i') }}{% elseif bib.fecha_vinculacion_creacion %}{{ bib.fecha_vinculacion_creacion|date('d/m/Y H:i') }}{% else %}N/A{% endif %}</small>
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group" role="group">
@@ -275,6 +283,7 @@
                                         <th>Editorial</th>
                                         <th class="text-center">Formato</th>
                                         <th class="text-center"># Bib. Disponibles</th>
+                                        <th class="text-center">Última actualización</th>
                                         <th class="text-center">Acciones</th>
                                     </tr>
                                 </thead>
@@ -296,6 +305,9 @@
                                             </td>
                                             <td class="text-center">
                                                 <span class="badge bg-warning">{{ bib.total_disponibles }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <small>{% if bib.fecha_vinculacion_actualizacion %}{{ bib.fecha_vinculacion_actualizacion|date('d/m/Y H:i') }}{% elseif bib.fecha_vinculacion_creacion %}{{ bib.fecha_vinculacion_creacion|date('d/m/Y H:i') }}{% else %}N/A{% endif %}</small>
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group" role="group">

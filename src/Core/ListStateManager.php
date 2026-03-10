@@ -185,6 +185,9 @@ class ListStateManager
                 $defaults['filters'] = [
                     'busqueda' => '',
                     'tipo_busqueda' => 'todos',
+                    'titulo' => '',
+                    'autor' => '',
+                    'editorial' => '',
                     'estado' => '',
                     'tipo' => '',
                     'tipo_bibliografia' => '',

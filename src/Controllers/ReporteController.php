@@ -886,6 +886,9 @@ class ReporteController extends BaseController
         // Obtener filtros del estado
         $busqueda = $state['busqueda'] ?? null;
         $tipoBusqueda = $state['tipo_busqueda'] ?? 'todos';
+        $titulo = isset($state['titulo']) ? trim((string)$state['titulo']) : null;
+        $autor = isset($state['autor']) ? trim((string)$state['autor']) : null;
+        $editorial = isset($state['editorial']) ? trim((string)$state['editorial']) : null;
         $estado = $state['estado'] ?? null;
         $tipo = $state['tipo'] ?? null;
         $tipoBibliografia = $state['tipo_bibliografia'] ?? null;
@@ -933,8 +936,26 @@ class ReporteController extends BaseController
         
         $params = [];
         
-        // Aplicar filtros si existen
-        if (!empty($busqueda)) {
+        // Filtros por título, autor y editorial (campos independientes del formulario)
+        if (!empty($titulo)) {
+            $sql .= " AND bd.titulo LIKE ?";
+            $countSql .= " AND bd.titulo LIKE ?";
+            $params[] = '%' . $titulo . '%';
+        }
+        if (!empty($autor)) {
+            $sql .= " AND (a.apellidos LIKE ? OR a.nombres LIKE ?)";
+            $countSql .= " AND (a.apellidos LIKE ? OR a.nombres LIKE ?)";
+            $params[] = '%' . $autor . '%';
+            $params[] = '%' . $autor . '%';
+        }
+        if (!empty($editorial)) {
+            $sql .= " AND bd.editorial LIKE ?";
+            $countSql .= " AND bd.editorial LIKE ?";
+            $params[] = '%' . $editorial . '%';
+        }
+        
+        // Búsqueda general (campo único busqueda + tipo_busqueda) por si se usa en otro flujo
+        if (!empty($busqueda) && empty($titulo) && empty($autor) && empty($editorial)) {
             if ($tipoBusqueda === 'titulo') {
                 $sql .= " AND bd.titulo LIKE ?";
                 $countSql .= " AND bd.titulo LIKE ?";
@@ -953,7 +974,6 @@ class ReporteController extends BaseController
                 $countSql .= " AND EXISTS (SELECT 1 FROM asignaturas_bibliografias ab2 JOIN asignaturas asig ON ab2.asignatura_id = asig.id WHERE ab2.bibliografia_id = bd.id AND asig.nombre LIKE ?)";
                 $params[] = '%' . $busqueda . '%';
             } else {
-                // Búsqueda general
                 $sql .= " AND (bd.titulo LIKE ? OR bd.editorial LIKE ? OR a.apellidos LIKE ? OR a.nombres LIKE ?)";
                 $countSql .= " AND (bd.titulo LIKE ? OR bd.editorial LIKE ? OR a.apellidos LIKE ? OR a.nombres LIKE ?)";
                 $params[] = '%' . $busqueda . '%';
@@ -1036,6 +1056,9 @@ class ReporteController extends BaseController
             'filtros' => [
                 'busqueda' => $busqueda ?? '',
                 'tipo_busqueda' => $tipoBusqueda ?? 'todos',
+                'titulo' => $titulo ?? '',
+                'autor' => $autor ?? '',
+                'editorial' => $editorial ?? '',
                 'estado' => $estado ?? '',
                 'tipo' => $tipo ?? '',
                 'tipo_bibliografia' => $tipoBibliografia ?? '',
@@ -1211,7 +1234,10 @@ class ReporteController extends BaseController
     {
         $params = $request->getQueryParams();
         
-        // Búsqueda general
+        // Filtros (titulo, autor, editorial independientes + busqueda/tipo_busqueda legacy)
+        $titulo = isset($params['titulo']) ? trim((string)$params['titulo']) : '';
+        $autor = isset($params['autor']) ? trim((string)$params['autor']) : '';
+        $editorial = isset($params['editorial']) ? trim((string)$params['editorial']) : '';
         $busqueda = $params['busqueda'] ?? '';
         $tipo_busqueda = $params['tipo_busqueda'] ?? 'todos';
         $estado = $params['estado'] ?? '';
@@ -1239,8 +1265,21 @@ class ReporteController extends BaseController
             ->leftJoin('bibliografias_disponibles as bdis', 'bd.id', '=', 'bdis.bibliografia_declarada_id')
             ->groupBy('bd.id', 'bd.titulo', 'bd.tipo', 'bd.anio_publicacion', 'bd.editorial', 'bd.estado');
         
-        // Aplicar búsqueda general
-        if (!empty($busqueda)) {
+        // Filtros por título, autor y editorial
+        if (!empty($titulo)) {
+            $query->where('bd.titulo', 'LIKE', '%' . $titulo . '%');
+        }
+        if (!empty($autor)) {
+            $query->where(function($q) use ($autor) {
+                $q->where('a.apellidos', 'LIKE', '%' . $autor . '%')
+                  ->orWhere('a.nombres', 'LIKE', '%' . $autor . '%');
+            });
+        }
+        if (!empty($editorial)) {
+            $query->where('bd.editorial', 'LIKE', '%' . $editorial . '%');
+        }
+        // Búsqueda general (solo si no hay filtros específicos)
+        if (!empty($busqueda) && empty($titulo) && empty($autor) && empty($editorial)) {
             $busquedaTerm = '%' . $busqueda . '%';
             switch ($tipo_busqueda) {
                 case 'titulo':
