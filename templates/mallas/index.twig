@@ -340,6 +340,8 @@
                                     <i class="fas {{ get_sort_icon('nombre', ordenamiento.column, ordenamiento.direction) }}"></i>
                                 </a>
                             </th>
+                            <th>Vigencia Desde</th>
+                            <th>Vigencia Hasta</th>
                             <th>
                                 <a href="{{ build_sort_url('tipo_programa', ordenamiento.column, ordenamiento.direction, filtros, paginacion.current_page, paginacion.per_page) }}">
                                     Tipo de Programa
@@ -370,6 +372,16 @@
                                 {% endfor %}
                             </td>
                             <td>{{ carrera.nombre }}</td>
+                            <td>
+                                {% for vig in carrera.vigencias_desde %}
+                                    {{ vig }}{% if not loop.last %}<br>{% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% for vig in carrera.vigencias_hasta %}
+                                    {{ vig }}{% if not loop.last %}<br>{% endif %}
+                                {% endfor %}
+                            </td>
                             <td>
                                 {% if carrera.tipo_programa == 'P' %}
                                     Pregrado
@@ -409,7 +421,7 @@
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="6" class="text-center">No se encontraron carreras</td>
+                            <td colspan="8" class="text-center">No se encontraron carreras</td>
                         </tr>
                         {% endfor %}
                     </tbody>

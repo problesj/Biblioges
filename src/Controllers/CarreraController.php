@@ -11,6 +11,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use App\Core\Session;
 use App\Core\ListStateManager;
+use App\Services\CarreraExcelImportService;
 use PDO;
 use App\Core\Config;
 
@@ -124,7 +125,9 @@ class CarreraController
             $sql = "SELECT c.*, 
                            GROUP_CONCAT(DISTINCT ce.codigo_carrera) as codigos_carrera,
                            GROUP_CONCAT(DISTINCT s.nombre) as sedes,
-                           GROUP_CONCAT(DISTINCT u.nombre) as unidades
+                           GROUP_CONCAT(DISTINCT u.nombre) as unidades,
+                           GROUP_CONCAT(DISTINCT ce.vigencia_desde ORDER BY ce.vigencia_desde) as vigencias_desde,
+                           GROUP_CONCAT(DISTINCT ce.vigencia_hasta ORDER BY ce.vigencia_desde) as vigencias_hasta
             FROM carreras c
                     LEFT JOIN carreras_espejos ce ON c.id = ce.carrera_id
                     LEFT JOIN sedes s ON ce.sede_id = s.id
@@ -1308,6 +1311,316 @@ class CarreraController
                 ->withHeader('Location', Config::get('app_url') . 'carreras')
                 ->withStatus(302);
         }
+    }
+
+    /**
+     * Formulario para importar carrera desde Excel (malla SIGEBI).
+     */
+    public function importarForm(Request $request, Response $response, array $args = [])
+    {
+        if (!$this->session->get('user_id')) {
+            $this->session->set('error', 'Por favor inicie sesión para acceder a las carreras');
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'biblioges/login')
+                ->withStatus(302);
+        }
+
+        // Para selección de carrera de referencia (espejo): mostrar código - nombre - vigencias
+        $stmt = $this->pdo->query(
+            "SELECT
+                c.id AS carrera_id,
+                c.nombre AS nombre,
+                ce.codigo_carrera AS codigo_carrera,
+                ce.vigencia_desde AS vigencia_desde,
+                ce.vigencia_hasta AS vigencia_hasta
+             FROM carreras c
+             INNER JOIN carreras_espejos ce ON ce.carrera_id = c.id
+             WHERE c.estado = 1 AND ce.estado = 1
+             ORDER BY c.nombre ASC, ce.vigencia_desde ASC, ce.codigo_carrera ASC"
+        );
+        $carrerasActivas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $user_id = $this->session->get('user_id');
+        $stmt = $this->pdo->prepare('SELECT id, nombre, email FROM usuarios WHERE id = ?');
+        $stmt->execute([$user_id]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $html = $this->twig->render('carreras/importar.twig', [
+            'app_url' => Config::get('app_url'),
+            'user' => $user,
+            'carreras_activas' => $carrerasActivas,
+            'current_page' => 'carreras',
+            'session' => $_SESSION,
+        ]);
+        $response->getBody()->write($html);
+        return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
+    }
+
+    /**
+     * Guarda el archivo, genera informe previo y muestra confirmación o errores.
+     */
+    public function importarPrevisualizar(Request $request, Response $response, array $args = [])
+    {
+        if (!$this->session->get('user_id')) {
+            $this->session->set('error', 'Por favor inicie sesión');
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'biblioges/login')
+                ->withStatus(302);
+        }
+
+        $parsedBody = $request->getParsedBody() ?? [];
+        $modo = $parsedBody['modo_importacion'] ?? 'nueva';
+        if (!in_array($modo, ['nueva', 'espejo'], true)) {
+            $modo = 'nueva';
+        }
+        $carreraEspejoId = null;
+        if ($modo === 'espejo') {
+            $rawId = $parsedBody['carrera_espejo_id'] ?? '';
+            $carreraEspejoId = $rawId !== '' ? (int) $rawId : null;
+            if ($carreraEspejoId !== null && $carreraEspejoId < 1) {
+                $carreraEspejoId = null;
+            }
+        }
+
+        try {
+            if (empty($_FILES['archivo_excel']) || !isset($_FILES['archivo_excel']['tmp_name'])) {
+                throw new \RuntimeException('Debe seleccionar un archivo Excel (.xlsx).');
+            }
+
+            $service = new CarreraExcelImportService();
+            $saved = $service->guardarArchivoSubido($_FILES['archivo_excel']);
+            $leido = $service->leerFilas($saved['path']);
+            $prev = $service->previsualizar($this->pdo, $leido['rows'], $modo, $carreraEspejoId);
+
+            $token = bin2hex(random_bytes(16));
+            $this->session->set(CarreraExcelImportService::sessionKey(), [
+                'token' => $token,
+                'ruta_archivo' => $saved['path'],
+                'modo_importacion' => $modo,
+                'carrera_espejo_id' => $carreraEspejoId,
+            ]);
+
+            $stmt = $this->pdo->query(
+                "SELECT
+                    c.id AS carrera_id,
+                    c.nombre AS nombre,
+                    ce.codigo_carrera AS codigo_carrera,
+                    ce.vigencia_desde AS vigencia_desde,
+                    ce.vigencia_hasta AS vigencia_hasta
+                 FROM carreras c
+                 INNER JOIN carreras_espejos ce ON ce.carrera_id = c.id
+                 WHERE c.estado = 1 AND ce.estado = 1
+                 ORDER BY c.nombre ASC, ce.vigencia_desde ASC, ce.codigo_carrera ASC"
+            );
+            $carrerasActivas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $user_id = $this->session->get('user_id');
+            $stmt = $this->pdo->prepare('SELECT id, nombre, email FROM usuarios WHERE id = ?');
+            $stmt->execute([$user_id]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            $html = $this->twig->render('carreras/importar_previsualizar.twig', [
+                'app_url' => Config::get('app_url'),
+                'user' => $user,
+                'carreras_activas' => $carrerasActivas,
+                'current_page' => 'carreras',
+                'session' => $_SESSION,
+                'archivo_guardado' => $saved['stored_name'],
+                'archivo_original' => $saved['original_name'],
+                'import_token' => $token,
+                'prev' => $prev,
+            ]);
+            $response->getBody()->write($html);
+            return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
+        } catch (\Throwable $e) {
+            error_log('importarPrevisualizar: ' . $e->getMessage());
+            $this->session->set('error', 'Importación: ' . $e->getMessage());
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'carreras/importar')
+                ->withStatus(302);
+        }
+    }
+
+    /**
+     * Ejecuta la importación tras validar token y volver a validar el archivo.
+     */
+    public function importarConfirmar(Request $request, Response $response, array $args = [])
+    {
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+
+        if (!$this->session->get('user_id')) {
+            $this->session->set('error', 'Por favor inicie sesión');
+            if ($isAjax) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Por favor inicie sesión',
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(401);
+            }
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'biblioges/login')
+                ->withStatus(302);
+        }
+
+        $parsedBody = $request->getParsedBody() ?? [];
+        $tokenRecibido = (string) ($parsedBody['import_token'] ?? '');
+        $pendiente = $this->session->get(CarreraExcelImportService::sessionKey());
+
+        if (!$pendiente || empty($pendiente['token']) || !hash_equals($pendiente['token'], $tokenRecibido)) {
+            $this->session->set('error', 'La sesión de importación expiró o el token no es válido. Vuelva a cargar el archivo.');
+            if ($isAjax) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'La sesión de importación expiró o el token no es válido. Vuelva a cargar el archivo.',
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+            }
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'carreras/importar')
+                ->withStatus(302);
+        }
+
+        $ruta = $pendiente['ruta_archivo'] ?? '';
+        if ($ruta === '' || !is_file($ruta)) {
+            $this->session->remove(CarreraExcelImportService::sessionKey());
+            $this->session->set('error', 'Ya no está disponible el archivo en el servidor. Vuelva a subirlo.');
+            if ($isAjax) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Ya no está disponible el archivo en el servidor. Vuelva a subirlo.',
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+            }
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'carreras/importar')
+                ->withStatus(302);
+        }
+
+        try {
+            $service = new CarreraExcelImportService();
+            $leido = $service->leerFilas($ruta);
+            $modo = $pendiente['modo_importacion'] ?? 'nueva';
+            $cid = $pendiente['carrera_espejo_id'] ?? null;
+            $prev = $service->previsualizar($this->pdo, $leido['rows'], $modo, $cid);
+
+            if (!$prev['puede_ejecutar']) {
+                $this->session->set('error', 'El archivo ya no cumple las validaciones. Revise el informe y vuelva a intentarlo.');
+                if ($isAjax) {
+                    $response->getBody()->write(json_encode([
+                        'success' => false,
+                        'message' => 'El archivo ya no cumple las validaciones. Revise el informe y vuelva a intentarlo.',
+                    ]));
+                    return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+                }
+                return $response
+                    ->withHeader('Location', Config::get('app_url') . 'carreras/importar')
+                    ->withStatus(302);
+            }
+
+            $requiereConfirmacionUnidades = !empty($prev['unidades_por_crear']);
+            $confirmarCreacionUnidades = ((string) ($parsedBody['confirmar_creacion_unidades'] ?? '0')) === '1';
+            if ($requiereConfirmacionUnidades && !$confirmarCreacionUnidades) {
+                $stmt = $this->pdo->query(
+                    "SELECT
+                        c.id AS carrera_id,
+                        c.nombre AS nombre,
+                        ce.codigo_carrera AS codigo_carrera,
+                        ce.vigencia_desde AS vigencia_desde,
+                        ce.vigencia_hasta AS vigencia_hasta
+                     FROM carreras c
+                     INNER JOIN carreras_espejos ce ON ce.carrera_id = c.id
+                     WHERE c.estado = 1 AND ce.estado = 1
+                     ORDER BY c.nombre ASC, ce.vigencia_desde ASC, ce.codigo_carrera ASC"
+                );
+                $carrerasActivas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                $user_id = $this->session->get('user_id');
+                $stmt = $this->pdo->prepare('SELECT id, nombre, email FROM usuarios WHERE id = ?');
+                $stmt->execute([$user_id]);
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                $html = $this->twig->render('carreras/importar_previsualizar.twig', [
+                    'app_url' => Config::get('app_url'),
+                    'user' => $user,
+                    'carreras_activas' => $carrerasActivas,
+                    'current_page' => 'carreras',
+                    'session' => $_SESSION,
+                    'archivo_guardado' => basename($ruta),
+                    'archivo_original' => basename($ruta),
+                    'import_token' => $tokenRecibido,
+                    'prev' => $prev,
+                    'error_unidades' => 'Debe confirmar explícitamente la creación de unidades faltantes para continuar.',
+                ]);
+                if ($isAjax) {
+                    $response->getBody()->write(json_encode([
+                        'success' => false,
+                        'message' => 'Debe confirmar explícitamente la creación de unidades faltantes para continuar.',
+                        'requires_units_confirmation' => true,
+                    ]));
+                    return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+                }
+                $response->getBody()->write($html);
+                return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
+            }
+
+            $resultado = $service->ejecutar($this->pdo, $prev['payload']);
+            $this->session->remove(CarreraExcelImportService::sessionKey());
+
+            $idCarrera = $resultado['carrera_id'] ?? 0;
+            $importadas = (int) ($prev['resumen']['filas_importables'] ?? 0);
+            $conflicto = (int) ($prev['resumen']['filas_con_conflicto'] ?? 0);
+            $this->session->set(
+                'success',
+                'Importación aplicada correctamente. ID carrera: ' . $idCarrera .
+                '. Filas importadas: ' . $importadas .
+                '. Filas omitidas por conflicto: ' . $conflicto . '.'
+            );
+            if ($isAjax) {
+                $response->getBody()->write(json_encode([
+                    'success' => true,
+                    'message' => 'Importación aplicada correctamente.',
+                    'carrera_id' => $idCarrera,
+                    'filas_importadas' => $importadas,
+                    'filas_omitidas' => $conflicto,
+                ]));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'carreras')
+                ->withStatus(302);
+        } catch (\Throwable $e) {
+            error_log('importarConfirmar: ' . $e->getMessage());
+            $this->session->set('error', 'Error al confirmar la importación: ' . $e->getMessage());
+            if ($isAjax) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Error al confirmar la importación: ' . $e->getMessage(),
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+            }
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'carreras/importar')
+                ->withStatus(302);
+        }
+    }
+
+    /**
+     * Cancela la importación pendiente (no borra el archivo guardado).
+     */
+    public function importarCancelar(Request $request, Response $response, array $args = [])
+    {
+        if (!$this->session->get('user_id')) {
+            return $response
+                ->withHeader('Location', Config::get('app_url') . 'biblioges/login')
+                ->withStatus(302);
+        }
+
+        $this->session->remove(CarreraExcelImportService::sessionKey());
+        $this->session->set('success', 'Importación cancelada. No se aplicaron cambios en la base de datos.');
+        return $response
+            ->withHeader('Location', Config::get('app_url') . 'carreras/importar')
+            ->withStatus(302);
     }
 
     private function isAjaxRequest()

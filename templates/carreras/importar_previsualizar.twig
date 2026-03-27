@@ -1,0 +1,507 @@
+{% extends "base.twig" %}
+
+{% block title %}Informe importación carrera - Biblioges{% endblock %}
+
+{% block content %}
+{% set puede_importar = prev.puede_ejecutar|default(false) %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Informe previo de importación</h1>
+        <a href="{{ app_url }}carreras/importar" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Volver</a>
+    </div>
+
+    <div class="alert alert-light border">
+        <strong>Archivo guardado:</strong> {{ archivo_guardado }}<br>
+        <span class="text-muted">Original: {{ archivo_original }}</span>
+    </div>
+
+    <div id="resultado_importacion" class="mb-3" style="display:none;"></div>
+
+    {% if prev.errores is not empty %}
+    <div class="alert alert-danger">
+        <h6 class="alert-heading">Errores globales (bloquean toda la importación)</h6>
+        <ul class="mb-0">
+            {% for e in prev.errores %}<li>{{ e }}</li>{% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if prev.errores_detalle is not empty %}
+    <div class="card border-danger mb-4">
+        <div class="card-header bg-danger text-white py-2">
+            <strong>Errores por fila (se omiten esas asignaturas, el resto sí puede importarse)</strong>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive" style="max-height: 260px;">
+                <table class="table table-sm table-striped mb-0">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th>Fila</th>
+                            <th>Código</th>
+                            <th>Tipo</th>
+                            <th>Motivo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for err in prev.errores_detalle %}
+                        <tr>
+                            <td>{{ err.fila|default('—') }}</td>
+                            <td>{{ err.codigo|default('—') }}</td>
+                            <td>{{ err.tipo|default('fila') }}</td>
+                            <td>{{ err.motivo|default('Error de validación') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if prev.advertencias is not empty %}
+    <div class="alert alert-warning">
+        <h6 class="alert-heading">Advertencias</h6>
+        <ul class="mb-0">
+            {% for a in prev.advertencias %}<li>{{ a }}</li>{% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if error_unidades is defined and error_unidades %}
+    <div class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle"></i> {{ error_unidades }}
+    </div>
+    {% endif %}
+
+    {% if prev.unidades_por_crear is not empty %}
+    <div class="card border-warning mb-4">
+        <div class="card-header bg-warning">
+            <strong>Unidades faltantes detectadas (se crearán al confirmar)</strong>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive" style="max-height: 220px;">
+                <table class="table table-sm table-striped mb-0">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Fila</th>
+                            <th>Código unidad</th>
+                            <th>Nombre unidad</th>
+                            <th>Sede</th>
+                            <th>Código asignatura</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in prev.unidades_por_crear %}
+                        <tr>
+                            <td>{{ u.tipo }}</td>
+                            <td>{{ u.fila }}</td>
+                            <td>{{ u.codigo_unidad|default('—') }}</td>
+                            <td>{{ u.nombre_unidad|default('—') }}</td>
+                            <td>{{ u.sede_id|default('—') }}</td>
+                            <td>{{ u.codigo_asignatura|default('—') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if prev.equivalencias_unidades is not empty %}
+    <div class="card border-info mb-4">
+        <div class="card-header bg-info text-white py-2">
+            <strong>Trazabilidad de equivalencias de unidades (Excel → tabla unidades)</strong>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive" style="max-height: 240px;">
+                <table class="table table-sm table-striped mb-0">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Fila</th>
+                            <th>Sede</th>
+                            <th>Código Asig.</th>
+                            <th>Excel: cod</th>
+                            <th>Excel: nombre</th>
+                            <th>Equiv.: cod</th>
+                            <th>Equiv.: nombre</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for eq in prev.equivalencias_unidades %}
+                        <tr>
+                            <td>{{ eq.tipo|default('—') }}</td>
+                            <td>{{ eq.fila|default('—') }}</td>
+                            <td>{{ eq.sede_id|default('—') }}</td>
+                            <td>{{ eq.codigo_asignatura|default('—') }}</td>
+                            <td>{{ eq.excel_codigo|default('—') }}</td>
+                            <td>{{ eq.excel_nombre|default('—') }}</td>
+                            <td>{{ eq.equiv_codigo|default('—') }}</td>
+                            <td>{{ eq.equiv_nombre|default('—') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Resumen</h6></div>
+        <div class="card-body">
+            <div class="alert alert-info py-2 mb-3">
+                <small>
+                    <i class="fas fa-info-circle"></i>
+                    Regla aplicada: toda asignatura de formación cuyo código comience con <strong>UN</strong>
+                    se considera <strong>asignatura electiva padre</strong>. Sus asignaturas hijas se toman desde
+                    <code>CODIGO_ASIGNATURA_1</code>, <code>NOMBRE_ASIGNATURA_1</code>,
+                    <code>COD_UNIDAD_FORMACION</code> y <code>UNIDAD_FORMACION</code>.
+                </small>
+            </div>
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Estado</dt>
+                <dd class="col-sm-9">
+                    {% if puede_importar %}
+                        <span class="badge bg-success">Listo para confirmar</span>
+                    {% else %}
+                        <span class="badge bg-danger">Bloqueado: hay errores que deben corregirse</span>
+                    {% endif %}
+                </dd>
+                <dt class="col-sm-3">Modo</dt><dd class="col-sm-9">{{ prev.resumen.modo }}</dd>
+                <dt class="col-sm-3">Código programa</dt><dd class="col-sm-9">{{ prev.resumen.codigo_programa }}</dd>
+                <dt class="col-sm-3">Nombre programa</dt><dd class="col-sm-9">{{ prev.resumen.nombre_programa }}</dd>
+                <dt class="col-sm-3">Tipo programa</dt><dd class="col-sm-9">{{ prev.resumen.tipo_programa }}</dd>
+                <dt class="col-sm-3">Vigencia</dt><dd class="col-sm-9">{{ prev.resumen.inicio_vigencia }} → {{ prev.resumen.termino_vigencia }}</dd>
+                <dt class="col-sm-3">Sede</dt><dd class="col-sm-9">{{ prev.resumen.sede }} {% if prev.resumen.sede_id %}(id {{ prev.resumen.sede_id }}){% endif %}</dd>
+                <dt class="col-sm-3">Unidad carrera</dt><dd class="col-sm-9">{% if prev.resumen.unidad_carrera_id %}id {{ prev.resumen.unidad_carrera_id }}{% else %}—{% endif %}</dd>
+                <dt class="col-sm-3">Filas Excel</dt><dd class="col-sm-9">{{ prev.resumen.filas_excel }}</dd>
+                <dt class="col-sm-3">Filas malla distintas</dt><dd class="col-sm-9">{{ prev.resumen.filas_malla_distintas }}</dd>
+                <dt class="col-sm-3">Filas importables</dt><dd class="col-sm-9">{{ prev.resumen.filas_importables|default(0) }}</dd>
+                <dt class="col-sm-3">Filas con conflicto</dt><dd class="col-sm-9">{{ prev.resumen.filas_con_conflicto|default(0) }}</dd>
+                <dt class="col-sm-3">Equivalencias de unidades</dt><dd class="col-sm-9">{{ prev.resumen.equivalencias_unidades_total|default(0) }}</dd>
+                <dt class="col-sm-3">Vigencias previas a cerrar</dt><dd class="col-sm-9">{{ prev.resumen.vigencias_previas_a_cerrar|default(0) }}</dd>
+                <dt class="col-sm-3">Carreras previas relacionadas</dt><dd class="col-sm-9">{{ prev.resumen.carreras_previas_relacionadas|default(0) }}</dd>
+                <dt class="col-sm-3">Máx. semestre</dt><dd class="col-sm-9">{{ prev.resumen.max_semestre }}</dd>
+                <dt class="col-sm-3">Relaciones formación (filas)</dt><dd class="col-sm-9">{{ prev.resumen.filas_relacion_formacion }}</dd>
+                {% if prev.resumen.modo == 'nueva' %}
+                <dt class="col-sm-3">Asignaturas</dt><dd class="col-sm-9">
+                    Códigos únicos: {{ prev.resumen.asignaturas_codigos_unicos|default('—') }},
+                    existentes en BD: {{ prev.resumen.asignaturas_existentes_bd|default('—') }},
+                    nuevas: {{ prev.resumen.asignaturas_nuevas|default('—') }}
+                </dd>
+                {% endif %}
+                {% if prev.resumen.modo == 'espejo' %}
+                <dt class="col-sm-3">Carrera referencia</dt><dd class="col-sm-9">{{ prev.resumen.carrera_referencia|default('—') }} (id {{ prev.resumen.carrera_referencia_id|default('—') }})</dd>
+                <dt class="col-sm-3">Códigos ya en deptos.</dt><dd class="col-sm-9">{{ prev.resumen.espejo_filas_codigo_ya_en_sede|default(0) }} <span class="text-muted small">(único en BD)</span></dd>
+                <dt class="col-sm-3">Fusión recomendada</dt><dd class="col-sm-9">{{ prev.resumen.espejo_filas_fusion_recomendada|default(0) }} <span class="text-muted small">(id referencia ≠ id ya cargado en sede)</span></dd>
+                {% endif %}
+            </dl>
+        </div>
+    </div>
+
+    {% if prev.recomendaciones_fusion is defined and prev.recomendaciones_fusion is not empty %}
+    <div class="card border-primary mb-4">
+        <div class="card-header bg-primary text-white py-2">
+            <strong>Recomendación: fusionar asignaturas al editar la malla</strong>
+        </div>
+        <div class="card-body">
+            <p class="small text-muted mb-2">
+                El código del Excel ya está cargado en departamentos (código único en BD) con un <code>asignatura_id</code> distinto al que corresponde por nombre en la carrera de referencia.
+                La importación <strong>agregará la asignatura a la malla</strong> usando el id ya existente en sede. Luego, en la edición de malla del sistema conviene <strong>fusionar</strong> esos registros para unificar bibliografías y datos.
+            </p>
+            <div class="table-responsive" style="max-height: 280px;">
+                <table class="table table-sm table-striped mb-0">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th>Fila</th>
+                            <th>Código Excel</th>
+                            <th>Nombre Excel</th>
+                            <th>Sem.</th>
+                            <th>Id (nombre ref.)</th>
+                            <th>Nombre referencia</th>
+                            <th>Id (código en sede)</th>
+                            <th>Nombre en BD sede</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rf in prev.recomendaciones_fusion %}
+                        <tr>
+                            <td>{{ rf.fila }}</td>
+                            <td>{{ rf.codigo_excel }}</td>
+                            <td>{{ rf.nombre_excel|default('—') }}</td>
+                            <td>{{ rf.semestre }}</td>
+                            <td>{{ rf.asignatura_id_por_nombre_referencia }}</td>
+                            <td><small>{{ rf.nombre_por_referencia|default('—') }}</small></td>
+                            <td>{{ rf.asignatura_id_codigo_en_sede }}</td>
+                            <td><small>{{ rf.nombre_en_bd_sede|default('—') }}</small></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Detalle malla / equivalencias</h6></div>
+        <div class="card-body p-0">
+            <div class="table-responsive" style="max-height: 420px;">
+                <table class="table table-sm table-striped mb-0">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            {% if prev.resumen.modo == 'espejo' %}
+                            <th>Fila</th><th>Código Excel</th><th>Sem.</th><th>Equiv. id</th><th>Equiv. nombre</th><th>En sede</th><th>Malla id</th><th>Fusión</th><th>Método / nota</th>
+                            {% else %}
+                            <th>Fila</th><th>Código</th><th>Sem.</th><th>Nombre</th><th>En BD</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set max_filas = 80 %}
+                        {% for linea in prev.informe_malla|slice(0, max_filas) %}
+                        <tr>
+                            {% if prev.resumen.modo == 'espejo' %}
+                            <td>{{ linea.fila }}</td>
+                            <td>{{ linea.codigo_excel }}</td>
+                            <td>{{ linea.semestre }}</td>
+                            <td>{{ linea.equivalente_id|default('—') }}</td>
+                            <td>{{ linea.equivalente_nombre|default('—') }}</td>
+                            <td>
+                                {% if linea.codigo_ya_en_sede|default(false) %}
+                                    <span class="badge bg-secondary">sí</span>
+                                    {% if linea.codigo_en_misma_sede is defined and linea.codigo_en_misma_sede %}<span class="badge bg-light text-dark border">misma sede</span>{% endif %}
+                                {% else %}—{% endif %}
+                            </td>
+                            <td>{{ linea.malla_usara_asignatura_id|default(linea.equivalente_id|default('—')) }}</td>
+                            <td>{% if linea.fusion_recomendada|default(false) %}<span class="badge bg-warning text-dark">revisar</span>{% else %}—{% endif %}</td>
+                            <td><small>{% if linea.nota_malla %}{{ linea.nota_malla }}<br>{% endif %}{{ linea.metodo|default('') }}</small></td>
+                            {% else %}
+                            <td>{{ linea.fila }}</td>
+                            <td>{{ linea.codigo }}</td>
+                            <td>{{ linea.semestre }}</td>
+                            <td>{{ linea.nombre }}</td>
+                            <td>
+                                {% if linea.asignatura_en_bd|default(false) %}
+                                    <span class="badge bg-info text-dark">Ya existe</span>
+                                    {% if linea.asignatura_id_existente is defined and linea.asignatura_id_existente %}<small class="text-muted">id {{ linea.asignatura_id_existente }}</small>{% endif %}
+                                {% else %}
+                                    <span class="badge bg-success">Nueva</span>
+                                {% endif %}
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if prev.informe_malla|length > max_filas %}
+            <div class="p-2 text-muted small">Mostrando las primeras {{ max_filas }} filas de {{ prev.informe_malla|length }}.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card border-secondary mb-3">
+        <div class="card-body py-3">
+            <div class="d-flex flex-wrap align-items-center gap-3">
+                <form method="post" action="{{ app_url }}carreras/importar/confirmar" class="d-inline mb-0"
+                      id="form_confirmar_importacion"
+                      onsubmit="if (this.querySelector('[type=submit]').disabled) { return false; } return confirmarImportacionConUnidades(this);">
+                    <input type="hidden" name="import_token" value="{{ import_token }}">
+                    <input type="hidden" name="confirmar_creacion_unidades" id="confirmar_creacion_unidades" value="0">
+                    <button type="submit" class="btn btn-success btn-lg"
+                            id="btn_confirmar_importacion"
+                            {% if not puede_importar %}disabled title="Corrija los errores del informe para poder confirmar" aria-disabled="true"{% endif %}>
+                        <i class="fas fa-check"></i> Confirmar importación
+                    </button>
+                </form>
+                <form method="post" action="{{ app_url }}carreras/importar/cancelar" class="d-inline mb-0">
+                    <button type="submit" class="btn btn-outline-danger btn-lg"><i class="fas fa-times"></i> Cancelar importación</button>
+                </form>
+            </div>
+            {% if not puede_importar %}
+            <p class="text-danger small mb-0 mt-3">
+                <i class="fas fa-info-circle"></i>
+                Si hay errores globales o no quedaron filas importables, el botón se deshabilita.
+                Corrige el archivo y vuelve a generar el informe previo.
+            </p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const APP_URL_BASE = "{{ app_url }}";
+
+function confirmarImportacionConUnidades(formEl) {
+    const requiereUnidades = {{ prev.unidades_por_crear is not empty ? 'true' : 'false' }};
+
+    if (!requiereUnidades) {
+        Swal.fire({
+            title: 'Confirmar importación',
+            text: '¿Confirma aplicar la importación en la base de datos? Esta acción no se puede deshacer automáticamente.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Confirmar',
+            cancelButtonText: 'Cancelar',
+            allowOutsideClick: false,
+        }).then((result) => {
+            if (!result.isConfirmed) return;
+            const input = document.getElementById('confirmar_creacion_unidades');
+            if (input) input.value = '0';
+            ejecutarImportacionAjax(formEl);
+        });
+        return false;
+    }
+
+    // Requiere creación de unidades
+    const total = {{ prev.unidades_por_crear|length }};
+    const unidadesHtml = `
+        <p>Se detectaron <b>${total}</b> unidad(es) faltante(s).</p>
+        <p>Se crearán para continuar la importación.</p>
+        <div style="max-height: 220px; overflow:auto; text-align:left;">
+            <ul class="mb-0">
+                {% for u in prev.unidades_por_crear %}
+                    <li>
+                        <b>{{ u.tipo }}</b>:
+                        {{ u.codigo_unidad|default('—') }} - {{ u.nombre_unidad|default('—') }}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    `;
+
+    Swal.fire({
+        title: 'Crear unidades faltantes y continuar',
+        html: unidadesHtml,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Crear y continuar',
+        cancelButtonText: 'Cancelar',
+        allowOutsideClick: false,
+        width: '720px',
+    }).then((result) => {
+        if (!result.isConfirmed) return;
+        const input = document.getElementById('confirmar_creacion_unidades');
+        if (input) input.value = '1';
+        ejecutarImportacionAjax(formEl);
+    });
+
+    return false;
+}
+
+function setProgress(percent, text) {
+    const bar = document.getElementById('progress_importacion_bar');
+    const label = document.getElementById('progress_importacion_text');
+    if (bar) {
+        bar.style.width = percent + '%';
+        bar.setAttribute('aria-valuenow', String(percent));
+        bar.textContent = percent + '%';
+    }
+    if (label) label.textContent = text;
+}
+
+async function ejecutarImportacionAjax(formEl) {
+    const modalEl = document.getElementById('modal_progreso_importacion');
+    const modal = new bootstrap.Modal(modalEl, {backdrop: 'static', keyboard: false});
+    const btn = document.getElementById('btn_confirmar_importacion');
+    if (btn) btn.disabled = true;
+    modal.show();
+
+    setProgress(10, 'Iniciando importación...');
+
+    // avance visual mientras espera respuesta
+    let p = 15;
+    const timer = setInterval(() => {
+        p = Math.min(90, p + 5);
+        setProgress(p, 'Procesando datos en el servidor...');
+    }, 700);
+
+    try {
+        const fd = new FormData(formEl);
+        const resp = await fetch(formEl.action, {
+            method: 'POST',
+            body: fd,
+            headers: {'X-Requested-With': 'XMLHttpRequest'}
+        });
+        const data = await resp.json();
+        clearInterval(timer);
+
+        if (!resp.ok || !data.success) {
+            setProgress(100, 'Importación finalizada con error');
+            mostrarResultado(false, data.message || 'Error en la importación.');
+            if (btn) btn.disabled = false;
+            Swal.fire({
+                icon: 'error',
+                title: 'Importación fallida',
+                text: data.message || 'Error en la importación.',
+            });
+            return;
+        }
+
+        setProgress(100, 'Importación completada');
+        mostrarResultado(true,
+            'Carrera ID: ' + data.carrera_id +
+            ' | Filas importadas: ' + data.filas_importadas +
+            ' | Filas omitidas: ' + data.filas_omitidas
+        );
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Importación completada',
+            html: 'Se creó la carrera con ID <b>' + data.carrera_id + '</b>.<br>' +
+                  'Filas importadas: ' + data.filas_importadas + '<br>' +
+                  'Filas omitidas: ' + data.filas_omitidas,
+            confirmButtonText: 'Ver carrera',
+            allowOutsideClick: false,
+        }).then(() => {
+            if (data.carrera_id) {
+                window.location.href = APP_URL_BASE + 'carreras/' + data.carrera_id;
+            }
+        });
+    } catch (e) {
+        clearInterval(timer);
+        setProgress(100, 'Importación finalizada con error');
+        mostrarResultado(false, 'Error de red o servidor: ' + e.message);
+        if (btn) btn.disabled = false;
+        Swal.fire({
+            icon: 'error',
+            title: 'Error de red',
+            text: e.message || 'Error inesperado',
+        });
+    } finally {
+        setTimeout(() => modal.hide(), 900);
+    }
+}
+
+function mostrarResultado(ok, texto) {
+    const c = document.getElementById('resultado_importacion');
+    if (!c) return;
+    c.style.display = 'block';
+    c.className = ok ? 'alert alert-success mb-3' : 'alert alert-danger mb-3';
+    c.innerHTML = '<strong>' + (ok ? 'Resultado de importación' : 'Error de importación') + ':</strong> ' + texto;
+}
+</script>
+
+<div class="modal fade" id="modal_progreso_importacion" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Importando carrera</h5>
+      </div>
+      <div class="modal-body">
+        <p id="progress_importacion_text" class="mb-2">Preparando...</p>
+        <div class="progress">
+          <div id="progress_importacion_bar" class="progress-bar progress-bar-striped progress-bar-animated"
+               role="progressbar" style="width: 0%" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">0%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

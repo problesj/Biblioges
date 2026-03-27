@@ -348,6 +348,22 @@ class AsignaturaController extends BaseController
                     ->withStatus(302);
             }
 
+            $stmt = $this->db->prepare("
+                SELECT DISTINCT
+                    c.id AS carrera_id,
+                    c.nombre AS nombre_carrera,
+                    ce.codigo_carrera,
+                    ce.vigencia_desde,
+                    ce.vigencia_hasta
+                FROM mallas m
+                INNER JOIN carreras c ON c.id = m.carrera_id
+                LEFT JOIN carreras_espejos ce ON ce.carrera_id = c.id AND ce.estado = 1
+                WHERE m.asignatura_id = ?
+                ORDER BY c.nombre ASC, ce.vigencia_desde ASC, ce.codigo_carrera ASC
+            ");
+            $stmt->execute([$id]);
+            $carrerasMalla = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
             // Si es una asignatura regular, obtener información de unidades
             if ($asignatura['tipo'] == 'REGULAR') {
                 $stmt = $this->db->prepare("
@@ -463,6 +479,7 @@ class AsignaturaController extends BaseController
             // Renderizar la vista
             $html = $this->twig->render('asignaturas/show.twig', [
                 'asignatura' => $asignatura,
+                'carreras_malla' => $carrerasMalla,
                 'user' => $user,
                 'bibliografias' => $bibliografiasAgrupadas,
                 'app_url' => Config::get('app_url'),
@@ -712,18 +729,7 @@ class AsignaturaController extends BaseController
                 $asignatura['vinculadas'] = $stmt->fetchAll();
             }
 
-            // Obtener unidades con su jerarquía
-            $stmt = $this->db->prepare("
-                SELECT u.id, u.codigo as unidad_codigo, u.nombre as unidad_nombre,
-                       COALESCE(s.nombre, 'Sin sede') as sede_nombre,
-                       CONCAT(COALESCE(s.nombre, 'Sin sede'), ' - ', u.codigo, ' - ', u.nombre) as unidad_completa
-                FROM unidades u
-                LEFT JOIN sedes s ON u.sede_id = s.id
-                WHERE u.estado = 1
-                ORDER BY COALESCE(s.nombre, 'Sin sede') ASC, u.codigo ASC, u.nombre ASC
-            ");
-            $stmt->execute();
-            $unidades = $stmt->fetchAll();
+            $unidades = $this->obtenerUnidadesParaFormularioAsignatura((int) $id);
 
             // Obtener datos del usuario
             $stmt = $this->db->prepare("SELECT * FROM usuarios WHERE id = ?");
@@ -1119,18 +1125,7 @@ class AsignaturaController extends BaseController
                     ->withStatus(302);
             }
 
-            // Obtener unidades con su jerarquía
-            $stmt = $this->db->prepare("
-                SELECT u.id, u.codigo as unidad_codigo, u.nombre as unidad_nombre,
-                       COALESCE(s.nombre, 'Sin sede') as sede_nombre,
-                       CONCAT(COALESCE(s.nombre, 'Sin sede'), ' - ', u.codigo, ' - ', u.nombre) as unidad_completa
-                FROM unidades u
-                LEFT JOIN sedes s ON u.sede_id = s.id
-                WHERE u.estado = 1
-                ORDER BY COALESCE(s.nombre, 'Sin sede') ASC, u.codigo ASC, u.nombre ASC
-            ");
-            $stmt->execute();
-            $unidades = $stmt->fetchAll();
+            $unidades = $this->obtenerUnidadesParaFormularioAsignatura(null);
 
             // Obtener datos del usuario
             $usuarioModel = new Usuario();
@@ -1679,6 +1674,46 @@ class AsignaturaController extends BaseController
                 ->withHeader('Content-Type', 'application/json; charset=utf-8')
                 ->withStatus(500);
         }
+    }
+
+    /**
+     * Unidades para formularios crear/editar asignatura: solo códigos compuestos exclusivamente por letras
+     * (Unicode [[:alpha:]]), más "Sin unidad" y, al editar, las ya vinculadas a la asignatura.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function obtenerUnidadesParaFormularioAsignatura(?int $asignaturaId): array
+    {
+        $sql = "
+            SELECT u.id, u.codigo AS unidad_codigo, u.nombre AS unidad_nombre,
+                   COALESCE(s.nombre, 'Sin sede') AS sede_nombre,
+                   CONCAT(COALESCE(s.nombre, 'Sin sede'), ' - ', u.codigo, ' - ', u.nombre) AS unidad_completa
+            FROM unidades u
+            LEFT JOIN sedes s ON u.sede_id = s.id
+            WHERE u.estado = 1
+              AND (
+                (TRIM(u.codigo) <> '' AND u.codigo REGEXP '^[[:alpha:]]+$')
+                OR u.id = 0
+                OR LOWER(TRIM(u.nombre)) = 'sin unidad'
+        ";
+        $params = [];
+        if ($asignaturaId !== null && $asignaturaId > 0) {
+            $sql .= '
+                OR u.id IN (
+                    SELECT DISTINCT ad.id_unidad
+                    FROM asignaturas_departamentos ad
+                    WHERE ad.asignatura_id = ? AND ad.id_unidad IS NOT NULL
+                )
+            ';
+            $params[] = $asignaturaId;
+        }
+        $sql .= '
+              )
+            ORDER BY u.nombre ASC
+        ';
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**

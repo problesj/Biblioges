@@ -40,7 +40,9 @@ class FrontendController
         $stmt->execute();
         $sedes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Construir consulta base para carreras
+        // Construir consulta base para carreras.
+        // Importante: una fila por combinación carrera + sede para que
+        // las carreras presentes en varias sedes aparezcan separadas.
         $sqlCarreras = "
             SELECT DISTINCT 
                 c.id, 
@@ -48,8 +50,8 @@ class FrontendController
                 c.tipo_programa, 
                 c.imagen_url, 
                 c.cantidad_semestres,
-                GROUP_CONCAT(DISTINCT s.nombre) as sedes_nombres,
-                GROUP_CONCAT(DISTINCT s.id) as sedes_ids
+                s.id AS sede_id,
+                s.nombre AS sede_nombre
             FROM carreras c
             INNER JOIN carreras_espejos ce ON c.id = ce.carrera_id
             INNER JOIN sedes s ON ce.sede_id = s.id
@@ -64,21 +66,12 @@ class FrontendController
             $params[':sede_id'] = $sedeFiltro;
         }
 
-        $sqlCarreras .= " GROUP BY c.id ORDER BY c.nombre";
+        // Ordenamos por nombre de carrera y luego por sede
+        $sqlCarreras .= " ORDER BY c.nombre, s.nombre";
 
         $stmt = $this->pdo->prepare($sqlCarreras);
         $stmt->execute($params);
         $carreras = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Procesar carreras para incluir información de sedes
-        foreach ($carreras as &$carrera) {
-            $carrera['sedes_nombres'] = explode(',', $carrera['sedes_nombres']);
-            $carrera['sedes_ids'] = explode(',', $carrera['sedes_ids']);
-            
-            // Obtener la primera sede disponible para las URLs
-            $carrera['sede_id'] = $carrera['sedes_ids'][0] ?? null;
-            $carrera['sede_nombre'] = $carrera['sedes_nombres'][0] ?? null;
-        }
 
         // Debug: log de datos
         error_log("Frontend - Total sedes: " . count($sedes));

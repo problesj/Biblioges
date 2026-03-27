@@ -64,6 +64,46 @@
         </div>
     </div>
 
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Carreras (malla curricular)</h6>
+        </div>
+        <div class="card-body">
+            {% if carreras_malla is not empty %}
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Código carrera</th>
+                            <th>Nombre</th>
+                            <th>Vigencia desde</th>
+                            <th>Vigencia hasta</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for car in carreras_malla %}
+                        <tr>
+                            <td>{{ car.codigo_carrera|default('—') }}</td>
+                            <td>
+                                {% if car.carrera_id is defined and car.carrera_id %}
+                                    <a href="{{ app_url }}carreras/{{ car.carrera_id }}">{{ car.nombre_carrera }}</a>
+                                {% else %}
+                                    {{ car.nombre_carrera|default('—') }}
+                                {% endif %}
+                            </td>
+                            <td>{{ car.vigencia_desde|default('—') }}</td>
+                            <td>{{ car.vigencia_hasta|default('—') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">Esta asignatura no está incluida en ninguna malla curricular.</p>
+            {% endif %}
+        </div>
+    </div>
+
     {% if asignatura.tipo == 'FORMACION_ELECTIVA' %}
         <!-- Asignaturas vinculadas (solo para Formación Electiva) -->
         <div class="card shadow mb-4">

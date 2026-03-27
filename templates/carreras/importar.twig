@@ -1,0 +1,78 @@
+{% extends "base.twig" %}
+
+{% block title %}Importar carrera - Biblioges{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Importar carrera desde Excel</h1>
+        <a href="{{ app_url }}carreras" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Volver al listado</a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Archivo y tipo de importación</h6>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">
+                El archivo debe seguir el formato de malla (columnas: CODIGO_PROGRAMA, NOMBRE_PROGRAMA, NIVEL, INICIO_VIGENCIA,
+                TERMINO_VIGENCIA, SEDE, unidad de carrera, semestre, códigos y tipos de asignatura, etc.).
+                El archivo se guardará en el servidor con fecha y hora en el nombre.
+            </p>
+            <form method="post" action="{{ app_url }}carreras/importar/previsualizar" enctype="multipart/form-data" id="form_importar_carrera">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Archivo Excel (.xlsx) *</label>
+                        <input type="file" name="archivo_excel" class="form-control" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Tipo *</label>
+                        <select name="modo_importacion" id="modo_importacion" class="form-select" required>
+                            <option value="nueva">Carrera con plan nuevo (crea carrera y malla completa)</option>
+                            <option value="espejo">Carrera espejo (asocia a carrera vigente y mapea códigos por sede)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row mb-3" id="bloque_carrera_referencia" style="display: none;">
+                    <div class="col-md-8">
+                        <label class="form-label">Carrera vigente a asociar (espejo)</label>
+                        <select name="carrera_espejo_id" id="carrera_espejo_id" class="form-select">
+                            <option value="">— Seleccione —</option>
+                            {% for c in carreras_activas %}
+                                <option value="{{ c.carrera_id }}">
+                                    {{ c.codigo_carrera }} - {{ c.nombre }} - {{ c.vigencia_desde }} - {{ c.vigencia_hasta }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Generar informe previo
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function actualizarModoEspejo() {
+    const modo = document.getElementById('modo_importacion').value;
+    const bloque = document.getElementById('bloque_carrera_referencia');
+    const sel = document.getElementById('carrera_espejo_id');
+    bloque.style.display = modo === 'espejo' ? 'block' : 'none';
+    if (sel) sel.required = modo === 'espejo';
+}
+document.getElementById('modo_importacion').addEventListener('change', actualizarModoEspejo);
+actualizarModoEspejo();
+document.getElementById('form_importar_carrera').addEventListener('submit', function (e) {
+    const modo = document.getElementById('modo_importacion').value;
+    const sel = document.getElementById('carrera_espejo_id');
+    if (modo === 'espejo' && sel && !sel.value) {
+        e.preventDefault();
+        alert('Seleccione la carrera vigente a la que se asociará el espejo.');
+    }
+});
+</script>
+{% endblock %}

@@ -97,6 +97,10 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
 
     // Carreras - Rutas específicas primero
     $group->get('/carreras', [CarreraController::class, 'index']);
+    $group->get('/carreras/importar', [CarreraController::class, 'importarForm']);
+    $group->post('/carreras/importar/previsualizar', [CarreraController::class, 'importarPrevisualizar']);
+    $group->post('/carreras/importar/confirmar', [CarreraController::class, 'importarConfirmar']);
+    $group->post('/carreras/importar/cancelar', [CarreraController::class, 'importarCancelar']);
     $group->get('/carreras/create', [CarreraController::class, 'create']);
     $group->post('/carreras/store', [CarreraController::class, 'store']);
     $group->get('/carreras/{id}/edit', [CarreraController::class, 'edit']);

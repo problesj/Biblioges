@@ -100,7 +100,9 @@ class MallaController
             $sql = "SELECT c.*, 
                     GROUP_CONCAT(DISTINCT ce.codigo_carrera) as codigos_carrera,
                     GROUP_CONCAT(DISTINCT s.nombre) as sedes,
-                    GROUP_CONCAT(DISTINCT u.nombre) as unidades
+                    GROUP_CONCAT(DISTINCT u.nombre) as unidades,
+                    GROUP_CONCAT(DISTINCT ce.vigencia_desde ORDER BY ce.vigencia_desde) as vigencias_desde,
+                    GROUP_CONCAT(DISTINCT ce.vigencia_hasta ORDER BY ce.vigencia_desde) as vigencias_hasta
                     FROM carreras c
                     LEFT JOIN carreras_espejos ce ON c.id = ce.carrera_id
                     LEFT JOIN sedes s ON ce.sede_id = s.id
@@ -187,6 +189,8 @@ class MallaController
                 $carrera['sedes'] = $carrera['sedes'] ? explode(',', $carrera['sedes']) : [];
                 $carrera['unidades'] = $carrera['unidades'] ? explode(',', $carrera['unidades']) : [];
                 $carrera['codigos_carrera'] = $carrera['codigos_carrera'] ? explode(',', $carrera['codigos_carrera']) : [];
+                $carrera['vigencias_desde'] = $carrera['vigencias_desde'] ? explode(',', $carrera['vigencias_desde']) : [];
+                $carrera['vigencias_hasta'] = $carrera['vigencias_hasta'] ? explode(',', $carrera['vigencias_hasta']) : [];
             }
 
             // Obtener sedes para el filtro

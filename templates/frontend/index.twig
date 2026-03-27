@@ -90,7 +90,7 @@
         {% if carreras|length > 0 %}
             {% for carrera in carreras %}
             <div class="col-md-6 col-lg-4 mb-4 carrera-item" 
-                 data-sedes="{{ carrera.sedes_ids|join(',') }}"
+                 data-sedes="{{ carrera.sede_id }}"
                  data-nombre="{{ carrera.nombre|lower }}">
                 <div class="card h-100 carrera-card">
                     <div class="carrera-image">
@@ -110,14 +110,14 @@
                             </div>
                             <div class="meta-item">
                                 <i class="fas fa-map-marker-alt"></i>
-                                <span>{{ carrera.sedes_nombres|join(', ') }}</span>
+                                <span>{{ carrera.sede_nombre }}</span>
                             </div>
                         </div>
                         {% if carrera.sede_id %}
                         <a href="{{ app_url }}/carrera/{{ carrera.sede_id }}/{{ carrera.id }}" 
                            class="btn btn-primary btn-ver-bibliografia"
                            data-carrera-id="{{ carrera.id }}"
-                           data-sedes="{{ carrera.sedes_ids|join(',') }}">
+                           data-sedes="{{ carrera.sede_id }}">
                             <i class="fas fa-book me-1"></i>
                             Ver Bibliografía
                         </a>

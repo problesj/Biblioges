@@ -197,7 +197,7 @@ class __TwigTemplate_803fc1d1cc8d2ce62a4ece97cbedd28e extends Template
                 yield "            <div class=\"col-md-6 col-lg-4 mb-4 carrera-item\" 
                  data-sedes=\"";
                 // line 93
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::join(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sedes_ids", [], "any", false, false, false, 93), ","), "html", null, true);
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sede_id", [], "any", false, false, false, 93), "html", null, true);
                 yield "\"
                  data-nombre=\"";
                 // line 94
@@ -247,7 +247,7 @@ class __TwigTemplate_803fc1d1cc8d2ce62a4ece97cbedd28e extends Template
                                 <i class=\"fas fa-map-marker-alt\"></i>
                                 <span>";
                 // line 113
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::join(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sedes_nombres", [], "any", false, false, false, 113), ", "), "html", null, true);
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sede_nombre", [], "any", false, false, false, 113), "html", null, true);
                 yield "</span>
                             </div>
                         </div>
@@ -269,7 +269,7 @@ class __TwigTemplate_803fc1d1cc8d2ce62a4ece97cbedd28e extends Template
                     yield "\"
                            data-sedes=\"";
                     // line 120
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::join(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sedes_ids", [], "any", false, false, false, 120), ","), "html", null, true);
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sede_id", [], "any", false, false, false, 120), "html", null, true);
                     yield "\">
                             <i class=\"fas fa-book me-1\"></i>
                             Ver Bibliografía
@@ -661,7 +661,7 @@ window.debugFiltros = function() {
         {% if carreras|length > 0 %}
             {% for carrera in carreras %}
             <div class=\"col-md-6 col-lg-4 mb-4 carrera-item\" 
-                 data-sedes=\"{{ carrera.sedes_ids|join(',') }}\"
+                 data-sedes=\"{{ carrera.sede_id }}\"
                  data-nombre=\"{{ carrera.nombre|lower }}\">
                 <div class=\"card h-100 carrera-card\">
                     <div class=\"carrera-image\">
@@ -681,14 +681,14 @@ window.debugFiltros = function() {
                             </div>
                             <div class=\"meta-item\">
                                 <i class=\"fas fa-map-marker-alt\"></i>
-                                <span>{{ carrera.sedes_nombres|join(', ') }}</span>
+                                <span>{{ carrera.sede_nombre }}</span>
                             </div>
                         </div>
                         {% if carrera.sede_id %}
                         <a href=\"{{ app_url }}/carrera/{{ carrera.sede_id }}/{{ carrera.id }}\" 
                            class=\"btn btn-primary btn-ver-bibliografia\"
                            data-carrera-id=\"{{ carrera.id }}\"
-                           data-sedes=\"{{ carrera.sedes_ids|join(',') }}\">
+                           data-sedes=\"{{ carrera.sede_id }}\">
                             <i class=\"fas fa-book me-1\"></i>
                             Ver Bibliografía
                         </a>
