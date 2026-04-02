@@ -34,7 +34,11 @@ class FrontendController
             FROM sedes s
             INNER JOIN carreras_espejos ce ON s.id = ce.sede_id
             INNER JOIN carreras c ON ce.carrera_id = c.id
-            WHERE s.estado = 1 AND c.estado = 1 AND c.tipo_programa = 'P'
+            WHERE s.estado = 1
+              AND c.estado = 1
+              AND c.tipo_programa = 'P'
+              AND ce.estado = 1
+              AND ce.vigencia_hasta = '999999'
             ORDER BY s.nombre
         ");
         $stmt->execute();
@@ -55,7 +59,11 @@ class FrontendController
             FROM carreras c
             INNER JOIN carreras_espejos ce ON c.id = ce.carrera_id
             INNER JOIN sedes s ON ce.sede_id = s.id
-            WHERE c.estado = 1 AND c.tipo_programa = 'P' AND s.estado = 1
+            WHERE c.estado = 1
+              AND c.tipo_programa = 'P'
+              AND s.estado = 1
+              AND ce.estado = 1
+              AND ce.vigencia_hasta = '999999'
         ";
 
         $params = [];
@@ -120,7 +128,13 @@ class FrontendController
             INNER JOIN carreras c ON ce.carrera_id = c.id
             LEFT JOIN carreras_espejos ce2 ON c.id = ce2.carrera_id
             LEFT JOIN sedes s2 ON ce2.sede_id = s2.id AND s2.estado = 1
-            WHERE s.id = :sede_id AND c.id = :carrera_id AND s.estado = 1 AND c.estado = 1
+            WHERE s.id = :sede_id
+              AND c.id = :carrera_id
+              AND s.estado = 1
+              AND c.estado = 1
+              AND ce.estado = 1
+              AND ce.vigencia_hasta = '999999'
+              AND (ce2.id IS NULL OR (ce2.estado = 1 AND ce2.vigencia_hasta = '999999'))
             GROUP BY s.id, c.id
         ");
         $stmt->execute([

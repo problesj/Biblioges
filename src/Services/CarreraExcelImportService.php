@@ -18,7 +18,7 @@ class CarreraExcelImportService
 
     public function __construct(?string $uploadDir = null)
     {
-        $this->uploadDir = $uploadDir ?? dirname(__DIR__, 2) . '/upload';
+        $this->uploadDir = $uploadDir ?? dirname(__DIR__, 2) . '/public/uploads/importaciones';
         $equivalenciasPath = dirname(__DIR__) . '/config/unidades_equivalencias.php';
         if (is_file($equivalenciasPath)) {
             $loaded = require $equivalenciasPath;
