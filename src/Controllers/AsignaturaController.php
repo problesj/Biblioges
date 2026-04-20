@@ -451,6 +451,12 @@ class AsignaturaController extends BaseController
                     ab.tipo_bibliografia,
                     ab.fecha_creacion AS fecha_vinculacion_creacion,
                     ab.fecha_actualizacion AS fecha_vinculacion_actualizacion,
+                    (
+                        SELECT GROUP_CONCAT(CONCAT(a.apellidos, ', ', a.nombres) SEPARATOR '; ')
+                        FROM bibliografias_autores ba
+                        LEFT JOIN autores a ON ba.autor_id = a.id
+                        WHERE ba.bibliografia_id = bd.id
+                    ) AS autores,
                     (SELECT COUNT(*) FROM bibliografias_disponibles bd2 WHERE bd2.bibliografia_declarada_id = bd.id) as total_disponibles
                 FROM asignaturas_bibliografias ab
                 JOIN bibliografias_declaradas bd ON ab.bibliografia_id = bd.id

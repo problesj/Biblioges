@@ -4340,8 +4340,16 @@ class BibliografiaDeclaradaController
     {
         // Convertir a minúsculas
         $titulo = mb_strtolower($titulo, 'UTF-8');
-        
-        // Reemplazar caracteres acentuados
+
+        // Normalizar unicode para separar letras y diacríticos (ej: ñ, ü, ¨ combinados)
+        if (class_exists(\Normalizer::class)) {
+            $titulo = \Normalizer::normalize($titulo, \Normalizer::FORM_D);
+        }
+
+        // Remover marcas diacríticas combinadas
+        $titulo = preg_replace('/\p{Mn}+/u', '', $titulo);
+
+        // Fallback para caracteres latinos frecuentes
         $acentos = [
             'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u',
             'à' => 'a', 'è' => 'e', 'ì' => 'i', 'ò' => 'o', 'ù' => 'u',
@@ -4350,17 +4358,13 @@ class BibliografiaDeclaradaController
             'ã' => 'a', 'ẽ' => 'e', 'ĩ' => 'i', 'õ' => 'o', 'ũ' => 'u',
             'ñ' => 'n', 'ç' => 'c'
         ];
-        
         $titulo = strtr($titulo, $acentos);
-        
-        // Eliminar caracteres especiales excepto espacios, números y letras
-        $titulo = preg_replace('/[^a-z0-9\s]/', '', $titulo);
-        
-        // Eliminar espacios múltiples y espacios al inicio/final
-        $titulo = preg_replace('/\s+/', ' ', $titulo);
-        $titulo = trim($titulo);
-        
-        return $titulo;
+
+        // Ignorar por completo puntuación, espacios y símbolos al comparar
+        // (ej: "A:B", "A;B", "A B", "A¨B" => "ab")
+        $titulo = preg_replace('/[^a-z0-9]/', '', $titulo);
+
+        return trim($titulo);
     }
 
     /**
