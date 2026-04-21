@@ -169,7 +169,7 @@ class ListStateManager
                 break;
 
             case 'reporte_coberturas':
-                $defaults['sort'] = 'sede';
+                $defaults['sort'] = 'nombre';
                 $defaults['allowed_columns'] = ['sede', 'codigo', 'nombre', 'tipo_programa', 'estado', 'cobertura_basica', 'cobertura_complementaria'];
                 $defaults['filters'] = [
                     'sede' => '',

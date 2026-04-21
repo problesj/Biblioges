@@ -1568,6 +1568,8 @@ class ReporteController extends BaseController
                 s.nombre as sede,
                 ce.codigo_carrera as codigo,
                 c.nombre,
+                ce.vigencia_desde,
+                ce.vigencia_hasta,
                 c.tipo_programa,
                 c.estado,
                 c.id as carrera_id,
@@ -1613,12 +1615,19 @@ class ReporteController extends BaseController
         $totalPages = ceil($totalRecords / $perPage);
         $currentPage = $page;
         
-        // Agregar ORDER BY y LIMIT a la consulta principal
+        // Agregar ORDER BY y LIMIT a la consulta principal (columnas calificadas para evitar ambigüedad)
+        $sortSqlMap = [
+            'sede' => 's.nombre',
+            'codigo' => 'ce.codigo_carrera',
+            'nombre' => 'c.nombre',
+            'tipo_programa' => 'c.tipo_programa',
+            'estado' => 'c.estado',
+        ];
         if ($sortColumn === 'cobertura_basica' || $sortColumn === 'cobertura_complementaria') {
-            // Para ordenar por cobertura, necesitamos hacer un subquery
             $sql .= " ORDER BY c.nombre ASC LIMIT {$perPage} OFFSET {$offset}";
         } else {
-            $sql .= " ORDER BY {$sortColumn} {$sortDirection} LIMIT {$perPage} OFFSET {$offset}";
+            $orderExpr = $sortSqlMap[$sortColumn] ?? 'c.nombre';
+            $sql .= " ORDER BY {$orderExpr} {$sortDirection} LIMIT {$perPage} OFFSET {$offset}";
         }
         
         $stmt = $this->pdo->prepare($sql);
@@ -5517,6 +5526,8 @@ class ReporteController extends BaseController
                 s.nombre as sede,
                 ce.codigo_carrera as codigo,
                 c.nombre,
+                ce.vigencia_desde,
+                ce.vigencia_hasta,
                 c.tipo_programa,
                 c.estado,
                 c.id as carrera_id,
@@ -5549,8 +5560,8 @@ class ReporteController extends BaseController
             $params[] = '%' . $_GET['nombre'] . '%';
         }
         
-        // Ordenar por sede y nombre por defecto
-        $sql .= " ORDER BY s.nombre ASC, c.nombre ASC";
+        // Ordenar por nombre de carrera (ascendente), luego sede para filas homónimas
+        $sql .= " ORDER BY c.nombre ASC, s.nombre ASC, ce.codigo_carrera ASC";
         
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
@@ -5607,7 +5618,7 @@ class ReporteController extends BaseController
         
         // Configurar el título del reporte
         $sheet->setCellValue('A1', 'REPORTE DE COBERTURAS - ' . $anioActual);
-        $sheet->mergeCells('A1:H1');
+        $sheet->mergeCells('A1:I1');
         
         // Estilo para el título
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
@@ -5620,10 +5631,12 @@ class ReporteController extends BaseController
             'A3' => 'Sede',
             'B3' => 'Código Carrera',
             'C3' => 'Nombre Carrera',
-            'D3' => 'Tipo Programa',
-            'E3' => 'Estado',
-            'F3' => 'Cobertura Básica (' . $anioActual . ')',
-            'G3' => 'Cobertura Complementaria (' . $anioActual . ')'
+            'D3' => 'Vigencia Desde',
+            'E3' => 'Vigencia Hasta',
+            'F3' => 'Tipo Programa',
+            'G3' => 'Estado',
+            'H3' => 'Cobertura Básica (' . $anioActual . ')',
+            'I3' => 'Cobertura Complementaria (' . $anioActual . ')'
         ];
         
         foreach ($headers as $cell => $header) {
@@ -5639,6 +5652,8 @@ class ReporteController extends BaseController
             $sheet->setCellValue('A' . $row, $carrera->sede);
             $sheet->setCellValue('B' . $row, $carrera->codigo);
             $sheet->setCellValue('C' . $row, $carrera->nombre);
+            $sheet->setCellValue('D' . $row, $carrera->vigencia_desde ?? '');
+            $sheet->setCellValue('E' . $row, $carrera->vigencia_hasta ?? '');
             
             // Tipo de programa
             $tipoPrograma = '';
@@ -5651,36 +5666,36 @@ class ReporteController extends BaseController
             } else {
                 $tipoPrograma = $carrera->tipo_programa;
             }
-            $sheet->setCellValue('D' . $row, $tipoPrograma);
+            $sheet->setCellValue('F' . $row, $tipoPrograma);
             
             // Estado
             $estado = $carrera->estado == 1 ? 'Activo' : 'Inactivo';
-            $sheet->setCellValue('E' . $row, $estado);
+            $sheet->setCellValue('G' . $row, $estado);
             
             // Coberturas
             $coberturaBasica = $carrera->cobertura_basica;
             if (is_numeric($coberturaBasica)) {
                 $coberturaBasica = number_format($coberturaBasica, 2) . '%';
             }
-            $sheet->setCellValue('F' . $row, $coberturaBasica);
+            $sheet->setCellValue('H' . $row, $coberturaBasica);
             
             $coberturaComplementaria = $carrera->cobertura_complementaria;
             if (is_numeric($coberturaComplementaria)) {
                 $coberturaComplementaria = number_format($coberturaComplementaria, 2) . '%';
             }
-            $sheet->setCellValue('G' . $row, $coberturaComplementaria);
+            $sheet->setCellValue('I' . $row, $coberturaComplementaria);
             
             $row++;
         }
         
         // Autoajustar columnas
-        foreach (range('A', 'G') as $column) {
+        foreach (range('A', 'I') as $column) {
             $sheet->getColumnDimension($column)->setAutoSize(true);
         }
         
         // Agregar bordes a toda la tabla
         $lastRow = $row - 1;
-        $tableRange = 'A3:G' . $lastRow;
+        $tableRange = 'A3:I' . $lastRow;
         $sheet->getStyle($tableRange)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
         
         // Configurar el writer
