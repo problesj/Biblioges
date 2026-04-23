@@ -168,26 +168,46 @@ class ReporteController extends BaseController
     /**
      * Calcula la cobertura básica en tiempo real para una carrera específica
      */
-    private function calcularCoberturaBasicaTiempoReal($codigoCarrera, $sedeId, $tiposFormacionFiltro = [])
+    private function calcularCoberturaBasicaTiempoReal($carreraId, $codigoCarrera, $sedeId, $vigenciaDesde = null, $vigenciaHasta = null, $tiposFormacionFiltro = [])
     {
-        // Obtener asignaturas regulares de la carrera
-        $asignaturasRegulares = DB::table('vw_mallas')
-            ->where('id_sede', $sedeId)
-            ->where('codigo_carrera', $codigoCarrera)
-            ->where('tipo_asignatura', 'REGULAR')
-            ->select('codigo_asignatura as codigo')
+        // Obtener asignaturas regulares de la carrera (acotado por plan: carrera + sede + codigo + vigencias)
+        $asignaturasRegulares = DB::table('mallas as m')
+            ->join('asignaturas as a', 'a.id', '=', 'm.asignatura_id')
+            ->join('asignaturas_departamentos as ad', 'ad.asignatura_id', '=', 'a.id')
+            ->join('unidades as u', 'u.id', '=', 'ad.id_unidad')
+            ->join('carreras_espejos as ce', function ($join) {
+                $join->on('ce.carrera_id', '=', 'm.carrera_id')
+                    ->on('ce.sede_id', '=', 'u.sede_id');
+            })
+            ->where('ce.carrera_id', $carreraId)
+            ->where('ce.sede_id', $sedeId)
+            ->where('ce.codigo_carrera', $codigoCarrera)
+            ->where('ce.vigencia_desde', $vigenciaDesde)
+            ->where('ce.vigencia_hasta', $vigenciaHasta)
+            ->where('a.tipo', 'REGULAR')
+            ->select('ad.codigo_asignatura as codigo')
             ->distinct()
             ->get();
 
         // Obtener asignaturas de formación si hay filtros aplicados
         $asignaturasFormacion = collect();
         if (!empty($tiposFormacionFiltro)) {
-            $asignaturasFormacion = DB::table('vw_mallas')
-                ->where('id_sede', $sedeId)
-                ->where('codigo_carrera', $codigoCarrera)
-                ->whereIn('tipo_asignatura', $tiposFormacionFiltro)
-                ->whereNotNull('codigo_asignatura_formacion')
-                ->select('codigo_asignatura_formacion as codigo')
+            $asignaturasFormacion = DB::table('mallas as m')
+                ->join('carreras_espejos as ce', 'ce.carrera_id', '=', 'm.carrera_id')
+                ->join('asignaturas_formacion as af', 'af.asignatura_regular_id', '=', 'm.asignatura_id')
+                ->join('asignaturas as a_form', 'a_form.id', '=', 'af.asignatura_formacion_id')
+                ->join('asignaturas_departamentos as ad_form', 'ad_form.asignatura_id', '=', 'a_form.id')
+                ->join('unidades as u_form', function ($join) {
+                    $join->on('u_form.id', '=', 'ad_form.id_unidad')
+                        ->on('u_form.sede_id', '=', 'ce.sede_id');
+                })
+                ->where('ce.carrera_id', $carreraId)
+                ->where('ce.sede_id', $sedeId)
+                ->where('ce.codigo_carrera', $codigoCarrera)
+                ->where('ce.vigencia_desde', $vigenciaDesde)
+                ->where('ce.vigencia_hasta', $vigenciaHasta)
+                ->whereIn('a_form.tipo', $tiposFormacionFiltro)
+                ->select('ad_form.codigo_asignatura as codigo')
                 ->distinct()
                 ->get();
         }
@@ -254,26 +274,46 @@ class ReporteController extends BaseController
     /**
      * Calcula la cobertura complementaria en tiempo real para una carrera específica
      */
-    private function calcularCoberturaComplementariaTiempoReal($codigoCarrera, $sedeId, $tiposFormacionFiltro = [])
+    private function calcularCoberturaComplementariaTiempoReal($carreraId, $codigoCarrera, $sedeId, $vigenciaDesde = null, $vigenciaHasta = null, $tiposFormacionFiltro = [])
     {
-        // Obtener asignaturas regulares de la carrera
-        $asignaturasRegulares = DB::table('vw_mallas')
-            ->where('id_sede', $sedeId)
-            ->where('codigo_carrera', $codigoCarrera)
-            ->where('tipo_asignatura', 'REGULAR')
-            ->select('codigo_asignatura as codigo')
+        // Obtener asignaturas regulares de la carrera (acotado por plan: carrera + sede + codigo + vigencias)
+        $asignaturasRegulares = DB::table('mallas as m')
+            ->join('asignaturas as a', 'a.id', '=', 'm.asignatura_id')
+            ->join('asignaturas_departamentos as ad', 'ad.asignatura_id', '=', 'a.id')
+            ->join('unidades as u', 'u.id', '=', 'ad.id_unidad')
+            ->join('carreras_espejos as ce', function ($join) {
+                $join->on('ce.carrera_id', '=', 'm.carrera_id')
+                    ->on('ce.sede_id', '=', 'u.sede_id');
+            })
+            ->where('ce.carrera_id', $carreraId)
+            ->where('ce.sede_id', $sedeId)
+            ->where('ce.codigo_carrera', $codigoCarrera)
+            ->where('ce.vigencia_desde', $vigenciaDesde)
+            ->where('ce.vigencia_hasta', $vigenciaHasta)
+            ->where('a.tipo', 'REGULAR')
+            ->select('ad.codigo_asignatura as codigo')
             ->distinct()
             ->get();
 
         // Obtener asignaturas de formación si hay filtros aplicados
         $asignaturasFormacion = collect();
         if (!empty($tiposFormacionFiltro)) {
-            $asignaturasFormacion = DB::table('vw_mallas')
-                ->where('id_sede', $sedeId)
-                ->where('codigo_carrera', $codigoCarrera)
-                ->whereIn('tipo_asignatura', $tiposFormacionFiltro)
-                ->whereNotNull('codigo_asignatura_formacion')
-                ->select('codigo_asignatura_formacion as codigo')
+            $asignaturasFormacion = DB::table('mallas as m')
+                ->join('carreras_espejos as ce', 'ce.carrera_id', '=', 'm.carrera_id')
+                ->join('asignaturas_formacion as af', 'af.asignatura_regular_id', '=', 'm.asignatura_id')
+                ->join('asignaturas as a_form', 'a_form.id', '=', 'af.asignatura_formacion_id')
+                ->join('asignaturas_departamentos as ad_form', 'ad_form.asignatura_id', '=', 'a_form.id')
+                ->join('unidades as u_form', function ($join) {
+                    $join->on('u_form.id', '=', 'ad_form.id_unidad')
+                        ->on('u_form.sede_id', '=', 'ce.sede_id');
+                })
+                ->where('ce.carrera_id', $carreraId)
+                ->where('ce.sede_id', $sedeId)
+                ->where('ce.codigo_carrera', $codigoCarrera)
+                ->where('ce.vigencia_desde', $vigenciaDesde)
+                ->where('ce.vigencia_hasta', $vigenciaHasta)
+                ->whereIn('a_form.tipo', $tiposFormacionFiltro)
+                ->select('ad_form.codigo_asignatura as codigo')
                 ->distinct()
                 ->get();
         }
@@ -1636,32 +1676,50 @@ class ReporteController extends BaseController
         
         error_log('ReporteController@coberturaBasica: Total carreras encontradas: ' . count($carreras));
 
+        // Cobertura por plan (carrera + sede + código + vigencias) para evitar mezclar espejos
+        $buildPlanKey = static function ($carrera): string {
+            return implode('|', [
+                $carrera->carrera_id ?? '',
+                $carrera->sede_id ?? '',
+                $carrera->codigo ?? '',
+                $carrera->vigencia_desde ?? '',
+                $carrera->vigencia_hasta ?? '',
+            ]);
+        };
+
         // Cobertura básica por carrera - Calculada en tiempo real
         $coberturasBasicas = [];
-        $carrerasCodigos = array_column($carreras, 'codigo');
-        foreach ($carrerasCodigos as $codigoCarrera) {
-            // Obtener sede_id para la carrera
-            $carreraInfo = collect($carreras)->firstWhere('codigo', $codigoCarrera);
-            $sedeId = $carreraInfo->sede_id ?? 1; // Default a sede 1 si no se encuentra
-            
-            $coberturasBasicas[$codigoCarrera] = $this->calcularCoberturaBasicaTiempoReal($codigoCarrera, $sedeId, $tiposFormacionFiltro);
+        foreach ($carreras as $carreraItem) {
+            $planKey = $buildPlanKey($carreraItem);
+            $coberturasBasicas[$planKey] = $this->calcularCoberturaBasicaTiempoReal(
+                $carreraItem->carrera_id,
+                $carreraItem->codigo,
+                $carreraItem->sede_id,
+                $carreraItem->vigencia_desde ?? null,
+                $carreraItem->vigencia_hasta ?? null,
+                $tiposFormacionFiltro
+            );
         }
 
         // Cobertura complementaria por carrera - Calculada en tiempo real
         $coberturasComplementarias = [];
-        foreach ($carrerasCodigos as $codigoCarrera) {
-            // Obtener sede_id para la carrera
-            $carreraInfo = collect($carreras)->firstWhere('codigo', $codigoCarrera);
-            $sedeId = $carreraInfo->sede_id ?? 1; // Default a sede 1 si no se encuentra
-            
-            $coberturasComplementarias[$codigoCarrera] = $this->calcularCoberturaComplementariaTiempoReal($codigoCarrera, $sedeId, $tiposFormacionFiltro);
+        foreach ($carreras as $carreraItem) {
+            $planKey = $buildPlanKey($carreraItem);
+            $coberturasComplementarias[$planKey] = $this->calcularCoberturaComplementariaTiempoReal(
+                $carreraItem->carrera_id,
+                $carreraItem->codigo,
+                $carreraItem->sede_id,
+                $carreraItem->vigencia_desde ?? null,
+                $carreraItem->vigencia_hasta ?? null,
+                $tiposFormacionFiltro
+            );
         }
 
         // Agregar datos de cobertura a cada carrera
         foreach ($carreras as $carrera) {
-            $carreraCodigo = $carrera->codigo ?? null;
-            $coberturaBasica = $coberturasBasicas[$carreraCodigo] ?? 'Sin información';
-            $coberturaComplementaria = $coberturasComplementarias[$carreraCodigo] ?? 'Sin información';
+            $planKey = $buildPlanKey($carrera);
+            $coberturaBasica = $coberturasBasicas[$planKey] ?? 'Sin información';
+            $coberturaComplementaria = $coberturasComplementarias[$planKey] ?? 'Sin información';
             $carrera->cobertura_basica = $coberturaBasica;
             $carrera->cobertura_complementaria = $coberturaComplementaria;
         }
@@ -1733,24 +1791,50 @@ class ReporteController extends BaseController
         $sedeId = $args['sede_id'];
         $carreraId = $args['carrera_id'];
         
-        // Obtener la carrera antes de cualquier uso de $carrera->codigo
-        $carrera = DB::table('vw_mallas')
-                ->where('id_sede', $sedeId)
-                ->where('id_carrera', $carreraId)
-            ->select(
-                'id_sede as sede_id',
-                'id_carrera as carrera_id',
-                'sede as sede',
-                'codigo_carrera as codigo',
-                'carrera as nombre'
-            )
-                ->first();
-                
-        if (!$carrera) {
-            error_log('ReporteController@reporteBibliografiaBasica: No se encontró la carrera');
+        // Resolver el plan (carrera espejo) usando parámetros explícitos cuando vienen desde el listado
+        $codigoPlan = $queryParams['codigo'] ?? null;
+        $vigenciaDesdePlan = $queryParams['vigencia_desde'] ?? null;
+        $vigenciaHastaPlan = $queryParams['vigencia_hasta'] ?? null;
+
+        $carreraEspejoQuery = DB::table('carreras_espejos')
+            ->where('carrera_id', $carreraId)
+            ->where('sede_id', $sedeId);
+
+        if (!empty($codigoPlan)) {
+            $carreraEspejoQuery->where('codigo_carrera', $codigoPlan);
+        }
+        if (!empty($vigenciaDesdePlan)) {
+            $carreraEspejoQuery->where('vigencia_desde', $vigenciaDesdePlan);
+        }
+        if (!empty($vigenciaHastaPlan)) {
+            $carreraEspejoQuery->where('vigencia_hasta', $vigenciaHastaPlan);
+        }
+
+        $carreraEspejo = $carreraEspejoQuery
+            ->orderByDesc('vigencia_desde')
+            ->first();
+
+        if (!$carreraEspejo) {
+            error_log('ReporteController@reporteBibliografiaBasica: No se encontró carrera_espejo para los parámetros recibidos');
             $response->getBody()->write('Carrera no encontrada');
             return $response->withStatus(404);
         }
+
+        $carreraNombre = DB::table('carreras')->where('id', $carreraId)->value('nombre');
+        $sedeNombre = DB::table('sedes')->where('id', $sedeId)->value('nombre');
+        if (!$carreraNombre || !$sedeNombre) {
+            $response->getBody()->write('Carrera no encontrada');
+            return $response->withStatus(404);
+        }
+        $carrera = (object) [
+            'sede_id' => (int) $sedeId,
+            'carrera_id' => (int) $carreraId,
+            'sede' => $sedeNombre,
+            'codigo' => $carreraEspejo->codigo_carrera,
+            'vigencia_desde' => $carreraEspejo->vigencia_desde,
+            'vigencia_hasta' => $carreraEspejo->vigencia_hasta,
+            'nombre' => $carreraNombre,
+        ];
         
         error_log('ReporteController@reporteBibliografiaBasica: Sede ID: ' . $sedeId . ', Carrera ID: ' . $carreraId);
         // Determinar si hay filtros aplicados inicialmente
@@ -1762,35 +1846,11 @@ class ReporteController extends BaseController
         error_log('ReporteController@reporteBibliografiaBasica: Tipos formación filtro está vacío: ' . (empty($tiposFormacionFiltro) ? 'SÍ' : 'NO'));
         error_log('ReporteController@reporteBibliografiaBasica: Hay filtros aplicados: ' . ($hayFiltrosAplicados ? 'SÍ' : 'NO'));
 
-        // Obtener información de la sede y carrera usando la vista vw_mallas con la nueva estructura
-        $carrera = DB::table('vw_mallas')
-            ->where('id_sede', $sedeId)
-            ->where('id_carrera', $carreraId)
-            ->select(
-                'id_sede as sede_id',
-                'id_carrera as carrera_id',
-                'sede as sede',
-                'codigo_carrera as codigo',
-                'carrera as nombre'
-            )
-            ->first();
-            
-        if (!$carrera) {
-            error_log('ReporteController@reporteBibliografiaBasica: No se encontró la carrera');
-            $response->getBody()->write('Carrera no encontrada');
-            return $response->withStatus(404);
-        }
-        
         error_log('ReporteController@reporteBibliografiaBasica: Carrera encontrada: ' . $carrera->nombre);
 
         // Si no hay filtros en la URL, intentar cargar filtros guardados de la tabla filtros_formaciones
         if (empty($tiposFormacionFiltro) && !$tiposFormacionVacio) {
             // Obtener el id_carrera_espejo para la carrera y sede específica
-            $carreraEspejo = DB::table('carreras_espejos')
-                ->where('codigo_carrera', $carrera->codigo)
-                ->where('sede_id', $sedeId)
-                ->first();
-            
             if ($carreraEspejo) {
                 $filtrosGuardados = DB::table('filtros_formaciones')
                     ->where('id_carrera_espejo', $carreraEspejo->id)
@@ -1851,6 +1911,7 @@ class ReporteController extends BaseController
         // Obtener asignaturas REGULARES de la sede específica
         $regulares = DB::table('vw_mallas')
             ->where('id_sede', $sedeId)
+            ->where('id_carrera', $carreraId)
             ->where('codigo_carrera', $carrera->codigo)
             ->where('tipo_asignatura', 'REGULAR')
             ->select('codigo_asignatura as codigo', 'asignatura as nombre', 'tipo_asignatura')
@@ -1862,6 +1923,8 @@ class ReporteController extends BaseController
         if (!empty($tiposFormacionFiltro)) {
             // Si hay filtros aplicados, usar solo los seleccionados
             $formaciones = DB::table('vw_mallas')
+                ->where('id_sede', $sedeId)
+                ->where('id_carrera', $carreraId)
                 ->where('codigo_carrera', $carrera->codigo)
                 ->whereIn('tipo_asignatura', $tiposFormacionFiltro)
                 ->whereNotNull('codigo_asignatura_formacion') // Solo asignaturas de formación
@@ -1878,6 +1941,8 @@ class ReporteController extends BaseController
         } else {
             // Primera carga: todas las de formación disponibles (excluyendo REGULAR y ELECTIVA)
             $formaciones = DB::table('vw_mallas')
+                ->where('id_sede', $sedeId)
+                ->where('id_carrera', $carreraId)
                 ->where('codigo_carrera', $carrera->codigo)
                 ->whereNotIn('tipo_asignatura', ['REGULAR', 'FORMACION_ELECTIVA'])
                 ->whereNotNull('codigo_asignatura_formacion') // Solo asignaturas de formación
@@ -1900,6 +1965,8 @@ class ReporteController extends BaseController
 
         // Obtener todos los tipos de formación disponibles para esta carrera desde vw_mallas
         $tiposFormacionDisponibles = DB::table('vw_mallas')
+            ->where('id_sede', $sedeId)
+            ->where('id_carrera', $carreraId)
             ->where('codigo_carrera', $carrera->codigo)
             ->whereNotIn('tipo_asignatura', ['REGULAR', 'FORMACION_ELECTIVA'])
             ->whereNotNull('codigo_asignatura_formacion') // Solo asignaturas de formación
@@ -1912,6 +1979,8 @@ class ReporteController extends BaseController
         
         // Log adicional para ver todos los tipos de asignatura en la carrera
         $todosLosTipos = DB::table('vw_mallas')
+            ->where('id_sede', $sedeId)
+            ->where('id_carrera', $carreraId)
             ->where('codigo_carrera', $carrera->codigo)
             ->pluck('tipo_asignatura')
             ->unique()
@@ -5569,45 +5638,48 @@ class ReporteController extends BaseController
         
         error_log('ReporteController@exportarCoberturasExcel: Total carreras encontradas: ' . count($carreras));
 
+        // Cobertura por plan (carrera + sede + código + vigencias) para evitar mezclar espejos
+        $buildPlanKey = static function ($carrera): string {
+            return implode('|', [
+                $carrera->carrera_id ?? '',
+                $carrera->sede_id ?? '',
+                $carrera->codigo ?? '',
+                $carrera->vigencia_desde ?? '',
+                $carrera->vigencia_hasta ?? '',
+            ]);
+        };
+
         // Cobertura básica por carrera
         $coberturasBasicas = [];
-        $carrerasCodigos = array_column($carreras, 'codigo');
-        foreach ($carrerasCodigos as $codigoCarrera) {
-            $ultimaFecha = DB::table('reporte_coberturas_carreras_basicas')
-                ->where('codigo_carrera', $codigoCarrera)
-                ->whereYear('fecha_medicion', $anioActual)
-                ->max('fecha_medicion');
-            if ($ultimaFecha) {
-                $cobertura = DB::table('reporte_coberturas_carreras_basicas')
-                    ->select(
-                        DB::raw('COUNT(DISTINCT id_bibliografia_declarada) AS total_declaradas'),
-                        DB::raw('COUNT(DISTINCT CASE WHEN no_bib_disponible_basica > 0 THEN id_bibliografia_declarada END) AS total_disponibles'),
-                        DB::raw('ROUND(LEAST(COUNT(DISTINCT CASE WHEN no_bib_disponible_basica > 0 THEN id_bibliografia_declarada END) * 100.0 / NULLIF(COUNT(DISTINCT id_bibliografia_declarada), 0), 100), 2) AS cobertura')
-                    )
-                    ->where('codigo_carrera', $codigoCarrera)
-                    ->where('fecha_medicion', $ultimaFecha)
-                    ->first();
-                $coberturasBasicas[$codigoCarrera] = $cobertura->cobertura ?? 'Sin información';
-            } else {
-                $coberturasBasicas[$codigoCarrera] = 'Sin información';
-            }
+        foreach ($carreras as $carreraItem) {
+            $planKey = $buildPlanKey($carreraItem);
+            $coberturasBasicas[$planKey] = $this->calcularCoberturaBasicaTiempoReal(
+                $carreraItem->carrera_id,
+                $carreraItem->codigo,
+                $carreraItem->sede_id,
+                $carreraItem->vigencia_desde ?? null,
+                $carreraItem->vigencia_hasta ?? null
+            );
         }
 
         // Cobertura complementaria por carrera - Calculada en tiempo real
         $coberturasComplementarias = [];
-        foreach ($carrerasCodigos as $codigoCarrera) {
-            // Obtener sede_id para la carrera
-            $carreraInfo = collect($carreras)->firstWhere('codigo', $codigoCarrera);
-            $sedeId = $carreraInfo->sede_id ?? 1; // Default a sede 1 si no se encuentra
-            
-            $coberturasComplementarias[$codigoCarrera] = $this->calcularCoberturaComplementariaTiempoReal($codigoCarrera, $sedeId);
+        foreach ($carreras as $carreraItem) {
+            $planKey = $buildPlanKey($carreraItem);
+            $coberturasComplementarias[$planKey] = $this->calcularCoberturaComplementariaTiempoReal(
+                $carreraItem->carrera_id,
+                $carreraItem->codigo,
+                $carreraItem->sede_id,
+                $carreraItem->vigencia_desde ?? null,
+                $carreraItem->vigencia_hasta ?? null
+            );
         }
 
         // Agregar datos de cobertura a cada carrera
         foreach ($carreras as $carrera) {
-            $carreraCodigo = $carrera->codigo ?? null;
-            $coberturaBasica = $coberturasBasicas[$carreraCodigo] ?? 'Sin información';
-            $coberturaComplementaria = $coberturasComplementarias[$carreraCodigo] ?? 'Sin información';
+            $planKey = $buildPlanKey($carrera);
+            $coberturaBasica = $coberturasBasicas[$planKey] ?? 'Sin información';
+            $coberturaComplementaria = $coberturasComplementarias[$planKey] ?? 'Sin información';
             $carrera->cobertura_basica = $coberturaBasica;
             $carrera->cobertura_complementaria = $coberturaComplementaria;
         }

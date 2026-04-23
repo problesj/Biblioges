@@ -796,6 +796,12 @@ $context["carrera"], "tipo_programa", [], "any", false, false, false, 514) == "O
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sede_id", [], "any", false, false, false, 543), "html", null, true);
             yield "/";
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "carrera_id", [], "any", false, false, false, 543), "html", null, true);
+            yield "?codigo=";
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::urlencode(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "codigo", [], "any", false, false, false, 543)), "html", null, true);
+            yield "&vigencia_desde=";
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::urlencode(((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", true, true, false, 543)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", false, false, false, 543), "")) : (""))), "html", null, true);
+            yield "&vigencia_hasta=";
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::urlencode(((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_hasta", [], "any", true, true, false, 543)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_hasta", [], "any", false, false, false, 543), "")) : (""))), "html", null, true);
             yield "\" class=\"btn btn-primary btn-action\">
                                         <i class=\"fas fa-chart-bar\"></i> Básicas
                                     </a>
@@ -806,6 +812,12 @@ $context["carrera"], "tipo_programa", [], "any", false, false, false, 514) == "O
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sede_id", [], "any", false, false, false, 546), "html", null, true);
             yield "/";
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "carrera_id", [], "any", false, false, false, 546), "html", null, true);
+            yield "?codigo=";
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::urlencode(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "codigo", [], "any", false, false, false, 546)), "html", null, true);
+            yield "&vigencia_desde=";
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::urlencode(((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", true, true, false, 546)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", false, false, false, 546), "")) : (""))), "html", null, true);
+            yield "&vigencia_hasta=";
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::urlencode(((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_hasta", [], "any", true, true, false, 546)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_hasta", [], "any", false, false, false, 546), "")) : (""))), "html", null, true);
             yield "\" class=\"btn btn-secondary btn-action\">
                                         <i class=\"fas fa-chart-line\"></i> Complementarias
                                     </a>
@@ -816,6 +828,12 @@ $context["carrera"], "tipo_programa", [], "any", false, false, false, 514) == "O
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sede_id", [], "any", false, false, false, 549), "html", null, true);
             yield "/";
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "carrera_id", [], "any", false, false, false, 549), "html", null, true);
+            yield "?codigo=";
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::urlencode(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "codigo", [], "any", false, false, false, 549)), "html", null, true);
+            yield "&vigencia_desde=";
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::urlencode(((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", true, true, false, 549)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", false, false, false, 549), "")) : (""))), "html", null, true);
+            yield "&vigencia_hasta=";
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::urlencode(((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_hasta", [], "any", true, true, false, 549)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_hasta", [], "any", false, false, false, 549), "")) : (""))), "html", null, true);
             yield "\" class=\"btn btn-info btn-action\">
                                         <i class=\"fas fa-object-group\"></i> Fusión
                                     </a>
@@ -1075,7 +1093,7 @@ $context["carrera"], "tipo_programa", [], "any", false, false, false, 514) == "O
      */
     public function getDebugInfo(): array
     {
-        return array (  1023 => 651,  1010 => 640,  1003 => 639,  995 => 634,  990 => 631,  984 => 627,  976 => 622,  973 => 621,  971 => 620,  967 => 618,  959 => 615,  956 => 614,  950 => 610,  947 => 609,  945 => 608,  942 => 607,  936 => 606,  928 => 603,  925 => 602,  919 => 599,  916 => 598,  913 => 597,  909 => 596,  906 => 595,  903 => 594,  897 => 590,  895 => 589,  890 => 587,  887 => 586,  885 => 585,  882 => 584,  879 => 583,  877 => 582,  873 => 580,  867 => 576,  859 => 571,  856 => 570,  854 => 569,  849 => 566,  847 => 565,  840 => 560,  831 => 556,  829 => 555,  814 => 549,  804 => 546,  794 => 543,  789 => 540,  785 => 538,  779 => 536,  777 => 535,  773 => 533,  769 => 531,  763 => 529,  761 => 528,  757 => 526,  753 => 524,  749 => 522,  747 => 521,  743 => 519,  737 => 517,  733 => 515,  731 => 514,  728 => 513,  726 => 512,  723 => 511,  721 => 510,  712 => 508,  708 => 507,  704 => 506,  700 => 505,  696 => 504,  693 => 503,  688 => 502,  678 => 495,  674 => 494,  670 => 493,  663 => 489,  659 => 488,  655 => 487,  648 => 483,  643 => 481,  636 => 477,  631 => 475,  622 => 469,  617 => 467,  610 => 463,  605 => 461,  598 => 457,  593 => 455,  578 => 445,  573 => 442,  564 => 439,  555 => 438,  551 => 437,  527 => 416,  515 => 407,  503 => 400,  497 => 399,  483 => 390,  477 => 389,  471 => 388,  460 => 380,  452 => 375,  439 => 364,  432 => 363,  72 => 6,  65 => 5,  54 => 3,  43 => 1,);
+        return array (  1041 => 651,  1028 => 640,  1021 => 639,  1013 => 634,  1008 => 631,  1002 => 627,  994 => 622,  991 => 621,  989 => 620,  985 => 618,  977 => 615,  974 => 614,  968 => 610,  965 => 609,  963 => 608,  960 => 607,  954 => 606,  946 => 603,  943 => 602,  937 => 599,  934 => 598,  931 => 597,  927 => 596,  924 => 595,  921 => 594,  915 => 590,  913 => 589,  908 => 587,  905 => 586,  903 => 585,  900 => 584,  897 => 583,  895 => 582,  891 => 580,  885 => 576,  877 => 571,  874 => 570,  872 => 569,  867 => 566,  865 => 565,  858 => 560,  849 => 556,  847 => 555,  826 => 549,  810 => 546,  794 => 543,  789 => 540,  785 => 538,  779 => 536,  777 => 535,  773 => 533,  769 => 531,  763 => 529,  761 => 528,  757 => 526,  753 => 524,  749 => 522,  747 => 521,  743 => 519,  737 => 517,  733 => 515,  731 => 514,  728 => 513,  726 => 512,  723 => 511,  721 => 510,  712 => 508,  708 => 507,  704 => 506,  700 => 505,  696 => 504,  693 => 503,  688 => 502,  678 => 495,  674 => 494,  670 => 493,  663 => 489,  659 => 488,  655 => 487,  648 => 483,  643 => 481,  636 => 477,  631 => 475,  622 => 469,  617 => 467,  610 => 463,  605 => 461,  598 => 457,  593 => 455,  578 => 445,  573 => 442,  564 => 439,  555 => 438,  551 => 437,  527 => 416,  515 => 407,  503 => 400,  497 => 399,  483 => 390,  477 => 389,  471 => 388,  460 => 380,  452 => 375,  439 => 364,  432 => 363,  72 => 6,  65 => 5,  54 => 3,  43 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -1622,13 +1640,13 @@ $context["carrera"], "tipo_programa", [], "any", false, false, false, 514) == "O
                                 </td>
                                 <td class=\"cell-acciones\">
                                 <div class=\"d-flex gap-1 flex-wrap justify-content-center\">
-                                    <a href=\"{{ app_url }}reportes/coberturas/{{ carrera.sede_id }}/{{ carrera.carrera_id }}\" class=\"btn btn-primary btn-action\">
+                                    <a href=\"{{ app_url }}reportes/coberturas/{{ carrera.sede_id }}/{{ carrera.carrera_id }}?codigo={{ carrera.codigo|url_encode }}&vigencia_desde={{ carrera.vigencia_desde|default('')|url_encode }}&vigencia_hasta={{ carrera.vigencia_hasta|default('')|url_encode }}\" class=\"btn btn-primary btn-action\">
                                         <i class=\"fas fa-chart-bar\"></i> Básicas
                                     </a>
-                                    <a href=\"{{ app_url }}reportes/coberturas-complementaria/{{ carrera.sede_id }}/{{ carrera.carrera_id }}\" class=\"btn btn-secondary btn-action\">
+                                    <a href=\"{{ app_url }}reportes/coberturas-complementaria/{{ carrera.sede_id }}/{{ carrera.carrera_id }}?codigo={{ carrera.codigo|url_encode }}&vigencia_desde={{ carrera.vigencia_desde|default('')|url_encode }}&vigencia_hasta={{ carrera.vigencia_hasta|default('')|url_encode }}\" class=\"btn btn-secondary btn-action\">
                                         <i class=\"fas fa-chart-line\"></i> Complementarias
                                     </a>
-                                    <a href=\"{{ app_url }}reportes/coberturas-fusionado/{{ carrera.sede_id }}/{{ carrera.carrera_id }}\" class=\"btn btn-info btn-action\">
+                                    <a href=\"{{ app_url }}reportes/coberturas-fusionado/{{ carrera.sede_id }}/{{ carrera.carrera_id }}?codigo={{ carrera.codigo|url_encode }}&vigencia_desde={{ carrera.vigencia_desde|default('')|url_encode }}&vigencia_hasta={{ carrera.vigencia_hasta|default('')|url_encode }}\" class=\"btn btn-info btn-action\">
                                         <i class=\"fas fa-object-group\"></i> Fusión
                                     </a>
                                 </div>

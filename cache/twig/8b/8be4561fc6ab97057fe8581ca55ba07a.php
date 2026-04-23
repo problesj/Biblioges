@@ -31,6 +31,7 @@ class __TwigTemplate_2e29d2ef4906adea61083fdcb803b2d0 extends Template
 
         $this->blocks = [
             'title' => [$this, 'block_title'],
+            'head' => [$this, 'block_head'],
             'content' => [$this, 'block_content'],
             'scripts' => [$this, 'block_scripts'],
         ];
@@ -65,96 +66,160 @@ class __TwigTemplate_2e29d2ef4906adea61083fdcb803b2d0 extends Template
     /**
      * @return iterable<null|scalar|\Stringable>
      */
-    public function block_content(array $context, array $blocks = []): iterable
+    public function block_head(array $context, array $blocks = []): iterable
     {
         $macros = $this->macros;
         // line 6
+        yield "<style>
+    .malla-grafica-header {
+        background: linear-gradient(90deg, #8b2f13 0%, #a83c16 100%);
+        color: #fff;
+        padding: 1rem 1.25rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .malla-grafica-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .malla-semestre-col {
+        background: #fff;
+        border: 1px solid #e3e6f0;
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+
+    .malla-semestre-title {
+        background: #ef6c00;
+        color: #fff;
+        font-weight: 700;
+        text-transform: uppercase;
+        text-align: center;
+        padding: 0.45rem 0.5rem;
+        font-size: 0.82rem;
+    }
+
+    .malla-asignatura-item {
+        margin: 0.4rem;
+        background: #f2f4f8;
+        border-radius: 0.35rem;
+        border-left: 4px solid #8b2f13;
+        padding: 0.45rem 0.5rem;
+        font-size: 0.78rem;
+        line-height: 1.2;
+    }
+
+    .malla-asignatura-tipo {
+        display: block;
+        color: #6c757d;
+        font-size: 0.68rem;
+        margin-top: 0.2rem;
+    }
+</style>
+";
+        yield from [];
+    }
+
+    // line 57
+    /**
+     * @return iterable<null|scalar|\Stringable>
+     */
+    public function block_content(array $context, array $blocks = []): iterable
+    {
+        $macros = $this->macros;
+        // line 58
         yield "<div class=\"container-fluid\">
     <div class=\"d-flex justify-content-between align-items-center mb-4\">
         <h1 class=\"h3 mb-0 text-gray-800\">Malla Curricular - ";
-        // line 8
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "nombre", [], "any", false, false, false, 8), "html", null, true);
+        // line 60
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "nombre", [], "any", false, false, false, 60), "html", null, true);
         yield "</h1>
         <div>
             <a href=\"";
-        // line 10
+        // line 62
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "mallas\" class=\"btn btn-secondary\">
                 <i class=\"fas fa-arrow-left\"></i> Volver
             </a>
             <a href=\"";
-        // line 13
+        // line 65
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "mallas/";
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "id", [], "any", false, false, false, 13), "html", null, true);
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "id", [], "any", false, false, false, 65), "html", null, true);
         yield "/fusion-asignaturas\" class=\"btn btn-warning\">
                 <i class=\"fas fa-object-group\"></i> Fusionar Asignaturas
             </a>
             <a href=\"";
-        // line 16
+        // line 68
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "mallas/";
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "id", [], "any", false, false, false, 16), "html", null, true);
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "id", [], "any", false, false, false, 68), "html", null, true);
         yield "/edit\" class=\"btn btn-primary\">
                 <i class=\"fas fa-edit\"></i> Editar
             </a>
+            <button type=\"button\" class=\"btn btn-success\" id=\"btnVerMallaGrafica\">
+                <i class=\"fas fa-image\"></i> Ver formato gráfico (PNG)
+            </button>
         </div>
     </div>
 
     ";
-        // line 22
+        // line 77
         if (($context["swal"] ?? null)) {
-            // line 23
+            // line 78
             yield "    <script>
         Swal.fire({
             icon: '";
-            // line 25
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "icon", [], "any", false, false, false, 25), "html", null, true);
+            // line 80
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "icon", [], "any", false, false, false, 80), "html", null, true);
             yield "',
             title: '";
-            // line 26
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "title", [], "any", false, false, false, 26), "html", null, true);
+            // line 81
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "title", [], "any", false, false, false, 81), "html", null, true);
             yield "',
             text: '";
-            // line 27
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "text", [], "any", false, false, false, 27), "html", null, true);
+            // line 82
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["swal"] ?? null), "text", [], "any", false, false, false, 82), "html", null, true);
             yield "',
             confirmButtonText: 'Aceptar'
         });
     </script>
     ";
         }
-        // line 32
+        // line 87
         yield "
     ";
-        // line 33
+        // line 88
         if (($context["success"] ?? null)) {
-            // line 34
+            // line 89
             yield "    <div class=\"alert alert-success alert-dismissible fade show\" role=\"alert\">
         ";
-            // line 35
+            // line 90
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["success"] ?? null), "html", null, true);
             yield "
         <button type=\"button\" class=\"btn-close\" data-bs-dismiss=\"alert\" aria-label=\"Close\"></button>
     </div>
     ";
         }
-        // line 39
+        // line 94
         yield "
     ";
-        // line 40
+        // line 95
         if (($context["error"] ?? null)) {
-            // line 41
+            // line 96
             yield "    <div class=\"alert alert-danger alert-dismissible fade show\" role=\"alert\">
         ";
-            // line 42
+            // line 97
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["error"] ?? null), "html", null, true);
             yield "
         <button type=\"button\" class=\"btn-close\" data-bs-dismiss=\"alert\" aria-label=\"Close\"></button>
     </div>
     ";
         }
-        // line 46
+        // line 101
         yield "
     <!-- Información de la Carrera -->
     <div class=\"card shadow mb-4\">
@@ -165,52 +230,52 @@ class __TwigTemplate_2e29d2ef4906adea61083fdcb803b2d0 extends Template
             <div class=\"row\">
                 <div class=\"col-md-4\">
                     <p><strong>Nombre:</strong> ";
-        // line 55
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "nombre", [], "any", false, false, false, 55), "html", null, true);
+        // line 110
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "nombre", [], "any", false, false, false, 110), "html", null, true);
         yield "</p>
                 </div>
                 <div class=\"col-md-4\">
                     <p><strong>Tipo de Programa:</strong>
                         ";
-        // line 59
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "tipo_programa", [], "any", false, false, false, 59) == "P")) {
-            // line 60
+        // line 114
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "tipo_programa", [], "any", false, false, false, 114) == "P")) {
+            // line 115
             yield "                            Pregrado
                         ";
-        } elseif ((CoreExtension::getAttribute($this->env, $this->source,         // line 61
-($context["carrera"] ?? null), "tipo_programa", [], "any", false, false, false, 61) == "G")) {
-            // line 62
+        } elseif ((CoreExtension::getAttribute($this->env, $this->source,         // line 116
+($context["carrera"] ?? null), "tipo_programa", [], "any", false, false, false, 116) == "G")) {
+            // line 117
             yield "                            Postgrado
                         ";
-        } elseif ((CoreExtension::getAttribute($this->env, $this->source,         // line 63
-($context["carrera"] ?? null), "tipo_programa", [], "any", false, false, false, 63) == "O")) {
-            // line 64
+        } elseif ((CoreExtension::getAttribute($this->env, $this->source,         // line 118
+($context["carrera"] ?? null), "tipo_programa", [], "any", false, false, false, 118) == "O")) {
+            // line 119
             yield "                            Otro
                         ";
         } else {
-            // line 66
+            // line 121
             yield "                            ";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "tipo_programa", [], "any", false, false, false, 66), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "tipo_programa", [], "any", false, false, false, 121), "html", null, true);
             yield "
                         ";
         }
-        // line 68
+        // line 123
         yield "                    </p>
                 </div>
                 <div class=\"col-md-4\">
                     <p><strong>Estado:</strong>
                         ";
-        // line 72
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "estado", [], "any", false, false, false, 72) == 1)) {
-            // line 73
+        // line 127
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "estado", [], "any", false, false, false, 127) == 1)) {
+            // line 128
             yield "                            <span class=\"badge bg-success\">Activo</span>
                         ";
         } else {
-            // line 75
+            // line 130
             yield "                            <span class=\"badge bg-danger\">Inactivo</span>
                         ";
         }
-        // line 77
+        // line 132
         yield "                    </p>
                 </div>
             </div>
@@ -237,9 +302,9 @@ class __TwigTemplate_2e29d2ef4906adea61083fdcb803b2d0 extends Template
                     </thead>
                     <tbody>
                         ";
-        // line 102
+        // line 157
         $context['_parent'] = $context;
-        $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "codigos_carrera", [], "any", false, false, false, 102));
+        $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "codigos_carrera", [], "any", false, false, false, 157));
         $context['loop'] = [
           'parent' => $context['_parent'],
           'index0' => 0,
@@ -254,41 +319,41 @@ class __TwigTemplate_2e29d2ef4906adea61083fdcb803b2d0 extends Template
             $context['loop']['last'] = 1 === $length;
         }
         foreach ($context['_seq'] as $context["_key"] => $context["codigo"]) {
-            // line 103
+            // line 158
             yield "                        <tr>
                             <td>";
-            // line 104
+            // line 159
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($context["codigo"], "html", null, true);
             yield "</td>
                             <td>";
-            // line 105
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v0 = CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "vigencias_desde", [], "any", false, false, false, 105)) && is_array($_v0) || $_v0 instanceof ArrayAccess ? ($_v0[CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 105)] ?? null) : null), "html", null, true);
+            // line 160
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v0 = CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "vigencias_desde", [], "any", false, false, false, 160)) && is_array($_v0) || $_v0 instanceof ArrayAccess ? ($_v0[CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 160)] ?? null) : null), "html", null, true);
             yield "</td>
                             <td>";
-            // line 106
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v1 = CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "vigencias_hasta", [], "any", false, false, false, 106)) && is_array($_v1) || $_v1 instanceof ArrayAccess ? ($_v1[CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 106)] ?? null) : null), "html", null, true);
+            // line 161
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v1 = CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "vigencias_hasta", [], "any", false, false, false, 161)) && is_array($_v1) || $_v1 instanceof ArrayAccess ? ($_v1[CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 161)] ?? null) : null), "html", null, true);
             yield "</td>
                             <td>";
-            // line 107
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v2 = CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "sedes", [], "any", false, false, false, 107)) && is_array($_v2) || $_v2 instanceof ArrayAccess ? ($_v2[CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 107)] ?? null) : null), "html", null, true);
+            // line 162
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v2 = CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "sedes", [], "any", false, false, false, 162)) && is_array($_v2) || $_v2 instanceof ArrayAccess ? ($_v2[CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 162)] ?? null) : null), "html", null, true);
             yield "</td>
                             <td>";
-            // line 108
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v3 = CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "unidades", [], "any", false, false, false, 108)) && is_array($_v3) || $_v3 instanceof ArrayAccess ? ($_v3[CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 108)] ?? null) : null), "html", null, true);
+            // line 163
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape((($_v3 = CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "unidades", [], "any", false, false, false, 163)) && is_array($_v3) || $_v3 instanceof ArrayAccess ? ($_v3[CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "index0", [], "any", false, false, false, 163)] ?? null) : null), "html", null, true);
             yield "</td>
                             <td>
                                 ";
-            // line 110
-            if ((CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "estado", [], "any", false, false, false, 110) == 1)) {
-                // line 111
+            // line 165
+            if ((CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "estado", [], "any", false, false, false, 165) == 1)) {
+                // line 166
                 yield "                                    <span class=\"badge bg-success\">Activo</span>
                                 ";
             } else {
-                // line 113
+                // line 168
                 yield "                                    <span class=\"badge bg-danger\">Inactivo</span>
                                 ";
             }
-            // line 115
+            // line 170
             yield "                            </td>
                         </tr>
                         ";
@@ -304,7 +369,7 @@ class __TwigTemplate_2e29d2ef4906adea61083fdcb803b2d0 extends Template
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_key'], $context['codigo'], $context['_parent'], $context['loop']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 118
+        // line 173
         yield "                    </tbody>
                 </table>
             </div>
@@ -332,20 +397,20 @@ class __TwigTemplate_2e29d2ef4906adea61083fdcb803b2d0 extends Template
                     </thead>
                     <tbody>
                         ";
-        // line 144
-        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "asignaturas", [], "any", true, true, false, 144) && (Twig\Extension\CoreExtension::length($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "asignaturas", [], "any", false, false, false, 144)) > 0))) {
-            // line 145
+        // line 199
+        if ((CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "asignaturas", [], "any", true, true, false, 199) && (Twig\Extension\CoreExtension::length($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "asignaturas", [], "any", false, false, false, 199)) > 0))) {
+            // line 200
             yield "                            ";
             $context['_parent'] = $context;
-            $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "asignaturas", [], "any", false, false, false, 145));
+            $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "asignaturas", [], "any", false, false, false, 200));
             foreach ($context['_seq'] as $context["_key"] => $context["asignatura"]) {
-                // line 146
+                // line 201
                 yield "                            <tr>
                                 <td>
                                     ";
-                // line 148
+                // line 203
                 $context['_parent'] = $context;
-                $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "codigos", [], "any", false, false, false, 148));
+                $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "codigos", [], "any", false, false, false, 203));
                 $context['loop'] = [
                   'parent' => $context['_parent'],
                   'index0' => 0,
@@ -360,13 +425,13 @@ class __TwigTemplate_2e29d2ef4906adea61083fdcb803b2d0 extends Template
                     $context['loop']['last'] = 1 === $length;
                 }
                 foreach ($context['_seq'] as $context["_key"] => $context["codigo"]) {
-                    // line 149
+                    // line 204
                     yield "                                        ";
                     yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($context["codigo"], "html", null, true);
-                    if ( !CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "last", [], "any", false, false, false, 149)) {
+                    if ( !CoreExtension::getAttribute($this->env, $this->source, $context["loop"], "last", [], "any", false, false, false, 204)) {
                         yield "<br>";
                     }
-                    // line 150
+                    // line 205
                     yield "                                    ";
                     ++$context['loop']['index0'];
                     ++$context['loop']['index'];
@@ -380,44 +445,44 @@ class __TwigTemplate_2e29d2ef4906adea61083fdcb803b2d0 extends Template
                 $_parent = $context['_parent'];
                 unset($context['_seq'], $context['_key'], $context['codigo'], $context['_parent'], $context['loop']);
                 $context = array_intersect_key($context, $_parent) + $_parent;
-                // line 151
+                // line 206
                 yield "                                </td>
                                 <td>";
-                // line 152
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "nombre", [], "any", false, false, false, 152), "html", null, true);
+                // line 207
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "nombre", [], "any", false, false, false, 207), "html", null, true);
                 yield "</td>
                                 <td class=\"text-center\">";
-                // line 153
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "tipo", [], "any", false, false, false, 153), "html", null, true);
+                // line 208
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "tipo", [], "any", false, false, false, 208), "html", null, true);
                 yield "</td>
                                 <td class=\"text-center\">";
-                // line 154
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "periodicidad", [], "any", false, false, false, 154), "html", null, true);
+                // line 209
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "periodicidad", [], "any", false, false, false, 209), "html", null, true);
                 yield "</td>
                                 <td class=\"text-center\">";
-                // line 155
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "semestre", [], "any", false, false, false, 155), "html", null, true);
+                // line 210
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "semestre", [], "any", false, false, false, 210), "html", null, true);
                 yield "</td>
                                 <td class=\"text-center\">
                                     ";
-                // line 157
-                if ((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "estado", [], "any", false, false, false, 157) == 1)) {
-                    // line 158
+                // line 212
+                if ((CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "estado", [], "any", false, false, false, 212) == 1)) {
+                    // line 213
                     yield "                                        <span class=\"badge bg-success\">Activo</span>
                                     ";
                 } else {
-                    // line 160
+                    // line 215
                     yield "                                        <span class=\"badge bg-danger\">Inactivo</span>
                                     ";
                 }
-                // line 162
+                // line 217
                 yield "                                </td>
                                 <td class=\"text-center\">
                                     <a href=\"";
-                // line 164
+                // line 219
                 yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
                 yield "asignaturas/";
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 164), "html", null, true);
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["asignatura"], "id", [], "any", false, false, false, 219), "html", null, true);
                 yield "\" class=\"btn btn-info btn-sm\">
                                         <i class=\"fas fa-eye\"></i>
                                     </a>
@@ -428,16 +493,16 @@ class __TwigTemplate_2e29d2ef4906adea61083fdcb803b2d0 extends Template
             $_parent = $context['_parent'];
             unset($context['_seq'], $context['_key'], $context['asignatura'], $context['_parent']);
             $context = array_intersect_key($context, $_parent) + $_parent;
-            // line 170
+            // line 225
             yield "                        ";
         } else {
-            // line 171
+            // line 226
             yield "                            <tr>
                                 <td colspan=\"7\" class=\"text-center\">No hay asignaturas vinculadas</td>
                             </tr>
                         ";
         }
-        // line 175
+        // line 230
         yield "                    </tbody>
                 </table>
             </div>
@@ -447,7 +512,7 @@ class __TwigTemplate_2e29d2ef4906adea61083fdcb803b2d0 extends Template
     <!-- Botones de acción -->
     <div class=\"d-flex gap-2 mb-4\">
         <a href=\"";
-        // line 183
+        // line 238
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "mallas\" class=\"btn btn-secondary\">
             <i class=\"fas fa-arrow-left\"></i> Volver
@@ -506,8 +571,37 @@ class __TwigTemplate_2e29d2ef4906adea61083fdcb803b2d0 extends Template
     </div>
 </div>
 
+<!-- Modal malla gráfica -->
+<div class=\"modal fade\" id=\"modalMallaGrafica\" tabindex=\"-1\" aria-labelledby=\"modalMallaGraficaLabel\" aria-hidden=\"true\">
+    <div class=\"modal-dialog modal-xl modal-dialog-scrollable\">
+        <div class=\"modal-content\">
+            <div class=\"modal-header\">
+                <h5 class=\"modal-title\" id=\"modalMallaGraficaLabel\">Malla en formato gráfico</h5>
+                <button type=\"button\" class=\"btn-close\" data-bs-dismiss=\"modal\" aria-label=\"Close\"></button>
+            </div>
+            <div class=\"modal-body\">
+                <div id=\"mallaGraficaContenedor\" class=\"p-2\">
+                    <div class=\"malla-grafica-header\">
+                        <h4 class=\"mb-0\">Malla Curricular ";
+        // line 306
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "nombre", [], "any", false, false, false, 306), "html", null, true);
+        yield "</h4>
+                    </div>
+                    <div id=\"mallaGraficaGrid\" class=\"malla-grafica-grid\"></div>
+                </div>
+            </div>
+            <div class=\"modal-footer\">
+                <button type=\"button\" class=\"btn btn-success\" id=\"btnDescargarMallaPng\">
+                    <i class=\"fas fa-download\"></i> Descargar PNG
+                </button>
+                <button type=\"button\" class=\"btn btn-secondary\" data-bs-dismiss=\"modal\">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 ";
-        // line 240
+        // line 321
         yield from $this->unwrap()->yieldBlock('scripts', $context, $blocks);
         yield from [];
     }
@@ -518,11 +612,17 @@ class __TwigTemplate_2e29d2ef4906adea61083fdcb803b2d0 extends Template
     public function block_scripts(array $context, array $blocks = []): iterable
     {
         $macros = $this->macros;
-        // line 241
-        yield "<script>
+        // line 322
+        yield "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js\"></script>
+<script>
 document.addEventListener('DOMContentLoaded', function() {
+    if (window.__mallaShowScriptInitialized) {
+        return;
+    }
+    window.__mallaShowScriptInitialized = true;
+
     const app_url = \"";
-        // line 243
+        // line 330
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "\";
     const modalDetalles = new bootstrap.Modal(document.getElementById('modalDetalles'));
@@ -530,6 +630,110 @@ document.addEventListener('DOMContentLoaded', function() {
     const detallesElectiva = document.getElementById('detallesElectiva');
     const modalElement = document.getElementById('modalDetalles');
     let lastFocusedElement = null;
+    const btnVerMallaGrafica = document.getElementById('btnVerMallaGrafica');
+    const btnDescargarMallaPng = document.getElementById('btnDescargarMallaPng');
+    const mallaGraficaGrid = document.getElementById('mallaGraficaGrid');
+    const mallaGraficaContenedor = document.getElementById('mallaGraficaContenedor');
+    const modalMallaGraficaElement = document.getElementById('modalMallaGrafica');
+    const modalMallaGrafica = new bootstrap.Modal(modalMallaGraficaElement);
+    const asignaturasMalla = ";
+        // line 342
+        yield json_encode(((CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "asignaturas", [], "any", true, true, false, 342)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "asignaturas", [], "any", false, false, false, 342), [])) : ([])));
+        yield ";
+    let generandoPng = false;
+
+    function construirMallaGrafica() {
+        if (!mallaGraficaGrid) return;
+        const porSemestre = {};
+
+        asignaturasMalla.forEach(asignatura => {
+            const semestreNumero = parseInt(asignatura.semestre, 10) || 0;
+            if (!porSemestre[semestreNumero]) {
+                porSemestre[semestreNumero] = [];
+            }
+            porSemestre[semestreNumero].push(asignatura);
+        });
+
+        const semestresOrdenados = Object.keys(porSemestre)
+            .map(Number)
+            .sort((a, b) => a - b);
+
+        if (semestresOrdenados.length === 0) {
+            mallaGraficaGrid.innerHTML = '<p class=\"text-muted\">No hay asignaturas para graficar.</p>';
+            return;
+        }
+
+        let html = '';
+        semestresOrdenados.forEach(semestre => {
+            const asignaturas = porSemestre[semestre];
+            html += `<div class=\"malla-semestre-col\">`;
+            html += `<div class=\"malla-semestre-title\">Semestre \${semestre}</div>`;
+            asignaturas.forEach(item => {
+                const nombre = item.nombre || 'Sin nombre';
+                const tipo = item.tipo || '';
+                html += `
+                    <div class=\"malla-asignatura-item\">
+                        \${nombre}
+                        <span class=\"malla-asignatura-tipo\">\${tipo}</span>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+        });
+
+        mallaGraficaGrid.innerHTML = html;
+    }
+
+    if (btnVerMallaGrafica) {
+        btnVerMallaGrafica.onclick = function() {
+            construirMallaGrafica();
+            modalMallaGrafica.show();
+        };
+    }
+
+    if (btnDescargarMallaPng) {
+        btnDescargarMallaPng.onclick = function() {
+            if (!mallaGraficaContenedor || generandoPng) return;
+            generandoPng = true;
+            btnDescargarMallaPng.disabled = true;
+            html2canvas(mallaGraficaContenedor, {
+                scale: 2,
+                backgroundColor: '#ffffff',
+                useCORS: true
+            }).then(canvas => {
+                const link = document.createElement('a');
+                const nombre = 'Malla_' + '";
+        // line 405
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::replace(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "nombre", [], "any", false, false, false, 405), [" " => "_"]), "html", null, true);
+        yield "' + '.png';
+                link.download = nombre;
+                link.href = canvas.toDataURL('image/png');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }).catch(() => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No fue posible generar el PNG de la malla.'
+                });
+            }).finally(() => {
+                generandoPng = false;
+                btnDescargarMallaPng.disabled = false;
+            });
+        };
+    }
+
+    if (modalMallaGraficaElement) {
+        modalMallaGraficaElement.addEventListener('hidden.bs.modal', function () {
+            // Limpieza defensiva por si quedó un backdrop colgado
+            if (!document.querySelector('.modal.show')) {
+                document.body.classList.remove('modal-open');
+                document.body.style.paddingRight = '';
+                document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            }
+        });
+    }
     
     // Manejar clic en botón de detalles
     document.querySelectorAll('.btn-detalles').forEach(btn => {
@@ -557,15 +761,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Manejar el cierre del modal
     modalElement.addEventListener('hidden.bs.modal', function () {
-        // Remover la clase modal-open del body
-        document.body.classList.remove('modal-open');
-        // Remover el padding-right que Bootstrap agrega
-        document.body.style.paddingRight = '';
-        // Remover el backdrop
-        const backdrop = document.querySelector('.modal-backdrop');
-        if (backdrop) {
-            backdrop.remove();
-        }
         // Restaurar el foco al elemento anterior
         if (lastFocusedElement) {
             lastFocusedElement.focus();
@@ -651,7 +846,7 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     public function getDebugInfo(): array
     {
-        return array (  526 => 243,  522 => 241,  511 => 240,  451 => 183,  441 => 175,  435 => 171,  432 => 170,  418 => 164,  414 => 162,  410 => 160,  406 => 158,  404 => 157,  399 => 155,  395 => 154,  391 => 153,  387 => 152,  384 => 151,  370 => 150,  364 => 149,  347 => 148,  343 => 146,  338 => 145,  336 => 144,  308 => 118,  292 => 115,  288 => 113,  284 => 111,  282 => 110,  277 => 108,  273 => 107,  269 => 106,  265 => 105,  261 => 104,  258 => 103,  241 => 102,  214 => 77,  210 => 75,  206 => 73,  204 => 72,  198 => 68,  192 => 66,  188 => 64,  186 => 63,  183 => 62,  181 => 61,  178 => 60,  176 => 59,  169 => 55,  158 => 46,  151 => 42,  148 => 41,  146 => 40,  143 => 39,  136 => 35,  133 => 34,  131 => 33,  128 => 32,  120 => 27,  116 => 26,  112 => 25,  108 => 23,  106 => 22,  95 => 16,  87 => 13,  81 => 10,  76 => 8,  72 => 6,  65 => 5,  53 => 3,  42 => 1,);
+        return array (  707 => 405,  641 => 342,  626 => 330,  616 => 322,  605 => 321,  587 => 306,  516 => 238,  506 => 230,  500 => 226,  497 => 225,  483 => 219,  479 => 217,  475 => 215,  471 => 213,  469 => 212,  464 => 210,  460 => 209,  456 => 208,  452 => 207,  449 => 206,  435 => 205,  429 => 204,  412 => 203,  408 => 201,  403 => 200,  401 => 199,  373 => 173,  357 => 170,  353 => 168,  349 => 166,  347 => 165,  342 => 163,  338 => 162,  334 => 161,  330 => 160,  326 => 159,  323 => 158,  306 => 157,  279 => 132,  275 => 130,  271 => 128,  269 => 127,  263 => 123,  257 => 121,  253 => 119,  251 => 118,  248 => 117,  246 => 116,  243 => 115,  241 => 114,  234 => 110,  223 => 101,  216 => 97,  213 => 96,  211 => 95,  208 => 94,  201 => 90,  198 => 89,  196 => 88,  193 => 87,  185 => 82,  181 => 81,  177 => 80,  173 => 78,  171 => 77,  157 => 68,  149 => 65,  143 => 62,  138 => 60,  134 => 58,  127 => 57,  73 => 6,  66 => 5,  54 => 3,  43 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -659,6 +854,58 @@ document.addEventListener('DOMContentLoaded', function() {
         return new Source("{% extends \"base.twig\" %}
 
 {% block title %}Malla Curricular - {{ carrera.nombre }}{% endblock %}
+
+{% block head %}
+<style>
+    .malla-grafica-header {
+        background: linear-gradient(90deg, #8b2f13 0%, #a83c16 100%);
+        color: #fff;
+        padding: 1rem 1.25rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .malla-grafica-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .malla-semestre-col {
+        background: #fff;
+        border: 1px solid #e3e6f0;
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+
+    .malla-semestre-title {
+        background: #ef6c00;
+        color: #fff;
+        font-weight: 700;
+        text-transform: uppercase;
+        text-align: center;
+        padding: 0.45rem 0.5rem;
+        font-size: 0.82rem;
+    }
+
+    .malla-asignatura-item {
+        margin: 0.4rem;
+        background: #f2f4f8;
+        border-radius: 0.35rem;
+        border-left: 4px solid #8b2f13;
+        padding: 0.45rem 0.5rem;
+        font-size: 0.78rem;
+        line-height: 1.2;
+    }
+
+    .malla-asignatura-tipo {
+        display: block;
+        color: #6c757d;
+        font-size: 0.68rem;
+        margin-top: 0.2rem;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class=\"container-fluid\">
@@ -674,6 +921,9 @@ document.addEventListener('DOMContentLoaded', function() {
             <a href=\"{{ app_url }}mallas/{{ carrera.id }}/edit\" class=\"btn btn-primary\">
                 <i class=\"fas fa-edit\"></i> Editar
             </a>
+            <button type=\"button\" class=\"btn btn-success\" id=\"btnVerMallaGrafica\">
+                <i class=\"fas fa-image\"></i> Ver formato gráfico (PNG)
+            </button>
         </div>
     </div>
 
@@ -895,15 +1145,145 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
+<!-- Modal malla gráfica -->
+<div class=\"modal fade\" id=\"modalMallaGrafica\" tabindex=\"-1\" aria-labelledby=\"modalMallaGraficaLabel\" aria-hidden=\"true\">
+    <div class=\"modal-dialog modal-xl modal-dialog-scrollable\">
+        <div class=\"modal-content\">
+            <div class=\"modal-header\">
+                <h5 class=\"modal-title\" id=\"modalMallaGraficaLabel\">Malla en formato gráfico</h5>
+                <button type=\"button\" class=\"btn-close\" data-bs-dismiss=\"modal\" aria-label=\"Close\"></button>
+            </div>
+            <div class=\"modal-body\">
+                <div id=\"mallaGraficaContenedor\" class=\"p-2\">
+                    <div class=\"malla-grafica-header\">
+                        <h4 class=\"mb-0\">Malla Curricular {{ carrera.nombre }}</h4>
+                    </div>
+                    <div id=\"mallaGraficaGrid\" class=\"malla-grafica-grid\"></div>
+                </div>
+            </div>
+            <div class=\"modal-footer\">
+                <button type=\"button\" class=\"btn btn-success\" id=\"btnDescargarMallaPng\">
+                    <i class=\"fas fa-download\"></i> Descargar PNG
+                </button>
+                <button type=\"button\" class=\"btn btn-secondary\" data-bs-dismiss=\"modal\">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% block scripts %}
+<script src=\"https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js\"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    if (window.__mallaShowScriptInitialized) {
+        return;
+    }
+    window.__mallaShowScriptInitialized = true;
+
     const app_url = \"{{ app_url }}\";
     const modalDetalles = new bootstrap.Modal(document.getElementById('modalDetalles'));
     const detallesRegular = document.getElementById('detallesRegular');
     const detallesElectiva = document.getElementById('detallesElectiva');
     const modalElement = document.getElementById('modalDetalles');
     let lastFocusedElement = null;
+    const btnVerMallaGrafica = document.getElementById('btnVerMallaGrafica');
+    const btnDescargarMallaPng = document.getElementById('btnDescargarMallaPng');
+    const mallaGraficaGrid = document.getElementById('mallaGraficaGrid');
+    const mallaGraficaContenedor = document.getElementById('mallaGraficaContenedor');
+    const modalMallaGraficaElement = document.getElementById('modalMallaGrafica');
+    const modalMallaGrafica = new bootstrap.Modal(modalMallaGraficaElement);
+    const asignaturasMalla = {{ carrera.asignaturas|default([])|json_encode|raw }};
+    let generandoPng = false;
+
+    function construirMallaGrafica() {
+        if (!mallaGraficaGrid) return;
+        const porSemestre = {};
+
+        asignaturasMalla.forEach(asignatura => {
+            const semestreNumero = parseInt(asignatura.semestre, 10) || 0;
+            if (!porSemestre[semestreNumero]) {
+                porSemestre[semestreNumero] = [];
+            }
+            porSemestre[semestreNumero].push(asignatura);
+        });
+
+        const semestresOrdenados = Object.keys(porSemestre)
+            .map(Number)
+            .sort((a, b) => a - b);
+
+        if (semestresOrdenados.length === 0) {
+            mallaGraficaGrid.innerHTML = '<p class=\"text-muted\">No hay asignaturas para graficar.</p>';
+            return;
+        }
+
+        let html = '';
+        semestresOrdenados.forEach(semestre => {
+            const asignaturas = porSemestre[semestre];
+            html += `<div class=\"malla-semestre-col\">`;
+            html += `<div class=\"malla-semestre-title\">Semestre \${semestre}</div>`;
+            asignaturas.forEach(item => {
+                const nombre = item.nombre || 'Sin nombre';
+                const tipo = item.tipo || '';
+                html += `
+                    <div class=\"malla-asignatura-item\">
+                        \${nombre}
+                        <span class=\"malla-asignatura-tipo\">\${tipo}</span>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+        });
+
+        mallaGraficaGrid.innerHTML = html;
+    }
+
+    if (btnVerMallaGrafica) {
+        btnVerMallaGrafica.onclick = function() {
+            construirMallaGrafica();
+            modalMallaGrafica.show();
+        };
+    }
+
+    if (btnDescargarMallaPng) {
+        btnDescargarMallaPng.onclick = function() {
+            if (!mallaGraficaContenedor || generandoPng) return;
+            generandoPng = true;
+            btnDescargarMallaPng.disabled = true;
+            html2canvas(mallaGraficaContenedor, {
+                scale: 2,
+                backgroundColor: '#ffffff',
+                useCORS: true
+            }).then(canvas => {
+                const link = document.createElement('a');
+                const nombre = 'Malla_' + '{{ carrera.nombre|replace({' ': '_'}) }}' + '.png';
+                link.download = nombre;
+                link.href = canvas.toDataURL('image/png');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }).catch(() => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No fue posible generar el PNG de la malla.'
+                });
+            }).finally(() => {
+                generandoPng = false;
+                btnDescargarMallaPng.disabled = false;
+            });
+        };
+    }
+
+    if (modalMallaGraficaElement) {
+        modalMallaGraficaElement.addEventListener('hidden.bs.modal', function () {
+            // Limpieza defensiva por si quedó un backdrop colgado
+            if (!document.querySelector('.modal.show')) {
+                document.body.classList.remove('modal-open');
+                document.body.style.paddingRight = '';
+                document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            }
+        });
+    }
     
     // Manejar clic en botón de detalles
     document.querySelectorAll('.btn-detalles').forEach(btn => {
@@ -931,15 +1311,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Manejar el cierre del modal
     modalElement.addEventListener('hidden.bs.modal', function () {
-        // Remover la clase modal-open del body
-        document.body.classList.remove('modal-open');
-        // Remover el padding-right que Bootstrap agrega
-        document.body.style.paddingRight = '';
-        // Remover el backdrop
-        const backdrop = document.querySelector('.modal-backdrop');
-        if (backdrop) {
-            backdrop.remove();
-        }
         // Restaurar el foco al elemento anterior
         if (lastFocusedElement) {
             lastFocusedElement.focus();

@@ -540,13 +540,13 @@
                                 </td>
                                 <td class="cell-acciones">
                                 <div class="d-flex gap-1 flex-wrap justify-content-center">
-                                    <a href="{{ app_url }}reportes/coberturas/{{ carrera.sede_id }}/{{ carrera.carrera_id }}" class="btn btn-primary btn-action">
+                                    <a href="{{ app_url }}reportes/coberturas/{{ carrera.sede_id }}/{{ carrera.carrera_id }}?codigo={{ carrera.codigo|url_encode }}&vigencia_desde={{ carrera.vigencia_desde|default('')|url_encode }}&vigencia_hasta={{ carrera.vigencia_hasta|default('')|url_encode }}" class="btn btn-primary btn-action">
                                         <i class="fas fa-chart-bar"></i> Básicas
                                     </a>
-                                    <a href="{{ app_url }}reportes/coberturas-complementaria/{{ carrera.sede_id }}/{{ carrera.carrera_id }}" class="btn btn-secondary btn-action">
+                                    <a href="{{ app_url }}reportes/coberturas-complementaria/{{ carrera.sede_id }}/{{ carrera.carrera_id }}?codigo={{ carrera.codigo|url_encode }}&vigencia_desde={{ carrera.vigencia_desde|default('')|url_encode }}&vigencia_hasta={{ carrera.vigencia_hasta|default('')|url_encode }}" class="btn btn-secondary btn-action">
                                         <i class="fas fa-chart-line"></i> Complementarias
                                     </a>
-                                    <a href="{{ app_url }}reportes/coberturas-fusionado/{{ carrera.sede_id }}/{{ carrera.carrera_id }}" class="btn btn-info btn-action">
+                                    <a href="{{ app_url }}reportes/coberturas-fusionado/{{ carrera.sede_id }}/{{ carrera.carrera_id }}?codigo={{ carrera.codigo|url_encode }}&vigencia_desde={{ carrera.vigencia_desde|default('')|url_encode }}&vigencia_hasta={{ carrera.vigencia_hasta|default('')|url_encode }}" class="btn btn-info btn-action">
                                         <i class="fas fa-object-group"></i> Fusión
                                     </a>
                                 </div>

@@ -2,6 +2,58 @@
 
 {% block title %}Malla Curricular - {{ carrera.nombre }}{% endblock %}
 
+{% block head %}
+<style>
+    .malla-grafica-header {
+        background: linear-gradient(90deg, #8b2f13 0%, #a83c16 100%);
+        color: #fff;
+        padding: 1rem 1.25rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .malla-grafica-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .malla-semestre-col {
+        background: #fff;
+        border: 1px solid #e3e6f0;
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+
+    .malla-semestre-title {
+        background: #ef6c00;
+        color: #fff;
+        font-weight: 700;
+        text-transform: uppercase;
+        text-align: center;
+        padding: 0.45rem 0.5rem;
+        font-size: 0.82rem;
+    }
+
+    .malla-asignatura-item {
+        margin: 0.4rem;
+        background: #f2f4f8;
+        border-radius: 0.35rem;
+        border-left: 4px solid #8b2f13;
+        padding: 0.45rem 0.5rem;
+        font-size: 0.78rem;
+        line-height: 1.2;
+    }
+
+    .malla-asignatura-tipo {
+        display: block;
+        color: #6c757d;
+        font-size: 0.68rem;
+        margin-top: 0.2rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -16,6 +68,9 @@
             <a href="{{ app_url }}mallas/{{ carrera.id }}/edit" class="btn btn-primary">
                 <i class="fas fa-edit"></i> Editar
             </a>
+            <button type="button" class="btn btn-success" id="btnVerMallaGrafica">
+                <i class="fas fa-image"></i> Ver formato gráfico (PNG)
+            </button>
         </div>
     </div>
 
@@ -237,15 +292,145 @@
     </div>
 </div>
 
+<!-- Modal malla gráfica -->
+<div class="modal fade" id="modalMallaGrafica" tabindex="-1" aria-labelledby="modalMallaGraficaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalMallaGraficaLabel">Malla en formato gráfico</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="mallaGraficaContenedor" class="p-2">
+                    <div class="malla-grafica-header">
+                        <h4 class="mb-0">Malla Curricular {{ carrera.nombre }}</h4>
+                    </div>
+                    <div id="mallaGraficaGrid" class="malla-grafica-grid"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" id="btnDescargarMallaPng">
+                    <i class="fas fa-download"></i> Descargar PNG
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    if (window.__mallaShowScriptInitialized) {
+        return;
+    }
+    window.__mallaShowScriptInitialized = true;
+
     const app_url = "{{ app_url }}";
     const modalDetalles = new bootstrap.Modal(document.getElementById('modalDetalles'));
     const detallesRegular = document.getElementById('detallesRegular');
     const detallesElectiva = document.getElementById('detallesElectiva');
     const modalElement = document.getElementById('modalDetalles');
     let lastFocusedElement = null;
+    const btnVerMallaGrafica = document.getElementById('btnVerMallaGrafica');
+    const btnDescargarMallaPng = document.getElementById('btnDescargarMallaPng');
+    const mallaGraficaGrid = document.getElementById('mallaGraficaGrid');
+    const mallaGraficaContenedor = document.getElementById('mallaGraficaContenedor');
+    const modalMallaGraficaElement = document.getElementById('modalMallaGrafica');
+    const modalMallaGrafica = new bootstrap.Modal(modalMallaGraficaElement);
+    const asignaturasMalla = {{ carrera.asignaturas|default([])|json_encode|raw }};
+    let generandoPng = false;
+
+    function construirMallaGrafica() {
+        if (!mallaGraficaGrid) return;
+        const porSemestre = {};
+
+        asignaturasMalla.forEach(asignatura => {
+            const semestreNumero = parseInt(asignatura.semestre, 10) || 0;
+            if (!porSemestre[semestreNumero]) {
+                porSemestre[semestreNumero] = [];
+            }
+            porSemestre[semestreNumero].push(asignatura);
+        });
+
+        const semestresOrdenados = Object.keys(porSemestre)
+            .map(Number)
+            .sort((a, b) => a - b);
+
+        if (semestresOrdenados.length === 0) {
+            mallaGraficaGrid.innerHTML = '<p class="text-muted">No hay asignaturas para graficar.</p>';
+            return;
+        }
+
+        let html = '';
+        semestresOrdenados.forEach(semestre => {
+            const asignaturas = porSemestre[semestre];
+            html += `<div class="malla-semestre-col">`;
+            html += `<div class="malla-semestre-title">Semestre ${semestre}</div>`;
+            asignaturas.forEach(item => {
+                const nombre = item.nombre || 'Sin nombre';
+                const tipo = item.tipo || '';
+                html += `
+                    <div class="malla-asignatura-item">
+                        ${nombre}
+                        <span class="malla-asignatura-tipo">${tipo}</span>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+        });
+
+        mallaGraficaGrid.innerHTML = html;
+    }
+
+    if (btnVerMallaGrafica) {
+        btnVerMallaGrafica.onclick = function() {
+            construirMallaGrafica();
+            modalMallaGrafica.show();
+        };
+    }
+
+    if (btnDescargarMallaPng) {
+        btnDescargarMallaPng.onclick = function() {
+            if (!mallaGraficaContenedor || generandoPng) return;
+            generandoPng = true;
+            btnDescargarMallaPng.disabled = true;
+            html2canvas(mallaGraficaContenedor, {
+                scale: 2,
+                backgroundColor: '#ffffff',
+                useCORS: true
+            }).then(canvas => {
+                const link = document.createElement('a');
+                const nombre = 'Malla_' + '{{ carrera.nombre|replace({' ': '_'}) }}' + '.png';
+                link.download = nombre;
+                link.href = canvas.toDataURL('image/png');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }).catch(() => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No fue posible generar el PNG de la malla.'
+                });
+            }).finally(() => {
+                generandoPng = false;
+                btnDescargarMallaPng.disabled = false;
+            });
+        };
+    }
+
+    if (modalMallaGraficaElement) {
+        modalMallaGraficaElement.addEventListener('hidden.bs.modal', function () {
+            // Limpieza defensiva por si quedó un backdrop colgado
+            if (!document.querySelector('.modal.show')) {
+                document.body.classList.remove('modal-open');
+                document.body.style.paddingRight = '';
+                document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            }
+        });
+    }
     
     // Manejar clic en botón de detalles
     document.querySelectorAll('.btn-detalles').forEach(btn => {
@@ -273,15 +458,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Manejar el cierre del modal
     modalElement.addEventListener('hidden.bs.modal', function () {
-        // Remover la clase modal-open del body
-        document.body.classList.remove('modal-open');
-        // Remover el padding-right que Bootstrap agrega
-        document.body.style.paddingRight = '';
-        // Remover el backdrop
-        const backdrop = document.querySelector('.modal-backdrop');
-        if (backdrop) {
-            backdrop.remove();
-        }
         // Restaurar el foco al elemento anterior
         if (lastFocusedElement) {
             lastFocusedElement.focus();
