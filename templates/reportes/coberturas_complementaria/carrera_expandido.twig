@@ -9,7 +9,10 @@
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">Coberturas Complementarias Expandido</h3>
-                    <h5 class="card-subtitle">{{ carrera.sede }} - {{ carrera.codigo }} - {{ carrera.nombre }}</h5>
+                    <h5 class="card-subtitle">
+                        {{ carrera.sede }} - {{ carrera.codigo }} - {{ carrera.nombre }}
+                        <small class="text-muted">(Vigencia: {{ carrera.vigencia_desde|default('—') }} a {{ carrera.vigencia_hasta|default('—') }})</small>
+                    </h5>
                 </div>
                 <div class="card-body">
                     <!-- Botones de acción -->

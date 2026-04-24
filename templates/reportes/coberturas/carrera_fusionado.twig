@@ -11,7 +11,10 @@
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">Reporte Fusionado de Coberturas</h3>
-                    <h5 class="card-subtitle">{{ carrera.sede }} - {{ carrera.codigo }} - {{ carrera.nombre }}</h5>
+                    <h5 class="card-subtitle">
+                        {{ carrera.sede }} - {{ carrera.codigo }} - {{ carrera.nombre }}
+                        <small class="text-muted">(Vigencia: {{ carrera.vigencia_desde|default('—') }} a {{ carrera.vigencia_hasta|default('—') }})</small>
+                    </h5>
                     <p class="card-text text-muted">
                         <i class="fas fa-info-circle"></i> 
                         Este reporte combina las coberturas básicas y complementarias de la carrera.

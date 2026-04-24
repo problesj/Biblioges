@@ -213,7 +213,7 @@
                                         {% endif %}
                                     </td>
                                     <td class="text-center">
-                                        <a href="/biblioges/reportes/coberturas/{{ carrera.sede_id }}/{{ carrera.carrera_id }}/{{ asignatura.codigo }}" class="btn btn-sm btn-outline-primary" title="Ver títulos declarados">
+                                        <a href="/biblioges/reportes/coberturas/{{ carrera.sede_id }}/{{ carrera.carrera_id }}/{{ asignatura.codigo }}?codigo={{ carrera.codigo|url_encode }}&vigencia_desde={{ carrera.vigencia_desde|default('')|url_encode }}&vigencia_hasta={{ carrera.vigencia_hasta|default('')|url_encode }}" class="btn btn-sm btn-outline-primary" title="Ver títulos declarados">
                                             <i class="fas fa-book"></i>
                                         </a>
                                     </td>

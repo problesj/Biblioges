@@ -689,6 +689,14 @@ document.addEventListener('DOMContentLoaded', function() {
             construirMallaGrafica();
             modalMallaGrafica.show();
         };
+
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('ver_grafico') === '1') {
+            btnVerMallaGrafica.click();
+            params.delete('ver_grafico');
+            const nuevaUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+            window.history.replaceState({}, '', nuevaUrl);
+        }
     }
 
     if (btnDescargarMallaPng) {
@@ -703,8 +711,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }).then(canvas => {
                 const link = document.createElement('a');
                 const nombre = 'Malla_' + '";
-        // line 405
-        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::replace(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "nombre", [], "any", false, false, false, 405), [" " => "_"]), "html", null, true);
+        // line 413
+        yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::replace(CoreExtension::getAttribute($this->env, $this->source, ($context["carrera"] ?? null), "nombre", [], "any", false, false, false, 413), [" " => "_"]), "html", null, true);
         yield "' + '.png';
                 link.download = nombre;
                 link.href = canvas.toDataURL('image/png');
@@ -846,7 +854,7 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     public function getDebugInfo(): array
     {
-        return array (  707 => 405,  641 => 342,  626 => 330,  616 => 322,  605 => 321,  587 => 306,  516 => 238,  506 => 230,  500 => 226,  497 => 225,  483 => 219,  479 => 217,  475 => 215,  471 => 213,  469 => 212,  464 => 210,  460 => 209,  456 => 208,  452 => 207,  449 => 206,  435 => 205,  429 => 204,  412 => 203,  408 => 201,  403 => 200,  401 => 199,  373 => 173,  357 => 170,  353 => 168,  349 => 166,  347 => 165,  342 => 163,  338 => 162,  334 => 161,  330 => 160,  326 => 159,  323 => 158,  306 => 157,  279 => 132,  275 => 130,  271 => 128,  269 => 127,  263 => 123,  257 => 121,  253 => 119,  251 => 118,  248 => 117,  246 => 116,  243 => 115,  241 => 114,  234 => 110,  223 => 101,  216 => 97,  213 => 96,  211 => 95,  208 => 94,  201 => 90,  198 => 89,  196 => 88,  193 => 87,  185 => 82,  181 => 81,  177 => 80,  173 => 78,  171 => 77,  157 => 68,  149 => 65,  143 => 62,  138 => 60,  134 => 58,  127 => 57,  73 => 6,  66 => 5,  54 => 3,  43 => 1,);
+        return array (  715 => 413,  641 => 342,  626 => 330,  616 => 322,  605 => 321,  587 => 306,  516 => 238,  506 => 230,  500 => 226,  497 => 225,  483 => 219,  479 => 217,  475 => 215,  471 => 213,  469 => 212,  464 => 210,  460 => 209,  456 => 208,  452 => 207,  449 => 206,  435 => 205,  429 => 204,  412 => 203,  408 => 201,  403 => 200,  401 => 199,  373 => 173,  357 => 170,  353 => 168,  349 => 166,  347 => 165,  342 => 163,  338 => 162,  334 => 161,  330 => 160,  326 => 159,  323 => 158,  306 => 157,  279 => 132,  275 => 130,  271 => 128,  269 => 127,  263 => 123,  257 => 121,  253 => 119,  251 => 118,  248 => 117,  246 => 116,  243 => 115,  241 => 114,  234 => 110,  223 => 101,  216 => 97,  213 => 96,  211 => 95,  208 => 94,  201 => 90,  198 => 89,  196 => 88,  193 => 87,  185 => 82,  181 => 81,  177 => 80,  173 => 78,  171 => 77,  157 => 68,  149 => 65,  143 => 62,  138 => 60,  134 => 58,  127 => 57,  73 => 6,  66 => 5,  54 => 3,  43 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -1242,6 +1250,14 @@ document.addEventListener('DOMContentLoaded', function() {
             construirMallaGrafica();
             modalMallaGrafica.show();
         };
+
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('ver_grafico') === '1') {
+            btnVerMallaGrafica.click();
+            params.delete('ver_grafico');
+            const nuevaUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+            window.history.replaceState({}, '', nuevaUrl);
+        }
     }
 
     if (btnDescargarMallaPng) {

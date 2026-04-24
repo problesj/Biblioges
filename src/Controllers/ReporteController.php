@@ -2155,6 +2155,7 @@ class ReporteController extends BaseController
             'user_rol' => $_SESSION['user_rol'] ?? null
         ];
 
+        $queryParams = $request->getQueryParams();
         // Obtener información de la sede, carrera y asignatura usando la vista vw_mallas con la nueva estructura
         $carrera = DB::table('vw_mallas')
             ->where('id_sede', $sedeId)
@@ -2172,6 +2173,27 @@ class ReporteController extends BaseController
             error_log('ReporteController@reporteTitulosBibliografiaBasica: No se encontró la carrera');
             $response->getBody()->write('Carrera no encontrada');
             return $response->withStatus(404);
+        }
+
+        $carreraEspejoQuery = DB::table('carreras_espejos')
+            ->where('carrera_id', $carreraId)
+            ->where('sede_id', $sedeId);
+        if (!empty($queryParams['codigo'])) {
+            $carreraEspejoQuery->where('codigo_carrera', $queryParams['codigo']);
+        } else {
+            $carreraEspejoQuery->where('codigo_carrera', $carrera->codigo);
+        }
+        if (!empty($queryParams['vigencia_desde'])) {
+            $carreraEspejoQuery->where('vigencia_desde', $queryParams['vigencia_desde']);
+        }
+        if (!empty($queryParams['vigencia_hasta'])) {
+            $carreraEspejoQuery->where('vigencia_hasta', $queryParams['vigencia_hasta']);
+        }
+        $carreraEspejo = $carreraEspejoQuery->orderByDesc('vigencia_desde')->first();
+        if ($carreraEspejo) {
+            $carrera->codigo = $carreraEspejo->codigo_carrera;
+            $carrera->vigencia_desde = $carreraEspejo->vigencia_desde;
+            $carrera->vigencia_hasta = $carreraEspejo->vigencia_hasta;
         }
 
         // Debug: Verificar qué asignaturas existen para esta sede y carrera
@@ -2346,6 +2368,7 @@ class ReporteController extends BaseController
             'user_rol' => $_SESSION['user_rol'] ?? null
         ];
 
+        $queryParams = $request->getQueryParams();
         // Obtener información de la sede, carrera y asignatura usando la vista vw_mallas con la nueva estructura
         $carrera = DB::table('vw_mallas')
             ->where('id_sede', $sedeId)
@@ -2363,6 +2386,27 @@ class ReporteController extends BaseController
             error_log('ReporteController@reporteTitulosBibliografiaComplementaria: No se encontró la carrera');
             $response->getBody()->write('Carrera no encontrada');
             return $response->withStatus(404);
+        }
+
+        $carreraEspejoQuery = DB::table('carreras_espejos')
+            ->where('carrera_id', $carreraId)
+            ->where('sede_id', $sedeId);
+        if (!empty($queryParams['codigo'])) {
+            $carreraEspejoQuery->where('codigo_carrera', $queryParams['codigo']);
+        } else {
+            $carreraEspejoQuery->where('codigo_carrera', $carrera->codigo);
+        }
+        if (!empty($queryParams['vigencia_desde'])) {
+            $carreraEspejoQuery->where('vigencia_desde', $queryParams['vigencia_desde']);
+        }
+        if (!empty($queryParams['vigencia_hasta'])) {
+            $carreraEspejoQuery->where('vigencia_hasta', $queryParams['vigencia_hasta']);
+        }
+        $carreraEspejo = $carreraEspejoQuery->orderByDesc('vigencia_desde')->first();
+        if ($carreraEspejo) {
+            $carrera->codigo = $carreraEspejo->codigo_carrera;
+            $carrera->vigencia_desde = $carreraEspejo->vigencia_desde;
+            $carrera->vigencia_hasta = $carreraEspejo->vigencia_hasta;
         }
 
         // Buscar la asignatura - para asignaturas de formación, buscar en toda la carrera sin limitar por sede
@@ -2529,6 +2573,7 @@ class ReporteController extends BaseController
             $sedeId = $args['sede_id'];
             $carreraId = $args['carrera_id'];
         
+        $queryParams = $request->getQueryParams();
         // Obtener la carrera antes de cualquier uso de $carrera->codigo
         $carrera = DB::table('vw_mallas')
                 ->where('id_sede', $sedeId)
@@ -2546,6 +2591,27 @@ class ReporteController extends BaseController
             error_log('ReporteController@reporteBibliografiaBasicaExpandido: No se encontró la carrera');
             $response->getBody()->write('Carrera no encontrada');
             return $response->withStatus(404);
+        }
+
+        $carreraEspejoQuery = DB::table('carreras_espejos')
+            ->where('carrera_id', $carreraId)
+            ->where('sede_id', $sedeId);
+        if (!empty($queryParams['codigo'])) {
+            $carreraEspejoQuery->where('codigo_carrera', $queryParams['codigo']);
+        } else {
+            $carreraEspejoQuery->where('codigo_carrera', $carrera->codigo);
+        }
+        if (!empty($queryParams['vigencia_desde'])) {
+            $carreraEspejoQuery->where('vigencia_desde', $queryParams['vigencia_desde']);
+        }
+        if (!empty($queryParams['vigencia_hasta'])) {
+            $carreraEspejoQuery->where('vigencia_hasta', $queryParams['vigencia_hasta']);
+        }
+        $carreraEspejo = $carreraEspejoQuery->orderByDesc('vigencia_desde')->first();
+        if ($carreraEspejo) {
+            $carrera->codigo = $carreraEspejo->codigo_carrera;
+            $carrera->vigencia_desde = $carreraEspejo->vigencia_desde;
+            $carrera->vigencia_hasta = $carreraEspejo->vigencia_hasta;
         }
         
         error_log('ReporteController@reporteBibliografiaBasicaExpandido: Sede ID: ' . $sedeId . ', Carrera ID: ' . $carreraId);
@@ -3617,30 +3683,54 @@ class ReporteController extends BaseController
         
         $sedeId = $args['sede_id'];
         $carreraId = $args['carrera_id'];
+        $queryParams = $request->getQueryParams();
+        $codigoPlan = $queryParams['codigo'] ?? null;
+        $vigenciaDesdePlan = $queryParams['vigencia_desde'] ?? null;
+        $vigenciaHastaPlan = $queryParams['vigencia_hasta'] ?? null;
         
         error_log('ReporteController@reporteBibliografiaComplementaria: Sede ID: ' . $sedeId . ', Carrera ID: ' . $carreraId);
 
-        // Obtener información de la sede y carrera usando la vista vw_mallas con la nueva estructura
-        $carrera = DB::table('vw_mallas')
-            ->where('id_sede', $sedeId)
-            ->where('id_carrera', $carreraId)
-            ->select(
-                'id_sede as sede_id',
-                'id_carrera as carrera_id',
-                'sede as sede',
-                'codigo_carrera as codigo',
-                'carrera as nombre'
-            )
+        // Resolver plan exacto (carrera espejo) para no mezclar mallas por código/vigencia
+        $carreraEspejoQuery = DB::table('carreras_espejos')
+            ->where('carrera_id', $carreraId)
+            ->where('sede_id', $sedeId);
+
+        if (!empty($codigoPlan)) {
+            $carreraEspejoQuery->where('codigo_carrera', $codigoPlan);
+        }
+        if (!empty($vigenciaDesdePlan)) {
+            $carreraEspejoQuery->where('vigencia_desde', $vigenciaDesdePlan);
+        }
+        if (!empty($vigenciaHastaPlan)) {
+            $carreraEspejoQuery->where('vigencia_hasta', $vigenciaHastaPlan);
+        }
+
+        $carreraEspejo = $carreraEspejoQuery
+            ->orderByDesc('vigencia_desde')
             ->first();
-            
-        if (!$carrera) {
+
+        if (!$carreraEspejo) {
             error_log('ReporteController@reporteBibliografiaComplementaria: No se encontró la carrera');
             $response->getBody()->write('Carrera no encontrada');
             return $response->withStatus(404);
         }
-        
-        // Obtener parámetros de filtro de la URL
-        $queryParams = $request->getQueryParams();
+
+        $carreraNombre = DB::table('carreras')->where('id', $carreraId)->value('nombre');
+        $sedeNombre = DB::table('sedes')->where('id', $sedeId)->value('nombre');
+        if (!$carreraNombre || !$sedeNombre) {
+            $response->getBody()->write('Carrera no encontrada');
+            return $response->withStatus(404);
+        }
+        $carrera = (object) [
+            'sede_id' => (int) $sedeId,
+            'carrera_id' => (int) $carreraId,
+            'sede' => $sedeNombre,
+            'codigo' => $carreraEspejo->codigo_carrera,
+            'vigencia_desde' => $carreraEspejo->vigencia_desde,
+            'vigencia_hasta' => $carreraEspejo->vigencia_hasta,
+            'nombre' => $carreraNombre,
+        ];
+
         $tiposFormacionFiltro = $queryParams['tipos_formacion'] ?? [];
         
         // Forzar que siempre sea un array
@@ -3654,12 +3744,7 @@ class ReporteController extends BaseController
         
         // Si no hay filtros en la URL, intentar cargar filtros guardados
         if (empty($tiposFormacionFiltro) && !$tiposFormacionVacio) {
-            // Obtener el id_carrera_espejo para la carrera y sede específica
-            $carreraEspejo = DB::table('carreras_espejos')
-                ->where('codigo_carrera', $carrera->codigo)
-                ->where('sede_id', $sedeId)
-                ->first();
-            
+            // Usar el carrera_espejo ya resuelto para el plan actual
             if ($carreraEspejo) {
                 $filtrosGuardados = DB::table('filtros_formaciones')
                     ->where('id_carrera_espejo', $carreraEspejo->id)
@@ -3715,6 +3800,7 @@ class ReporteController extends BaseController
         // Obtener asignaturas REGULARES (siempre incluidas)
         $regulares = DB::table('vw_mallas')
             ->where('id_sede', $sedeId)
+            ->where('id_carrera', $carreraId)
             ->where('codigo_carrera', $carrera->codigo)
             ->where('tipo_asignatura', 'REGULAR')
             ->select('codigo_asignatura as codigo', 'asignatura as nombre', 'tipo_asignatura')
@@ -3726,6 +3812,8 @@ class ReporteController extends BaseController
         if (!empty($tiposFormacionFiltro)) {
             // Si hay filtros aplicados explícitamente, usar solo los seleccionados
             $formaciones = DB::table('vw_mallas')
+                ->where('id_sede', $sedeId)
+                ->where('id_carrera', $carreraId)
                 ->where('codigo_carrera', $carrera->codigo)
                 ->whereIn('tipo_asignatura', $tiposFormacionFiltro)
                 ->whereNotNull('codigo_asignatura_formacion')
@@ -3750,6 +3838,8 @@ class ReporteController extends BaseController
 
         // Obtener todos los tipos de formación disponibles para esta carrera (excluyendo REGULAR y ELECTIVA)
         $tiposFormacionDisponibles = DB::table('vw_mallas')
+            ->where('id_sede', $sedeId)
+            ->where('id_carrera', $carreraId)
             ->where('codigo_carrera', $carrera->codigo)
             ->whereNotIn('tipo_asignatura', ['REGULAR', 'FORMACION_ELECTIVA'])
             ->whereNotNull('codigo_asignatura_formacion') // Solo asignaturas que tienen código de formación
@@ -4088,6 +4178,43 @@ class ReporteController extends BaseController
                         error_log('ReporteController@reporteBibliografiaComplementariaExpandido: Todos los filtros guardados están desmarcados, no se aplican filtros');
                     }
                 }
+            }
+        }
+
+        // Resolver vigencia/código del plan para mostrarlo en encabezado
+        if (!isset($carrera) || !$carrera) {
+            $carrera = DB::table('vw_mallas')
+                ->where('id_sede', $sedeId)
+                ->where('id_carrera', $carreraId)
+                ->select(
+                    'id_sede as sede_id',
+                    'id_carrera as carrera_id',
+                    'sede as sede',
+                    'codigo_carrera as codigo',
+                    'carrera as nombre'
+                )
+                ->first();
+        }
+        if ($carrera) {
+            $carreraEspejoQuery = DB::table('carreras_espejos')
+                ->where('carrera_id', $carreraId)
+                ->where('sede_id', $sedeId);
+            if (!empty($queryParams['codigo'])) {
+                $carreraEspejoQuery->where('codigo_carrera', $queryParams['codigo']);
+            } else {
+                $carreraEspejoQuery->where('codigo_carrera', $carrera->codigo);
+            }
+            if (!empty($queryParams['vigencia_desde'])) {
+                $carreraEspejoQuery->where('vigencia_desde', $queryParams['vigencia_desde']);
+            }
+            if (!empty($queryParams['vigencia_hasta'])) {
+                $carreraEspejoQuery->where('vigencia_hasta', $queryParams['vigencia_hasta']);
+            }
+            $carreraEspejo = $carreraEspejoQuery->orderByDesc('vigencia_desde')->first();
+            if ($carreraEspejo) {
+                $carrera->codigo = $carreraEspejo->codigo_carrera;
+                $carrera->vigencia_desde = $carreraEspejo->vigencia_desde;
+                $carrera->vigencia_hasta = $carreraEspejo->vigencia_hasta;
             }
         }
         
@@ -5186,6 +5313,28 @@ class ReporteController extends BaseController
             error_log('ReporteController@reporteCoberturasFusionado: Carrera no encontrada');
             $response->getBody()->write('Carrera no encontrada');
             return $response->withStatus(404);
+        }
+
+        $queryParams = $request->getQueryParams();
+        $carreraEspejoQuery = DB::table('carreras_espejos')
+            ->where('carrera_id', $carreraId)
+            ->where('sede_id', $sedeId);
+        if (!empty($queryParams['codigo'])) {
+            $carreraEspejoQuery->where('codigo_carrera', $queryParams['codigo']);
+        } else {
+            $carreraEspejoQuery->where('codigo_carrera', $carrera->codigo);
+        }
+        if (!empty($queryParams['vigencia_desde'])) {
+            $carreraEspejoQuery->where('vigencia_desde', $queryParams['vigencia_desde']);
+        }
+        if (!empty($queryParams['vigencia_hasta'])) {
+            $carreraEspejoQuery->where('vigencia_hasta', $queryParams['vigencia_hasta']);
+        }
+        $carreraEspejo = $carreraEspejoQuery->orderByDesc('vigencia_desde')->first();
+        if ($carreraEspejo) {
+            $carrera->codigo = $carreraEspejo->codigo_carrera;
+            $carrera->vigencia_desde = $carreraEspejo->vigencia_desde;
+            $carrera->vigencia_hasta = $carreraEspejo->vigencia_hasta;
         }
 
         // Obtener datos de cobertura básica desde la tabla de reportes guardados

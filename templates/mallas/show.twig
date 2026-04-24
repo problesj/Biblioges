@@ -389,6 +389,14 @@ document.addEventListener('DOMContentLoaded', function() {
             construirMallaGrafica();
             modalMallaGrafica.show();
         };
+
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('ver_grafico') === '1') {
+            btnVerMallaGrafica.click();
+            params.delete('ver_grafico');
+            const nuevaUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+            window.history.replaceState({}, '', nuevaUrl);
+        }
     }
 
     if (btnDescargarMallaPng) {
