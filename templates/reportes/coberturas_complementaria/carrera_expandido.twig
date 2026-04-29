@@ -572,7 +572,7 @@ function guardarFiltros() {
         especial: tiposFormacion.includes('FORMACION_ESPECIAL')
     };
     
-    fetch('/biblioges/reportes/guardar-filtros-formacion/{{ carrera.sede_id }}/{{ carrera.carrera_id }}', {
+    fetch('/biblioges/reportes/guardar-filtros-formacion/{{ carrera.sede_id }}/{{ carrera.carrera_id }}' + window.location.search, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

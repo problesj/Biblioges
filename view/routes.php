@@ -10,6 +10,7 @@ use App\Controllers\ReporteController;
 // Rutas del frontend (públicas)
 $app->get('/', [FrontendController::class, 'index'])->setName('frontend.index');
 $app->get('/carrera/{sede_id}/{carrera_id}', [FrontendController::class, 'showCarrera'])->setName('frontend.carrera');
+$app->get('/carrera/{sede_id}/{carrera_id}/malla-grafica', [FrontendController::class, 'showMallaGrafica'])->setName('frontend.carrera.malla_grafica');
 $app->get('/asignatura/{sede_id}/{carrera_id}/{asignatura_id}', [FrontendController::class, 'showAsignatura'])->setName('frontend.asignatura');
 // Vista pública para solo bibliografía de una asignatura (URL compacta para compartir)
 $app->get('/asignatura-biblio/{sede_id}/{asignatura_id}', [FrontendController::class, 'showAsignaturaBibliografia'])->setName('frontend.asignatura_biblio');

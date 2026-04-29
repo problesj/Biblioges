@@ -66,8 +66,21 @@
                         <i class="fas fa-bookmark"></i>
                         <span>Semestres: {{ asignaturas_por_semestre|length }}</span>
                     </div>
+                    <div class="stat-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Vigencia desde: {{ carrera.vigencia_desde ? carrera.vigencia_desde|slice(0, 4) : '—' }}</span>
+                    </div>
                 </div>
-                <div class="mt-3 d-flex align-items-center gap-2 flex-wrap share-buttons">
+                <div class="mt-3 d-flex align-items-center gap-2 flex-wrap">
+                    <button type="button"
+                        class="btn btn-success"
+                        title="Ver malla en formato gráfico"
+                        onclick="abrirMallaGrafica('{{ app_url }}/carrera/{{ carrera.sede_id }}/{{ carrera.carrera_id }}/malla-grafica?vigencia_desde={{ carrera.vigencia_desde|default('')|url_encode }}')">
+                        <i class="fas fa-image me-1"></i>
+                        Ver malla gráfica
+                    </button>
+                </div>
+                <div class="mt-2 d-flex align-items-center gap-2 flex-wrap share-buttons">
                     <span class="fw-semibold me-1">Compartir:</span>
                     <button class="btn btn-outline-secondary" title="Facebook" onclick="shareTo('facebook', { title: '{{ carrera.carrera_nombre }}', text: 'Bibliografía oficial - {{ carrera.sede_nombre }}' })">
                         <i class="fab fa-facebook-f"></i>
@@ -288,9 +301,55 @@
     </div>
 </div>
 
+<!-- Modal Malla Gráfica -->
+<div class="modal fade" id="modalMallaGraficaFrontend" tabindex="-1" aria-labelledby="modalMallaGraficaFrontendLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalMallaGraficaFrontendLabel">
+                    <i class="fas fa-image me-2"></i>
+                    Malla Gráfica - {{ carrera.carrera_nombre }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <iframe id="iframeMallaGraficaFrontend" src="about:blank" style="width: 100%; min-height: 80vh; border: 0;"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <!-- JavaScript para el modal -->
 <script>
+function abrirMallaGrafica(url) {
+    const iframe = document.getElementById('iframeMallaGraficaFrontend');
+    const modalEl = document.getElementById('modalMallaGraficaFrontend');
+    if (!iframe || !modalEl || typeof bootstrap === 'undefined') return;
+
+    iframe.src = url;
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const modalEl = document.getElementById('modalMallaGraficaFrontend');
+    const iframe = document.getElementById('iframeMallaGraficaFrontend');
+    if (!modalEl || !iframe || typeof bootstrap === 'undefined') return;
+
+    modalEl.addEventListener('hidden.bs.modal', function () {
+        iframe.src = 'about:blank';
+    });
+
+    window.addEventListener('message', function (event) {
+        if (!event || !event.data || event.data.type !== 'cerrarModalMallaGrafica') {
+            return;
+        }
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.hide();
+    });
+});
+
 function mostrarBibliografiasDisponibles(bibliografiaId, titulo) {
     // Mostrar loading
     document.getElementById('modalContent').innerHTML = `

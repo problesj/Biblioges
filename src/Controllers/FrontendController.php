@@ -38,7 +38,6 @@ class FrontendController
               AND c.estado = 1
               AND c.tipo_programa = 'P'
               AND ce.estado = 1
-              AND ce.vigencia_hasta = '999999'
             ORDER BY s.nombre
         ");
         $stmt->execute();
@@ -55,7 +54,8 @@ class FrontendController
                 c.imagen_url, 
                 c.cantidad_semestres,
                 s.id AS sede_id,
-                s.nombre AS sede_nombre
+                s.nombre AS sede_nombre,
+                ce.vigencia_desde
             FROM carreras c
             INNER JOIN carreras_espejos ce ON c.id = ce.carrera_id
             INNER JOIN sedes s ON ce.sede_id = s.id
@@ -63,7 +63,6 @@ class FrontendController
               AND c.tipo_programa = 'P'
               AND s.estado = 1
               AND ce.estado = 1
-              AND ce.vigencia_hasta = '999999'
         ";
 
         $params = [];
@@ -105,6 +104,7 @@ class FrontendController
 
         $sedeId = $args['sede_id'] ?? null;
         $carreraId = $args['carrera_id'] ?? null;
+        $vigenciaDesde = $request->getQueryParams()['vigencia_desde'] ?? null;
 
         if (!$sedeId || !$carreraId) {
             $response->getBody()->write('Parámetros requeridos no proporcionados');
@@ -112,7 +112,7 @@ class FrontendController
         }
 
         // Obtener información de la sede y carrera
-        $stmt = $this->pdo->prepare("
+        $sqlCarrera = "
             SELECT 
                 s.id as sede_id,
                 s.nombre as sede_nombre,
@@ -121,6 +121,7 @@ class FrontendController
                 c.tipo_programa,
                 c.imagen_url,
                 c.cantidad_semestres,
+                ce.vigencia_desde,
                 GROUP_CONCAT(DISTINCT s2.nombre) as todas_las_sedes,
                 GROUP_CONCAT(DISTINCT s2.id) as todas_las_sedes_ids
             FROM sedes s
@@ -133,14 +134,25 @@ class FrontendController
               AND s.estado = 1
               AND c.estado = 1
               AND ce.estado = 1
-              AND ce.vigencia_hasta = '999999'
-              AND (ce2.id IS NULL OR (ce2.estado = 1 AND ce2.vigencia_hasta = '999999'))
-            GROUP BY s.id, c.id
-        ");
-        $stmt->execute([
+              AND (ce2.id IS NULL OR ce2.estado = 1)
+        ";
+
+        $paramsCarrera = [
             ':sede_id' => $sedeId,
             ':carrera_id' => $carreraId
-        ]);
+        ];
+
+        if (!empty($vigenciaDesde)) {
+            $sqlCarrera .= " AND ce.vigencia_desde = :vigencia_desde";
+            $paramsCarrera[':vigencia_desde'] = $vigenciaDesde;
+        }
+
+        $sqlCarrera .= " GROUP BY s.id, c.id, ce.vigencia_desde
+                         ORDER BY ce.vigencia_desde DESC
+                         LIMIT 1";
+
+        $stmt = $this->pdo->prepare($sqlCarrera);
+        $stmt->execute($paramsCarrera);
         $carrera = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$carrera) {
@@ -270,6 +282,104 @@ class FrontendController
         $html = $twig->render('frontend/asignatura.twig', [
             'asignatura' => $asignatura,
             'bibliografias' => $bibliografias
+        ]);
+
+        $response->getBody()->write($html);
+        return $response;
+    }
+
+    /**
+     * Mostrar malla gráfica pública de una carrera/sede.
+     */
+    public function showMallaGrafica(Request $request, Response $response, array $args)
+    {
+        global $twig;
+
+        $sedeId = $args['sede_id'] ?? null;
+        $carreraId = $args['carrera_id'] ?? null;
+        $vigenciaDesde = $request->getQueryParams()['vigencia_desde'] ?? null;
+
+        if (!$sedeId || !$carreraId) {
+            $response->getBody()->write('Parámetros requeridos no proporcionados');
+            return $response->withStatus(400);
+        }
+
+        $sqlCarrera = "
+            SELECT
+                s.id AS sede_id,
+                s.nombre AS sede_nombre,
+                c.id AS carrera_id,
+                c.nombre AS carrera_nombre,
+                ce.vigencia_desde
+            FROM carreras c
+            INNER JOIN carreras_espejos ce ON c.id = ce.carrera_id
+            INNER JOIN sedes s ON ce.sede_id = s.id
+            WHERE c.id = :carrera_id
+              AND s.id = :sede_id
+              AND c.estado = 1
+              AND s.estado = 1
+              AND ce.estado = 1
+        ";
+
+        $paramsCarrera = [
+            ':carrera_id' => $carreraId,
+            ':sede_id' => $sedeId,
+        ];
+
+        if (!empty($vigenciaDesde)) {
+            $sqlCarrera .= " AND ce.vigencia_desde = :vigencia_desde";
+            $paramsCarrera[':vigencia_desde'] = $vigenciaDesde;
+        }
+
+        $sqlCarrera .= " ORDER BY ce.vigencia_desde DESC LIMIT 1";
+
+        $stmt = $this->pdo->prepare($sqlCarrera);
+        $stmt->execute($paramsCarrera);
+        $carrera = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$carrera) {
+            $response->getBody()->write('Carrera no encontrada');
+            return $response->withStatus(404);
+        }
+
+        $stmt = $this->pdo->prepare("
+            SELECT DISTINCT
+                m.semestre,
+                a.nombre AS asignatura_nombre,
+                a.tipo AS tipo_asignatura,
+                ad.codigo_asignatura
+            FROM mallas m
+            INNER JOIN asignaturas a ON m.asignatura_id = a.id
+            LEFT JOIN asignaturas_departamentos ad ON a.id = ad.asignatura_id
+            LEFT JOIN unidades u ON ad.id_unidad = u.id
+            WHERE m.carrera_id = :carrera_id
+              AND a.estado = 1
+              AND (
+                    (u.sede_id = :sede_id)
+                    OR (a.tipo = 'FORMACION_ELECTIVA')
+              )
+            ORDER BY m.semestre, a.nombre
+        ");
+        $stmt->execute([
+            ':carrera_id' => $carreraId,
+            ':sede_id' => $sedeId,
+        ]);
+        $asignaturas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $asignaturasPorSemestre = [];
+        foreach ($asignaturas as $asignatura) {
+            $semestre = $asignatura['semestre'] ?? 0;
+            if (!isset($asignaturasPorSemestre[$semestre])) {
+                $asignaturasPorSemestre[$semestre] = [];
+            }
+            $asignaturasPorSemestre[$semestre][] = $asignatura;
+        }
+        ksort($asignaturasPorSemestre, SORT_NUMERIC);
+
+        $html = $twig->render('frontend/malla_grafica.twig', [
+            'carrera' => $carrera,
+            'asignaturas_por_semestre' => $asignaturasPorSemestre,
+            'app_url' => $_ENV['APP_URL'] ?? '',
         ]);
 
         $response->getBody()->write($html);

@@ -1,0 +1,139 @@
+{% extends 'frontend/base.twig' %}
+
+{% block title %}Malla Gráfica - {{ carrera.carrera_nombre }}{% endblock %}
+
+{% block content %}
+<section class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="mb-1">Malla Gráfica</h2>
+            <div class="text-muted">
+                {{ carrera.carrera_nombre }} - {{ carrera.sede_nombre }}
+                {% if carrera.vigencia_desde %}
+                    (Vigencia desde: {{ carrera.vigencia_desde|slice(0, 4) }})
+                {% endif %}
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-success" id="btnDescargarMallaPng">
+                <i class="fas fa-download me-1"></i> Descargar PNG
+            </button>
+            <button type="button" class="btn btn-secondary" id="btnCerrarMallaGrafica">
+                <i class="fas fa-times me-1"></i> Cerrar
+            </button>
+        </div>
+    </div>
+
+    <div id="mallaGraficaContenedor" class="p-2 bg-white border rounded">
+        <div class="malla-grafica-header">
+            <h5 class="mb-1">{{ carrera.carrera_nombre }}</h5>
+            <small>{{ carrera.sede_nombre }}{% if carrera.vigencia_desde %} | Vigencia desde {{ carrera.vigencia_desde|slice(0, 4) }}{% endif %}</small>
+        </div>
+        <div id="mallaGraficaGrid" class="malla-grafica-grid">
+            {% if asignaturas_por_semestre is not empty %}
+                {% for semestre, asignaturas in asignaturas_por_semestre %}
+                    <div class="malla-semestre-col">
+                        <div class="malla-semestre-title">Semestre {{ semestre }}</div>
+                        {% for asignatura in asignaturas %}
+                            <div class="malla-asignatura-item">
+                                <strong>{{ asignatura.asignatura_nombre }}</strong>
+                                {% if asignatura.codigo_asignatura %}
+                                    <br><small>{{ asignatura.codigo_asignatura }}</small>
+                                {% endif %}
+                                <span class="malla-asignatura-tipo">{{ asignatura.tipo_asignatura|default('—')|replace({'_':' '}) }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted m-0">No hay asignaturas para graficar.</p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<style>
+.malla-grafica-header {
+    background: linear-gradient(90deg, #8b2f13 0%, #a83c16 100%);
+    color: #fff;
+    padding: 1rem 1.25rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+.malla-grafica-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 0.75rem;
+}
+.malla-semestre-col {
+    background: #fff;
+    border: 1px solid #e3e6f0;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+.malla-semestre-title {
+    background: #ef6c00;
+    color: #fff;
+    font-weight: 700;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 0.45rem 0.5rem;
+    font-size: 0.82rem;
+}
+.malla-asignatura-item {
+    margin: 0.4rem;
+    background: #f2f4f8;
+    border-radius: 0.35rem;
+    border-left: 4px solid #8b2f13;
+    padding: 0.45rem 0.5rem;
+    font-size: 0.78rem;
+    line-height: 1.2;
+}
+.malla-asignatura-tipo {
+    display: block;
+    color: #6c757d;
+    font-size: 0.68rem;
+    margin-top: 0.2rem;
+}
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const btnDescargarMallaPng = document.getElementById('btnDescargarMallaPng');
+    const btnCerrarMallaGrafica = document.getElementById('btnCerrarMallaGrafica');
+    const mallaGraficaContenedor = document.getElementById('mallaGraficaContenedor');
+    let generandoPng = false;
+
+    if (!btnDescargarMallaPng || !mallaGraficaContenedor) return;
+
+    btnDescargarMallaPng.onclick = function () {
+        if (generandoPng) return;
+        generandoPng = true;
+        btnDescargarMallaPng.disabled = true;
+
+        html2canvas(mallaGraficaContenedor, { scale: 2, backgroundColor: '#ffffff' })
+            .then(function (canvas) {
+                const link = document.createElement('a');
+                link.download = 'malla-grafica-{{ carrera.carrera_nombre|replace({" ":"-"})|lower }}.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            })
+            .finally(function () {
+                generandoPng = false;
+                btnDescargarMallaPng.disabled = false;
+            });
+    };
+
+    if (btnCerrarMallaGrafica) {
+        btnCerrarMallaGrafica.onclick = function () {
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'cerrarModalMallaGrafica' }, '*');
+                return;
+            }
+            window.close();
+        };
+    }
+});
+</script>
+{% endblock %}

@@ -231,59 +231,85 @@ class __TwigTemplate_803fc1d1cc8d2ce62a4ece97cbedd28e extends Template
                 // line 104
                 yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "nombre", [], "any", false, false, false, 104), "html", null, true);
                 yield "</h5>
-                        <p class=\"card-text\">";
-                // line 105
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "descripcion", [], "any", true, true, false, 105)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "descripcion", [], "any", false, false, false, 105), "Forma profesionales capaces de optimizar procesos productivos y de servicios.")) : ("Forma profesionales capaces de optimizar procesos productivos y de servicios.")), "html", null, true);
-                yield "</p>
+                        <p class=\"card-text\">
+                            ";
+                // line 106
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "descripcion", [], "any", true, true, false, 106)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "descripcion", [], "any", false, false, false, 106), "Forma profesionales capaces de optimizar procesos productivos y de servicios.")) : ("Forma profesionales capaces de optimizar procesos productivos y de servicios.")), "html", null, true);
+                yield "
+                            <br>
+                            <small class=\"text-muted\">
+                                Vigencia desde:
+                                ";
+                // line 110
+                if ((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", true, true, false, 110) && CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", false, false, false, 110))) {
+                    // line 111
+                    yield "                                    ";
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::slice($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", false, false, false, 111), 0, 4), "html", null, true);
+                    yield "
+                                ";
+                } else {
+                    // line 113
+                    yield "                                    —
+                                ";
+                }
+                // line 115
+                yield "                            </small>
+                        </p>
                         <div class=\"carrera-meta\">
                             <div class=\"meta-item\">
                                 <i class=\"fas fa-clock\"></i>
                                 <span>";
-                // line 109
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "cantidad_semestres", [], "any", true, true, false, 109)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "cantidad_semestres", [], "any", false, false, false, 109), 10)) : (10)), "html", null, true);
+                // line 120
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "cantidad_semestres", [], "any", true, true, false, 120)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "cantidad_semestres", [], "any", false, false, false, 120), 10)) : (10)), "html", null, true);
                 yield " semestres</span>
                             </div>
                             <div class=\"meta-item\">
                                 <i class=\"fas fa-map-marker-alt\"></i>
                                 <span>";
-                // line 113
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sede_nombre", [], "any", false, false, false, 113), "html", null, true);
+                // line 124
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sede_nombre", [], "any", false, false, false, 124), "html", null, true);
                 yield "</span>
                             </div>
                         </div>
                         ";
-                // line 116
-                if (CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sede_id", [], "any", false, false, false, 116)) {
-                    // line 117
+                // line 127
+                if (CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sede_id", [], "any", false, false, false, 127)) {
+                    // line 128
                     yield "                        <a href=\"";
                     yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
                     yield "/carrera/";
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sede_id", [], "any", false, false, false, 117), "html", null, true);
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sede_id", [], "any", false, false, false, 128), "html", null, true);
                     yield "/";
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "id", [], "any", false, false, false, 117), "html", null, true);
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "id", [], "any", false, false, false, 128), "html", null, true);
+                    yield "?vigencia_desde=";
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::urlencode(((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", true, true, false, 128)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", false, false, false, 128), "")) : (""))), "html", null, true);
                     yield "\" 
                            class=\"btn btn-primary btn-ver-bibliografia\"
                            data-carrera-id=\"";
-                    // line 119
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "id", [], "any", false, false, false, 119), "html", null, true);
+                    // line 130
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "id", [], "any", false, false, false, 130), "html", null, true);
                     yield "\"
                            data-sedes=\"";
-                    // line 120
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sede_id", [], "any", false, false, false, 120), "html", null, true);
+                    // line 131
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sede_id", [], "any", false, false, false, 131), "html", null, true);
+                    yield "\"
+                           data-vigencia-desde=\"";
+                    // line 132
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", true, true, false, 132)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", false, false, false, 132), "")) : ("")), "html", null, true);
                     yield "\">
                             <i class=\"fas fa-book me-1\"></i>
                             Ver Bibliografía
                         </a>
                         ";
                 } else {
-                    // line 125
+                    // line 137
                     yield "                        <button class=\"btn btn-secondary btn-ver-bibliografia\" disabled>
                             <i class=\"fas fa-exclamation-triangle me-1\"></i>
                             No disponible
                         </button>
                         ";
                 }
-                // line 130
+                // line 142
                 yield "                    </div>
                 </div>
             </div>
@@ -292,10 +318,10 @@ class __TwigTemplate_803fc1d1cc8d2ce62a4ece97cbedd28e extends Template
             $_parent = $context['_parent'];
             unset($context['_seq'], $context['_key'], $context['carrera'], $context['_parent']);
             $context = array_intersect_key($context, $_parent) + $_parent;
-            // line 134
+            // line 146
             yield "        ";
         } else {
-            // line 135
+            // line 147
             yield "            <div class=\"col-12\">
                 <div class=\"alert alert-info text-center\">
                     <i class=\"fas fa-info-circle me-2\"></i>
@@ -304,7 +330,7 @@ class __TwigTemplate_803fc1d1cc8d2ce62a4ece97cbedd28e extends Template
             </div>
         ";
         }
-        // line 142
+        // line 154
         yield "    </div>
 </section>
 
@@ -348,14 +374,14 @@ class __TwigTemplate_803fc1d1cc8d2ce62a4ece97cbedd28e extends Template
         yield from [];
     }
 
-    // line 183
+    // line 195
     /**
      * @return iterable<null|scalar|\Stringable>
      */
     public function block_scripts(array $context, array $blocks = []): iterable
     {
         $macros = $this->macros;
-        // line 184
+        // line 196
         yield "<script>
 // Función global para filtrar carreras
 function filtrarCarreras() {
@@ -504,6 +530,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const button = e.target.closest('.btn-ver-bibliografia');
             const carreraId = button.getAttribute('data-carrera-id');
             const sedesDisponibles = button.getAttribute('data-sedes').split(',');
+            const vigenciaDesde = button.getAttribute('data-vigencia-desde') || '';
             const sedeSeleccionada = sedeSelect.value;
             
             console.log('Carrera ID:', carreraId);
@@ -514,13 +541,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (sedeSeleccionada === 'todas' || sedesDisponibles.includes(sedeSeleccionada)) {
                 // Usar la sede seleccionada o la primera disponible
                 const sedeParaUsar = sedeSeleccionada === 'todas' ? sedesDisponibles[0] : sedeSeleccionada;
-                const url = `\${window.location.origin}/carrera/\${sedeParaUsar}/\${carreraId}`;
+                const vigenciaQuery = vigenciaDesde ? `?vigencia_desde=\${encodeURIComponent(vigenciaDesde)}` : '';
+                const url = `\${window.location.origin}/carrera/\${sedeParaUsar}/\${carreraId}\${vigenciaQuery}`;
                 console.log('Navegando a:', url);
                 window.location.href = url;
             } else {
                 // Si la sede seleccionada no está disponible, usar la primera sede disponible
                 const sedeParaUsar = sedesDisponibles[0];
-                const url = `\${window.location.origin}/carrera/\${sedeParaUsar}/\${carreraId}`;
+                const vigenciaQuery = vigenciaDesde ? `?vigencia_desde=\${encodeURIComponent(vigenciaDesde)}` : '';
+                const url = `\${window.location.origin}/carrera/\${sedeParaUsar}/\${carreraId}\${vigenciaQuery}`;
                 console.log('Sede seleccionada no disponible, usando:', sedeParaUsar);
                 console.log('Navegando a:', url);
                 window.location.href = url;
@@ -564,7 +593,7 @@ window.debugFiltros = function() {
      */
     public function getDebugInfo(): array
     {
-        return array (  359 => 184,  352 => 183,  308 => 142,  299 => 135,  296 => 134,  287 => 130,  280 => 125,  272 => 120,  268 => 119,  258 => 117,  256 => 116,  250 => 113,  243 => 109,  236 => 105,  232 => 104,  228 => 102,  222 => 100,  212 => 98,  210 => 97,  204 => 94,  200 => 93,  197 => 92,  192 => 91,  190 => 90,  170 => 72,  161 => 69,  156 => 68,  152 => 67,  121 => 38,  106 => 36,  102 => 35,  71 => 6,  64 => 5,  53 => 3,  42 => 1,);
+        return array (  385 => 196,  378 => 195,  334 => 154,  325 => 147,  322 => 146,  313 => 142,  306 => 137,  298 => 132,  294 => 131,  290 => 130,  278 => 128,  276 => 127,  270 => 124,  263 => 120,  256 => 115,  252 => 113,  246 => 111,  244 => 110,  237 => 106,  232 => 104,  228 => 102,  222 => 100,  212 => 98,  210 => 97,  204 => 94,  200 => 93,  197 => 92,  192 => 91,  190 => 90,  170 => 72,  161 => 69,  156 => 68,  152 => 67,  121 => 38,  106 => 36,  102 => 35,  71 => 6,  64 => 5,  53 => 3,  42 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -673,7 +702,18 @@ window.debugFiltros = function() {
                     </div>
                     <div class=\"card-body\">
                         <h5 class=\"card-title\">{{ carrera.nombre }}</h5>
-                        <p class=\"card-text\">{{ carrera.descripcion|default('Forma profesionales capaces de optimizar procesos productivos y de servicios.') }}</p>
+                        <p class=\"card-text\">
+                            {{ carrera.descripcion|default('Forma profesionales capaces de optimizar procesos productivos y de servicios.') }}
+                            <br>
+                            <small class=\"text-muted\">
+                                Vigencia desde:
+                                {% if carrera.vigencia_desde is defined and carrera.vigencia_desde %}
+                                    {{ carrera.vigencia_desde|slice(0, 4) }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </small>
+                        </p>
                         <div class=\"carrera-meta\">
                             <div class=\"meta-item\">
                                 <i class=\"fas fa-clock\"></i>
@@ -685,10 +725,11 @@ window.debugFiltros = function() {
                             </div>
                         </div>
                         {% if carrera.sede_id %}
-                        <a href=\"{{ app_url }}/carrera/{{ carrera.sede_id }}/{{ carrera.id }}\" 
+                        <a href=\"{{ app_url }}/carrera/{{ carrera.sede_id }}/{{ carrera.id }}?vigencia_desde={{ carrera.vigencia_desde|default('')|url_encode }}\" 
                            class=\"btn btn-primary btn-ver-bibliografia\"
                            data-carrera-id=\"{{ carrera.id }}\"
-                           data-sedes=\"{{ carrera.sede_id }}\">
+                           data-sedes=\"{{ carrera.sede_id }}\"
+                           data-vigencia-desde=\"{{ carrera.vigencia_desde|default('') }}\">
                             <i class=\"fas fa-book me-1\"></i>
                             Ver Bibliografía
                         </a>
@@ -900,6 +941,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const button = e.target.closest('.btn-ver-bibliografia');
             const carreraId = button.getAttribute('data-carrera-id');
             const sedesDisponibles = button.getAttribute('data-sedes').split(',');
+            const vigenciaDesde = button.getAttribute('data-vigencia-desde') || '';
             const sedeSeleccionada = sedeSelect.value;
             
             console.log('Carrera ID:', carreraId);
@@ -910,13 +952,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (sedeSeleccionada === 'todas' || sedesDisponibles.includes(sedeSeleccionada)) {
                 // Usar la sede seleccionada o la primera disponible
                 const sedeParaUsar = sedeSeleccionada === 'todas' ? sedesDisponibles[0] : sedeSeleccionada;
-                const url = `\${window.location.origin}/carrera/\${sedeParaUsar}/\${carreraId}`;
+                const vigenciaQuery = vigenciaDesde ? `?vigencia_desde=\${encodeURIComponent(vigenciaDesde)}` : '';
+                const url = `\${window.location.origin}/carrera/\${sedeParaUsar}/\${carreraId}\${vigenciaQuery}`;
                 console.log('Navegando a:', url);
                 window.location.href = url;
             } else {
                 // Si la sede seleccionada no está disponible, usar la primera sede disponible
                 const sedeParaUsar = sedesDisponibles[0];
-                const url = `\${window.location.origin}/carrera/\${sedeParaUsar}/\${carreraId}`;
+                const vigenciaQuery = vigenciaDesde ? `?vigencia_desde=\${encodeURIComponent(vigenciaDesde)}` : '';
+                const url = `\${window.location.origin}/carrera/\${sedeParaUsar}/\${carreraId}\${vigenciaQuery}`;
                 console.log('Sede seleccionada no disponible, usando:', sedeParaUsar);
                 console.log('Navegando a:', url);
                 window.location.href = url;

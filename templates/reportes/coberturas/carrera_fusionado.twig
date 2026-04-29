@@ -119,8 +119,9 @@
                                         {% set len_basica = asignatura.basica|length %}
                                         {% set len_complementaria = asignatura.complementaria|length %}
                                         {% set max_filas = len_basica > len_complementaria ? len_basica : len_complementaria %}
+                                        {% set clase_fila_asignatura = loop.index0 is even ? 'fila-asignatura-blanca' : 'fila-asignatura-gris' %}
                                         {% for i in 0..(max_filas-1) %}
-                                            <tr>
+                                            <tr class="{{ clase_fila_asignatura }}">
                                                 {% if i == 0 %}
                                                     <td class="text-center align-middle" rowspan="{{ max_filas }}">{{ asignatura.tipo }}</td>
                                                     <td class="align-middle" rowspan="{{ max_filas }}">{{ asignatura.nombre }}</td>
@@ -155,7 +156,11 @@
                                                         {% endif %}
                                                     {% endif %}
                                                 </td>
-                                                <td class="text-center">{{ b ? (b.cobertura ~ '%') : '' }}</td>
+                                                {% if i == 0 %}
+                                                    <td class="text-center align-middle" rowspan="{{ max_filas }}">
+                                                        {{ asignatura.cobertura_basica_asignatura|default(0) }}%
+                                                    </td>
+                                                {% endif %}
                                                 {# Bibliografía complementaria #}
                                                 {% set c = asignatura.complementaria[i] is defined ? asignatura.complementaria[i] : null %}
                                                 <td>{{ c ? c.titulo_declarado : '' }}</td>
@@ -186,7 +191,11 @@
                                                         {% endif %}
                                                     {% endif %}
                                                 </td>
-                                                <td class="text-center">{{ c ? (c.cobertura ~ '%') : '' }}</td>
+                                                {% if i == 0 %}
+                                                    <td class="text-center align-middle" rowspan="{{ max_filas }}">
+                                                        {{ asignatura.cobertura_complementaria_asignatura|default(0) }}%
+                                                    </td>
+                                                {% endif %}
                                             </tr>
                                         {% endfor %}
                                     {% endfor %}
@@ -229,6 +238,14 @@
 
 .badge {
     font-size: 0.8em;
+}
+
+#tablaFusionada tbody tr.fila-asignatura-gris td {
+    background-color: #f2f2f2;
+}
+
+#tablaFusionada tbody tr.fila-asignatura-blanca td {
+    background-color: #ffffff;
 }
 </style>
 

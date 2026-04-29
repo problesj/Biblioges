@@ -378,6 +378,116 @@ class ReporteController extends BaseController
     }
 
     /**
+     * Tipos de formación soportados por filtros de cobertura.
+     */
+    private function tiposFormacionDisponiblesPorDefecto(): array
+    {
+        return [
+            'FORMACION_BASICA',
+            'FORMACION_GENERAL',
+            'FORMACION_IDIOMAS',
+            'FORMACION_PROFESIONAL',
+            'FORMACION_VALORES',
+            'FORMACION_ESPECIALIDAD',
+            'FORMACION_ESPECIAL',
+        ];
+    }
+
+    /**
+     * Mapea un registro de filtros_formaciones a arreglo de tipos seleccionados.
+     */
+    private function tiposFormacionDesdeRegistro($filtrosGuardados): array
+    {
+        if (!$filtrosGuardados) {
+            return [];
+        }
+
+        $mapeo = [
+            'basica' => 'FORMACION_BASICA',
+            'general' => 'FORMACION_GENERAL',
+            'idioma' => 'FORMACION_IDIOMAS',
+            'profesional' => 'FORMACION_PROFESIONAL',
+            'valores' => 'FORMACION_VALORES',
+            'especialidad' => 'FORMACION_ESPECIALIDAD',
+            'especial' => 'FORMACION_ESPECIAL',
+        ];
+
+        $tipos = [];
+        foreach ($mapeo as $columna => $tipo) {
+            if (!empty($filtrosGuardados->$columna)) {
+                $tipos[] = $tipo;
+            }
+        }
+
+        return $tipos;
+    }
+
+    /**
+     * Obtiene filtros guardados para una carrera.
+     * Prioriza el plan exacto (id_carrera_espejo) y, si no existe,
+     * usa como respaldo el registro más reciente de la misma carrera/sede/código.
+     */
+    private function obtenerFiltrosFormacionGuardados(
+        int $carreraEspejoId,
+        int $carreraId,
+        int $sedeId,
+        ?string $codigoCarrera = null
+    ) {
+        $filtros = DB::table('filtros_formaciones')
+            ->where('id_carrera_espejo', $carreraEspejoId)
+            ->first();
+
+        if ($filtros) {
+            return $filtros;
+        }
+
+        $fallback = DB::table('filtros_formaciones as ff')
+            ->join('carreras_espejos as ce', 'ce.id', '=', 'ff.id_carrera_espejo')
+            ->where('ce.sede_id', $sedeId);
+
+        if (!empty($codigoCarrera)) {
+            $fallback->where('ce.codigo_carrera', $codigoCarrera);
+        } else {
+            $fallback->where('ce.carrera_id', $carreraId);
+        }
+
+        return $fallback
+            ->orderByDesc('ce.vigencia_desde')
+            ->orderByDesc('ce.id')
+            ->select('ff.*')
+            ->first();
+    }
+
+    /**
+     * Redirige al mismo reporte con filtros explícitos en URL.
+     */
+    private function redirigirConFiltrosFormacion(
+        Response $response,
+        string $ruta,
+        array $queryParams,
+        array $tiposFormacion,
+        bool $filtrosVacios = false
+    ): Response {
+        unset($queryParams['tipos_formacion'], $queryParams['tipos_formacion_vacio']);
+
+        if ($filtrosVacios) {
+            $queryParams['tipos_formacion_vacio'] = 1;
+        } else {
+            $queryParams['tipos_formacion'] = array_values($tiposFormacion);
+        }
+
+        $query = http_build_query($queryParams);
+        $url = app_url() . ltrim($ruta, '/');
+        if ($query !== '') {
+            $url .= '?' . $query;
+        }
+
+        return $response
+            ->withHeader('Location', $url)
+            ->withStatus(302);
+    }
+
+    /**
      * Calcula el total de ejemplares digitales considerando valores especiales
      */
     private function calcularTotalEjemplaresDigitales($items) {
@@ -1785,6 +1895,7 @@ class ReporteController extends BaseController
             $tiposFormacionFiltro = [$tiposFormacionFiltro];
         }
         $tiposFormacionVacio = $queryParams['tipos_formacion_vacio'] ?? null;
+        $filtrosEnUrl = array_key_exists('tipos_formacion', $queryParams) || array_key_exists('tipos_formacion_vacio', $queryParams);
         $filtrosGuardadosAplicados = false; // Nueva variable para rastrear si se aplicaron filtros guardados
         
         error_log('ReporteController@reporteBibliografiaBasica: Iniciando método');
@@ -1848,60 +1959,38 @@ class ReporteController extends BaseController
 
         error_log('ReporteController@reporteBibliografiaBasica: Carrera encontrada: ' . $carrera->nombre);
 
-        // Si no hay filtros en la URL, intentar cargar filtros guardados de la tabla filtros_formaciones
-        if (empty($tiposFormacionFiltro) && !$tiposFormacionVacio) {
-            // Obtener el id_carrera_espejo para la carrera y sede específica
+        // Si no vienen filtros explícitos por URL, cargar desde BD (o default)
+        if (!$filtrosEnUrl) {
             if ($carreraEspejo) {
-                $filtrosGuardados = DB::table('filtros_formaciones')
-                    ->where('id_carrera_espejo', $carreraEspejo->id)
-                    ->first();
-                    
+                $filtrosGuardados = $this->obtenerFiltrosFormacionGuardados(
+                    (int) $carreraEspejo->id,
+                    (int) $carreraId,
+                    (int) $sedeId,
+                    (string) $carrera->codigo
+                );
+
                 if ($filtrosGuardados) {
-                    $filtrosGuardadosAplicados = true; // Marcamos que se intentaron aplicar filtros guardados
-                    // Solo cargar filtros si al menos uno está marcado como 1
-                    $filtrosMarcados = 0;
-                    $tiposFormacionFiltro = [];
-                    
-                    if ($filtrosGuardados->basica) {
-                        $tiposFormacionFiltro[] = 'FORMACION_BASICA';
-                        $filtrosMarcados++;
+                    $filtrosGuardadosAplicados = true;
+                    $tiposFormacionFiltro = $this->tiposFormacionDesdeRegistro($filtrosGuardados);
+                    if (empty($tiposFormacionFiltro)) {
+                        // Registro existe pero todo en 0 => mostrar solo regulares
+                        $tiposFormacionVacio = true;
                     }
-                    if ($filtrosGuardados->general) {
-                        $tiposFormacionFiltro[] = 'FORMACION_GENERAL';
-                        $filtrosMarcados++;
-                    }
-                    if ($filtrosGuardados->idioma) {
-                        $tiposFormacionFiltro[] = 'FORMACION_IDIOMAS';
-                        $filtrosMarcados++;
-                    }
-                    if ($filtrosGuardados->profesional) {
-                        $tiposFormacionFiltro[] = 'FORMACION_PROFESIONAL';
-                        $filtrosMarcados++;
-                    }
-                    if ($filtrosGuardados->valores) {
-                        $tiposFormacionFiltro[] = 'FORMACION_VALORES';
-                        $filtrosMarcados++;
-                    }
-                    if ($filtrosGuardados->especialidad) {
-                        $tiposFormacionFiltro[] = 'FORMACION_ESPECIALIDAD';
-                        $filtrosMarcados++;
-                    }
-                    if ($filtrosGuardados->especial) {
-                        $tiposFormacionFiltro[] = 'FORMACION_ESPECIAL';
-                        $filtrosMarcados++;
-                    }
-                    
-                    // Solo aplicar filtros si al menos uno está marcado
-                    if ($filtrosMarcados > 0) {
-                        error_log('ReporteController@reporteBibliografiaBasica: Filtros guardados cargados: ' . print_r($tiposFormacionFiltro, true));
-                    } else {
-                        // Si todos los filtros están en 0, marcar como vacío explícitamente
-                        $tiposFormacionFiltro = [];
-                        $tiposFormacionVacio = true; // Esto forzará que solo se muestren asignaturas regulares
-                        error_log('ReporteController@reporteBibliografiaBasica: Todos los filtros guardados están desmarcados, se aplica filtro vacío');
-                    }
+                    error_log('ReporteController@reporteBibliografiaBasica: Filtros guardados cargados: ' . print_r($tiposFormacionFiltro, true));
+                } else {
+                    // Si no hay filtros guardados para la carrera, seleccionar todos por defecto
+                    $tiposFormacionFiltro = $this->tiposFormacionDisponiblesPorDefecto();
+                    error_log('ReporteController@reporteBibliografiaBasica: Sin filtros guardados, se seleccionan todos por defecto');
                 }
             }
+
+            return $this->redirigirConFiltrosFormacion(
+                $response,
+                "reportes/coberturas/{$sedeId}/{$carreraId}",
+                $queryParams,
+                $tiposFormacionFiltro,
+                !empty($tiposFormacionVacio)
+            );
         }
         
         // Actualizar si hay filtros aplicados y determinar si todos los filtros guardados están en cero
@@ -2624,65 +2713,34 @@ class ReporteController extends BaseController
             $tiposFormacionFiltro = [$tiposFormacionFiltro];
         }
         $tiposFormacionVacio = $queryParams['tipos_formacion_vacio'] ?? null;
+        $filtrosEnUrl = array_key_exists('tipos_formacion', $queryParams) || array_key_exists('tipos_formacion_vacio', $queryParams);
         $filtrosGuardadosAplicados = false; // Nueva variable para rastrear si se aplicaron filtros guardados
         
-        // Si no hay filtros en la URL, intentar cargar filtros guardados de la tabla filtros_formaciones
-        if (empty($tiposFormacionFiltro) && !$tiposFormacionVacio) {
-            // Obtener el id_carrera_espejo para la carrera y sede específica
+        // Si no vienen filtros explícitos por URL, cargar filtros guardados o defaults
+        if (!$filtrosEnUrl) {
             $carreraEspejo = DB::table('carreras_espejos')
                 ->where('codigo_carrera', $carrera->codigo)
                 ->where('sede_id', $sedeId)
                 ->first();
             
             if ($carreraEspejo) {
-                $filtrosGuardados = DB::table('filtros_formaciones')
-                    ->where('id_carrera_espejo', $carreraEspejo->id)
-                    ->first();
+                $filtrosGuardados = $this->obtenerFiltrosFormacionGuardados(
+                    (int) $carreraEspejo->id,
+                    (int) $carreraId,
+                    (int) $sedeId,
+                    (string) $carrera->codigo
+                );
                     
                 if ($filtrosGuardados) {
-                    $filtrosGuardadosAplicados = true; // Marcamos que se intentaron aplicar filtros guardados
-                    // Solo cargar filtros si al menos uno está marcado como 1
-                    $filtrosMarcados = 0;
-                    $tiposFormacionFiltro = [];
-                    
-                    if ($filtrosGuardados->basica) {
-                        $tiposFormacionFiltro[] = 'FORMACION_BASICA';
-                        $filtrosMarcados++;
+                    $filtrosGuardadosAplicados = true;
+                    $tiposFormacionFiltro = $this->tiposFormacionDesdeRegistro($filtrosGuardados);
+                    if (empty($tiposFormacionFiltro)) {
+                        $tiposFormacionVacio = true;
                     }
-                    if ($filtrosGuardados->general) {
-                        $tiposFormacionFiltro[] = 'FORMACION_GENERAL';
-                        $filtrosMarcados++;
-                    }
-                    if ($filtrosGuardados->idioma) {
-                        $tiposFormacionFiltro[] = 'FORMACION_IDIOMAS';
-                        $filtrosMarcados++;
-                    }
-                    if ($filtrosGuardados->profesional) {
-                        $tiposFormacionFiltro[] = 'FORMACION_PROFESIONAL';
-                        $filtrosMarcados++;
-                    }
-                    if ($filtrosGuardados->valores) {
-                        $tiposFormacionFiltro[] = 'FORMACION_VALORES';
-                        $filtrosMarcados++;
-                    }
-                    if ($filtrosGuardados->especialidad) {
-                        $tiposFormacionFiltro[] = 'FORMACION_ESPECIALIDAD';
-                        $filtrosMarcados++;
-                    }
-                    if ($filtrosGuardados->especial) {
-                        $tiposFormacionFiltro[] = 'FORMACION_ESPECIAL';
-                        $filtrosMarcados++;
-                    }
-                    
-                    // Solo aplicar filtros si al menos uno está marcado
-                    if ($filtrosMarcados > 0) {
-                        error_log('ReporteController@reporteBibliografiaBasicaExpandido: Filtros guardados cargados: ' . print_r($tiposFormacionFiltro, true));
-                    } else {
-                        // Si todos los filtros están en 0, marcar como vacío explícitamente
-                        $tiposFormacionFiltro = [];
-                        $tiposFormacionVacio = true; // Esto forzará que solo se muestren asignaturas regulares
-                        error_log('ReporteController@reporteBibliografiaBasicaExpandido: Todos los filtros guardados están desmarcados, se aplica filtro vacío');
-                    }
+                    error_log('ReporteController@reporteBibliografiaBasicaExpandido: Filtros guardados cargados: ' . print_r($tiposFormacionFiltro, true));
+                } else {
+                    $tiposFormacionFiltro = $this->tiposFormacionDisponiblesPorDefecto();
+                    error_log('ReporteController@reporteBibliografiaBasicaExpandido: Sin filtros guardados, se seleccionan todos por defecto');
                 }
             }
         }
@@ -3746,53 +3804,23 @@ class ReporteController extends BaseController
         if (empty($tiposFormacionFiltro) && !$tiposFormacionVacio) {
             // Usar el carrera_espejo ya resuelto para el plan actual
             if ($carreraEspejo) {
-                $filtrosGuardados = DB::table('filtros_formaciones')
-                    ->where('id_carrera_espejo', $carreraEspejo->id)
-                    ->first();
+                $filtrosGuardados = $this->obtenerFiltrosFormacionGuardados(
+                    (int) $carreraEspejo->id,
+                    (int) $carreraId,
+                    (int) $sedeId,
+                    (string) $carrera->codigo
+                );
                 if ($filtrosGuardados) {
-                    // Solo cargar filtros si al menos uno está marcado como 1
-                    $filtrosMarcados = 0;
-                    $tiposFormacionFiltro = [];
-                    
-                    if ($filtrosGuardados->basica == 1) {
-                        $tiposFormacionFiltro[] = 'FORMACION_BASICA';
-                        $filtrosMarcados++;
+                    $tiposFormacionFiltro = $this->tiposFormacionDesdeRegistro($filtrosGuardados);
+                    $hayFiltrosAplicados = !empty($tiposFormacionFiltro);
+                    if (empty($tiposFormacionFiltro)) {
+                        $tiposFormacionVacio = true;
                     }
-                    if ($filtrosGuardados->general == 1) {
-                        $tiposFormacionFiltro[] = 'FORMACION_GENERAL';
-                        $filtrosMarcados++;
-                    }
-                    if ($filtrosGuardados->idioma == 1) {
-                        $tiposFormacionFiltro[] = 'FORMACION_IDIOMAS';
-                        $filtrosMarcados++;
-                    }
-                    if ($filtrosGuardados->profesional == 1) {
-                        $tiposFormacionFiltro[] = 'FORMACION_PROFESIONAL';
-                        $filtrosMarcados++;
-                    }
-                    if ($filtrosGuardados->valores == 1) {
-                        $tiposFormacionFiltro[] = 'FORMACION_VALORES';
-                        $filtrosMarcados++;
-                    }
-                    if ($filtrosGuardados->especialidad == 1) {
-                        $tiposFormacionFiltro[] = 'FORMACION_ESPECIALIDAD';
-                        $filtrosMarcados++;
-                    }
-                    if ($filtrosGuardados->especial == 1) {
-                        $tiposFormacionFiltro[] = 'FORMACION_ESPECIAL';
-                        $filtrosMarcados++;
-                    }
-                    
-                    // Solo aplicar filtros si al menos uno está marcado
-                    if ($filtrosMarcados > 0) {
-                        $hayFiltrosAplicados = true;
                     error_log('ReporteController@reporteBibliografiaComplementaria: Filtros guardados cargados: ' . print_r($tiposFormacionFiltro, true));
-                    } else {
-                        // Si todos los filtros están en 0, no aplicar ningún filtro
-                        $tiposFormacionFiltro = [];
-                        $hayFiltrosAplicados = false;
-                        error_log('ReporteController@reporteBibliografiaComplementaria: Todos los filtros guardados están desmarcados, no se aplican filtros');
-                    }
+                } else {
+                    $tiposFormacionFiltro = $this->tiposFormacionDisponiblesPorDefecto();
+                    $hayFiltrosAplicados = true;
+                    error_log('ReporteController@reporteBibliografiaComplementaria: Sin filtros guardados, se seleccionan todos por defecto');
                 }
             }
         }
@@ -4004,27 +4032,40 @@ class ReporteController extends BaseController
             error_log('ReporteController@guardarFiltrosFormacion: Sede ID: ' . $sedeId . ', Carrera ID: ' . $carreraId);
             error_log('ReporteController@guardarFiltrosFormacion: Filtros recibidos: ' . print_r($filtros, true));
 
-            // Obtener información de la carrera
-        $carrera = DB::table('vw_mallas')
-            ->where('id_sede', $sedeId)
-            ->where('id_carrera', $carreraId)
-                ->select('codigo_carrera as codigo')
-            ->first();
-            
-            if (!$carrera) {
-                error_log('ReporteController@guardarFiltrosFormacion: No se encontró la carrera');
-                $response->getBody()->write(json_encode(['error' => 'Carrera no encontrada']));
-                return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
+            $queryParams = $request->getQueryParams();
+            $codigoPlan = $queryParams['codigo'] ?? null;
+            $vigenciaDesdePlan = $queryParams['vigencia_desde'] ?? null;
+            $vigenciaHastaPlan = $queryParams['vigencia_hasta'] ?? null;
+
+            // Resolver carrera_espejo exacta del plan visualizado
+            $carreraEspejoQuery = DB::table('carreras_espejos')
+                ->where('sede_id', $sedeId);
+
+            if (!empty($codigoPlan)) {
+                $carreraEspejoQuery->where('codigo_carrera', $codigoPlan);
+            } else {
+                // fallback para compatibilidad con rutas antiguas
+                $codigoDesdeMalla = DB::table('vw_mallas')
+                    ->where('id_sede', $sedeId)
+                    ->where('id_carrera', $carreraId)
+                    ->value('codigo_carrera');
+                if (!empty($codigoDesdeMalla)) {
+                    $carreraEspejoQuery->where('codigo_carrera', $codigoDesdeMalla);
+                } else {
+                    $carreraEspejoQuery->where('carrera_id', $carreraId);
+                }
+            }
+            if (!empty($vigenciaDesdePlan)) {
+                $carreraEspejoQuery->where('vigencia_desde', $vigenciaDesdePlan);
+            }
+            if (!empty($vigenciaHastaPlan)) {
+                $carreraEspejoQuery->where('vigencia_hasta', $vigenciaHastaPlan);
             }
 
-            // Obtener el id_carrera_espejo para la carrera y sede específica
-            $carreraEspejo = DB::table('carreras_espejos')
-                ->where('codigo_carrera', $carrera->codigo)
-                ->where('sede_id', $sedeId)
-                ->first();
+            $carreraEspejo = $carreraEspejoQuery->orderByDesc('vigencia_desde')->first();
             
             if (!$carreraEspejo) {
-                error_log('ReporteController@guardarFiltrosFormacion: No se encontró carrera_espejo para codigo_carrera: ' . $carrera->codigo . ' y sede_id: ' . $sedeId);
+                error_log('ReporteController@guardarFiltrosFormacion: No se encontró carrera_espejo para carrera_id/sede_id y query actual');
                 $response->getBody()->write(json_encode([
                     'error' => 'No se encontró la configuración de carrera para la sede especificada'
                 ]));
@@ -4060,12 +4101,12 @@ class ReporteController extends BaseController
                 error_log('ReporteController@guardarFiltrosFormacion: Nuevos filtros insertados');
             }
 
-            $mensaje = 'Filtros guardados correctamente para la carrera ' . $carrera->codigo;
+            $mensaje = 'Filtros guardados correctamente para la carrera ' . $carreraEspejo->codigo_carrera;
             
             $response->getBody()->write(json_encode([
                 'success' => true,
                 'message' => $mensaje,
-                'codigo_carrera' => $carrera->codigo,
+                'codigo_carrera' => $carreraEspejo->codigo_carrera,
                 'filtros' => $filtros
             ]));
             
@@ -4100,9 +4141,10 @@ class ReporteController extends BaseController
             $hayFiltrosAplicados = !empty($tiposFormacionFiltro);
         
             $tiposFormacionVacio = $queryParams['tipos_formacion_vacio'] ?? null;
+            $filtrosEnUrl = array_key_exists('tipos_formacion', $queryParams) || array_key_exists('tipos_formacion_vacio', $queryParams);
             
         // Si no hay filtros en la URL, intentar cargar filtros guardados
-        if (!$hayFiltrosAplicados) {
+        if (!$filtrosEnUrl) {
             // Obtener la carrera antes de usarla
             $carrera = DB::table('vw_mallas')
                 ->where('id_sede', $sedeId)
@@ -4129,54 +4171,24 @@ class ReporteController extends BaseController
                 ->first();
             
             if ($carreraEspejo) {
-                $filtrosGuardados = DB::table('filtros_formaciones')
-                    ->where('id_carrera_espejo', $carreraEspejo->id)
-                    ->first();
+                $filtrosGuardados = $this->obtenerFiltrosFormacionGuardados(
+                    (int) $carreraEspejo->id,
+                    (int) $carreraId,
+                    (int) $sedeId,
+                    (string) $carrera->codigo
+                );
                     
                 if ($filtrosGuardados) {
-                    // Solo cargar filtros si al menos uno está marcado como 1
-                    $filtrosMarcados = 0;
-                    $tiposFormacionFiltro = [];
-                    
-                    if ($filtrosGuardados->basica == 1) {
-                        $tiposFormacionFiltro[] = 'FORMACION_BASICA';
-                        $filtrosMarcados++;
+                    $tiposFormacionFiltro = $this->tiposFormacionDesdeRegistro($filtrosGuardados);
+                    $hayFiltrosAplicados = !empty($tiposFormacionFiltro);
+                    if (empty($tiposFormacionFiltro)) {
+                        $tiposFormacionVacio = true;
                     }
-                    if ($filtrosGuardados->general == 1) {
-                        $tiposFormacionFiltro[] = 'FORMACION_GENERAL';
-                        $filtrosMarcados++;
-                    }
-                    if ($filtrosGuardados->idioma == 1) {
-                        $tiposFormacionFiltro[] = 'FORMACION_IDIOMAS';
-                        $filtrosMarcados++;
-                    }
-                    if ($filtrosGuardados->profesional == 1) {
-                        $tiposFormacionFiltro[] = 'FORMACION_PROFESIONAL';
-                        $filtrosMarcados++;
-                    }
-                    if ($filtrosGuardados->valores == 1) {
-                        $tiposFormacionFiltro[] = 'FORMACION_VALORES';
-                        $filtrosMarcados++;
-                    }
-                    if ($filtrosGuardados->especialidad == 1) {
-                        $tiposFormacionFiltro[] = 'FORMACION_ESPECIALIDAD';
-                        $filtrosMarcados++;
-                    }
-                    if ($filtrosGuardados->especial == 1) {
-                        $tiposFormacionFiltro[] = 'FORMACION_ESPECIAL';
-                        $filtrosMarcados++;
-                    }
-                    
-                    // Solo aplicar filtros si al menos uno está marcado
-                    if ($filtrosMarcados > 0) {
-                        $hayFiltrosAplicados = true;
-                        error_log('ReporteController@reporteBibliografiaComplementariaExpandido: Filtros guardados cargados: ' . print_r($tiposFormacionFiltro, true));
-                    } else {
-                        // Si todos los filtros están en 0, no aplicar ningún filtro
-                        $tiposFormacionFiltro = [];
-                        $hayFiltrosAplicados = false;
-                        error_log('ReporteController@reporteBibliografiaComplementariaExpandido: Todos los filtros guardados están desmarcados, no se aplican filtros');
-                    }
+                    error_log('ReporteController@reporteBibliografiaComplementariaExpandido: Filtros guardados cargados: ' . print_r($tiposFormacionFiltro, true));
+                } else {
+                    $tiposFormacionFiltro = $this->tiposFormacionDisponiblesPorDefecto();
+                    $hayFiltrosAplicados = true;
+                    error_log('ReporteController@reporteBibliografiaComplementariaExpandido: Sin filtros guardados, se seleccionan todos por defecto');
                 }
             }
         }
@@ -5406,6 +5418,17 @@ class ReporteController extends BaseController
                         $asignaturaInfo = DB::table('asignaturas')
                             ->where('id', $asignatura->asignatura_id)
                             ->first();
+
+                        $disponible = (int) ($dato->disponible ?? 0);
+                        $ejemplaresImpresos = (int) ($dato->ejemplares_impresos ?? 0);
+                        $ejemplaresDigitales = (int) ($dato->ejemplares_digitales ?? 0);
+                        if ($disponible === 0 && $ejemplaresImpresos === 0) {
+                            $ejemplaresImpresos = -1;
+                        }
+                        // Si no está disponible, un 0 no puede interpretarse como "Ilimitado".
+                        if ($disponible === 0 && $ejemplaresDigitales === 0) {
+                            $ejemplaresDigitales = -1;
+                        }
                             
                         $datosBasicosProcesados->push([
                             'codigo_asignatura' => $dato->codigo_asignatura,
@@ -5413,9 +5436,9 @@ class ReporteController extends BaseController
                             'tipo_asignatura' => $asignaturaInfo->tipo ?? 'N/A',
                             'titulo_declarado' => $bibliografia->titulo,
                             'anio_edicion' => $bibliografia->anio_publicacion,
-                            'ejemplares_impresos' => $dato->ejemplares_impresos,
-                            'ejemplares_digitales' => $dato->ejemplares_digitales,
-                            'cobertura' => $dato->disponible ? 100 : 0,
+                            'ejemplares_impresos' => $ejemplaresImpresos,
+                            'ejemplares_digitales' => $ejemplaresDigitales,
+                            'cobertura' => $disponible ? 100 : 0,
                             'id_bibliografia_declarada' => $dato->id_bibliografia_declarada
                         ]);
                     }
@@ -5442,6 +5465,17 @@ class ReporteController extends BaseController
                         $asignaturaInfo = DB::table('asignaturas')
                             ->where('id', $asignatura->asignatura_id)
                             ->first();
+
+                        $disponible = (int) ($dato->disponible ?? 0);
+                        $ejemplaresImpresos = (int) ($dato->ejemplares_impresos ?? 0);
+                        $ejemplaresDigitales = (int) ($dato->ejemplares_digitales ?? 0);
+                        if ($disponible === 0 && $ejemplaresImpresos === 0) {
+                            $ejemplaresImpresos = -1;
+                        }
+                        // Si no está disponible, un 0 no puede interpretarse como "Ilimitado".
+                        if ($disponible === 0 && $ejemplaresDigitales === 0) {
+                            $ejemplaresDigitales = -1;
+                        }
                             
                         $datosComplementariosProcesados->push([
                             'codigo_asignatura' => $dato->codigo_asignatura,
@@ -5449,9 +5483,9 @@ class ReporteController extends BaseController
                             'tipo_asignatura' => $asignaturaInfo->tipo ?? 'N/A',
                             'titulo_declarado' => $bibliografia->titulo,
                             'anio_edicion' => $bibliografia->anio_publicacion,
-                            'ejemplares_impresos' => $dato->ejemplares_impresos,
-                            'ejemplares_digitales' => $dato->ejemplares_digitales,
-                            'cobertura' => $dato->disponible ? 100 : 0,
+                            'ejemplares_impresos' => $ejemplaresImpresos,
+                            'ejemplares_digitales' => $ejemplaresDigitales,
+                            'cobertura' => $disponible ? 100 : 0,
                             'id_bibliografia_declarada' => $dato->id_bibliografia_declarada
                         ]);
                     }
@@ -5488,7 +5522,9 @@ class ReporteController extends BaseController
                     'nombre' => $item['nombre_asignatura'],
                     'tipo' => $item['tipo_asignatura'],
                     'basica' => [],
-                    'complementaria' => []
+                    'complementaria' => [],
+                    'cobertura_basica_asignatura' => 0,
+                    'cobertura_complementaria_asignatura' => 0,
                 ];
             }
             $asignaturas[$codigo]['basica'][] = $item;
@@ -5500,10 +5536,25 @@ class ReporteController extends BaseController
                     'nombre' => $item['nombre_asignatura'],
                     'tipo' => $item['tipo_asignatura'],
                     'basica' => [],
-                    'complementaria' => []
+                    'complementaria' => [],
+                    'cobertura_basica_asignatura' => 0,
+                    'cobertura_complementaria_asignatura' => 0,
                 ];
             }
             $asignaturas[$codigo]['complementaria'][] = $item;
+        }
+
+        foreach ($asignaturas as $codigo => $asignatura) {
+            $basica = $asignatura['basica'];
+            $complementaria = $asignatura['complementaria'];
+            $coberturaBasicaAsignatura = !empty($basica)
+                ? round((collect($basica)->where('cobertura', '>', 0)->count() / count($basica)) * 100, 2)
+                : 0;
+            $coberturaComplementariaAsignatura = !empty($complementaria)
+                ? round((collect($complementaria)->where('cobertura', '>', 0)->count() / count($complementaria)) * 100, 2)
+                : 0;
+            $asignaturas[$codigo]['cobertura_basica_asignatura'] = $coberturaBasicaAsignatura;
+            $asignaturas[$codigo]['cobertura_complementaria_asignatura'] = $coberturaComplementariaAsignatura;
         }
 
         // Renderizar la vista
@@ -5578,15 +5629,24 @@ class ReporteController extends BaseController
             $asignatura = DB::table('asignaturas_departamentos')->where('codigo_asignatura', $dato->codigo_asignatura)->first();
             if ($bibliografia && $asignatura) {
                 $asignaturaInfo = DB::table('asignaturas')->where('id', $asignatura->asignatura_id)->first();
+                $disponible = (int) ($dato->no_bib_disponible_basica ?? 0);
+                $ejemplaresImpresos = (int) ($dato->no_ejem_imp ?? 0);
+                $ejemplaresDigitales = (int) ($dato->no_ejem_dig ?? 0);
+                if ($disponible === 0 && $ejemplaresImpresos === 0) {
+                    $ejemplaresImpresos = -1;
+                }
+                if ($disponible === 0 && $ejemplaresDigitales === 0) {
+                    $ejemplaresDigitales = -1;
+                }
                 $datosBasicosProcesados->push([
                     'codigo_asignatura' => $dato->codigo_asignatura,
                     'nombre_asignatura' => $asignaturaInfo->nombre ?? 'N/A',
                     'tipo_asignatura' => $asignaturaInfo->tipo ?? 'N/A',
                     'titulo_declarado' => $bibliografia->titulo,
                     'anio_edicion' => $bibliografia->anio_publicacion,
-                    'ejemplares_impresos' => $dato->no_ejem_imp,
-                    'ejemplares_digitales' => $dato->no_ejem_dig,
-                    'cobertura' => $dato->no_bib_disponible_basica ? 100 : 0
+                    'ejemplares_impresos' => $ejemplaresImpresos,
+                    'ejemplares_digitales' => $ejemplaresDigitales,
+                    'cobertura' => $disponible ? 100 : 0
                 ]);
             }
         }
@@ -5596,15 +5656,24 @@ class ReporteController extends BaseController
             $asignatura = DB::table('asignaturas_departamentos')->where('codigo_asignatura', $dato->codigo_asignatura)->first();
             if ($bibliografia && $asignatura) {
                 $asignaturaInfo = DB::table('asignaturas')->where('id', $asignatura->asignatura_id)->first();
+                $disponible = (int) ($dato->no_bib_disponible_complementaria ?? 0);
+                $ejemplaresImpresos = (int) ($dato->no_ejem_imp ?? 0);
+                $ejemplaresDigitales = (int) ($dato->no_ejem_dig ?? 0);
+                if ($disponible === 0 && $ejemplaresImpresos === 0) {
+                    $ejemplaresImpresos = -1;
+                }
+                if ($disponible === 0 && $ejemplaresDigitales === 0) {
+                    $ejemplaresDigitales = -1;
+                }
                 $datosComplementariosProcesados->push([
                     'codigo_asignatura' => $dato->codigo_asignatura,
                     'nombre_asignatura' => $asignaturaInfo->nombre ?? 'N/A',
                     'tipo_asignatura' => $asignaturaInfo->tipo ?? 'N/A',
                     'titulo_declarado' => $bibliografia->titulo,
                     'anio_edicion' => $bibliografia->anio_publicacion,
-                    'ejemplares_impresos' => $dato->no_ejem_imp,
-                    'ejemplares_digitales' => $dato->no_ejem_dig,
-                    'cobertura' => $dato->no_bib_disponible_complementaria ? 100 : 0
+                    'ejemplares_impresos' => $ejemplaresImpresos,
+                    'ejemplares_digitales' => $ejemplaresDigitales,
+                    'cobertura' => $disponible ? 100 : 0
                 ]);
             }
         }
@@ -5617,7 +5686,9 @@ class ReporteController extends BaseController
                     'nombre' => $item['nombre_asignatura'],
                     'tipo' => $item['tipo_asignatura'],
                     'basica' => [],
-                    'complementaria' => []
+                    'complementaria' => [],
+                    'cobertura_basica_asignatura' => 0,
+                    'cobertura_complementaria_asignatura' => 0,
                 ];
             }
             $asignaturas[$codigo]['basica'][] = $item;
@@ -5629,10 +5700,25 @@ class ReporteController extends BaseController
                     'nombre' => $item['nombre_asignatura'],
                     'tipo' => $item['tipo_asignatura'],
                     'basica' => [],
-                    'complementaria' => []
+                    'complementaria' => [],
+                    'cobertura_basica_asignatura' => 0,
+                    'cobertura_complementaria_asignatura' => 0,
                 ];
             }
             $asignaturas[$codigo]['complementaria'][] = $item;
+        }
+
+        foreach ($asignaturas as $codigo => $asignatura) {
+            $basica = $asignatura['basica'];
+            $complementaria = $asignatura['complementaria'];
+            $coberturaBasicaAsignatura = !empty($basica)
+                ? round((collect($basica)->where('cobertura', '>', 0)->count() / count($basica)) * 100, 2)
+                : 0;
+            $coberturaComplementariaAsignatura = !empty($complementaria)
+                ? round((collect($complementaria)->where('cobertura', '>', 0)->count() / count($complementaria)) * 100, 2)
+                : 0;
+            $asignaturas[$codigo]['cobertura_basica_asignatura'] = $coberturaBasicaAsignatura;
+            $asignaturas[$codigo]['cobertura_complementaria_asignatura'] = $coberturaComplementariaAsignatura;
         }
         // Crear hoja fusionada
         $spreadsheet = new Spreadsheet();
@@ -5646,10 +5732,12 @@ class ReporteController extends BaseController
         ];
         $sheet->fromArray($headers, null, 'A1');
         $rowNum = 2;
+        $usarFondoGris = false;
         foreach ($asignaturas as $asignatura) {
             $len_basica = count($asignatura['basica']);
             $len_complementaria = count($asignatura['complementaria']);
             $max_filas = max($len_basica, $len_complementaria);
+            $inicioAsignatura = $rowNum;
             for ($i = 0; $i < $max_filas; $i++) {
                 $b = $asignatura['basica'][$i] ?? null;
                 $c = $asignatura['complementaria'][$i] ?? null;
@@ -5658,18 +5746,42 @@ class ReporteController extends BaseController
                 // Básica
                 $sheet->setCellValue('C'.$rowNum, $b['titulo_declarado'] ?? '');
                 $sheet->setCellValue('D'.$rowNum, $b['anio_edicion'] ?? '');
-                $sheet->setCellValue('E'.$rowNum, $b ? $this->convertirValorEspecial($b['ejemplares_impresos'], 'impresos', $b['ejemplares_digitales'] ?? 0) : '');
-                $sheet->setCellValue('F'.$rowNum, $b ? $this->convertirValorEspecial($b['ejemplares_digitales'], 'digitales', $b['ejemplares_digitales'] ?? 0) : '');
-                $sheet->setCellValue('G'.$rowNum, isset($b['cobertura']) ? $b['cobertura'].'%' : '');
+                $sheet->setCellValue('E'.$rowNum, $b ? $this->convertirValorEspecial($b['ejemplares_impresos'], 'impresos', $b['cobertura'] > 0 ? 1 : 0) : '');
+                $sheet->setCellValue('F'.$rowNum, $b ? $this->convertirValorEspecial($b['ejemplares_digitales'], 'digitales', $b['cobertura'] > 0 ? 1 : 0) : '');
                 // Complementaria
                 $sheet->setCellValue('H'.$rowNum, $c['titulo_declarado'] ?? '');
                 $sheet->setCellValue('I'.$rowNum, $c['anio_edicion'] ?? '');
-                $sheet->setCellValue('J'.$rowNum, $c ? $this->convertirValorEspecial($c['ejemplares_impresos'], 'impresos', $c['ejemplares_digitales'] ?? 0) : '');
-                $sheet->setCellValue('K'.$rowNum, $c ? $this->convertirValorEspecial($c['ejemplares_digitales'], 'digitales', $c['ejemplares_digitales'] ?? 0) : '');
-                $sheet->setCellValue('L'.$rowNum, isset($c['cobertura']) ? $c['cobertura'].'%' : '');
+                $sheet->setCellValue('J'.$rowNum, $c ? $this->convertirValorEspecial($c['ejemplares_impresos'], 'impresos', $c['cobertura'] > 0 ? 1 : 0) : '');
+                $sheet->setCellValue('K'.$rowNum, $c ? $this->convertirValorEspecial($c['ejemplares_digitales'], 'digitales', $c['cobertura'] > 0 ? 1 : 0) : '');
                 $rowNum++;
             }
+            $finAsignatura = $rowNum - 1;
+            if ($finAsignatura > $inicioAsignatura) {
+                $sheet->mergeCells('A'.$inicioAsignatura.':A'.$finAsignatura);
+                $sheet->mergeCells('B'.$inicioAsignatura.':B'.$finAsignatura);
+            }
+            $sheet->setCellValue('G'.$inicioAsignatura, $asignatura['cobertura_basica_asignatura'] . '%');
+            $sheet->setCellValue('L'.$inicioAsignatura, $asignatura['cobertura_complementaria_asignatura'] . '%');
+            if ($finAsignatura > $inicioAsignatura) {
+                $sheet->mergeCells('G'.$inicioAsignatura.':G'.$finAsignatura);
+                $sheet->mergeCells('L'.$inicioAsignatura.':L'.$finAsignatura);
+            }
+            $sheet->getStyle('A'.$inicioAsignatura)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+            $sheet->getStyle('A'.$inicioAsignatura)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('B'.$inicioAsignatura)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+            $sheet->getStyle('G'.$inicioAsignatura)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+            $sheet->getStyle('G'.$inicioAsignatura)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('L'.$inicioAsignatura)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+            $sheet->getStyle('L'.$inicioAsignatura)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('A'.$inicioAsignatura.':L'.$finAsignatura)
+                ->getFill()
+                ->setFillType(Fill::FILL_SOLID)
+                ->getStartColor()
+                ->setARGB($usarFondoGris ? 'FFF2F2F2' : 'FFFFFFFF');
+            $usarFondoGris = !$usarFondoGris;
         }
+        $sheet->getStyle('E2:K'.($rowNum-1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('E2:K'.($rowNum-1))->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
         // Formato: negrita encabezados y bordes
         $sheet->getStyle('A1:L1')->getFont()->setBold(true);
         $sheet->getStyle('A1:L'.($rowNum-1))->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
