@@ -711,6 +711,16 @@ class ReporteController extends BaseController
         return $this->calcularEjemplaresNuevaLogica($bibliografiaId, $sedeId, $bibliografiasDisponibles);
     }
 
+    /**
+     * Ordena el listado del reporte fusionado por nombre de asignatura (A-Z, sin distinguir mayúsculas).
+     */
+    private function ordenarAsignaturasFusionadoPorNombre(array &$asignaturas): void
+    {
+        uasort($asignaturas, function ($a, $b) {
+            return strcasecmp($a['nombre'] ?? '', $b['nombre'] ?? '');
+        });
+    }
+
     public function __construct()
     {
         global $twig;
@@ -5764,6 +5774,8 @@ class ReporteController extends BaseController
             $asignaturas[$codigo]['cobertura_complementaria_asignatura'] = $coberturaComplementariaAsignatura;
         }
 
+        $this->ordenarAsignaturasFusionadoPorNombre($asignaturas);
+
         // Renderizar la vista
         $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
         $template = $view->load('reportes/coberturas/carrera_fusionado.twig');
@@ -5931,6 +5943,9 @@ class ReporteController extends BaseController
             $asignaturas[$codigo]['cobertura_basica_asignatura'] = $coberturaBasicaAsignatura;
             $asignaturas[$codigo]['cobertura_complementaria_asignatura'] = $coberturaComplementariaAsignatura;
         }
+
+        $this->ordenarAsignaturasFusionadoPorNombre($asignaturas);
+
         // Crear hoja fusionada
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
