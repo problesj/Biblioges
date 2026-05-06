@@ -342,6 +342,7 @@ CREATE TABLE IF NOT EXISTS reporte_coberturas_carreras_basicas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     id_reporte INT NOT NULL,
     codigo_carrera VARCHAR(20) NOT NULL,
+    id_carrera_espejo INT NULL,
     codigo_asignatura VARCHAR(20) NOT NULL,
     id_bibliografia_declarada INT NOT NULL,
     fecha_medicion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -351,6 +352,8 @@ CREATE TABLE IF NOT EXISTS reporte_coberturas_carreras_basicas (
     FOREIGN KEY (id_reporte) REFERENCES reportes(id) ON DELETE CASCADE,
     FOREIGN KEY (id_bibliografia_declarada) REFERENCES bibliografias_declaradas(id) ON DELETE CASCADE,
     INDEX idx_carrera_asignatura (codigo_carrera, codigo_asignatura),
+    INDEX idx_id_carrera_espejo_basica (id_carrera_espejo),
+    INDEX idx_plan_anio_basica (id_carrera_espejo, fecha_medicion),
     INDEX idx_fecha_medicion (fecha_medicion)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -359,6 +362,7 @@ CREATE TABLE IF NOT EXISTS reporte_coberturas_carreras_complementarias (
     id INT AUTO_INCREMENT PRIMARY KEY,
     id_reporte INT NOT NULL,
     codigo_carrera VARCHAR(20) NOT NULL,
+    id_carrera_espejo INT NULL,
     codigo_asignatura VARCHAR(20) NOT NULL,
     id_bibliografia_declarada INT NOT NULL,
     fecha_medicion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -368,6 +372,8 @@ CREATE TABLE IF NOT EXISTS reporte_coberturas_carreras_complementarias (
     FOREIGN KEY (id_reporte) REFERENCES reportes(id) ON DELETE CASCADE,
     FOREIGN KEY (id_bibliografia_declarada) REFERENCES bibliografias_declaradas(id) ON DELETE CASCADE,
     INDEX idx_carrera_asignatura (codigo_carrera, codigo_asignatura),
+    INDEX idx_id_carrera_espejo_compl (id_carrera_espejo),
+    INDEX idx_plan_anio_compl (id_carrera_espejo, fecha_medicion),
     INDEX idx_fecha_medicion (fecha_medicion)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -422,9 +428,12 @@ SELECT
   sedes.nombre AS sede,
   unidades.id AS id_unidad,
   unidades.nombre AS unidad,
-  codigo_carrera AS codigo_carrera,
+  carreras_espejos.codigo_carrera AS codigo_carrera,
   carreras.id AS id_carrera,
   carreras.nombre AS carrera,
+  carreras_espejos.id AS id_carrera_espejo,
+  carreras_espejos.vigencia_desde AS vigencia_desde,
+  carreras_espejos.vigencia_hasta AS vigencia_hasta,
   codigo_asignatura AS codigo_asignatura,
   asignaturas.id AS id_asignatura,
   asignaturas.nombre AS asignatura,
@@ -454,9 +463,12 @@ SELECT
   sedes.nombre AS sede,
   unidades.id AS id_unidad,
   unidades.nombre AS unidad,
-  codigo_carrera AS codigo_carrera,
+  carreras_espejos.codigo_carrera AS codigo_carrera,
   carreras_espejos.carrera_id AS id_carrera,
   carreras.nombre AS carrera,
+  carreras_espejos.id AS id_carrera_espejo,
+  carreras_espejos.vigencia_desde AS vigencia_desde,
+  carreras_espejos.vigencia_hasta AS vigencia_hasta,
   asignaturas_departamentos.codigo_asignatura AS codigo_asignatura,
   asignaturas_departamentos.asignatura_id AS id_asignatura,
   asignaturas.nombre AS asignatura,
@@ -518,60 +530,66 @@ ORDER BY id_bib_declarada, id_sede;
 -- Vista de carreras con bibliografías básicas declaradas
 CREATE OR REPLACE VIEW vw_car_basica_bib_declarada AS
 SELECT 
+    reporte_coberturas_carreras_basicas.id_carrera_espejo AS id_carrera_espejo,
     reporte_coberturas_carreras_basicas.codigo_carrera AS codigo_carrera,
     YEAR(reporte_coberturas_carreras_basicas.fecha_medicion) AS anho,
     COUNT(DISTINCT reporte_coberturas_carreras_basicas.id_bibliografia_declarada) AS no_bib_declarada
 FROM reporte_coberturas_carreras_basicas 
-GROUP BY reporte_coberturas_carreras_basicas.codigo_carrera, YEAR(reporte_coberturas_carreras_basicas.fecha_medicion);
+GROUP BY reporte_coberturas_carreras_basicas.id_carrera_espejo, reporte_coberturas_carreras_basicas.codigo_carrera, YEAR(reporte_coberturas_carreras_basicas.fecha_medicion);
 
 -- Vista de carreras con bibliografías básicas disponibles
 CREATE OR REPLACE VIEW vw_car_basica_bib_disponible AS
 SELECT 
+    reporte_coberturas_carreras_basicas.id_carrera_espejo AS id_carrera_espejo,
     reporte_coberturas_carreras_basicas.codigo_carrera AS codigo_carrera,
     YEAR(reporte_coberturas_carreras_basicas.fecha_medicion) AS anho,
     SUM(reporte_coberturas_carreras_basicas.no_bib_disponible_basica) AS no_bib_disp
 FROM reporte_coberturas_carreras_basicas 
-GROUP BY reporte_coberturas_carreras_basicas.codigo_carrera, YEAR(reporte_coberturas_carreras_basicas.fecha_medicion);
+GROUP BY reporte_coberturas_carreras_basicas.id_carrera_espejo, reporte_coberturas_carreras_basicas.codigo_carrera, YEAR(reporte_coberturas_carreras_basicas.fecha_medicion);
 
 -- Vista de carreras con bibliografías complementarias declaradas
 CREATE OR REPLACE VIEW vw_car_compl_bib_declarada AS
 SELECT 
+    reporte_coberturas_carreras_complementarias.id_carrera_espejo AS id_carrera_espejo,
     reporte_coberturas_carreras_complementarias.codigo_carrera AS codigo_carrera,
     YEAR(reporte_coberturas_carreras_complementarias.fecha_medicion) AS anho,
     COUNT(DISTINCT reporte_coberturas_carreras_complementarias.id_bibliografia_declarada) AS no_bib_declaradas
 FROM reporte_coberturas_carreras_complementarias 
-GROUP BY reporte_coberturas_carreras_complementarias.codigo_carrera, YEAR(reporte_coberturas_carreras_complementarias.fecha_medicion);
+GROUP BY reporte_coberturas_carreras_complementarias.id_carrera_espejo, reporte_coberturas_carreras_complementarias.codigo_carrera, YEAR(reporte_coberturas_carreras_complementarias.fecha_medicion);
 
 -- Vista de carreras con bibliografías complementarias disponibles
 CREATE OR REPLACE VIEW vw_car_compl_bib_disponible AS
 SELECT 
+    reporte_coberturas_carreras_complementarias.id_carrera_espejo AS id_carrera_espejo,
     reporte_coberturas_carreras_complementarias.codigo_carrera AS codigo_carrera,
     YEAR(reporte_coberturas_carreras_complementarias.fecha_medicion) AS anho,
     SUM(reporte_coberturas_carreras_complementarias.no_bib_disponible_complementaria) AS no_bib_disponible
 FROM reporte_coberturas_carreras_complementarias 
-GROUP BY reporte_coberturas_carreras_complementarias.codigo_carrera, YEAR(reporte_coberturas_carreras_complementarias.fecha_medicion);
+GROUP BY reporte_coberturas_carreras_complementarias.id_carrera_espejo, reporte_coberturas_carreras_complementarias.codigo_carrera, YEAR(reporte_coberturas_carreras_complementarias.fecha_medicion);
 
 -- Vista de cobertura básica por carrera
 CREATE OR REPLACE VIEW vw_car_cobertura_basica AS
 SELECT 
+    vw_car_basica_bib_declarada.id_carrera_espejo AS id_carrera_espejo,
     vw_car_basica_bib_declarada.codigo_carrera AS codigo_carrera,
     vw_car_basica_bib_declarada.anho AS anho,
     vw_car_basica_bib_declarada.no_bib_declarada AS no_bib_declarada,
     vw_car_basica_bib_disponible.no_bib_disp AS no_bib_disp,
     ((vw_car_basica_bib_disponible.no_bib_disp / vw_car_basica_bib_declarada.no_bib_declarada) * 100) AS cobertura_basica
 FROM vw_car_basica_bib_declarada 
-JOIN vw_car_basica_bib_disponible ON vw_car_basica_bib_declarada.codigo_carrera = vw_car_basica_bib_disponible.codigo_carrera AND vw_car_basica_bib_declarada.anho = vw_car_basica_bib_disponible.anho;
+JOIN vw_car_basica_bib_disponible ON vw_car_basica_bib_declarada.codigo_carrera = vw_car_basica_bib_disponible.codigo_carrera AND vw_car_basica_bib_declarada.anho = vw_car_basica_bib_disponible.anho AND vw_car_basica_bib_declarada.id_carrera_espejo <=> vw_car_basica_bib_disponible.id_carrera_espejo;
 
 -- Vista de cobertura complementaria por carrera
 CREATE OR REPLACE VIEW vw_car_cobertura_complementaria AS
 SELECT 
+    vw_car_compl_bib_declarada.id_carrera_espejo AS id_carrera_espejo,
     vw_car_compl_bib_declarada.codigo_carrera AS codigo_carrera,
     vw_car_compl_bib_declarada.anho AS anho,
     vw_car_compl_bib_declarada.no_bib_declaradas AS no_bib_declaradas,
     vw_car_compl_bib_disponible.no_bib_disponible AS no_bib_disponible,
     ((vw_car_compl_bib_disponible.no_bib_disponible / vw_car_compl_bib_declarada.no_bib_declaradas) * 100) AS cobertura_complementaria
 FROM vw_car_compl_bib_declarada 
-JOIN vw_car_compl_bib_disponible ON vw_car_compl_bib_declarada.codigo_carrera = vw_car_compl_bib_disponible.codigo_carrera AND vw_car_compl_bib_declarada.anho = vw_car_compl_bib_disponible.anho; 
+JOIN vw_car_compl_bib_disponible ON vw_car_compl_bib_declarada.codigo_carrera = vw_car_compl_bib_disponible.codigo_carrera AND vw_car_compl_bib_declarada.anho = vw_car_compl_bib_disponible.anho AND vw_car_compl_bib_declarada.id_carrera_espejo <=> vw_car_compl_bib_disponible.id_carrera_espejo; 
 
 -- =====================================================
 -- SECCIÓN 3: TRIGGERS Y PROCEDIMIENTOS

@@ -111,19 +111,17 @@ function ejecutarReporteBasicoExpandido($tarea) {
         
         // Guardar la cobertura básica directamente en la base de datos
         if (!empty($detalles)) {
-            // Obtener código de carrera
-            $carrera = DB::table('vw_mallas')
-                ->where('id_sede', $tarea->sede_id)
-                ->where('id_carrera', $tarea->carrera_id)
-                ->select('codigo_carrera as codigo')
+            $planEspejo = DB::table('carreras_espejos')
+                ->where('carrera_id', $tarea->carrera_id)
+                ->where('sede_id', $tarea->sede_id)
+                ->orderByDesc('vigencia_desde')
                 ->first();
-            
-            if (!$carrera) {
+            if (!$planEspejo) {
                 throw new Exception('Carrera no encontrada');
             }
-            
-            $codigoCarrera = $carrera->codigo;
-            echo "Código de carrera: " . $codigoCarrera . "\n";
+            $codigoCarrera = $planEspejo->codigo_carrera;
+            $idCarreraEspejo = (int) $planEspejo->id;
+            echo "Código de carrera: " . $codigoCarrera . " (plan id " . $idCarreraEspejo . ")\n";
             
             // Obtener ID del reporte
             $reporte = DB::table('reportes')->where('nombre', 'Reporte de Coberturas Básicas')->first();
@@ -138,6 +136,7 @@ function ejecutarReporteBasicoExpandido($tarea) {
             $borrados = DB::table('reporte_coberturas_carreras_basicas')
                 ->where('id_reporte', $idReporte)
                 ->where('codigo_carrera', $codigoCarrera)
+                ->where('id_carrera_espejo', $idCarreraEspejo)
                 ->whereYear('fecha_medicion', date('Y'))
                 ->delete();
             
@@ -149,6 +148,7 @@ function ejecutarReporteBasicoExpandido($tarea) {
                 DB::table('reporte_coberturas_carreras_basicas')->insert([
                     'id_reporte' => $idReporte,
                     'codigo_carrera' => $codigoCarrera,
+                    'id_carrera_espejo' => $idCarreraEspejo,
                     'codigo_asignatura' => $detalle['codigo_asignatura'],
                     'id_bibliografia_declarada' => $detalle['id_bibliografia_declarada'],
                     'fecha_medicion' => $fechaMedicion,
@@ -192,19 +192,17 @@ function ejecutarReporteComplementarioExpandido($tarea) {
         
         // Guardar la cobertura complementaria directamente en la base de datos
         if (!empty($detalles)) {
-            // Obtener código de carrera
-            $carrera = DB::table('vw_mallas')
-                ->where('id_sede', $tarea->sede_id)
-                ->where('id_carrera', $tarea->carrera_id)
-                ->select('codigo_carrera as codigo')
+            $planEspejo = DB::table('carreras_espejos')
+                ->where('carrera_id', $tarea->carrera_id)
+                ->where('sede_id', $tarea->sede_id)
+                ->orderByDesc('vigencia_desde')
                 ->first();
-            
-            if (!$carrera) {
+            if (!$planEspejo) {
                 throw new Exception('Carrera no encontrada');
             }
-            
-            $codigoCarrera = $carrera->codigo;
-            echo "Código de carrera: " . $codigoCarrera . "\n";
+            $codigoCarrera = $planEspejo->codigo_carrera;
+            $idCarreraEspejo = (int) $planEspejo->id;
+            echo "Código de carrera: " . $codigoCarrera . " (plan id " . $idCarreraEspejo . ")\n";
             
             // Obtener ID del reporte
             $reporte = DB::table('reportes')->where('nombre', 'Reporte de Coberturas Complementarias')->first();
@@ -219,6 +217,7 @@ function ejecutarReporteComplementarioExpandido($tarea) {
             $borrados = DB::table('reporte_coberturas_carreras_complementarias')
                 ->where('id_reporte', $idReporte)
                 ->where('codigo_carrera', $codigoCarrera)
+                ->where('id_carrera_espejo', $idCarreraEspejo)
                 ->whereYear('fecha_medicion', date('Y'))
                 ->delete();
             
@@ -230,6 +229,7 @@ function ejecutarReporteComplementarioExpandido($tarea) {
                 DB::table('reporte_coberturas_carreras_complementarias')->insert([
                     'id_reporte' => $idReporte,
                     'codigo_carrera' => $codigoCarrera,
+                    'id_carrera_espejo' => $idCarreraEspejo,
                     'codigo_asignatura' => $detalle['codigo_asignatura'],
                     'id_bibliografia_declarada' => ($detalle['id_bibliografia_declarada'] === '' || is_null($detalle['id_bibliografia_declarada'])) ? null : $detalle['id_bibliografia_declarada'],
                     'fecha_medicion' => $fechaMedicion,
@@ -263,45 +263,38 @@ function ejecutarReporteComplementarioExpandido($tarea) {
  * Obtener detalles de cobertura básica para guardado
  */
 function obtenerDetallesCoberturaBasica($sedeId, $carreraId) {
+    $planEspejo = DB::table('carreras_espejos')
+        ->where('carrera_id', $carreraId)
+        ->where('sede_id', $sedeId)
+        ->orderByDesc('vigencia_desde')
+        ->first();
+    if (!$planEspejo) {
+        return [];
+    }
+    $idPlanMalla = (int) $planEspejo->id;
+
     // Obtener asignaturas REGULARES (siempre incluidas)
     $regulares = DB::table('vw_mallas')
         ->where('id_sede', $sedeId)
         ->where('id_carrera', $carreraId)
+        ->where('id_carrera_espejo', $idPlanMalla)
         ->where('tipo_asignatura', 'REGULAR')
         ->select('codigo_asignatura as codigo', 'asignatura as nombre', 'tipo_asignatura')
         ->distinct()
         ->get();
 
-    // Obtener filtros guardados para la carrera
-    $carreraTemp = DB::table('vw_mallas')
-        ->where('id_sede', $sedeId)
-        ->where('id_carrera', $carreraId)
-        ->select('codigo_carrera as codigo')
-        ->first();
-        
     $tiposFormacionFiltro = [];
-    if ($carreraTemp) {
-        // Obtener el id_carrera_espejo para la carrera y sede específica
-        $carreraEspejo = DB::table('carreras_espejos')
-            ->where('codigo_carrera', $carreraTemp->codigo)
-            ->where('sede_id', $sedeId)
-            ->first();
-        
-        if ($carreraEspejo) {
-            $filtrosGuardados = DB::table('filtros_formaciones')
-                ->where('id_carrera_espejo', $carreraEspejo->id)
-            ->first();
-            
-        if ($filtrosGuardados) {
-            if ($filtrosGuardados->basica) $tiposFormacionFiltro[] = 'FORMACION_BASICA';
-            if ($filtrosGuardados->general) $tiposFormacionFiltro[] = 'FORMACION_GENERAL';
-            if ($filtrosGuardados->idioma) $tiposFormacionFiltro[] = 'FORMACION_IDIOMAS';
-            if ($filtrosGuardados->profesional) $tiposFormacionFiltro[] = 'FORMACION_PROFESIONAL';
-            if ($filtrosGuardados->valores) $tiposFormacionFiltro[] = 'FORMACION_VALORES';
-            if ($filtrosGuardados->especialidad) $tiposFormacionFiltro[] = 'FORMACION_ESPECIALIDAD';
-            if ($filtrosGuardados->especial) $tiposFormacionFiltro[] = 'FORMACION_ESPECIAL';
-            }
-        }
+    $filtrosGuardados = DB::table('filtros_formaciones')
+        ->where('id_carrera_espejo', $idPlanMalla)
+        ->first();
+    if ($filtrosGuardados) {
+        if ($filtrosGuardados->basica) $tiposFormacionFiltro[] = 'FORMACION_BASICA';
+        if ($filtrosGuardados->general) $tiposFormacionFiltro[] = 'FORMACION_GENERAL';
+        if ($filtrosGuardados->idioma) $tiposFormacionFiltro[] = 'FORMACION_IDIOMAS';
+        if ($filtrosGuardados->profesional) $tiposFormacionFiltro[] = 'FORMACION_PROFESIONAL';
+        if ($filtrosGuardados->valores) $tiposFormacionFiltro[] = 'FORMACION_VALORES';
+        if ($filtrosGuardados->especialidad) $tiposFormacionFiltro[] = 'FORMACION_ESPECIALIDAD';
+        if ($filtrosGuardados->especial) $tiposFormacionFiltro[] = 'FORMACION_ESPECIAL';
     }
 
     // Obtener asignaturas de formación según filtros guardados
@@ -310,6 +303,7 @@ function obtenerDetallesCoberturaBasica($sedeId, $carreraId) {
         $formaciones = DB::table('vw_mallas')
             ->where('id_sede', $sedeId)
             ->where('id_carrera', $carreraId)
+            ->where('id_carrera_espejo', $idPlanMalla)
             ->whereIn('tipo_asignatura', $tiposFormacionFiltro)
             ->whereNotNull('codigo_asignatura_formacion')
             ->select(
@@ -391,45 +385,38 @@ function obtenerDetallesCoberturaBasica($sedeId, $carreraId) {
  * Obtener detalles de cobertura complementaria para guardado
  */
 function obtenerDetallesCoberturaComplementaria($sedeId, $carreraId) {
+    $planEspejo = DB::table('carreras_espejos')
+        ->where('carrera_id', $carreraId)
+        ->where('sede_id', $sedeId)
+        ->orderByDesc('vigencia_desde')
+        ->first();
+    if (!$planEspejo) {
+        return [];
+    }
+    $idPlanMalla = (int) $planEspejo->id;
+
     // Obtener asignaturas REGULARES (siempre incluidas)
     $regulares = DB::table('vw_mallas')
         ->where('id_sede', $sedeId)
         ->where('id_carrera', $carreraId)
+        ->where('id_carrera_espejo', $idPlanMalla)
         ->where('tipo_asignatura', 'REGULAR')
         ->select('codigo_asignatura as codigo', 'asignatura as nombre', 'tipo_asignatura')
         ->distinct()
         ->get();
 
-    // Obtener filtros guardados para la carrera
-    $carreraTemp = DB::table('vw_mallas')
-        ->where('id_sede', $sedeId)
-        ->where('id_carrera', $carreraId)
-        ->select('codigo_carrera as codigo')
-        ->first();
-        
     $tiposFormacionFiltro = [];
-    if ($carreraTemp) {
-        // Obtener el id_carrera_espejo para la carrera y sede específica
-        $carreraEspejo = DB::table('carreras_espejos')
-            ->where('codigo_carrera', $carreraTemp->codigo)
-            ->where('sede_id', $sedeId)
-            ->first();
-        
-        if ($carreraEspejo) {
-            $filtrosGuardados = DB::table('filtros_formaciones')
-                ->where('id_carrera_espejo', $carreraEspejo->id)
-            ->first();
-            
-        if ($filtrosGuardados) {
-            if ($filtrosGuardados->basica) $tiposFormacionFiltro[] = 'FORMACION_BASICA';
-            if ($filtrosGuardados->general) $tiposFormacionFiltro[] = 'FORMACION_GENERAL';
-            if ($filtrosGuardados->idioma) $tiposFormacionFiltro[] = 'FORMACION_IDIOMAS';
-            if ($filtrosGuardados->profesional) $tiposFormacionFiltro[] = 'FORMACION_PROFESIONAL';
-            if ($filtrosGuardados->valores) $tiposFormacionFiltro[] = 'FORMACION_VALORES';
-            if ($filtrosGuardados->especialidad) $tiposFormacionFiltro[] = 'FORMACION_ESPECIALIDAD';
-            if ($filtrosGuardados->especial) $tiposFormacionFiltro[] = 'FORMACION_ESPECIAL';
-            }
-        }
+    $filtrosGuardados = DB::table('filtros_formaciones')
+        ->where('id_carrera_espejo', $idPlanMalla)
+        ->first();
+    if ($filtrosGuardados) {
+        if ($filtrosGuardados->basica) $tiposFormacionFiltro[] = 'FORMACION_BASICA';
+        if ($filtrosGuardados->general) $tiposFormacionFiltro[] = 'FORMACION_GENERAL';
+        if ($filtrosGuardados->idioma) $tiposFormacionFiltro[] = 'FORMACION_IDIOMAS';
+        if ($filtrosGuardados->profesional) $tiposFormacionFiltro[] = 'FORMACION_PROFESIONAL';
+        if ($filtrosGuardados->valores) $tiposFormacionFiltro[] = 'FORMACION_VALORES';
+        if ($filtrosGuardados->especialidad) $tiposFormacionFiltro[] = 'FORMACION_ESPECIALIDAD';
+        if ($filtrosGuardados->especial) $tiposFormacionFiltro[] = 'FORMACION_ESPECIAL';
     }
 
     // Obtener asignaturas de formación según filtros guardados
@@ -438,6 +425,7 @@ function obtenerDetallesCoberturaComplementaria($sedeId, $carreraId) {
         $formaciones = DB::table('vw_mallas')
             ->where('id_sede', $sedeId)
             ->where('id_carrera', $carreraId)
+            ->where('id_carrera_espejo', $idPlanMalla)
             ->whereIn('tipo_asignatura', $tiposFormacionFiltro)
             ->whereNotNull('codigo_asignatura_formacion')
             ->select(

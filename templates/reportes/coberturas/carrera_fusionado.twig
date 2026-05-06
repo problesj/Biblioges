@@ -377,7 +377,7 @@ function exportarExcel() {
     });
     
     // Construir la URL de exportación
-    const exportUrl = '/biblioges/reportes/coberturas-fusionado-excel/{{ carrera.sede_id }}/{{ carrera.carrera_id }}';
+    const exportUrl = '/biblioges/reportes/coberturas-fusionado-excel/{{ carrera.sede_id }}/{{ carrera.carrera_id }}' + window.location.search;
     
     // Realizar la petición al servidor
     fetch(exportUrl)
