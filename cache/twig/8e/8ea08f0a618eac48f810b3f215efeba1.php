@@ -92,41 +92,59 @@ class __TwigTemplate_803fc1d1cc8d2ce62a4ece97cbedd28e extends Template
         <div class=\"row mt-5\">
             <div class=\"col-12\">
                 <div class=\"filter-section\">
-                    <div class=\"row align-items-center\">
-                        <div class=\"col-md-4\">
-                            <label class=\"form-label text-white fw-bold\">Sedes</label>
-                            <select class=\"form-select sede-select\" id=\"sedeSelect\">
-                                <option value=\"todas\">Todas</option>
-                                ";
-        // line 35
+                    <div class=\"row align-items-end g-3\">
+                        <div class=\"col-md-3\">
+                            <label class=\"form-label text-white fw-bold\" for=\"sedeSelect\">Sedes</label>
+                            <div class=\"select-con-indicador\">
+                                <select class=\"form-select sede-select\" id=\"sedeSelect\" title=\"Seleccionar sede\">
+                                    <option value=\"todas\">Todas</option>
+                                    ";
+        // line 36
         $context['_parent'] = $context;
         $context['_seq'] = CoreExtension::ensureTraversable(($context["sedes"] ?? null));
         foreach ($context['_seq'] as $context["_key"] => $context["sede"]) {
-            // line 36
-            yield "                                <option value=\"";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["sede"], "id", [], "any", false, false, false, 36), "html", null, true);
+            // line 37
+            yield "                                    <option value=\"";
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["sede"], "id", [], "any", false, false, false, 37), "html", null, true);
             yield "\" ";
-            if ((($context["sede_filtro"] ?? null) == CoreExtension::getAttribute($this->env, $this->source, $context["sede"], "id", [], "any", false, false, false, 36))) {
+            if ((($context["sede_filtro"] ?? null) == CoreExtension::getAttribute($this->env, $this->source, $context["sede"], "id", [], "any", false, false, false, 37))) {
                 yield "selected";
             }
             yield ">";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["sede"], "nombre", [], "any", false, false, false, 36), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["sede"], "nombre", [], "any", false, false, false, 37), "html", null, true);
             yield "</option>
-                                ";
+                                    ";
         }
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_key'], $context['sede'], $context['_parent']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 38
-        yield "                            </select>
+        // line 39
+        yield "                                </select>
+                                <span class=\"select-indicador\" aria-hidden=\"true\">
+                                    <i class=\"fas fa-chevron-down\"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class=\"col-md-3\">
+                            <label class=\"form-label text-white fw-bold\" for=\"tipoBusqueda\">Buscar por</label>
+                            <div class=\"select-con-indicador\">
+                                <select class=\"form-select\" id=\"tipoBusqueda\" title=\"Seleccionar criterio de búsqueda\">
+                                    <option value=\"carrera\">Nombre de carrera</option>
+                                    <option value=\"asignatura_nombre\">Nombre de asignatura</option>
+                                    <option value=\"asignatura_codigo\">Código de asignatura</option>
+                                    <option value=\"titulo_autor\">Título o autor</option>
+                                </select>
+                                <span class=\"select-indicador\" aria-hidden=\"true\">
+                                    <i class=\"fas fa-chevron-down\"></i>
+                                </span>
+                            </div>
                         </div>
                         <div class=\"col-md-4\">
-                            <label class=\"form-label text-white fw-bold\">Carreras</label>
+                            <label class=\"form-label text-white fw-bold\" for=\"carreraSearch\">Texto de búsqueda</label>
                             <input type=\"text\" class=\"form-control\" id=\"carreraSearch\" placeholder=\"¿Qué carrera buscas?\">
                         </div>
-                        <div class=\"col-md-4 d-flex flex-column\">
-                            <label class=\"form-label text-white fw-bold\">Acción</label>
-                            <button class=\"btn btn-warning btn-lg w-100 mt-auto\" id=\"buscarBtn\">
+                        <div class=\"col-md-2\">
+                            <button class=\"btn btn-warning btn-lg w-100\" id=\"buscarBtn\" type=\"button\">
                                 <i class=\"fas fa-search me-2\"></i>Buscar
                             </button>
                         </div>
@@ -148,17 +166,17 @@ class __TwigTemplate_803fc1d1cc8d2ce62a4ece97cbedd28e extends Template
                         TODAS
                     </button>
                     ";
-        // line 67
+        // line 85
         $context['_parent'] = $context;
         $context['_seq'] = CoreExtension::ensureTraversable(($context["sedes"] ?? null));
         foreach ($context['_seq'] as $context["_key"] => $context["sede"]) {
-            // line 68
+            // line 86
             yield "                    <button class=\"tab-btn\" data-sede=\"";
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["sede"], "id", [], "any", false, false, false, 68), "html", null, true);
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["sede"], "id", [], "any", false, false, false, 86), "html", null, true);
             yield "\">
                         ";
-            // line 69
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::upper($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, $context["sede"], "nombre", [], "any", false, false, false, 69)), "html", null, true);
+            // line 87
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::upper($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, $context["sede"], "nombre", [], "any", false, false, false, 87)), "html", null, true);
             yield "
                     </button>
                     ";
@@ -166,8 +184,44 @@ class __TwigTemplate_803fc1d1cc8d2ce62a4ece97cbedd28e extends Template
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_key'], $context['sede'], $context['_parent']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 72
+        // line 90
         yield "                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Resultados de búsqueda por asignatura -->
+<section id=\"resultadosAsignaturas\" class=\"container mb-5 d-none\">
+    <div class=\"row\">
+        <div class=\"col-12\">
+            <h2 class=\"mb-3\">
+                <i class=\"fas fa-list me-2\"></i>
+                <span id=\"tituloResultadosAsignaturas\">Asignaturas encontradas</span>
+            </h2>
+            <p class=\"text-muted mb-3\" id=\"subtituloResultadosAsignaturas\"></p>
+            <div id=\"listaAsignaturas\" class=\"list-group shadow-sm\"></div>
+            <div id=\"sinResultadosAsignaturas\" class=\"alert alert-info d-none mt-3\">
+                <i class=\"fas fa-info-circle me-2\"></i>
+                No se encontraron asignaturas que coincidan con tu búsqueda.
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Resultados de búsqueda por título o autor -->
+<section id=\"resultadosBibliografia\" class=\"container mb-5 d-none\">
+    <div class=\"row\">
+        <div class=\"col-12\">
+            <h2 class=\"mb-3\">
+                <i class=\"fas fa-book me-2\"></i>
+                <span id=\"tituloResultadosBibliografia\">Bibliografías encontradas</span>
+            </h2>
+            <p class=\"text-muted mb-3\" id=\"subtituloResultadosBibliografia\"></p>
+            <div id=\"listaBibliografias\" class=\"list-group shadow-sm\"></div>
+            <div id=\"sinResultadosBibliografia\" class=\"alert alert-info d-none mt-3\">
+                <i class=\"fas fa-info-circle me-2\"></i>
+                No se encontraron bibliografías que coincidan con tu búsqueda.
             </div>
         </div>
     </div>
@@ -175,7 +229,7 @@ class __TwigTemplate_803fc1d1cc8d2ce62a4ece97cbedd28e extends Template
 
 <!-- Sección de Carreras -->
 <section id=\"carreras\" class=\"container\">
-    <div class=\"row\">
+    <div class=\"row\" id=\"encabezadoCarreras\">
         <div class=\"col-12\">
             <h2 class=\"text-center mb-5\">
                 <i class=\"fas fa-graduation-cap me-2\"></i>
@@ -186,130 +240,150 @@ class __TwigTemplate_803fc1d1cc8d2ce62a4ece97cbedd28e extends Template
 
     <div class=\"row\" id=\"carrerasContainer\">
         ";
-        // line 90
+        // line 144
         if ((Twig\Extension\CoreExtension::length($this->env->getCharset(), ($context["carreras"] ?? null)) > 0)) {
-            // line 91
+            // line 145
             yield "            ";
             $context['_parent'] = $context;
             $context['_seq'] = CoreExtension::ensureTraversable(($context["carreras"] ?? null));
             foreach ($context['_seq'] as $context["_key"] => $context["carrera"]) {
-                // line 92
+                // line 146
                 yield "            <div class=\"col-md-6 col-lg-4 mb-4 carrera-item\" 
                  data-sedes=\"";
-                // line 93
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sede_id", [], "any", false, false, false, 93), "html", null, true);
+                // line 147
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sede_id", [], "any", false, false, false, 147), "html", null, true);
                 yield "\"
                  data-nombre=\"";
-                // line 94
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::lower($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "nombre", [], "any", false, false, false, 94)), "html", null, true);
+                // line 148
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::lower($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "nombre", [], "any", false, false, false, 148)), "html", null, true);
+                yield "\"
+                 data-carrera-id=\"";
+                // line 149
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "id", [], "any", false, false, false, 149), "html", null, true);
+                yield "\"
+                 data-carrera-nombre=\"";
+                // line 150
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "nombre", [], "any", false, false, false, 150), "html_attr");
+                yield "\"
+                 data-sede-nombre=\"";
+                // line 151
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sede_nombre", [], "any", false, false, false, 151), "html_attr");
+                yield "\"
+                 data-vigencia-desde=\"";
+                // line 152
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", true, true, false, 152)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", false, false, false, 152), "")) : ("")), "html_attr");
+                yield "\"
+                 data-asignaturas=\"";
+                // line 153
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "asignaturas_busqueda", [], "any", true, true, false, 153)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "asignaturas_busqueda", [], "any", false, false, false, 153), "{}")) : ("{}")), "html_attr");
                 yield "\">
                 <div class=\"card h-100 carrera-card\">
                     <div class=\"carrera-image\">
                         ";
-                // line 97
-                if (CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "imagen_url", [], "any", false, false, false, 97)) {
-                    // line 98
+                // line 156
+                if (CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "imagen_url", [], "any", false, false, false, 156)) {
+                    // line 157
                     yield "                            <img src=\"";
                     yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
                     yield "/biblioges/";
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "imagen_url", [], "any", false, false, false, 98), "html", null, true);
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "imagen_url", [], "any", false, false, false, 157), "html", null, true);
                     yield "\" alt=\"";
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "nombre", [], "any", false, false, false, 98), "html", null, true);
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "nombre", [], "any", false, false, false, 157), "html", null, true);
                     yield "\" class=\"card-img-top\" style=\"object-fit:cover; width:100%; height:200px;\">
                         ";
                 } else {
-                    // line 100
+                    // line 159
                     yield "                            <img src=\"";
                     yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["assets_url"] ?? null), "html", null, true);
                     yield "/images/carreras/default.svg\" alt=\"Imagen no disponible\" class=\"card-img-top\" style=\"object-fit:cover; width:100%; height:200px;\">
                         ";
                 }
-                // line 102
+                // line 161
                 yield "                    </div>
                     <div class=\"card-body\">
                         <h5 class=\"card-title\">";
-                // line 104
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "nombre", [], "any", false, false, false, 104), "html", null, true);
+                // line 163
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "nombre", [], "any", false, false, false, 163), "html", null, true);
                 yield "</h5>
                         <p class=\"card-text\">
                             ";
-                // line 106
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "descripcion", [], "any", true, true, false, 106)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "descripcion", [], "any", false, false, false, 106), "Forma profesionales capaces de optimizar procesos productivos y de servicios.")) : ("Forma profesionales capaces de optimizar procesos productivos y de servicios.")), "html", null, true);
+                // line 165
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "descripcion", [], "any", true, true, false, 165)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "descripcion", [], "any", false, false, false, 165), "Forma profesionales capaces de optimizar procesos productivos y de servicios.")) : ("Forma profesionales capaces de optimizar procesos productivos y de servicios.")), "html", null, true);
                 yield "
                             <br>
                             <small class=\"text-muted\">
                                 Vigencia desde:
                                 ";
-                // line 110
-                if ((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", true, true, false, 110) && CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", false, false, false, 110))) {
-                    // line 111
+                // line 169
+                if ((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", true, true, false, 169) && CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", false, false, false, 169))) {
+                    // line 170
                     yield "                                    ";
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::slice($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", false, false, false, 111), 0, 4), "html", null, true);
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::slice($this->env->getCharset(), CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", false, false, false, 170), 0, 4), "html", null, true);
                     yield "
                                 ";
                 } else {
-                    // line 113
+                    // line 172
                     yield "                                    —
                                 ";
                 }
-                // line 115
+                // line 174
                 yield "                            </small>
                         </p>
                         <div class=\"carrera-meta\">
                             <div class=\"meta-item\">
                                 <i class=\"fas fa-clock\"></i>
                                 <span>";
-                // line 120
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "cantidad_semestres", [], "any", true, true, false, 120)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "cantidad_semestres", [], "any", false, false, false, 120), 10)) : (10)), "html", null, true);
+                // line 179
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "cantidad_semestres", [], "any", true, true, false, 179)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "cantidad_semestres", [], "any", false, false, false, 179), 10)) : (10)), "html", null, true);
                 yield " semestres</span>
                             </div>
                             <div class=\"meta-item\">
                                 <i class=\"fas fa-map-marker-alt\"></i>
                                 <span>";
-                // line 124
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sede_nombre", [], "any", false, false, false, 124), "html", null, true);
+                // line 183
+                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sede_nombre", [], "any", false, false, false, 183), "html", null, true);
                 yield "</span>
                             </div>
                         </div>
                         ";
-                // line 127
-                if (CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sede_id", [], "any", false, false, false, 127)) {
-                    // line 128
+                // line 186
+                if (CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sede_id", [], "any", false, false, false, 186)) {
+                    // line 187
                     yield "                        <a href=\"";
                     yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
                     yield "/carrera/";
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sede_id", [], "any", false, false, false, 128), "html", null, true);
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sede_id", [], "any", false, false, false, 187), "html", null, true);
                     yield "/";
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "id", [], "any", false, false, false, 128), "html", null, true);
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "id", [], "any", false, false, false, 187), "html", null, true);
                     yield "?vigencia_desde=";
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::urlencode(((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", true, true, false, 128)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", false, false, false, 128), "")) : (""))), "html", null, true);
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(Twig\Extension\CoreExtension::urlencode(((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", true, true, false, 187)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", false, false, false, 187), "")) : (""))), "html", null, true);
                     yield "\" 
                            class=\"btn btn-primary btn-ver-bibliografia\"
                            data-carrera-id=\"";
-                    // line 130
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "id", [], "any", false, false, false, 130), "html", null, true);
+                    // line 189
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "id", [], "any", false, false, false, 189), "html", null, true);
                     yield "\"
                            data-sedes=\"";
-                    // line 131
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sede_id", [], "any", false, false, false, 131), "html", null, true);
+                    // line 190
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "sede_id", [], "any", false, false, false, 190), "html", null, true);
                     yield "\"
                            data-vigencia-desde=\"";
-                    // line 132
-                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", true, true, false, 132)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", false, false, false, 132), "")) : ("")), "html", null, true);
+                    // line 191
+                    yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(((CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", true, true, false, 191)) ? (Twig\Extension\CoreExtension::default(CoreExtension::getAttribute($this->env, $this->source, $context["carrera"], "vigencia_desde", [], "any", false, false, false, 191), "")) : ("")), "html", null, true);
                     yield "\">
                             <i class=\"fas fa-book me-1\"></i>
                             Ver Bibliografía
                         </a>
                         ";
                 } else {
-                    // line 137
+                    // line 196
                     yield "                        <button class=\"btn btn-secondary btn-ver-bibliografia\" disabled>
                             <i class=\"fas fa-exclamation-triangle me-1\"></i>
                             No disponible
                         </button>
                         ";
                 }
-                // line 142
+                // line 201
                 yield "                    </div>
                 </div>
             </div>
@@ -318,10 +392,10 @@ class __TwigTemplate_803fc1d1cc8d2ce62a4ece97cbedd28e extends Template
             $_parent = $context['_parent'];
             unset($context['_seq'], $context['_key'], $context['carrera'], $context['_parent']);
             $context = array_intersect_key($context, $_parent) + $_parent;
-            // line 146
+            // line 205
             yield "        ";
         } else {
-            // line 147
+            // line 206
             yield "            <div class=\"col-12\">
                 <div class=\"alert alert-info text-center\">
                     <i class=\"fas fa-info-circle me-2\"></i>
@@ -330,7 +404,7 @@ class __TwigTemplate_803fc1d1cc8d2ce62a4ece97cbedd28e extends Template
             </div>
         ";
         }
-        // line 154
+        // line 213
         yield "    </div>
 </section>
 
@@ -374,21 +448,390 @@ class __TwigTemplate_803fc1d1cc8d2ce62a4ece97cbedd28e extends Template
         yield from [];
     }
 
-    // line 195
+    // line 254
     /**
      * @return iterable<null|scalar|\Stringable>
      */
     public function block_scripts(array $context, array $blocks = []): iterable
     {
         $macros = $this->macros;
-        // line 196
-        yield "<script>
+        // line 255
+        yield "<script id=\"bibliografiasBusquedaData\" type=\"application/json\">";
+        yield ((array_key_exists("bibliografias_busqueda_json", $context)) ? (Twig\Extension\CoreExtension::default(($context["bibliografias_busqueda_json"] ?? null), "[]")) : ("[]"));
+        yield "</script>
+<script>
+window.APP_URL = ";
+        // line 257
+        yield json_encode(($context["app_url"] ?? null));
+        yield ";
+
+/**
+ * Normaliza texto para búsqueda: minúsculas, sin acentos/diacríticos ni caracteres especiales.
+ */
+function normalizarTextoBusqueda(texto) {
+    if (!texto) return '';
+    return String(texto)
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\\u0300-\\u036f]/g, '')
+        .replace(/[^a-z0-9\\s]/g, ' ')
+        .replace(/\\s+/g, ' ')
+        .trim();
+}
+
+/** Normaliza códigos de asignatura (sin guiones ni espacios) para comparar. */
+function normalizarCodigoAsignatura(texto) {
+    return normalizarTextoBusqueda(texto).replace(/\\s+/g, '');
+}
+
+function escapeHtml(texto) {
+    const div = document.createElement('div');
+    div.textContent = texto == null ? '' : String(texto);
+    return div.innerHTML;
+}
+
+function obtenerAsignaturasItem(item) {
+    try {
+        const raw = item.getAttribute('data-asignaturas') || '{}';
+        const datos = JSON.parse(raw);
+        return {
+            items: Array.isArray(datos.items) ? datos.items : [],
+            nombres: Array.isArray(datos.nombres) ? datos.nombres : [],
+            codigos: Array.isArray(datos.codigos) ? datos.codigos : []
+        };
+    } catch (e) {
+        return { items: [], nombres: [], codigos: [] };
+    }
+}
+
+function itemPasaFiltroSede(item, sedeSeleccionada) {
+    if (sedeSeleccionada === 'todas') {
+        return true;
+    }
+    const sedes = (item.getAttribute('data-sedes') || '').split(',').map(function(s) { return s.trim(); });
+    return sedes.includes(sedeSeleccionada);
+}
+
+function asignaturaCoincidePatron(asig, busqueda, tipoBusqueda) {
+    if (!busqueda) {
+        return false;
+    }
+    if (tipoBusqueda === 'asignatura_nombre') {
+        return normalizarTextoBusqueda(asig.nombre || '').includes(busqueda);
+    }
+    if (tipoBusqueda === 'asignatura_codigo') {
+        return normalizarCodigoAsignatura(asig.codigo || '').includes(busqueda);
+    }
+    return false;
+}
+
+function recopilarAsignaturasCoincidentes(busqueda, tipoBusqueda, sedeSeleccionada) {
+    const resultados = [];
+    const vistos = new Set();
+
+    document.querySelectorAll('.carrera-item').forEach(function(item) {
+        if (!itemPasaFiltroSede(item, sedeSeleccionada)) {
+            return;
+        }
+
+        const datos = obtenerAsignaturasItem(item);
+        const meta = {
+            carreraId: item.getAttribute('data-carrera-id'),
+            carreraNombre: item.getAttribute('data-carrera-nombre') || '',
+            sedeId: item.getAttribute('data-sedes'),
+            sedeNombre: item.getAttribute('data-sede-nombre') || '',
+            vigenciaDesde: item.getAttribute('data-vigencia-desde') || ''
+        };
+
+        datos.items.forEach(function(asig) {
+            if (!asignaturaCoincidePatron(asig, busqueda, tipoBusqueda)) {
+                return;
+            }
+            const clave = asig.id + '_' + meta.carreraId + '_' + meta.sedeId;
+            if (vistos.has(clave)) {
+                return;
+            }
+            vistos.add(clave);
+            resultados.push(Object.assign({}, asig, meta));
+        });
+    });
+
+    resultados.sort(function(a, b) {
+        return (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' });
+    });
+
+    return resultados;
+}
+
+function renderizarListadoAsignaturas(resultados) {
+    const seccion = document.getElementById('resultadosAsignaturas');
+    const lista = document.getElementById('listaAsignaturas');
+    const sinResultados = document.getElementById('sinResultadosAsignaturas');
+    const subtitulo = document.getElementById('subtituloResultadosAsignaturas');
+    const appUrl = window.APP_URL || '';
+
+    if (!seccion || !lista) {
+        return;
+    }
+
+    lista.innerHTML = '';
+
+    if (subtitulo) {
+        subtitulo.textContent = resultados.length === 1
+            ? '1 asignatura encontrada'
+            : resultados.length + ' asignaturas encontradas';
+    }
+
+    if (resultados.length === 0) {
+        sinResultados?.classList.remove('d-none');
+        return;
+    }
+
+    sinResultados?.classList.add('d-none');
+
+    resultados.forEach(function(r) {
+        const vigenciaQuery = r.vigenciaDesde ? '?vigencia_desde=' + encodeURIComponent(r.vigenciaDesde) : '';
+        const urlCarrera = appUrl + '/carrera/' + r.sedeId + '/' + r.carreraId + vigenciaQuery;
+        const urlBiblio = appUrl + '/asignatura-biblio/' + r.sedeId + '/' + r.id;
+
+        const item = document.createElement('div');
+        item.className = 'list-group-item';
+        item.innerHTML =
+            '<div class=\"d-flex w-100 justify-content-between align-items-start flex-wrap gap-3\">' +
+                '<div class=\"flex-grow-1\">' +
+                    '<h5 class=\"mb-1\">' + escapeHtml(r.nombre) + '</h5>' +
+                    '<p class=\"mb-1 text-muted small mb-0\">' +
+                        '<strong>Código:</strong> ' + escapeHtml(r.codigo || '—') +
+                        (r.semestre ? ' &nbsp;·&nbsp; <strong>Semestre:</strong> ' + escapeHtml(r.semestre) : '') +
+                    '</p>' +
+                    '<p class=\"mb-0 small text-secondary\">' +
+                        '<i class=\"fas fa-graduation-cap me-1\"></i>' + escapeHtml(r.carreraNombre) +
+                        ' <span class=\"text-muted\">· ' + escapeHtml(r.sedeNombre) + '</span>' +
+                    '</p>' +
+                '</div>' +
+                '<div class=\"d-flex gap-2 flex-shrink-0 align-items-center\">' +
+                    '<a href=\"' + urlBiblio + '\" class=\"btn btn-sm btn-primary\" target=\"_blank\" rel=\"noopener\">' +
+                        '<i class=\"fas fa-book me-1\"></i>Ver bibliografía' +
+                    '</a>' +
+                    '<a href=\"' + urlCarrera + '\" class=\"btn btn-sm btn-outline-secondary\">' +
+                        '<i class=\"fas fa-university me-1\"></i>Ver carrera' +
+                    '</a>' +
+                '</div>' +
+            '</div>';
+        lista.appendChild(item);
+    });
+}
+
+function esBusquedaConListado(tipoBusqueda, busqueda) {
+    return !!busqueda && (
+        tipoBusqueda === 'asignatura_nombre' ||
+        tipoBusqueda === 'asignatura_codigo' ||
+        tipoBusqueda === 'titulo_autor'
+    );
+}
+
+function alternarVistaResultados(tipoBusqueda, busqueda) {
+    const seccionAsig = document.getElementById('resultadosAsignaturas');
+    const seccionBib = document.getElementById('resultadosBibliografia');
+    const encabezadoCarreras = document.getElementById('encabezadoCarreras');
+    const carrerasContainer = document.getElementById('carrerasContainer');
+    const esListado = esBusquedaConListado(tipoBusqueda, busqueda);
+    const esAsignatura = esListado && (tipoBusqueda === 'asignatura_nombre' || tipoBusqueda === 'asignatura_codigo');
+    const esBibliografia = esListado && tipoBusqueda === 'titulo_autor';
+
+    seccionAsig?.classList.toggle('d-none', !esAsignatura);
+    seccionBib?.classList.toggle('d-none', !esBibliografia);
+
+    if (esListado) {
+        encabezadoCarreras?.classList.add('d-none');
+        if (carrerasContainer) {
+            carrerasContainer.style.display = 'none';
+        }
+    } else {
+        encabezadoCarreras?.classList.remove('d-none');
+        if (carrerasContainer) {
+            carrerasContainer.style.display = '';
+        }
+    }
+}
+
+function obtenerCatalogoBibliografias() {
+    const el = document.getElementById('bibliografiasBusquedaData');
+    if (!el || !el.textContent) {
+        return [];
+    }
+    try {
+        const datos = JSON.parse(el.textContent);
+        return Array.isArray(datos) ? datos : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+/** Coincide texto normalizado en cadena completa o en fragmentos (autores separados por ; o ,). */
+function textoCoincidePatron(texto, busqueda) {
+    if (!busqueda || !texto) {
+        return false;
+    }
+    if (normalizarTextoBusqueda(texto).includes(busqueda)) {
+        return true;
+    }
+    return String(texto).split(/[;,]/).some(function(parte) {
+        return normalizarTextoBusqueda(parte).includes(busqueda);
+    });
+}
+
+function etiquetaTipoBibliografia(tipo) {
+    const mapa = {
+        basica: 'Básica',
+        complementaria: 'Complementaria'
+    };
+    return mapa[tipo] || (tipo ? tipo.charAt(0).toUpperCase() + tipo.slice(1) : '—');
+}
+
+function recopilarBibliografiasCoincidentes(busqueda, sedeSeleccionada) {
+    const resultados = [];
+    const vistos = new Set();
+
+    obtenerCatalogoBibliografias().forEach(function(bib) {
+        if (sedeSeleccionada !== 'todas' && String(bib.sedeId) !== String(sedeSeleccionada)) {
+            return;
+        }
+
+        const coincideTitulo = textoCoincidePatron(bib.titulo, busqueda);
+        const coincideAutor = textoCoincidePatron(bib.autores, busqueda);
+        if (!coincideTitulo && !coincideAutor) {
+            return;
+        }
+
+        const clave = bib.id + '_' + bib.asignaturaId + '_' + bib.carreraId + '_' + bib.sedeId + '_' + (bib.tipoBibliografia || '');
+        if (vistos.has(clave)) {
+            return;
+        }
+        vistos.add(clave);
+        resultados.push(Object.assign({}, bib, {
+            coincideTitulo: coincideTitulo,
+            coincideAutor: coincideAutor
+        }));
+    });
+
+    resultados.sort(function(a, b) {
+        const cmpTitulo = (a.titulo || '').localeCompare(b.titulo || '', 'es', { sensitivity: 'base' });
+        if (cmpTitulo !== 0) {
+            return cmpTitulo;
+        }
+        return (a.autores || '').localeCompare(b.autores || '', 'es', { sensitivity: 'base' });
+    });
+
+    return resultados;
+}
+
+function renderizarListadoBibliografias(resultados) {
+    const seccion = document.getElementById('resultadosBibliografia');
+    const lista = document.getElementById('listaBibliografias');
+    const sinResultados = document.getElementById('sinResultadosBibliografia');
+    const subtitulo = document.getElementById('subtituloResultadosBibliografia');
+    const appUrl = window.APP_URL || '';
+
+    if (!seccion || !lista) {
+        return;
+    }
+
+    lista.innerHTML = '';
+
+    if (subtitulo) {
+        subtitulo.textContent = resultados.length === 1
+            ? '1 bibliografía encontrada'
+            : resultados.length + ' bibliografías encontradas';
+    }
+
+    if (resultados.length === 0) {
+        sinResultados?.classList.remove('d-none');
+        return;
+    }
+
+    sinResultados?.classList.add('d-none');
+
+    resultados.forEach(function(r) {
+        const vigenciaQuery = r.vigenciaDesde ? '?vigencia_desde=' + encodeURIComponent(r.vigenciaDesde) : '';
+        const urlCarrera = appUrl + '/carrera/' + r.sedeId + '/' + r.carreraId + vigenciaQuery;
+        const urlAsignatura = appUrl + '/asignatura-biblio/' + r.sedeId + '/' + r.asignaturaId;
+
+        let coincidencia = '';
+        if (r.coincideTitulo && r.coincideAutor) {
+            coincidencia = '<span class=\"badge bg-secondary me-1\">Título</span><span class=\"badge bg-secondary\">Autor</span>';
+        } else if (r.coincideTitulo) {
+            coincidencia = '<span class=\"badge bg-secondary\">Título</span>';
+        } else {
+            coincidencia = '<span class=\"badge bg-secondary\">Autor</span>';
+        }
+
+        const item = document.createElement('div');
+        item.className = 'list-group-item';
+        item.innerHTML =
+            '<div class=\"d-flex w-100 justify-content-between align-items-start flex-wrap gap-3\">' +
+                '<div class=\"flex-grow-1\">' +
+                    '<h5 class=\"mb-1\">' + escapeHtml(r.titulo) + '</h5>' +
+                    '<p class=\"mb-1 text-muted small\">' +
+                        '<strong>Autor(es):</strong> ' + escapeHtml(r.autores || '—') +
+                    '</p>' +
+                    '<p class=\"mb-1 small\">' + coincidencia +
+                        ' <span class=\"badge bg-light text-dark border ms-1\">' + escapeHtml(etiquetaTipoBibliografia(r.tipoBibliografia)) + '</span>' +
+                    '</p>' +
+                    '<p class=\"mb-0 small text-secondary\">' +
+                        '<i class=\"fas fa-chalkboard-teacher me-1\"></i>' + escapeHtml(r.asignaturaNombre) +
+                        (r.codigoAsignatura ? ' <span class=\"text-muted\">(' + escapeHtml(r.codigoAsignatura) + ')</span>' : '') +
+                        '<br><i class=\"fas fa-graduation-cap me-1\"></i>' + escapeHtml(r.carreraNombre) +
+                        ' <span class=\"text-muted\">· ' + escapeHtml(r.sedeNombre) + '</span>' +
+                    '</p>' +
+                '</div>' +
+                '<div class=\"d-flex gap-2 flex-shrink-0 align-items-center\">' +
+                    '<a href=\"' + urlAsignatura + '\" class=\"btn btn-sm btn-primary\" target=\"_blank\" rel=\"noopener\">' +
+                        '<i class=\"fas fa-book-open me-1\"></i>Ver en asignatura' +
+                    '</a>' +
+                    '<a href=\"' + urlCarrera + '\" class=\"btn btn-sm btn-outline-secondary\">' +
+                        '<i class=\"fas fa-university me-1\"></i>Ver carrera' +
+                    '</a>' +
+                '</div>' +
+            '</div>';
+        lista.appendChild(item);
+    });
+}
+
+function carreraCoincideBusqueda(item, busqueda, tipoBusqueda) {
+    if (!busqueda) {
+        return true;
+    }
+    if (tipoBusqueda === 'carrera') {
+        const nombreCarrera = normalizarTextoBusqueda(item.getAttribute('data-nombre') || '');
+        return nombreCarrera.includes(busqueda);
+    }
+    return true;
+}
+
+const PLACEHOLDERS_BUSQUEDA = {
+    carrera: '¿Qué carrera buscas?',
+    asignatura_nombre: '¿Qué asignatura buscas?',
+    asignatura_codigo: 'Ej: DAII-00505',
+    titulo_autor: 'Título o nombre de autor'
+};
+
+function actualizarPlaceholderBusqueda() {
+    const tipoBusqueda = document.getElementById('tipoBusqueda');
+    const carreraSearch = document.getElementById('carreraSearch');
+    if (!tipoBusqueda || !carreraSearch) {
+        return;
+    }
+    carreraSearch.placeholder = PLACEHOLDERS_BUSQUEDA[tipoBusqueda.value] || PLACEHOLDERS_BUSQUEDA.carrera;
+}
+
 // Función global para filtrar carreras
 function filtrarCarreras() {
     console.log('=== EJECUTANDO FILTRO DE CARRERAS ===');
     
     const sedeSelect = document.getElementById('sedeSelect');
     const carreraSearch = document.getElementById('carreraSearch');
+    const tipoBusquedaEl = document.getElementById('tipoBusqueda');
     const carreraItems = document.querySelectorAll('.carrera-item');
     
     if (!sedeSelect || !carreraSearch) {
@@ -397,33 +840,42 @@ function filtrarCarreras() {
     }
     
     const sedeSeleccionada = sedeSelect.value;
-    const busqueda = carreraSearch.value.toLowerCase().trim();
-    
-    console.log('Sede seleccionada:', sedeSeleccionada);
-    console.log('Búsqueda:', busqueda);
-    console.log('Total carreras:', carreraItems.length);
-    
+    const tipoBusqueda = tipoBusquedaEl ? tipoBusquedaEl.value : 'carrera';
+    const busqueda = tipoBusqueda === 'asignatura_codigo'
+        ? normalizarCodigoAsignatura(carreraSearch.value)
+        : normalizarTextoBusqueda(carreraSearch.value);
+
+    alternarVistaResultados(tipoBusqueda, busqueda);
+
+    if (tipoBusqueda === 'titulo_autor' && busqueda) {
+        const resultadosBib = recopilarBibliografiasCoincidentes(busqueda, sedeSeleccionada);
+        renderizarListadoBibliografias(resultadosBib);
+        return;
+    }
+
+    if ((tipoBusqueda === 'asignatura_nombre' || tipoBusqueda === 'asignatura_codigo') && busqueda) {
+        const resultados = recopilarAsignaturasCoincidentes(busqueda, tipoBusqueda, sedeSeleccionada);
+        renderizarListadoAsignaturas(resultados);
+        return;
+    }
+
     let carrerasMostradas = 0;
-    
-    carreraItems.forEach((item, index) => {
+
+    carreraItems.forEach(function(item) {
         const sedesCarrera = item.getAttribute('data-sedes') || '';
-        const nombreCarrera = item.getAttribute('data-nombre') || '';
-        
         let mostrar = true;
-        
-        // Filtro por sede
+
         if (sedeSeleccionada !== 'todas') {
-            const sedesArray = sedesCarrera.split(',').map(s => s.trim());
+            const sedesArray = sedesCarrera.split(',').map(function(s) { return s.trim(); });
             if (!sedesArray.includes(sedeSeleccionada)) {
                 mostrar = false;
             }
         }
-        
-        // Filtro por búsqueda
-        if (busqueda && !nombreCarrera.includes(busqueda)) {
+
+        if (busqueda && !carreraCoincideBusqueda(item, busqueda, tipoBusqueda)) {
             mostrar = false;
         }
-        
+
         if (mostrar) {
             item.style.display = 'block';
             item.classList.add('fade-in');
@@ -433,9 +885,8 @@ function filtrarCarreras() {
             item.classList.remove('fade-in');
         }
     });
-    
+
     console.log('Carreras mostradas:', carrerasMostradas);
-    console.log('=== FILTRO COMPLETADO ===');
 }
 
 // Sincroniza la pestaña activa con el valor del select de sedes
@@ -457,6 +908,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Verificar elementos
     const sedeSelect = document.getElementById('sedeSelect');
     const carreraSearch = document.getElementById('carreraSearch');
+    const tipoBusqueda = document.getElementById('tipoBusqueda');
     const buscarBtn = document.getElementById('buscarBtn');
     const tabButtons = document.querySelectorAll('.tab-btn');
     const carreraItems = document.querySelectorAll('.carrera-item');
@@ -478,6 +930,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    if (tipoBusqueda) {
+        tipoBusqueda.addEventListener('change', function() {
+            actualizarPlaceholderBusqueda();
+            filtrarCarreras();
+        });
+        actualizarPlaceholderBusqueda();
+    }
+
     if (carreraSearch) {
         carreraSearch.addEventListener('input', function() {
             console.log('Búsqueda:', this.value);
@@ -593,7 +1053,7 @@ window.debugFiltros = function() {
      */
     public function getDebugInfo(): array
     {
-        return array (  385 => 196,  378 => 195,  334 => 154,  325 => 147,  322 => 146,  313 => 142,  306 => 137,  298 => 132,  294 => 131,  290 => 130,  278 => 128,  276 => 127,  270 => 124,  263 => 120,  256 => 115,  252 => 113,  246 => 111,  244 => 110,  237 => 106,  232 => 104,  228 => 102,  222 => 100,  212 => 98,  210 => 97,  204 => 94,  200 => 93,  197 => 92,  192 => 91,  190 => 90,  170 => 72,  161 => 69,  156 => 68,  152 => 67,  121 => 38,  106 => 36,  102 => 35,  71 => 6,  64 => 5,  53 => 3,  42 => 1,);
+        return array (  465 => 257,  459 => 255,  452 => 254,  408 => 213,  399 => 206,  396 => 205,  387 => 201,  380 => 196,  372 => 191,  368 => 190,  364 => 189,  352 => 187,  350 => 186,  344 => 183,  337 => 179,  330 => 174,  326 => 172,  320 => 170,  318 => 169,  311 => 165,  306 => 163,  302 => 161,  296 => 159,  286 => 157,  284 => 156,  278 => 153,  274 => 152,  270 => 151,  266 => 150,  262 => 149,  258 => 148,  254 => 147,  251 => 146,  246 => 145,  244 => 144,  188 => 90,  179 => 87,  174 => 86,  170 => 85,  122 => 39,  107 => 37,  103 => 36,  71 => 6,  64 => 5,  53 => 3,  42 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -627,23 +1087,41 @@ window.debugFiltros = function() {
         <div class=\"row mt-5\">
             <div class=\"col-12\">
                 <div class=\"filter-section\">
-                    <div class=\"row align-items-center\">
-                        <div class=\"col-md-4\">
-                            <label class=\"form-label text-white fw-bold\">Sedes</label>
-                            <select class=\"form-select sede-select\" id=\"sedeSelect\">
-                                <option value=\"todas\">Todas</option>
-                                {% for sede in sedes %}
-                                <option value=\"{{ sede.id }}\" {% if sede_filtro == sede.id %}selected{% endif %}>{{ sede.nombre }}</option>
-                                {% endfor %}
-                            </select>
+                    <div class=\"row align-items-end g-3\">
+                        <div class=\"col-md-3\">
+                            <label class=\"form-label text-white fw-bold\" for=\"sedeSelect\">Sedes</label>
+                            <div class=\"select-con-indicador\">
+                                <select class=\"form-select sede-select\" id=\"sedeSelect\" title=\"Seleccionar sede\">
+                                    <option value=\"todas\">Todas</option>
+                                    {% for sede in sedes %}
+                                    <option value=\"{{ sede.id }}\" {% if sede_filtro == sede.id %}selected{% endif %}>{{ sede.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                                <span class=\"select-indicador\" aria-hidden=\"true\">
+                                    <i class=\"fas fa-chevron-down\"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class=\"col-md-3\">
+                            <label class=\"form-label text-white fw-bold\" for=\"tipoBusqueda\">Buscar por</label>
+                            <div class=\"select-con-indicador\">
+                                <select class=\"form-select\" id=\"tipoBusqueda\" title=\"Seleccionar criterio de búsqueda\">
+                                    <option value=\"carrera\">Nombre de carrera</option>
+                                    <option value=\"asignatura_nombre\">Nombre de asignatura</option>
+                                    <option value=\"asignatura_codigo\">Código de asignatura</option>
+                                    <option value=\"titulo_autor\">Título o autor</option>
+                                </select>
+                                <span class=\"select-indicador\" aria-hidden=\"true\">
+                                    <i class=\"fas fa-chevron-down\"></i>
+                                </span>
+                            </div>
                         </div>
                         <div class=\"col-md-4\">
-                            <label class=\"form-label text-white fw-bold\">Carreras</label>
+                            <label class=\"form-label text-white fw-bold\" for=\"carreraSearch\">Texto de búsqueda</label>
                             <input type=\"text\" class=\"form-control\" id=\"carreraSearch\" placeholder=\"¿Qué carrera buscas?\">
                         </div>
-                        <div class=\"col-md-4 d-flex flex-column\">
-                            <label class=\"form-label text-white fw-bold\">Acción</label>
-                            <button class=\"btn btn-warning btn-lg w-100 mt-auto\" id=\"buscarBtn\">
+                        <div class=\"col-md-2\">
+                            <button class=\"btn btn-warning btn-lg w-100\" id=\"buscarBtn\" type=\"button\">
                                 <i class=\"fas fa-search me-2\"></i>Buscar
                             </button>
                         </div>
@@ -675,9 +1153,45 @@ window.debugFiltros = function() {
     </div>
 </section>
 
+<!-- Resultados de búsqueda por asignatura -->
+<section id=\"resultadosAsignaturas\" class=\"container mb-5 d-none\">
+    <div class=\"row\">
+        <div class=\"col-12\">
+            <h2 class=\"mb-3\">
+                <i class=\"fas fa-list me-2\"></i>
+                <span id=\"tituloResultadosAsignaturas\">Asignaturas encontradas</span>
+            </h2>
+            <p class=\"text-muted mb-3\" id=\"subtituloResultadosAsignaturas\"></p>
+            <div id=\"listaAsignaturas\" class=\"list-group shadow-sm\"></div>
+            <div id=\"sinResultadosAsignaturas\" class=\"alert alert-info d-none mt-3\">
+                <i class=\"fas fa-info-circle me-2\"></i>
+                No se encontraron asignaturas que coincidan con tu búsqueda.
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Resultados de búsqueda por título o autor -->
+<section id=\"resultadosBibliografia\" class=\"container mb-5 d-none\">
+    <div class=\"row\">
+        <div class=\"col-12\">
+            <h2 class=\"mb-3\">
+                <i class=\"fas fa-book me-2\"></i>
+                <span id=\"tituloResultadosBibliografia\">Bibliografías encontradas</span>
+            </h2>
+            <p class=\"text-muted mb-3\" id=\"subtituloResultadosBibliografia\"></p>
+            <div id=\"listaBibliografias\" class=\"list-group shadow-sm\"></div>
+            <div id=\"sinResultadosBibliografia\" class=\"alert alert-info d-none mt-3\">
+                <i class=\"fas fa-info-circle me-2\"></i>
+                No se encontraron bibliografías que coincidan con tu búsqueda.
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- Sección de Carreras -->
 <section id=\"carreras\" class=\"container\">
-    <div class=\"row\">
+    <div class=\"row\" id=\"encabezadoCarreras\">
         <div class=\"col-12\">
             <h2 class=\"text-center mb-5\">
                 <i class=\"fas fa-graduation-cap me-2\"></i>
@@ -691,7 +1205,12 @@ window.debugFiltros = function() {
             {% for carrera in carreras %}
             <div class=\"col-md-6 col-lg-4 mb-4 carrera-item\" 
                  data-sedes=\"{{ carrera.sede_id }}\"
-                 data-nombre=\"{{ carrera.nombre|lower }}\">
+                 data-nombre=\"{{ carrera.nombre|lower }}\"
+                 data-carrera-id=\"{{ carrera.id }}\"
+                 data-carrera-nombre=\"{{ carrera.nombre|e('html_attr') }}\"
+                 data-sede-nombre=\"{{ carrera.sede_nombre|e('html_attr') }}\"
+                 data-vigencia-desde=\"{{ carrera.vigencia_desde|default('')|e('html_attr') }}\"
+                 data-asignaturas=\"{{ carrera.asignaturas_busqueda|default('{}')|e('html_attr') }}\">
                 <div class=\"card h-100 carrera-card\">
                     <div class=\"carrera-image\">
                         {% if carrera.imagen_url %}
@@ -793,13 +1312,377 @@ window.debugFiltros = function() {
 {% endblock %}
 
 {% block scripts %}
+<script id=\"bibliografiasBusquedaData\" type=\"application/json\">{{ bibliografias_busqueda_json|default('[]')|raw }}</script>
 <script>
+window.APP_URL = {{ app_url|json_encode|raw }};
+
+/**
+ * Normaliza texto para búsqueda: minúsculas, sin acentos/diacríticos ni caracteres especiales.
+ */
+function normalizarTextoBusqueda(texto) {
+    if (!texto) return '';
+    return String(texto)
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\\u0300-\\u036f]/g, '')
+        .replace(/[^a-z0-9\\s]/g, ' ')
+        .replace(/\\s+/g, ' ')
+        .trim();
+}
+
+/** Normaliza códigos de asignatura (sin guiones ni espacios) para comparar. */
+function normalizarCodigoAsignatura(texto) {
+    return normalizarTextoBusqueda(texto).replace(/\\s+/g, '');
+}
+
+function escapeHtml(texto) {
+    const div = document.createElement('div');
+    div.textContent = texto == null ? '' : String(texto);
+    return div.innerHTML;
+}
+
+function obtenerAsignaturasItem(item) {
+    try {
+        const raw = item.getAttribute('data-asignaturas') || '{}';
+        const datos = JSON.parse(raw);
+        return {
+            items: Array.isArray(datos.items) ? datos.items : [],
+            nombres: Array.isArray(datos.nombres) ? datos.nombres : [],
+            codigos: Array.isArray(datos.codigos) ? datos.codigos : []
+        };
+    } catch (e) {
+        return { items: [], nombres: [], codigos: [] };
+    }
+}
+
+function itemPasaFiltroSede(item, sedeSeleccionada) {
+    if (sedeSeleccionada === 'todas') {
+        return true;
+    }
+    const sedes = (item.getAttribute('data-sedes') || '').split(',').map(function(s) { return s.trim(); });
+    return sedes.includes(sedeSeleccionada);
+}
+
+function asignaturaCoincidePatron(asig, busqueda, tipoBusqueda) {
+    if (!busqueda) {
+        return false;
+    }
+    if (tipoBusqueda === 'asignatura_nombre') {
+        return normalizarTextoBusqueda(asig.nombre || '').includes(busqueda);
+    }
+    if (tipoBusqueda === 'asignatura_codigo') {
+        return normalizarCodigoAsignatura(asig.codigo || '').includes(busqueda);
+    }
+    return false;
+}
+
+function recopilarAsignaturasCoincidentes(busqueda, tipoBusqueda, sedeSeleccionada) {
+    const resultados = [];
+    const vistos = new Set();
+
+    document.querySelectorAll('.carrera-item').forEach(function(item) {
+        if (!itemPasaFiltroSede(item, sedeSeleccionada)) {
+            return;
+        }
+
+        const datos = obtenerAsignaturasItem(item);
+        const meta = {
+            carreraId: item.getAttribute('data-carrera-id'),
+            carreraNombre: item.getAttribute('data-carrera-nombre') || '',
+            sedeId: item.getAttribute('data-sedes'),
+            sedeNombre: item.getAttribute('data-sede-nombre') || '',
+            vigenciaDesde: item.getAttribute('data-vigencia-desde') || ''
+        };
+
+        datos.items.forEach(function(asig) {
+            if (!asignaturaCoincidePatron(asig, busqueda, tipoBusqueda)) {
+                return;
+            }
+            const clave = asig.id + '_' + meta.carreraId + '_' + meta.sedeId;
+            if (vistos.has(clave)) {
+                return;
+            }
+            vistos.add(clave);
+            resultados.push(Object.assign({}, asig, meta));
+        });
+    });
+
+    resultados.sort(function(a, b) {
+        return (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' });
+    });
+
+    return resultados;
+}
+
+function renderizarListadoAsignaturas(resultados) {
+    const seccion = document.getElementById('resultadosAsignaturas');
+    const lista = document.getElementById('listaAsignaturas');
+    const sinResultados = document.getElementById('sinResultadosAsignaturas');
+    const subtitulo = document.getElementById('subtituloResultadosAsignaturas');
+    const appUrl = window.APP_URL || '';
+
+    if (!seccion || !lista) {
+        return;
+    }
+
+    lista.innerHTML = '';
+
+    if (subtitulo) {
+        subtitulo.textContent = resultados.length === 1
+            ? '1 asignatura encontrada'
+            : resultados.length + ' asignaturas encontradas';
+    }
+
+    if (resultados.length === 0) {
+        sinResultados?.classList.remove('d-none');
+        return;
+    }
+
+    sinResultados?.classList.add('d-none');
+
+    resultados.forEach(function(r) {
+        const vigenciaQuery = r.vigenciaDesde ? '?vigencia_desde=' + encodeURIComponent(r.vigenciaDesde) : '';
+        const urlCarrera = appUrl + '/carrera/' + r.sedeId + '/' + r.carreraId + vigenciaQuery;
+        const urlBiblio = appUrl + '/asignatura-biblio/' + r.sedeId + '/' + r.id;
+
+        const item = document.createElement('div');
+        item.className = 'list-group-item';
+        item.innerHTML =
+            '<div class=\"d-flex w-100 justify-content-between align-items-start flex-wrap gap-3\">' +
+                '<div class=\"flex-grow-1\">' +
+                    '<h5 class=\"mb-1\">' + escapeHtml(r.nombre) + '</h5>' +
+                    '<p class=\"mb-1 text-muted small mb-0\">' +
+                        '<strong>Código:</strong> ' + escapeHtml(r.codigo || '—') +
+                        (r.semestre ? ' &nbsp;·&nbsp; <strong>Semestre:</strong> ' + escapeHtml(r.semestre) : '') +
+                    '</p>' +
+                    '<p class=\"mb-0 small text-secondary\">' +
+                        '<i class=\"fas fa-graduation-cap me-1\"></i>' + escapeHtml(r.carreraNombre) +
+                        ' <span class=\"text-muted\">· ' + escapeHtml(r.sedeNombre) + '</span>' +
+                    '</p>' +
+                '</div>' +
+                '<div class=\"d-flex gap-2 flex-shrink-0 align-items-center\">' +
+                    '<a href=\"' + urlBiblio + '\" class=\"btn btn-sm btn-primary\" target=\"_blank\" rel=\"noopener\">' +
+                        '<i class=\"fas fa-book me-1\"></i>Ver bibliografía' +
+                    '</a>' +
+                    '<a href=\"' + urlCarrera + '\" class=\"btn btn-sm btn-outline-secondary\">' +
+                        '<i class=\"fas fa-university me-1\"></i>Ver carrera' +
+                    '</a>' +
+                '</div>' +
+            '</div>';
+        lista.appendChild(item);
+    });
+}
+
+function esBusquedaConListado(tipoBusqueda, busqueda) {
+    return !!busqueda && (
+        tipoBusqueda === 'asignatura_nombre' ||
+        tipoBusqueda === 'asignatura_codigo' ||
+        tipoBusqueda === 'titulo_autor'
+    );
+}
+
+function alternarVistaResultados(tipoBusqueda, busqueda) {
+    const seccionAsig = document.getElementById('resultadosAsignaturas');
+    const seccionBib = document.getElementById('resultadosBibliografia');
+    const encabezadoCarreras = document.getElementById('encabezadoCarreras');
+    const carrerasContainer = document.getElementById('carrerasContainer');
+    const esListado = esBusquedaConListado(tipoBusqueda, busqueda);
+    const esAsignatura = esListado && (tipoBusqueda === 'asignatura_nombre' || tipoBusqueda === 'asignatura_codigo');
+    const esBibliografia = esListado && tipoBusqueda === 'titulo_autor';
+
+    seccionAsig?.classList.toggle('d-none', !esAsignatura);
+    seccionBib?.classList.toggle('d-none', !esBibliografia);
+
+    if (esListado) {
+        encabezadoCarreras?.classList.add('d-none');
+        if (carrerasContainer) {
+            carrerasContainer.style.display = 'none';
+        }
+    } else {
+        encabezadoCarreras?.classList.remove('d-none');
+        if (carrerasContainer) {
+            carrerasContainer.style.display = '';
+        }
+    }
+}
+
+function obtenerCatalogoBibliografias() {
+    const el = document.getElementById('bibliografiasBusquedaData');
+    if (!el || !el.textContent) {
+        return [];
+    }
+    try {
+        const datos = JSON.parse(el.textContent);
+        return Array.isArray(datos) ? datos : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+/** Coincide texto normalizado en cadena completa o en fragmentos (autores separados por ; o ,). */
+function textoCoincidePatron(texto, busqueda) {
+    if (!busqueda || !texto) {
+        return false;
+    }
+    if (normalizarTextoBusqueda(texto).includes(busqueda)) {
+        return true;
+    }
+    return String(texto).split(/[;,]/).some(function(parte) {
+        return normalizarTextoBusqueda(parte).includes(busqueda);
+    });
+}
+
+function etiquetaTipoBibliografia(tipo) {
+    const mapa = {
+        basica: 'Básica',
+        complementaria: 'Complementaria'
+    };
+    return mapa[tipo] || (tipo ? tipo.charAt(0).toUpperCase() + tipo.slice(1) : '—');
+}
+
+function recopilarBibliografiasCoincidentes(busqueda, sedeSeleccionada) {
+    const resultados = [];
+    const vistos = new Set();
+
+    obtenerCatalogoBibliografias().forEach(function(bib) {
+        if (sedeSeleccionada !== 'todas' && String(bib.sedeId) !== String(sedeSeleccionada)) {
+            return;
+        }
+
+        const coincideTitulo = textoCoincidePatron(bib.titulo, busqueda);
+        const coincideAutor = textoCoincidePatron(bib.autores, busqueda);
+        if (!coincideTitulo && !coincideAutor) {
+            return;
+        }
+
+        const clave = bib.id + '_' + bib.asignaturaId + '_' + bib.carreraId + '_' + bib.sedeId + '_' + (bib.tipoBibliografia || '');
+        if (vistos.has(clave)) {
+            return;
+        }
+        vistos.add(clave);
+        resultados.push(Object.assign({}, bib, {
+            coincideTitulo: coincideTitulo,
+            coincideAutor: coincideAutor
+        }));
+    });
+
+    resultados.sort(function(a, b) {
+        const cmpTitulo = (a.titulo || '').localeCompare(b.titulo || '', 'es', { sensitivity: 'base' });
+        if (cmpTitulo !== 0) {
+            return cmpTitulo;
+        }
+        return (a.autores || '').localeCompare(b.autores || '', 'es', { sensitivity: 'base' });
+    });
+
+    return resultados;
+}
+
+function renderizarListadoBibliografias(resultados) {
+    const seccion = document.getElementById('resultadosBibliografia');
+    const lista = document.getElementById('listaBibliografias');
+    const sinResultados = document.getElementById('sinResultadosBibliografia');
+    const subtitulo = document.getElementById('subtituloResultadosBibliografia');
+    const appUrl = window.APP_URL || '';
+
+    if (!seccion || !lista) {
+        return;
+    }
+
+    lista.innerHTML = '';
+
+    if (subtitulo) {
+        subtitulo.textContent = resultados.length === 1
+            ? '1 bibliografía encontrada'
+            : resultados.length + ' bibliografías encontradas';
+    }
+
+    if (resultados.length === 0) {
+        sinResultados?.classList.remove('d-none');
+        return;
+    }
+
+    sinResultados?.classList.add('d-none');
+
+    resultados.forEach(function(r) {
+        const vigenciaQuery = r.vigenciaDesde ? '?vigencia_desde=' + encodeURIComponent(r.vigenciaDesde) : '';
+        const urlCarrera = appUrl + '/carrera/' + r.sedeId + '/' + r.carreraId + vigenciaQuery;
+        const urlAsignatura = appUrl + '/asignatura-biblio/' + r.sedeId + '/' + r.asignaturaId;
+
+        let coincidencia = '';
+        if (r.coincideTitulo && r.coincideAutor) {
+            coincidencia = '<span class=\"badge bg-secondary me-1\">Título</span><span class=\"badge bg-secondary\">Autor</span>';
+        } else if (r.coincideTitulo) {
+            coincidencia = '<span class=\"badge bg-secondary\">Título</span>';
+        } else {
+            coincidencia = '<span class=\"badge bg-secondary\">Autor</span>';
+        }
+
+        const item = document.createElement('div');
+        item.className = 'list-group-item';
+        item.innerHTML =
+            '<div class=\"d-flex w-100 justify-content-between align-items-start flex-wrap gap-3\">' +
+                '<div class=\"flex-grow-1\">' +
+                    '<h5 class=\"mb-1\">' + escapeHtml(r.titulo) + '</h5>' +
+                    '<p class=\"mb-1 text-muted small\">' +
+                        '<strong>Autor(es):</strong> ' + escapeHtml(r.autores || '—') +
+                    '</p>' +
+                    '<p class=\"mb-1 small\">' + coincidencia +
+                        ' <span class=\"badge bg-light text-dark border ms-1\">' + escapeHtml(etiquetaTipoBibliografia(r.tipoBibliografia)) + '</span>' +
+                    '</p>' +
+                    '<p class=\"mb-0 small text-secondary\">' +
+                        '<i class=\"fas fa-chalkboard-teacher me-1\"></i>' + escapeHtml(r.asignaturaNombre) +
+                        (r.codigoAsignatura ? ' <span class=\"text-muted\">(' + escapeHtml(r.codigoAsignatura) + ')</span>' : '') +
+                        '<br><i class=\"fas fa-graduation-cap me-1\"></i>' + escapeHtml(r.carreraNombre) +
+                        ' <span class=\"text-muted\">· ' + escapeHtml(r.sedeNombre) + '</span>' +
+                    '</p>' +
+                '</div>' +
+                '<div class=\"d-flex gap-2 flex-shrink-0 align-items-center\">' +
+                    '<a href=\"' + urlAsignatura + '\" class=\"btn btn-sm btn-primary\" target=\"_blank\" rel=\"noopener\">' +
+                        '<i class=\"fas fa-book-open me-1\"></i>Ver en asignatura' +
+                    '</a>' +
+                    '<a href=\"' + urlCarrera + '\" class=\"btn btn-sm btn-outline-secondary\">' +
+                        '<i class=\"fas fa-university me-1\"></i>Ver carrera' +
+                    '</a>' +
+                '</div>' +
+            '</div>';
+        lista.appendChild(item);
+    });
+}
+
+function carreraCoincideBusqueda(item, busqueda, tipoBusqueda) {
+    if (!busqueda) {
+        return true;
+    }
+    if (tipoBusqueda === 'carrera') {
+        const nombreCarrera = normalizarTextoBusqueda(item.getAttribute('data-nombre') || '');
+        return nombreCarrera.includes(busqueda);
+    }
+    return true;
+}
+
+const PLACEHOLDERS_BUSQUEDA = {
+    carrera: '¿Qué carrera buscas?',
+    asignatura_nombre: '¿Qué asignatura buscas?',
+    asignatura_codigo: 'Ej: DAII-00505',
+    titulo_autor: 'Título o nombre de autor'
+};
+
+function actualizarPlaceholderBusqueda() {
+    const tipoBusqueda = document.getElementById('tipoBusqueda');
+    const carreraSearch = document.getElementById('carreraSearch');
+    if (!tipoBusqueda || !carreraSearch) {
+        return;
+    }
+    carreraSearch.placeholder = PLACEHOLDERS_BUSQUEDA[tipoBusqueda.value] || PLACEHOLDERS_BUSQUEDA.carrera;
+}
+
 // Función global para filtrar carreras
 function filtrarCarreras() {
     console.log('=== EJECUTANDO FILTRO DE CARRERAS ===');
     
     const sedeSelect = document.getElementById('sedeSelect');
     const carreraSearch = document.getElementById('carreraSearch');
+    const tipoBusquedaEl = document.getElementById('tipoBusqueda');
     const carreraItems = document.querySelectorAll('.carrera-item');
     
     if (!sedeSelect || !carreraSearch) {
@@ -808,33 +1691,42 @@ function filtrarCarreras() {
     }
     
     const sedeSeleccionada = sedeSelect.value;
-    const busqueda = carreraSearch.value.toLowerCase().trim();
-    
-    console.log('Sede seleccionada:', sedeSeleccionada);
-    console.log('Búsqueda:', busqueda);
-    console.log('Total carreras:', carreraItems.length);
-    
+    const tipoBusqueda = tipoBusquedaEl ? tipoBusquedaEl.value : 'carrera';
+    const busqueda = tipoBusqueda === 'asignatura_codigo'
+        ? normalizarCodigoAsignatura(carreraSearch.value)
+        : normalizarTextoBusqueda(carreraSearch.value);
+
+    alternarVistaResultados(tipoBusqueda, busqueda);
+
+    if (tipoBusqueda === 'titulo_autor' && busqueda) {
+        const resultadosBib = recopilarBibliografiasCoincidentes(busqueda, sedeSeleccionada);
+        renderizarListadoBibliografias(resultadosBib);
+        return;
+    }
+
+    if ((tipoBusqueda === 'asignatura_nombre' || tipoBusqueda === 'asignatura_codigo') && busqueda) {
+        const resultados = recopilarAsignaturasCoincidentes(busqueda, tipoBusqueda, sedeSeleccionada);
+        renderizarListadoAsignaturas(resultados);
+        return;
+    }
+
     let carrerasMostradas = 0;
-    
-    carreraItems.forEach((item, index) => {
+
+    carreraItems.forEach(function(item) {
         const sedesCarrera = item.getAttribute('data-sedes') || '';
-        const nombreCarrera = item.getAttribute('data-nombre') || '';
-        
         let mostrar = true;
-        
-        // Filtro por sede
+
         if (sedeSeleccionada !== 'todas') {
-            const sedesArray = sedesCarrera.split(',').map(s => s.trim());
+            const sedesArray = sedesCarrera.split(',').map(function(s) { return s.trim(); });
             if (!sedesArray.includes(sedeSeleccionada)) {
                 mostrar = false;
             }
         }
-        
-        // Filtro por búsqueda
-        if (busqueda && !nombreCarrera.includes(busqueda)) {
+
+        if (busqueda && !carreraCoincideBusqueda(item, busqueda, tipoBusqueda)) {
             mostrar = false;
         }
-        
+
         if (mostrar) {
             item.style.display = 'block';
             item.classList.add('fade-in');
@@ -844,9 +1736,8 @@ function filtrarCarreras() {
             item.classList.remove('fade-in');
         }
     });
-    
+
     console.log('Carreras mostradas:', carrerasMostradas);
-    console.log('=== FILTRO COMPLETADO ===');
 }
 
 // Sincroniza la pestaña activa con el valor del select de sedes
@@ -868,6 +1759,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Verificar elementos
     const sedeSelect = document.getElementById('sedeSelect');
     const carreraSearch = document.getElementById('carreraSearch');
+    const tipoBusqueda = document.getElementById('tipoBusqueda');
     const buscarBtn = document.getElementById('buscarBtn');
     const tabButtons = document.querySelectorAll('.tab-btn');
     const carreraItems = document.querySelectorAll('.carrera-item');
@@ -889,6 +1781,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    if (tipoBusqueda) {
+        tipoBusqueda.addEventListener('change', function() {
+            actualizarPlaceholderBusqueda();
+            filtrarCarreras();
+        });
+        actualizarPlaceholderBusqueda();
+    }
+
     if (carreraSearch) {
         carreraSearch.addEventListener('input', function() {
             console.log('Búsqueda:', this.value);

@@ -132,6 +132,43 @@
             transition: all 0.3s ease;
         }
 
+        /* Indicador visual de menú desplegable en los select */
+        .filter-section .select-con-indicador {
+            position: relative;
+        }
+
+        .filter-section .select-con-indicador .form-select {
+            padding-right: 2.75rem;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: none;
+        }
+
+        .filter-section .select-indicador {
+            position: absolute;
+            right: 0.85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.75rem;
+            height: 1.75rem;
+            border-radius: 6px;
+            background: rgba(44, 62, 80, 0.08);
+            color: var(--primary-color);
+            font-size: 0.8rem;
+            line-height: 1;
+        }
+
+        .filter-section .select-con-indicador .form-select:focus + .select-indicador {
+            background: rgba(52, 152, 219, 0.15);
+            color: var(--secondary-color);
+        }
+
         .filter-section .form-select:focus,
         .filter-section .form-control:focus {
             background: rgba(255, 255, 255, 1);

@@ -80,15 +80,20 @@ class FrontendController
         $stmt->execute($params);
         $carreras = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        $carreras = $this->adjuntarAsignaturasParaBusquedaIndex($carreras);
+        $bibliografiasBusqueda = $this->obtenerBibliografiasParaBusquedaIndex();
+
         // Debug: log de datos
         error_log("Frontend - Total sedes: " . count($sedes));
         error_log("Frontend - Total carreras: " . count($carreras));
+        error_log("Frontend - Total bibliografías índice: " . count($bibliografiasBusqueda));
         error_log("Frontend - Sede filtro: " . ($sedeFiltro ?? 'ninguno'));
         
         $html = $twig->render('frontend/index.twig', [
             'carreras' => $carreras,
             'sedes' => $sedes,
-            'sede_filtro' => $sedeFiltro
+            'sede_filtro' => $sedeFiltro,
+            'bibliografias_busqueda_json' => json_encode($bibliografiasBusqueda, JSON_UNESCAPED_UNICODE),
         ]);
 
         $response->getBody()->write($html);
@@ -445,6 +450,171 @@ class FrontendController
 
         $response->getBody()->write($html);
         return $response;
+    }
+
+    /**
+     * Adjunta nombres y códigos de asignaturas por carrera/sede para búsqueda en el índice público.
+     */
+    private function adjuntarAsignaturasParaBusquedaIndex(array $carreras): array
+    {
+        if (empty($carreras)) {
+            return $carreras;
+        }
+
+        $stmt = $this->pdo->prepare("
+            SELECT
+                m.carrera_id,
+                ce.sede_id,
+                a.id AS asignatura_id,
+                a.nombre AS asignatura_nombre,
+                MAX(ad.codigo_asignatura) AS codigo_asignatura,
+                a.tipo AS tipo_asignatura,
+                MIN(m.semestre) AS semestre
+            FROM mallas m
+            INNER JOIN asignaturas a ON m.asignatura_id = a.id
+            INNER JOIN carreras c ON m.carrera_id = c.id
+            INNER JOIN carreras_espejos ce ON c.id = ce.carrera_id AND ce.estado = 1
+            LEFT JOIN asignaturas_departamentos ad ON a.id = ad.asignatura_id
+            LEFT JOIN unidades u ON ad.id_unidad = u.id
+            WHERE c.estado = 1
+              AND c.tipo_programa = 'P'
+              AND a.estado = 1
+              AND (
+                u.sede_id = ce.sede_id
+                OR a.tipo = 'FORMACION_ELECTIVA'
+              )
+            GROUP BY m.carrera_id, ce.sede_id, a.id, a.nombre, a.tipo
+        ");
+        $stmt->execute();
+
+        $porPlan = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+            $key = $fila['carrera_id'] . '_' . $fila['sede_id'];
+            if (!isset($porPlan[$key])) {
+                $porPlan[$key] = [];
+            }
+            $porPlan[$key][(int) $fila['asignatura_id']] = [
+                'id' => (int) $fila['asignatura_id'],
+                'nombre' => $fila['asignatura_nombre'],
+                'codigo' => $fila['codigo_asignatura'] ?? '',
+                'tipo' => $fila['tipo_asignatura'] ?? '',
+                'semestre' => $fila['semestre'] !== null ? (int) $fila['semestre'] : null,
+            ];
+        }
+
+        foreach ($carreras as &$carrera) {
+            $key = $carrera['id'] . '_' . $carrera['sede_id'];
+            $items = array_values($porPlan[$key] ?? []);
+            $nombres = [];
+            $codigos = [];
+            foreach ($items as $item) {
+                if (!empty($item['nombre'])) {
+                    $nombres[] = $item['nombre'];
+                }
+                if (!empty($item['codigo'])) {
+                    $codigos[] = $item['codigo'];
+                }
+            }
+            $carrera['asignaturas_busqueda'] = json_encode([
+                'items' => $items,
+                'nombres' => $nombres,
+                'codigos' => $codigos,
+            ], JSON_UNESCAPED_UNICODE);
+        }
+        unset($carrera);
+
+        return $carreras;
+    }
+
+    /**
+     * Catálogo de bibliografías declaradas (pregrado) para búsqueda por título o autor en el índice público.
+     */
+    private function obtenerBibliografiasParaBusquedaIndex(): array
+    {
+        $sql = "
+            SELECT
+                bd.id AS bibliografia_id,
+                bd.titulo,
+                GROUP_CONCAT(DISTINCT CONCAT(TRIM(au.apellidos), ', ', TRIM(au.nombres))
+                    ORDER BY au.apellidos, au.nombres SEPARATOR '; ') AS autores,
+                c.id AS carrera_id,
+                c.nombre AS carrera_nombre,
+                ce.sede_id,
+                s.nombre AS sede_nombre,
+                ce.vigencia_desde,
+                a.id AS asignatura_id,
+                a.nombre AS asignatura_nombre,
+                MAX(ad.codigo_asignatura) AS codigo_asignatura,
+                ab.tipo_bibliografia AS tipo_bibliografia
+            FROM bibliografias_declaradas bd
+            INNER JOIN asignaturas_bibliografias ab ON bd.id = ab.bibliografia_id AND ab.estado = 'activa'
+            INNER JOIN asignaturas a ON ab.asignatura_id = a.id AND a.estado = 1
+            INNER JOIN mallas m ON m.asignatura_id = a.id
+            INNER JOIN carreras c ON m.carrera_id = c.id AND c.estado = 1 AND c.tipo_programa = 'P'
+            INNER JOIN carreras_espejos ce ON c.id = ce.carrera_id AND ce.estado = 1
+            INNER JOIN sedes s ON ce.sede_id = s.id AND s.estado = 1
+            LEFT JOIN asignaturas_departamentos ad ON a.id = ad.asignatura_id
+            LEFT JOIN unidades u ON ad.id_unidad = u.id
+            LEFT JOIN bibliografias_autores ba ON bd.id = ba.bibliografia_id
+            LEFT JOIN autores au ON ba.autor_id = au.id
+            WHERE bd.estado = 1
+              AND (u.sede_id = ce.sede_id OR a.tipo = 'FORMACION_ELECTIVA')
+            GROUP BY bd.id, c.id, ce.sede_id, ce.vigencia_desde, a.id, a.nombre, ab.tipo_bibliografia, c.nombre, s.nombre, bd.titulo
+
+            UNION
+
+            SELECT
+                bd.id AS bibliografia_id,
+                bd.titulo,
+                GROUP_CONCAT(DISTINCT CONCAT(TRIM(au.apellidos), ', ', TRIM(au.nombres))
+                    ORDER BY au.apellidos, au.nombres SEPARATOR '; ') AS autores,
+                c.id AS carrera_id,
+                c.nombre AS carrera_nombre,
+                ce.sede_id,
+                s.nombre AS sede_nombre,
+                ce.vigencia_desde,
+                a_elec.id AS asignatura_id,
+                a_elec.nombre AS asignatura_nombre,
+                MAX(ad_elec.codigo_asignatura) AS codigo_asignatura,
+                ab.tipo_bibliografia AS tipo_bibliografia
+            FROM asignaturas_formacion af
+            INNER JOIN asignaturas_bibliografias ab ON af.asignatura_regular_id = ab.asignatura_id AND ab.estado = 'activa'
+            INNER JOIN bibliografias_declaradas bd ON ab.bibliografia_id = bd.id AND bd.estado = 1
+            INNER JOIN asignaturas a_elec ON af.asignatura_formacion_id = a_elec.id AND a_elec.estado = 1
+            INNER JOIN mallas m ON m.asignatura_id = a_elec.id
+            INNER JOIN carreras c ON m.carrera_id = c.id AND c.estado = 1 AND c.tipo_programa = 'P'
+            INNER JOIN carreras_espejos ce ON c.id = ce.carrera_id AND ce.estado = 1
+            INNER JOIN sedes s ON ce.sede_id = s.id AND s.estado = 1
+            LEFT JOIN asignaturas_departamentos ad_elec ON a_elec.id = ad_elec.asignatura_id
+            LEFT JOIN unidades u_elec ON ad_elec.id_unidad = u_elec.id
+            LEFT JOIN bibliografias_autores ba ON bd.id = ba.bibliografia_id
+            LEFT JOIN autores au ON ba.autor_id = au.id
+            WHERE (u_elec.sede_id = ce.sede_id OR a_elec.tipo = 'FORMACION_ELECTIVA')
+            GROUP BY bd.id, c.id, ce.sede_id, ce.vigencia_desde, a_elec.id, a_elec.nombre, ab.tipo_bibliografia, c.nombre, s.nombre, bd.titulo
+        ";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
+
+        $resultado = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+            $resultado[] = [
+                'id' => (int) $fila['bibliografia_id'],
+                'titulo' => $fila['titulo'] ?? '',
+                'autores' => $fila['autores'] ?? '',
+                'carreraId' => (int) $fila['carrera_id'],
+                'carreraNombre' => $fila['carrera_nombre'] ?? '',
+                'sedeId' => (int) $fila['sede_id'],
+                'sedeNombre' => $fila['sede_nombre'] ?? '',
+                'vigenciaDesde' => $fila['vigencia_desde'] ?? '',
+                'asignaturaId' => (int) $fila['asignatura_id'],
+                'asignaturaNombre' => $fila['asignatura_nombre'] ?? '',
+                'codigoAsignatura' => $fila['codigo_asignatura'] ?? '',
+                'tipoBibliografia' => $fila['tipo_bibliografia'] ?? '',
+            ];
+        }
+
+        return $resultado;
     }
 
     /**

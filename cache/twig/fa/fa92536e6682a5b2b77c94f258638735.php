@@ -174,6 +174,43 @@ class __TwigTemplate_b61d14249b4a771cd235b86de19fdd03 extends Template
             transition: all 0.3s ease;
         }
 
+        /* Indicador visual de menú desplegable en los select */
+        .filter-section .select-con-indicador {
+            position: relative;
+        }
+
+        .filter-section .select-con-indicador .form-select {
+            padding-right: 2.75rem;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: none;
+        }
+
+        .filter-section .select-indicador {
+            position: absolute;
+            right: 0.85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.75rem;
+            height: 1.75rem;
+            border-radius: 6px;
+            background: rgba(44, 62, 80, 0.08);
+            color: var(--primary-color);
+            font-size: 0.8rem;
+            line-height: 1;
+        }
+
+        .filter-section .select-con-indicador .form-select:focus + .select-indicador {
+            background: rgba(52, 152, 219, 0.15);
+            color: var(--secondary-color);
+        }
+
         .filter-section .form-select:focus,
         .filter-section .form-control:focus {
             background: rgba(255, 255, 255, 1);
@@ -823,16 +860,16 @@ class __TwigTemplate_b61d14249b4a771cd235b86de19fdd03 extends Template
     </style>
 
     ";
-        // line 783
+        // line 820
         yield from $this->unwrap()->yieldBlock('extra_css', $context, $blocks);
-        // line 784
+        // line 821
         yield "</head>
 <body>
     <!-- Navbar -->
     <nav class=\"navbar navbar-expand-lg navbar-dark\">
         <div class=\"container\">
             <a class=\"navbar-brand\" href=\"";
-        // line 789
+        // line 826
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "\">
                 <i class=\"fas fa-book-open me-2\"></i>
@@ -847,7 +884,7 @@ class __TwigTemplate_b61d14249b4a771cd235b86de19fdd03 extends Template
                 <ul class=\"navbar-nav ms-auto\">
                     <li class=\"nav-item\">
                         <a class=\"nav-link\" href=\"";
-        // line 801
+        // line 838
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["app_url"] ?? null), "html", null, true);
         yield "\">
                             <i class=\"fas fa-home me-1\"></i>
@@ -856,7 +893,7 @@ class __TwigTemplate_b61d14249b4a771cd235b86de19fdd03 extends Template
                     </li>
                     <li class=\"nav-item\">
                         <a class=\"nav-link\" href=\"";
-        // line 807
+        // line 844
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(($context["admin_url"] ?? null), "html", null, true);
         yield "\">
                             <i class=\"fas fa-cog me-1\"></i>
@@ -871,9 +908,9 @@ class __TwigTemplate_b61d14249b4a771cd235b86de19fdd03 extends Template
     <!-- Main Content -->
     <main>
         ";
-        // line 819
+        // line 856
         yield from $this->unwrap()->yieldBlock('content', $context, $blocks);
-        // line 820
+        // line 857
         yield "    </main>
 
     <!-- Footer -->
@@ -886,7 +923,7 @@ class __TwigTemplate_b61d14249b4a771cd235b86de19fdd03 extends Template
                 </div>
                 <div class=\"col-md-6 text-md-end\">
                     <p>&copy; ";
-        // line 831
+        // line 868
         yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->extensions['Twig\Extension\CoreExtension']->formatDate("now", "Y"), "html", null, true);
         yield " Universidad Católica del Norte. Todos los derechos reservados.</p>
                 </div>
@@ -1028,12 +1065,12 @@ class __TwigTemplate_b61d14249b4a771cd235b86de19fdd03 extends Template
     </script>
 
     ";
-        // line 970
+        // line 1007
         yield from $this->unwrap()->yieldBlock('extra_js', $context, $blocks);
-        // line 971
+        // line 1008
         yield "    ";
         yield from $this->unwrap()->yieldBlock('scripts', $context, $blocks);
-        // line 972
+        // line 1009
         yield "</body>
 </html> ";
         yield from [];
@@ -1104,7 +1141,7 @@ class __TwigTemplate_b61d14249b4a771cd235b86de19fdd03 extends Template
         yield from [];
     }
 
-    // line 783
+    // line 820
     /**
      * @return iterable<null|scalar|\Stringable>
      */
@@ -1114,7 +1151,7 @@ class __TwigTemplate_b61d14249b4a771cd235b86de19fdd03 extends Template
         yield from [];
     }
 
-    // line 819
+    // line 856
     /**
      * @return iterable<null|scalar|\Stringable>
      */
@@ -1124,7 +1161,7 @@ class __TwigTemplate_b61d14249b4a771cd235b86de19fdd03 extends Template
         yield from [];
     }
 
-    // line 970
+    // line 1007
     /**
      * @return iterable<null|scalar|\Stringable>
      */
@@ -1134,7 +1171,7 @@ class __TwigTemplate_b61d14249b4a771cd235b86de19fdd03 extends Template
         yield from [];
     }
 
-    // line 971
+    // line 1008
     /**
      * @return iterable<null|scalar|\Stringable>
      */
@@ -1165,7 +1202,7 @@ class __TwigTemplate_b61d14249b4a771cd235b86de19fdd03 extends Template
      */
     public function getDebugInfo(): array
     {
-        return array (  1138 => 971,  1128 => 970,  1118 => 819,  1108 => 783,  1101 => 21,  1097 => 20,  1093 => 19,  1087 => 16,  1083 => 15,  1079 => 14,  1075 => 13,  1071 => 12,  1066 => 10,  1061 => 9,  1054 => 8,  1043 => 7,  1037 => 972,  1034 => 971,  1032 => 970,  890 => 831,  877 => 820,  875 => 819,  860 => 807,  851 => 801,  836 => 789,  829 => 784,  827 => 783,  66 => 25,  62 => 23,  60 => 8,  56 => 7,  48 => 1,);
+        return array (  1175 => 1008,  1165 => 1007,  1155 => 856,  1145 => 820,  1138 => 21,  1134 => 20,  1130 => 19,  1124 => 16,  1120 => 15,  1116 => 14,  1112 => 13,  1108 => 12,  1103 => 10,  1098 => 9,  1091 => 8,  1080 => 7,  1074 => 1009,  1071 => 1008,  1069 => 1007,  927 => 868,  914 => 857,  912 => 856,  897 => 844,  888 => 838,  873 => 826,  866 => 821,  864 => 820,  66 => 25,  62 => 23,  60 => 8,  56 => 7,  48 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -1302,6 +1339,43 @@ class __TwigTemplate_b61d14249b4a771cd235b86de19fdd03 extends Template
             background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(5px);
             transition: all 0.3s ease;
+        }
+
+        /* Indicador visual de menú desplegable en los select */
+        .filter-section .select-con-indicador {
+            position: relative;
+        }
+
+        .filter-section .select-con-indicador .form-select {
+            padding-right: 2.75rem;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: none;
+        }
+
+        .filter-section .select-indicador {
+            position: absolute;
+            right: 0.85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.75rem;
+            height: 1.75rem;
+            border-radius: 6px;
+            background: rgba(44, 62, 80, 0.08);
+            color: var(--primary-color);
+            font-size: 0.8rem;
+            line-height: 1;
+        }
+
+        .filter-section .select-con-indicador .form-select:focus + .select-indicador {
+            background: rgba(52, 152, 219, 0.15);
+            color: var(--secondary-color);
         }
 
         .filter-section .form-select:focus,
