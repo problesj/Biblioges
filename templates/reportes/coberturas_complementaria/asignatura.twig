@@ -110,19 +110,17 @@
                                     {% endif %}
                                 </td>
                                 <td class="text-center">
-                                    {% if bibliografia.ejemplares_impresos == -2 %}
-                                        <span class="text-muted">Sin ejemplares disponibles</span>
-                                    {% elseif bibliografia.ejemplares_impresos == -1 %}
-                                        <span class="text-muted">Sin ejemplares impresos</span>
+                                    {% if bibliografia.ejemplares_impresos < 0 %}
+                                        <span class="text-muted">No disponibles</span>
                                     {% else %}
                                         {{ bibliografia.ejemplares_impresos }}
                                     {% endif %}
                                 </td>
                                 <td class="text-center">
-                                    {% if bibliografia.ejemplares_digitales == -2 %}
-                                        <span class="text-muted">Sin ejemplares disponibles</span>
-                                    {% elseif bibliografia.ejemplares_digitales == -1 %}
-                                        <span class="text-muted">Sin ejemplares digitales</span>
+                                    {% if bibliografia.ejemplares_digitales < 0 and bibliografia.ejemplares_digitales != -3 %}
+                                        <span class="text-muted">No disponibles</span>
+                                    {% elseif bibliografia.ejemplares_digitales == -3 %}
+                                        <span class="text-warning">Ilimitado parcialmente</span>
                                     {% elseif bibliografia.ejemplares_digitales == 0 %}
                                         <span class="text-muted">Ilimitado</span>
                                     {% else %}
@@ -180,8 +178,8 @@ function exportarCSV() {
         '"{{ bibliografia.isbn|replace({'"': '""'}) }}"',
         '"{{ bibliografia.doi|replace({'"': '""'}) }}"',
         '"{{ bibliografia.formato|title }}"',
-        '{{ bibliografia.ejemplares_impresos == -2 ? "Sin ejemplares disponibles" : (bibliografia.ejemplares_impresos == -1 ? "Sin ejemplares impresos" : bibliografia.ejemplares_impresos) }}',
-        '{{ bibliografia.ejemplares_digitales == -2 ? "Sin ejemplares disponibles" : (bibliografia.ejemplares_digitales == -1 ? "Sin ejemplares digitales" : (bibliografia.ejemplares_digitales == 0 ? "Ilimitado" : bibliografia.ejemplares_digitales)) }}',
+        '{{ bibliografia.ejemplares_impresos < 0 ? "No disponibles" : bibliografia.ejemplares_impresos }}',
+        '{{ bibliografia.ejemplares_digitales == -3 ? "Ilimitado parcialmente" : (bibliografia.ejemplares_digitales < 0 ? "No disponibles" : (bibliografia.ejemplares_digitales == 0 ? "Ilimitado" : bibliografia.ejemplares_digitales)) }}',
         '"{{ bibliografia.disponible ? "Disponible" : "No disponible" }}"'
     ];
     csvContent += row{{ loop.index }}.join(',') + '\n';

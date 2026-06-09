@@ -175,21 +175,17 @@
                                     </td>
                                     <td class="text-center">{{ fila.anio_edicion }}</td>
                                     <td class="text-center">
-                                        {% if fila.ejemplares_impresos == -2 %}
-                                            <span class="text-muted">Sin información</span>
-                                        {% elseif fila.ejemplares_impresos == -1 %}
-                                            <span class="text-muted">Sin ejemplares impresos</span>
+                                        {% if fila.ejemplares_impresos < 0 %}
+                                            <span class="text-muted">No disponibles</span>
                                         {% else %}
                                             {{ fila.ejemplares_impresos }}
                                         {% endif %}
                                     </td>
                                     <td class="text-center">
-                                        {% if fila.ejemplares_digitales == -2 %}
-                                            <span class="text-muted">Sin información</span>
-                                        {% elseif fila.ejemplares_digitales == -3 %}
+                                        {% if fila.ejemplares_digitales == -3 %}
                                             <span class="text-warning">Ilimitado parcialmente</span>
-                                        {% elseif fila.ejemplares_digitales == -1 %}
-                                            <span class="text-muted">Sin ejemplares digitales</span>
+                                        {% elseif fila.ejemplares_digitales < 0 %}
+                                            <span class="text-muted">No disponibles</span>
                                         {% elseif fila.ejemplares_digitales == 0 %}
                                             <span class="text-success">Ilimitado</span>
                                         {% else %}
@@ -236,10 +232,8 @@
                                         <div class="col-md-3">
                                             <div class="text-center">
                                                 <h4 class="text-success">
-                                                    {% if totales_carrera.ejemplares_impresos == -2 %}
-                                                        Sin información
-                                                    {% elseif totales_carrera.ejemplares_impresos == -1 %}
-                                                        Sin ejemplares impresos
+                                                    {% if totales_carrera.ejemplares_impresos < 0 %}
+                                                        No disponibles
                                                     {% else %}
                                                         {{ totales_carrera.ejemplares_impresos }}
                                                     {% endif %}
@@ -250,12 +244,10 @@
                                         <div class="col-md-3">
                                             <div class="text-center">
                                                 <h4 class="text-info">
-                                                    {% if totales_carrera.ejemplares_digitales == -2 %}
-                                                        Sin información
-                                                    {% elseif totales_carrera.ejemplares_digitales == -3 %}
+                                                    {% if totales_carrera.ejemplares_digitales == -3 %}
                                                         Ilimitado parcialmente
-                                                    {% elseif totales_carrera.ejemplares_digitales == -1 %}
-                                                        Sin ejemplares digitales
+                                                    {% elseif totales_carrera.ejemplares_digitales < 0 %}
+                                                        No disponibles
                                                     {% elseif totales_carrera.titulos_disponibles > 0 and totales_carrera.ejemplares_digitales == 0 %}
                                                         Ilimitado
                                                     {% else %}
@@ -587,18 +579,14 @@ function guardarReporte() {
         // Convertir ejemplares a números, manejando valores especiales
         let ejemImp, ejemDig;
         
-        if (ejemplaresImpresos === 'Sin ejemplares disponibles') {
-            ejemImp = 'Sin ejemplares disponibles';
-        } else if (ejemplaresImpresos === 'Sin ejemplares impresos') {
-            ejemImp = 'Sin ejemplares impresos';
+        if (ejemplaresImpresos === 'No disponibles' || ejemplaresImpresos === 'Sin ejemplares disponibles' || ejemplaresImpresos === 'Sin ejemplares impresos' || ejemplaresImpresos === 'Sin información') {
+            ejemImp = 'No disponibles';
         } else {
             ejemImp = parseInt(ejemplaresImpresos) || 0;
         }
         
-        if (ejemplaresDigitales === 'Sin ejemplares disponibles') {
-            ejemDig = 'Sin ejemplares disponibles';
-        } else if (ejemplaresDigitales === 'Sin ejemplares digitales') {
-            ejemDig = 'Sin ejemplares digitales';
+        if (ejemplaresDigitales === 'No disponibles' || ejemplaresDigitales === 'Sin ejemplares disponibles' || ejemplaresDigitales === 'Sin ejemplares digitales' || ejemplaresDigitales === 'Sin información') {
+            ejemDig = 'No disponibles';
         } else if (ejemplaresDigitales === 'Ilimitado') {
             ejemDig = 'Ilimitado';
         } else {

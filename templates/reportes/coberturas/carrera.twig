@@ -182,21 +182,17 @@
                                     <td class="text-center">{{ asignatura.titulos_declarados }}</td>
                                     <td class="text-center">{{ asignatura.titulos_disponibles }}</td>
                                     <td class="text-center">
-                                        {% if asignatura.ejemplares_impresos == -2 %}
-                                            <span class="text-muted">Sin información</span>
-                                        {% elseif asignatura.ejemplares_impresos == -1 %}
-                                            <span class="text-muted">Sin ejemplares impresos</span>
+                                        {% if asignatura.ejemplares_impresos < 0 %}
+                                            <span class="text-muted">No disponibles</span>
                                         {% else %}
                                             {{ asignatura.ejemplares_impresos }}
                                         {% endif %}
                                     </td>
                                     <td class="text-center">
-                                        {% if asignatura.ejemplares_digitales == -2 %}
-                                            <span class="text-muted">Sin información</span>
-                                        {% elseif asignatura.ejemplares_digitales == -3 %}
+                                        {% if asignatura.ejemplares_digitales == -3 %}
                                             <span class="text-warning">Ilimitado parcialmente</span>
                                         {% elseif asignatura.ejemplares_digitales < 0 %}
-                                            <span class="text-muted">Sin ejemplares digitales</span>
+                                            <span class="text-muted">No disponibles</span>
                                         {% elseif asignatura.titulos_disponibles > 0 and asignatura.ejemplares_digitales == 0 %}
                                             <span class="text-success">Ilimitado</span>
                                         {% else %}
@@ -252,10 +248,8 @@
                         <div class="col-md-2">
                             <div class="text-center">
                                 <h4 class="text-success">
-                                    {% if totales_carrera.ejemplares_impresos == -2 %}
-                                        Sin información
-                                    {% elseif totales_carrera.ejemplares_impresos == -1 %}
-                                        Sin ejemplares impresos
+                                    {% if totales_carrera.ejemplares_impresos < 0 %}
+                                        No disponibles
                                     {% else %}
                                         {{ totales_carrera.ejemplares_impresos }}
                                     {% endif %}
@@ -266,12 +260,10 @@
                         <div class="col-md-2">
                             <div class="text-center">
                                 <h4 class="text-info">
-                                    {% if totales_carrera.ejemplares_digitales == -2 %}
-                                        Sin información
-                                    {% elseif totales_carrera.ejemplares_digitales == -3 %}
+                                    {% if totales_carrera.ejemplares_digitales == -3 %}
                                         Ilimitado parcialmente
                                     {% elseif totales_carrera.ejemplares_digitales < 0 %}
-                                        Sin ejemplares digitales
+                                        No disponibles
                                     {% elseif totales_carrera.titulos_disponibles > 0 and totales_carrera.ejemplares_digitales == 0 %}
                                         Ilimitado
                                     {% else %}

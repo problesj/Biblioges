@@ -31,11 +31,12 @@ class ReporteController extends BaseController
         
         // Convertir strings especiales a números
         switch ($valor) {
+            case 'No disponibles':
             case 'Sin ejemplares impresos':
             case 'Sin ejemplares digitales':
-                return -1;
             case 'Sin ejemplares disponibles':
-                return -2;
+            case 'Sin información':
+                return -1;
             case 'Ilimitado':
                 return 0;
             default:
@@ -578,12 +579,10 @@ class ReporteController extends BaseController
      * Convierte valores especiales de ejemplares a texto legible para exportación
      */
     private function convertirValorEspecial($valor, $tipo = 'digitales', $titulosDisponibles = 0) {
-        if ($valor == -2) {
-            return 'Sin información';
+        if ($valor == -2 || $valor == -1) {
+            return 'No disponibles';
         } elseif ($valor == -3) {
             return 'Ilimitado parcialmente';
-        } elseif ($valor == -1) {
-            return $tipo == 'digitales' ? 'Sin ejemplares digitales' : 'Sin ejemplares impresos';
         } elseif ($valor == 0 && $titulosDisponibles > 0) {
             return 'Ilimitado';
         } else {
@@ -719,6 +718,32 @@ class ReporteController extends BaseController
         uasort($asignaturas, function ($a, $b) {
             return strcasecmp($a['nombre'] ?? '', $b['nombre'] ?? '');
         });
+    }
+
+    /**
+     * Códigos de asignatura (regulares y formación) del plan de carrera seleccionado.
+     * Evita mezclar asignaturas de planes no vigentes que comparten el mismo código de carrera.
+     */
+    private function obtenerCodigosAsignaturaPlanCarrera(int $carreraId, int $sedeId, string $codigoCarrera): array
+    {
+        $codigosRegulares = DB::table('vw_mallas')
+            ->where('id_sede', $sedeId)
+            ->where('id_carrera', $carreraId)
+            ->where('codigo_carrera', $codigoCarrera)
+            ->where('tipo_asignatura', 'REGULAR')
+            ->whereNotNull('codigo_asignatura')
+            ->distinct()
+            ->pluck('codigo_asignatura');
+
+        $codigosFormacion = DB::table('vw_mallas')
+            ->where('id_sede', $sedeId)
+            ->where('id_carrera', $carreraId)
+            ->where('codigo_carrera', $codigoCarrera)
+            ->whereNotNull('codigo_asignatura_formacion')
+            ->distinct()
+            ->pluck('codigo_asignatura_formacion');
+
+        return $codigosRegulares->merge($codigosFormacion)->unique()->filter()->values()->all();
     }
 
     public function __construct()
@@ -3244,6 +3269,7 @@ class ReporteController extends BaseController
         // Obtener asignaturas REGULARES (siempre incluidas)
         $regulares = DB::table('vw_mallas')
             ->where('id_sede', $sedeId)
+            ->where('id_carrera', $carreraId)
             ->where('codigo_carrera', $carrera->codigo)
             ->where('tipo_asignatura', 'REGULAR')
             ->select('codigo_asignatura as codigo', 'asignatura as nombre', 'tipo_asignatura')
@@ -3258,6 +3284,7 @@ class ReporteController extends BaseController
             // Si hay filtros aplicados explícitamente, usar solo los seleccionados
         $formaciones = DB::table('vw_mallas')
                 ->where('id_sede', $sedeId)
+            ->where('id_carrera', $carreraId)
             ->where('codigo_carrera', $carrera->codigo)
                 ->whereIn('tipo_asignatura', $tiposFormacionFiltro)
             ->whereNotNull('codigo_asignatura_formacion')
@@ -4381,6 +4408,7 @@ class ReporteController extends BaseController
             // Obtener asignaturas REGULARES (siempre incluidas)
             $regulares = DB::table('vw_mallas')
                 ->where('id_sede', $sedeId)
+                ->where('id_carrera', $carreraId)
                 ->where('codigo_carrera', $carrera->codigo)
                 ->where('tipo_asignatura', 'REGULAR')
                 ->select('codigo_asignatura as codigo', 'asignatura as nombre', 'tipo_asignatura')
@@ -4523,8 +4551,8 @@ class ReporteController extends BaseController
                     'tipo_asignatura' => $asignatura->tipo_asignatura,
                     'titulo_declarado' => '',
                     'anio_edicion' => '',
-                    'ejemplares_impresos' => 'Sin información',
-                    'ejemplares_digitales' => 'Sin información',
+                    'ejemplares_impresos' => 'No disponibles',
+                    'ejemplares_digitales' => 'No disponibles',
                     'cobertura' => 0,
                     'disponible' => false,
                     'id_bibliografia_declarada' => null
@@ -4854,6 +4882,7 @@ class ReporteController extends BaseController
         // Obtener asignaturas REGULARES (siempre incluidas)
         $regulares = DB::table('vw_mallas')
             ->where('id_sede', $sedeId)
+            ->where('id_carrera', $carreraId)
             ->where('codigo_carrera', $carrera->codigo)
                 ->where('tipo_asignatura', 'REGULAR')
                 ->select('codigo_asignatura as codigo', 'asignatura as nombre', 'tipo_asignatura')
@@ -4867,6 +4896,7 @@ class ReporteController extends BaseController
             // Si hay filtros aplicados explícitamente, usar solo los seleccionados
                 $formaciones = DB::table('vw_mallas')
                 ->where('id_sede', $sedeId)
+                ->where('id_carrera', $carreraId)
                 ->where('codigo_carrera', $carrera->codigo)
                 ->whereIn('tipo_asignatura', $tiposFormacionFiltro)
                 ->whereNotNull('codigo_asignatura_formacion')
@@ -5154,6 +5184,7 @@ class ReporteController extends BaseController
         // Obtener asignaturas REGULARES (siempre incluidas)
         $regulares = DB::table('vw_mallas')
             ->where('id_sede', $sedeId)
+            ->where('id_carrera', $carreraId)
             ->where('codigo_carrera', $carrera->codigo)
             ->where('tipo_asignatura', 'REGULAR')
             ->select('codigo_asignatura as codigo', 'asignatura as nombre', 'tipo_asignatura')
@@ -5167,6 +5198,7 @@ class ReporteController extends BaseController
             // Si hay filtros aplicados explícitamente, usar solo los seleccionados
             $formaciones = DB::table('vw_mallas')
                 ->where('id_sede', $sedeId)
+                ->where('id_carrera', $carreraId)
                 ->where('codigo_carrera', $carrera->codigo)
                 ->whereIn('tipo_asignatura', $tiposFormacionFiltro)
                 ->whereNotNull('codigo_asignatura_formacion')
@@ -5266,8 +5298,8 @@ class ReporteController extends BaseController
                         'tipo_asignatura' => $asignatura->tipo_asignatura,
                         'titulo_declarado' => '',
                         'anio_edicion' => '',
-                        'ejemplares_impresos' => 'Sin información',
-                        'ejemplares_digitales' => 'Sin información',
+                        'ejemplares_impresos' => 'No disponibles',
+                        'ejemplares_digitales' => 'No disponibles',
                         'cobertura' => 0,
                         'disponible' => false,
                         'id_bibliografia_declarada' => null
@@ -5553,6 +5585,20 @@ class ReporteController extends BaseController
                 'no_bib_disponible_complementaria as disponible'
             )
             ->get();
+
+        $codigosAsignaturaPlan = $this->obtenerCodigosAsignaturaPlanCarrera(
+            (int) $carreraId,
+            (int) $sedeId,
+            (string) $carrera->codigo
+        );
+        if (!empty($codigosAsignaturaPlan)) {
+            $datosBasicos = $datosBasicos->filter(function ($dato) use ($codigosAsignaturaPlan) {
+                return in_array($dato->codigo_asignatura, $codigosAsignaturaPlan, true);
+            })->values();
+            $datosComplementarios = $datosComplementarios->filter(function ($dato) use ($codigosAsignaturaPlan) {
+                return in_array($dato->codigo_asignatura, $codigosAsignaturaPlan, true);
+            })->values();
+        }
 
         // Si no hay datos guardados, mostrar alerta
         if ($datosBasicos->isEmpty() && $datosComplementarios->isEmpty()) {
@@ -5848,6 +5894,20 @@ class ReporteController extends BaseController
             ->where('id_carrera_espejo', $carreraEspejo->id)
             ->whereYear('fecha_medicion', date('Y'))
             ->get();
+
+        $codigosAsignaturaPlan = $this->obtenerCodigosAsignaturaPlanCarrera(
+            (int) $carreraId,
+            (int) $sedeId,
+            (string) $carreraEspejo->codigo_carrera
+        );
+        if (!empty($codigosAsignaturaPlan)) {
+            $datosBasicos = $datosBasicos->filter(function ($dato) use ($codigosAsignaturaPlan) {
+                return in_array($dato->codigo_asignatura, $codigosAsignaturaPlan, true);
+            })->values();
+            $datosComplementarios = $datosComplementarios->filter(function ($dato) use ($codigosAsignaturaPlan) {
+                return in_array($dato->codigo_asignatura, $codigosAsignaturaPlan, true);
+            })->values();
+        }
 
         // Si no hay datos, retornar error
         if ($datosBasicos->isEmpty() && $datosComplementarios->isEmpty()) {

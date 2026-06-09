@@ -132,10 +132,8 @@
                                                 <td class="text-center">{{ b ? b.anio_edicion : '' }}</td>
                                                 <td class="text-center">
                                                     {% if b %}
-                                                        {% if b.ejemplares_impresos == -2 %}
-                                                            <span class="text-muted">Sin información</span>
-                                                        {% elseif b.ejemplares_impresos == -1 %}
-                                                            <span class="text-muted">Sin ejemplares impresos</span>
+                                                        {% if b.ejemplares_impresos == -2 or b.ejemplares_impresos == -1 %}
+                                                            <span class="text-muted">No disponibles</span>
                                                         {% else %}
                                                             {{ b.ejemplares_impresos }}
                                                         {% endif %}
@@ -143,12 +141,10 @@
                                                 </td>
                                                 <td class="text-center">
                                                     {% if b %}
-                                                        {% if b.ejemplares_digitales == -2 %}
-                                                            <span class="text-muted">Sin información</span>
+                                                        {% if b.ejemplares_digitales == -2 or b.ejemplares_digitales == -1 %}
+                                                            <span class="text-muted">No disponibles</span>
                                                         {% elseif b.ejemplares_digitales == -3 %}
                                                             <span class="text-warning">Ilimitado parcialmente</span>
-                                                        {% elseif b.ejemplares_digitales == -1 %}
-                                                            <span class="text-muted">Sin ejemplares digitales</span>
                                                         {% elseif b.ejemplares_digitales == 0 %}
                                                             <span class="text-success">Ilimitado</span>
                                                         {% else %}
@@ -167,10 +163,8 @@
                                                 <td class="text-center">{{ c ? c.anio_edicion : '' }}</td>
                                                 <td class="text-center">
                                                     {% if c %}
-                                                        {% if c.ejemplares_impresos == -2 %}
-                                                            <span class="text-muted">Sin información</span>
-                                                        {% elseif c.ejemplares_impresos == -1 %}
-                                                            <span class="text-muted">Sin ejemplares impresos</span>
+                                                        {% if c.ejemplares_impresos == -2 or c.ejemplares_impresos == -1 %}
+                                                            <span class="text-muted">No disponibles</span>
                                                         {% else %}
                                                             {{ c.ejemplares_impresos }}
                                                         {% endif %}
@@ -178,12 +172,10 @@
                                                 </td>
                                                 <td class="text-center">
                                                     {% if c %}
-                                                        {% if c.ejemplares_digitales == -2 %}
-                                                            <span class="text-muted">Sin información</span>
+                                                        {% if c.ejemplares_digitales == -2 or c.ejemplares_digitales == -1 %}
+                                                            <span class="text-muted">No disponibles</span>
                                                         {% elseif c.ejemplares_digitales == -3 %}
                                                             <span class="text-warning">Ilimitado parcialmente</span>
-                                                        {% elseif c.ejemplares_digitales == -1 %}
-                                                            <span class="text-muted">Sin ejemplares digitales</span>
                                                         {% elseif c.ejemplares_digitales == 0 %}
                                                             <span class="text-success">Ilimitado</span>
                                                         {% else %}
