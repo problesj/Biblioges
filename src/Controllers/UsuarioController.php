@@ -693,8 +693,8 @@ class UsuarioController extends BaseController
                 return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
             }
             $passwordActual = $data['password_actual'] ?? '';
-            $passwordNuevo = $data['password_nuevo'] ?? '';
-            $passwordConfirmar = $data['password_confirmar'] ?? '';
+            $passwordNuevo = $data['nueva_password'] ?? $data['password_nuevo'] ?? '';
+            $passwordConfirmar = $data['confirmar_password'] ?? $data['password_confirmar'] ?? '';
             if ($passwordActual === '' || $passwordNuevo === '' || $passwordConfirmar === '') {
                 $response->getBody()->write(json_encode(['success' => false, 'message' => 'Todos los campos de contraseña son obligatorios']));
                 return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
@@ -718,11 +718,9 @@ class UsuarioController extends BaseController
                 $response->getBody()->write(json_encode(['success' => false, 'message' => 'La contraseña actual es incorrecta']));
                 return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
             }
-            // Hashear nueva contraseña
-            $passwordHash = password_hash($passwordNuevo, PASSWORD_DEFAULT);
-            // Actualizar contraseña
+            // Actualizar contraseña (Usuario::update() aplica password_hash)
             $this->usuarioModel->update($userId, [
-                'password' => $passwordHash
+                'password' => $passwordNuevo
             ]);
             $response->getBody()->write(json_encode(['success' => true, 'message' => 'Contraseña actualizada correctamente']));
             return $response->withHeader('Content-Type', 'application/json');
