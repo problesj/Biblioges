@@ -5,7 +5,8 @@ CREATE DATABASE IF NOT EXISTS bibliografia CHARACTER SET utf8mb4 COLLATE utf8mb4
 USE bibliografia;
 
 -- Crear usuario si no existe
-CREATE USER IF NOT EXISTS 'biblioges'@'localhost' IDENTIFIED BY 'joyal2025$';
+-- Reemplazar CAMBIAR_ESTA_CLAVE por la clave definida en DB_PASSWORD (.env)
+CREATE USER IF NOT EXISTS 'biblioges'@'localhost' IDENTIFIED BY 'CAMBIAR_ESTA_CLAVE';
 
 -- Otorgar permisos
 GRANT ALL PRIVILEGES ON bibliografia.* TO 'biblioges'@'localhost';

@@ -8,12 +8,8 @@ if (file_exists($envFile)) {
     $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
     $dotenv->load();
 } else {
-    // Configuración por defecto si no existe .env
-    $_ENV['DB_HOST'] = 'localhost';
-    $_ENV['DB_PORT'] = '3306';
-    $_ENV['DB_DATABASE'] = 'bibliografia';
-    $_ENV['DB_USERNAME'] = 'biblioges';
-    $_ENV['DB_PASSWORD'] = 'joyal2025$';
+    fwrite(STDERR, "Falta el archivo .env: configure las credenciales de la base de datos\n");
+    exit(1);
 }
 
 // Configuración de la base de datos ROOT (para crear usuario y base de datos)
@@ -21,13 +17,13 @@ $rootConfig = [
     'host' => $_ENV['DB_HOST'] ?? 'localhost',
     'port' => $_ENV['DB_PORT'] ?? '3306',
     'user' => 'root',
-    'password' => $_ENV['DB_PASSWORD'] ?? 'joyal2025$' // Se asume que el root usa la misma contraseña, ajustar si es necesario
+    'password' => $_ENV['DB_PASSWORD'] ?? '' // Se asume que el root usa la misma contraseña, ajustar si es necesario
 ];
 
 // Datos de producción
 $prodDbName = $_ENV['DB_DATABASE'] ?? 'bibliografia';
 $prodUser = $_ENV['DB_USERNAME'] ?? 'biblioges';
-$prodPassword = $_ENV['DB_PASSWORD'] ?? 'joyal2025$';
+$prodPassword = $_ENV['DB_PASSWORD'] ?? '';
 
 try {
     // Conectar a MySQL como root sin seleccionar base de datos

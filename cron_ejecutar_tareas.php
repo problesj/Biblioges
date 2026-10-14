@@ -7,11 +7,9 @@
 // Incluir el autoloader de Composer
 require_once __DIR__ . '/vendor/autoload.php';
 
-// Configurar variables de entorno para la base de datos
-$_ENV['DB_HOST'] = 'localhost';
-$_ENV['DB_DATABASE'] = 'bibliografia';
-$_ENV['DB_USERNAME'] = 'biblioges';
-$_ENV['DB_PASSWORD'] = 'joyal2025$';
+// Cargar variables de entorno (credenciales de la base de datos) desde .env
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv->load();
 
 // Inicializar la base de datos
 $capsule = new Illuminate\Database\Capsule\Manager;

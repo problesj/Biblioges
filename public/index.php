@@ -67,15 +67,9 @@ if (file_exists($envFile)) {
     $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
     $dotenv->load();
 } else {
-                $section = 'carreras'; // Por defecto
-    // Configuración por defecto si no existe .env
-    $_ENV['DB_HOST'] = '127.0.0.1';
-    $_ENV['DB_PORT'] = '3306';
-    $_ENV['DB_DATABASE'] = 'bibliografia';
-    $_ENV['DB_USERNAME'] = 'biblioges';
-    $_ENV['DB_PASSWORD'] = 'joyal2025$';
-    $_ENV['APP_URL'] = 'https://biblioges.ucn.cl/biblioges/';
-    $_ENV['APP_DEBUG'] = 'true';
+    error_log('Falta el archivo .env: configure las credenciales de la base de datos');
+    http_response_code(500);
+    exit('Configuración no disponible.');
 }
 
 // Cargar configuración

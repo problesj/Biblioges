@@ -23,7 +23,7 @@ $capsule->addConnection([
     'host'      => $_ENV['DB_HOST'] ?? 'localhost',
     'database'  => $_ENV['DB_DATABASE'] ?? 'bibliografia',
     'username'  => $_ENV['DB_USERNAME'] ?? 'biblioges',
-    'password'  => $_ENV['DB_PASSWORD'] ?? 'joyal2025$',
+    'password'  => $_ENV['DB_PASSWORD'] ?? '',
     'charset'   => 'utf8',
     'collation' => 'utf8_unicode_ci',
     'prefix'    => '',

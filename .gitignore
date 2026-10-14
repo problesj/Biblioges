@@ -13,3 +13,7 @@ storage/logs/*
 *.sqlite
 .vscode/launch.json
 biblioges-installer.tar.gz
+
+# Respaldos y variantes de .env (contienen credenciales)
+.env.*
+!.env.example
