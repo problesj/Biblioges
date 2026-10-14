@@ -7,9 +7,27 @@ mb_http_input('P');
 mb_http_input('C');
 mb_regex_encoding('UTF-8');
 
-// Asegurar que los errores se muestren en UTF-8
+// Cargar el autoloader de Composer
+require_once __DIR__ . '/../vendor/autoload.php';
+
+// Cargar helpers
+require_once __DIR__ . '/../src/helpers.php';
+
+// Cargar variables de entorno
+$envFile = __DIR__ . '/../.env';
+if (file_exists($envFile)) {
+    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
+    $dotenv->load();
+} else {
+    error_log('Falta el archivo .env: configure las credenciales de la base de datos');
+    http_response_code(500);
+    exit('Configuración no disponible.');
+}
+
+// Errores: siempre se registran en el log; solo se muestran en pantalla con APP_DEBUG=true
+$appDebug = filter_var($_ENV['APP_DEBUG'] ?? false, FILTER_VALIDATE_BOOLEAN);
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', $appDebug ? '1' : '0');
 ini_set('default_charset', 'UTF-8');
 
 // Configuración adicional de codificación
@@ -30,7 +48,9 @@ ini_set('error_log_charset', 'UTF-8');
 
 // Configurar la cookie de sesión antes de iniciar la sesión
 ini_set('session.cookie_httponly', 1);
-ini_set('session.cookie_secure', 0);
+$esHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
+ini_set('session.cookie_secure', $esHttps ? 1 : 0);
 ini_set('session.cookie_samesite', 'Lax');
 
 // Usar configuración del .env para la duración de sesión
@@ -40,44 +60,18 @@ ini_set('session.cookie_lifetime', $sessionLifetime);
 ini_set('session.use_strict_mode', 1);
 ini_set('session.save_path', __DIR__ . '/../storage/framework/sessions');
 
-// Log para verificar la configuración de sesión aplicada
-error_log('Configuración de sesión: SESSION_LIFETIME=' . $sessionLifetime . ' segundos (' . ($sessionLifetime/60) . ' minutos)');
 
 // Iniciar sesión si no está iniciada
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Log para depuración de sesión
-error_log('Estado de la sesión: ' . session_status());
-error_log('ID de sesión: ' . session_id());
-error_log('Datos de sesión: ' . print_r($_SESSION, true));
-error_log('Cookie de sesión: ' . print_r($_COOKIE, true));
-error_log('Save path: ' . session_save_path());
 
-// Cargar el autoloader de Composer
-require_once __DIR__ . '/../vendor/autoload.php';
-
-// Cargar helpers
-require_once __DIR__ . '/../src/helpers.php';
-
-// Cargar variables de entorno
-$envFile = __DIR__ . '/../.env';
-if (file_exists($envFile)) {
-    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
-    $dotenv->load();
-} else {
-    error_log('Falta el archivo .env: configure las credenciales de la base de datos');
-    http_response_code(500);
-    exit('Configuración no disponible.');
-}
 
 // Cargar configuración
 use App\Core\Config;
 Config::load(__DIR__ . '/../config/app.php');
 
-// Log para verificar configuración
-error_log('Configuración cargada: ' . print_r(Config::get('app_url'), true));
 
 // Inicializar Eloquent
 require_once __DIR__ . '/../src/config/eloquent.php';
@@ -89,7 +83,7 @@ use Slim\Middleware\MethodOverrideMiddleware;
 $app = AppFactory::create();
 
 // Configurar el manejo de errores
-$app->addErrorMiddleware(true, true, true);
+$app->addErrorMiddleware($appDebug, true, true);
 
 // Middleware personalizado para establecer PATH_INFO correctamente (debe ir antes del routing)
 $app->add(function ($request, $handler) {
@@ -97,8 +91,6 @@ $app->add(function ($request, $handler) {
     $uri = $request->getUri();
     $path = $uri->getPath();
     
-    // Log para depuración
-    error_log('Middleware PATH_INFO: URI original: ' . $path);
     
     // Establecer PATH_INFO desde la URI de Slim
     if (strpos($path, '/biblioges') === 0) {
@@ -110,12 +102,10 @@ $app->add(function ($request, $handler) {
             $pathInfo = '/';
         }
     } else {
-                $section = 'carreras'; // Por defecto
         $pathInfo = $path;
     }
     
     $_SERVER['PATH_INFO'] = $pathInfo;
-    error_log('Middleware PATH_INFO: PATH_INFO establecido: ' . $pathInfo);
     
     return $handler->handle($request);
 });
@@ -131,9 +121,11 @@ $loader = new \Twig\Loader\FilesystemLoader(__DIR__ . '/../templates');
 $twig = new \Twig\Environment($loader, [
     'cache' => __DIR__ . '/../cache/twig',
     'auto_reload' => true,
-    'debug' => true
+    'debug' => $appDebug
 ]);
-$twig->addExtension(new \Twig\Extension\DebugExtension());
+if ($appDebug) {
+    $twig->addExtension(new \Twig\Extension\DebugExtension());
+}
 
 // Hacer que $twig sea global
 global $twig;
@@ -346,14 +338,6 @@ $twig->addFunction(new \Twig\TwigFunction('csrf_token', function() {
     return $_SESSION['csrf_token'];
 }));
 
-// Log para depuración de rutas
-error_log('Antes de cargar rutas');
-error_log('REQUEST_URI: ' . $_SERVER['REQUEST_URI']);
-error_log('SCRIPT_NAME: ' . $_SERVER['SCRIPT_NAME']);
-error_log('PATH_INFO: ' . ($_SERVER['PATH_INFO'] ?? 'no definido'));
-error_log('REQUEST_METHOD: ' . $_SERVER['REQUEST_METHOD']);
-error_log('QUERY_STRING: ' . ($_SERVER['QUERY_STRING'] ?? 'no definido'));
-error_log('HTTP_HOST: ' . ($_SERVER['HTTP_HOST'] ?? 'no definido'));
 
 // Cargar las rutas de Slim
 require_once __DIR__ . '/../src/routes.php';
@@ -366,8 +350,8 @@ try {
     error_log('Ejecutando aplicación Slim');
     error_log('Rutas registradas: ' . count($app->getRouteCollector()->getRoutes()));
     
-    // Log detallado de todas las rutas registradas (solo en modo debug)
-    if (isset($_ENV['APP_DEBUG']) && $_ENV['APP_DEBUG'] === 'true') {
+    // Log de todas las rutas registradas (solo con LOG_RUTAS=true en .env; genera ~200 líneas por petición)
+    if (filter_var($_ENV['LOG_RUTAS'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
         error_log('=== RUTAS REGISTRADAS ===');
         foreach ($app->getRouteCollector()->getRoutes() as $route) {
             $methods = implode(',', $route->getMethods());
