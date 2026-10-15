@@ -17,3 +17,7 @@ biblioges-installer.tar.gz
 # Respaldos y variantes de .env (contienen credenciales)
 .env.*
 !.env.example
+
+# Excel generados por la aplicación (no versionar)
+/public/reportes/
+/public/exports/

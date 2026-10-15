@@ -3,9 +3,7 @@
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use App\Controllers\DashboardController;
-use App\Controllers\FacultadController;
 use App\Controllers\SedeController;
-use App\Controllers\DepartamentoController;
 use App\Controllers\AsignaturaController;
 use App\Controllers\CarreraController;
 use App\Controllers\BibliografiaDeclaradaController;
@@ -81,8 +79,6 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     // API para obtener unidades padre por sede
     $group->get('/api/unidades/padre/{sedeId}', [UnidadController::class, 'getUnidadesPadre']);
     
-    // API para obtener departamentos por sede y facultad
-    $group->get('/api/departamentos/{sedeId}/{facultadId}', [DepartamentoController::class, 'getDepartamentosBySedeAndFacultad']);
     
     // API para obtener asignaturas por unidad
     $group->get('/api/asignaturas/unidad/{unidadId}', [AsignaturaController::class, 'getAsignaturasByUnidad']);

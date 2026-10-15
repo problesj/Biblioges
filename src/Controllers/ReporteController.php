@@ -3479,7 +3479,7 @@ class ReporteController extends BaseController
         }
         $fecha = date('Ymd_His');
         $nombreArchivo = 'Reporte_Bibliografia_Basica_'.$sedeId.'_'.$carreraId.'_'.$fecha.'.xlsx';
-        $rutaCarpeta = __DIR__.'/../../public/reportes/';
+        $rutaCarpeta = __DIR__.'/../../storage/reportes/';
         if (!is_dir($rutaCarpeta)) mkdir($rutaCarpeta, 0777, true);
         $rutaCompleta = $rutaCarpeta.$nombreArchivo;
         $writer = new Xlsx($spreadsheet);
@@ -3802,7 +3802,7 @@ class ReporteController extends BaseController
             
             $fecha = date('Ymd_His');
             $nombreArchivo = 'Reporte_Expandido_Bibliografia_Basica_'.$sedeId.'_'.$carreraId.'_'.$fecha.'.xlsx';
-            $rutaCarpeta = __DIR__.'/../../public/reportes/';
+            $rutaCarpeta = __DIR__.'/../../storage/reportes/';
             
             // Verificar y crear la carpeta si no existe
             if (!is_dir($rutaCarpeta)) {
@@ -5097,7 +5097,7 @@ class ReporteController extends BaseController
             }
             $fecha = date('Ymd_His');
         $nombreArchivo = 'Reporte_Bibliografia_Complementaria_'.$sedeId.'_'.$carreraId.'_'.$fecha.'.xlsx';
-            $rutaCarpeta = __DIR__.'/../../public/reportes/';
+            $rutaCarpeta = __DIR__.'/../../storage/reportes/';
             if (!is_dir($rutaCarpeta)) mkdir($rutaCarpeta, 0777, true);
             $rutaCompleta = $rutaCarpeta.$nombreArchivo;
             $writer = new Xlsx($spreadsheet);
@@ -5459,7 +5459,7 @@ class ReporteController extends BaseController
             
             $fecha = date('Ymd_His');
             $nombreArchivo = 'Reporte_Expandido_Bibliografia_Complementaria_'.$sedeId.'_'.$carreraId.'_'.$fecha.'.xlsx';
-            $rutaCarpeta = __DIR__.'/../../public/reportes/';
+            $rutaCarpeta = __DIR__.'/../../storage/reportes/';
             if (!is_dir($rutaCarpeta)) mkdir($rutaCarpeta, 0777, true);
             $rutaCompleta = $rutaCarpeta.$nombreArchivo;
             $writer = new Xlsx($spreadsheet);
