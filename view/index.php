@@ -7,9 +7,9 @@ mb_http_input('P');
 mb_http_input('C');
 mb_regex_encoding('UTF-8');
 
-// Asegurar que los errores se muestren en UTF-8
+// Errores: siempre se registran; solo se muestran con APP_DEBUG=true (se ajusta tras cargar .env)
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', '0');
 ini_set('default_charset', 'UTF-8');
 
 // Configuración adicional de codificación
@@ -44,6 +44,8 @@ if (file_exists($envFile)) {
     http_response_code(500);
     exit('Configuración no disponible.');
 }
+$appDebug = filter_var($_ENV['APP_DEBUG'] ?? false, FILTER_VALIDATE_BOOLEAN);
+ini_set('display_errors', $appDebug ? '1' : '0');
 
 // Inicializar Eloquent
 require_once __DIR__ . '/../src/config/eloquent.php';
@@ -54,19 +56,11 @@ use Slim\Middleware\MethodOverrideMiddleware;
 
 $app = AppFactory::create();
 
-// Configurar el manejo de errores
-$app->addErrorMiddleware(true, true, true);
-
 // Configurar el middleware de routing
 $app->addRoutingMiddleware();
 
 // Agregar middleware de método override para soportar _method en formularios
 $app->add(new MethodOverrideMiddleware());
-
-// Configurar el middleware de manejo de errores personalizado
-$errorMiddleware = $app->addErrorMiddleware(true, true, true);
-$errorHandler = $errorMiddleware->getDefaultErrorHandler();
-$errorHandler->forceContentType('text/html');
 
 // Middleware personalizado para establecer PATH_INFO correctamente
 $app->add(function ($request, $handler) {
@@ -96,10 +90,6 @@ $app->add(function ($request, $handler) {
     // Establecer PATH_INFO desde la URI de Slim
     $_SERVER['PATH_INFO'] = $path ?: '/';
     
-    // Debug: registrar ruta procesada
-    error_log("Frontend - Ruta original: " . $uri->getPath());
-    error_log("Frontend - Ruta procesada: " . $path);
-    error_log("Frontend - PATH_INFO establecido: " . $_SERVER['PATH_INFO']);
     
     return $handler->handle($request);
 });
@@ -109,9 +99,11 @@ $loader = new \Twig\Loader\FilesystemLoader(__DIR__ . '/../templates');
 $twig = new \Twig\Environment($loader, [
     'cache' => __DIR__ . '/../cache/twig',
     'auto_reload' => true,
-    'debug' => true
+    'debug' => $appDebug
 ]);
-$twig->addExtension(new \Twig\Extension\DebugExtension());
+if ($appDebug) {
+    $twig->addExtension(new \Twig\Extension\DebugExtension());
+}
 
 // Hacer que $twig sea global
 global $twig;
@@ -134,6 +126,11 @@ $twig->addFunction(new \Twig\TwigFunction('asset', function ($path) use ($baseUr
 
 // Cargar las rutas del frontend
 require_once __DIR__ . '/routes.php';
+
+// Manejo de errores al final: envuelve a todos los middlewares (incluido el routing),
+// así las rutas inexistentes responden 404 en lugar de un Fatal error
+$errorMiddleware = $app->addErrorMiddleware($appDebug, true, true);
+$errorMiddleware->getDefaultErrorHandler()->forceContentType('text/html');
 
 // Ejecutar la aplicación Slim
 try {

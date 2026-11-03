@@ -303,6 +303,7 @@ class CarreraController
 
         // Renderizar la vista
         $html = $this->twig->render('carreras/create.twig', [
+            'limite_subida_bytes' => $this->limiteSubidaBytes(),
             'sedes' => $sedes,
             'unidades' => $unidades,
             'app_url' => Config::get('app_url'),
@@ -310,9 +311,67 @@ class CarreraController
             'session' => $_SESSION,
             'current_page' => 'carreras'
         ]);
+        unset($_SESSION['error']); // el mensaje ya se mostró en la vista
         
         $response->getBody()->write($html);
         return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
+    }
+
+    /**
+     * Límite efectivo de subida en bytes según php.ini: el menor entre
+     * upload_max_filesize y post_max_size.
+     */
+    private function limiteSubidaBytes(): int
+    {
+        $aBytes = function ($valor): int {
+            $valor = trim((string) $valor);
+            $numero = (int) $valor;
+            switch (strtolower(substr($valor, -1))) {
+                case 'g':
+                    $numero *= 1024;
+                    // no break
+                case 'm':
+                    $numero *= 1024;
+                    // no break
+                case 'k':
+                    $numero *= 1024;
+            }
+            return $numero;
+        };
+        $limites = array_filter([
+            $aBytes(ini_get('upload_max_filesize')),
+            $aBytes(ini_get('post_max_size')),
+        ]);
+        return (int) min($limites);
+    }
+
+    /**
+     * Detiene el guardado si el envío o algún archivo supera los límites.
+     * Si el envío completo excede post_max_size, PHP descarta $_POST y $_FILES
+     * sin avisar: sin esta validación se procesaría un formulario vacío.
+     */
+    private function validarArchivosSubidos(): void
+    {
+        $limite = $this->limiteSubidaBytes();
+        $limiteMb = round($limite / 1048576, 1);
+        if (empty($_POST) && empty($_FILES) && (int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
+            throw new \Exception("Los archivos enviados superan el tamaño máximo permitido ({$limiteMb} MB). No se guardaron cambios.");
+        }
+        $campos = [
+            'libro_carrera' => 'El libro de carrera (PDF)',
+            'imagen_carrera' => 'La imagen de la carrera',
+        ];
+        foreach ($campos as $campo => $etiqueta) {
+            $error = $_FILES[$campo]['error'] ?? UPLOAD_ERR_NO_FILE;
+            $excede = in_array($error, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)
+                || ($error === UPLOAD_ERR_OK && ($_FILES[$campo]['size'] ?? 0) > $limite);
+            if ($excede) {
+                throw new \Exception("{$etiqueta} supera el tamaño máximo permitido ({$limiteMb} MB). No se guardaron cambios.");
+            }
+            if (!in_array($error, [UPLOAD_ERR_OK, UPLOAD_ERR_NO_FILE], true)) {
+                throw new \Exception("No se pudo recibir " . lcfirst($etiqueta) . " (código de error {$error}). No se guardaron cambios.");
+            }
+        }
     }
 
     /**
@@ -333,6 +392,9 @@ class CarreraController
         }
 
         try {
+            // Rechazar envíos o archivos que superan el límite (PHP los descarta sin avisar)
+            $this->validarArchivosSubidos();
+
             // Obtener datos del formulario
             $parsedBody = $request->getParsedBody();
             $nombre = $parsedBody['nombre'] ?? '';
@@ -378,7 +440,8 @@ class CarreraController
                     mkdir($imgDir, 0755, true);
                     error_log('[CARRERA] Carpeta creada: ' . $imgDir);
                 }
-                $imgExt = pathinfo($imgFile['name'], PATHINFO_EXTENSION);
+                // Extensión según el tipo detectado (nunca la del nombre original: evita subir .php)
+                $imgExt = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif'][$imgMimeType];
                 $imgName = 'carrera_' . time() . '_' . uniqid() . '.' . $imgExt;
                 $imgPath = $imgDir . $imgName;
                 move_uploaded_file($imgFile['tmp_name'], $imgPath);
@@ -406,10 +469,9 @@ class CarreraController
                     error_log('[CARRERA] Tipo de libro no permitido: ' . $mimeType);
                     throw new \Exception('Solo se permiten archivos PDF');
                 }
-                // Validar tamaño (máximo 10MB)
-                if ($file['size'] > 10 * 1024 * 1024) {
+                if ($file['size'] > $this->limiteSubidaBytes()) {
                     error_log('[CARRERA] El archivo PDF supera el tamaño permitido.');
-                    throw new \Exception('El archivo no puede superar los 10MB');
+                    throw new \Exception('El archivo PDF supera el tamaño máximo permitido (' . round($this->limiteSubidaBytes() / 1048576, 1) . ' MB)');
                 }
                 // Crear directorio si no existe
                 $uploadDir = __DIR__ . '/../../public/uploads/libros_carrera/';
@@ -418,7 +480,8 @@ class CarreraController
                     error_log('[CARRERA] Carpeta creada: ' . $uploadDir);
                 }
                 // Generar nombre único para el archivo
-                $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+                // Extensión fija: el contenido ya se validó como PDF (nunca la del nombre original)
+                $extension = 'pdf';
                 $filename = 'libro_carrera_' . time() . '_' . uniqid() . '.' . $extension;
                 $filepath = $uploadDir . $filename;
                 // Mover archivo
@@ -566,6 +629,7 @@ class CarreraController
 
             // Renderizar la vista con los datos del formulario
             $html = $this->twig->render('carreras/create.twig', [
+                'limite_subida_bytes' => $this->limiteSubidaBytes(),
                 'sedes' => $sedes,
                 'unidades' => $unidades,
                 'app_url' => Config::get('app_url'),
@@ -574,6 +638,7 @@ class CarreraController
                 'current_page' => 'carreras',
                 'form_data' => $parsedBody
             ]);
+            unset($_SESSION['error']); // el mensaje ya se mostró en la vista
             
             $response->getBody()->write($html);
             return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
@@ -780,6 +845,7 @@ class CarreraController
             $user = $stmt->fetch();
 
             $html = $this->twig->render('carreras/edit.twig', [
+                'limite_subida_bytes' => $this->limiteSubidaBytes(),
                 'carrera' => $carrera,
                 'sedes' => $sedes,
                 'unidades' => $unidades,
@@ -788,6 +854,7 @@ class CarreraController
                 'current_page' => 'carreras',
                 'session' => $_SESSION
             ]);
+            unset($_SESSION['error']); // el mensaje ya se mostró en la vista
             
             $response->getBody()->write($html);
             return $response->withHeader('Content-Type', 'text/html; charset=UTF-8');
@@ -824,6 +891,9 @@ class CarreraController
         }
 
         try {
+            // Rechazar envíos o archivos que superan el límite (PHP los descarta sin avisar)
+            $this->validarArchivosSubidos();
+
             // Obtener datos del formulario
             $parsedBody = $request->getParsedBody();
             $nombre = $parsedBody['nombre'] ?? '';
@@ -870,7 +940,8 @@ class CarreraController
                     mkdir($imgDir, 0755, true);
                     error_log('[CARRERA] Carpeta creada: ' . $imgDir);
                 }
-                $imgExt = pathinfo($imgFile['name'], PATHINFO_EXTENSION);
+                // Extensión según el tipo detectado (nunca la del nombre original: evita subir .php)
+                $imgExt = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif'][$imgMimeType];
                 $imgName = 'carrera_' . time() . '_' . uniqid() . '.' . $imgExt;
                 $imgPath = $imgDir . $imgName;
                 move_uploaded_file($imgFile['tmp_name'], $imgPath);
@@ -904,16 +975,17 @@ class CarreraController
                     error_log('[CARRERA] Tipo de libro no permitido: ' . $mimeType);
                     throw new \Exception('Solo se permiten archivos PDF');
                 }
-                if ($file['size'] > 10 * 1024 * 1024) {
+                if ($file['size'] > $this->limiteSubidaBytes()) {
                     error_log('[CARRERA] El archivo PDF supera el tamaño permitido.');
-                    throw new \Exception('El archivo no puede superar los 10MB');
+                    throw new \Exception('El archivo PDF supera el tamaño máximo permitido (' . round($this->limiteSubidaBytes() / 1048576, 1) . ' MB)');
                 }
                 $uploadDir = __DIR__ . '/../../public/uploads/libros_carrera/';
                 if (!is_dir($uploadDir)) {
                     mkdir($uploadDir, 0755, true);
                     error_log('[CARRERA] Carpeta creada: ' . $uploadDir);
                 }
-                $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+                // Extensión fija: el contenido ya se validó como PDF (nunca la del nombre original)
+                $extension = 'pdf';
                 $filename = 'libro_carrera_' . time() . '_' . uniqid() . '.' . $extension;
                 $filepath = $uploadDir . $filename;
                 if (move_uploaded_file($file['tmp_name'], $filepath)) {

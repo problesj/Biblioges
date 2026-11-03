@@ -82,8 +82,6 @@ use Slim\Middleware\MethodOverrideMiddleware;
 
 $app = AppFactory::create();
 
-// Configurar el manejo de errores
-$app->addErrorMiddleware($appDebug, true, true);
 
 // Middleware personalizado para establecer PATH_INFO correctamente (debe ir antes del routing)
 $app->add(function ($request, $handler) {
@@ -370,6 +368,9 @@ try {
         error_log('=== FIN PETICIÓN ===');
     }
     
+    // Manejo de errores al final: envuelve a todos los middlewares (incluido el routing),
+    // así las rutas inexistentes responden 404 en lugar de un Fatal error
+    $app->addErrorMiddleware($appDebug, true, true);
     $app->run();
 } catch (Exception $e) {
     error_log('Error en Slim: ' . $e->getMessage());
