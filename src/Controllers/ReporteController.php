@@ -169,59 +169,14 @@ class ReporteController extends BaseController
     /**
      * Calcula la cobertura básica en tiempo real para una carrera específica
      */
-    private function calcularCoberturaBasicaTiempoReal($carreraId, $codigoCarrera, $sedeId, $vigenciaDesde = null, $vigenciaHasta = null, $tiposFormacionFiltro = [])
+    private function calcularCoberturaBasicaTiempoReal($carreraId, $codigoCarrera, $sedeId, $vigenciaDesde = null, $vigenciaHasta = null, $tiposFormacionFiltro = null)
     {
-        // Obtener asignaturas regulares de la carrera (acotado por plan: carrera + sede + codigo + vigencias)
-        $asignaturasRegulares = DB::table('mallas as m')
-            ->join('asignaturas as a', 'a.id', '=', 'm.asignatura_id')
-            ->join('asignaturas_departamentos as ad', 'ad.asignatura_id', '=', 'a.id')
-            ->join('unidades as u', 'u.id', '=', 'ad.id_unidad')
-            ->join('carreras_espejos as ce', function ($join) {
-                $join->on('ce.carrera_id', '=', 'm.carrera_id')
-                    ->on('ce.sede_id', '=', 'u.sede_id');
-            })
-            ->where('ce.carrera_id', $carreraId)
-            ->where('ce.sede_id', $sedeId)
-            ->where('ce.codigo_carrera', $codigoCarrera)
-            ->where('ce.vigencia_desde', $vigenciaDesde)
-            ->where('ce.vigencia_hasta', $vigenciaHasta)
-            ->where('a.tipo', 'REGULAR')
-            ->select('ad.codigo_asignatura as codigo')
-            ->distinct()
-            ->get();
-
-        // Obtener asignaturas de formación si hay filtros aplicados
-        $asignaturasFormacion = collect();
-        if (!empty($tiposFormacionFiltro)) {
-            $asignaturasFormacion = DB::table('mallas as m')
-                ->join('carreras_espejos as ce', 'ce.carrera_id', '=', 'm.carrera_id')
-                ->join('asignaturas_formacion as af', 'af.asignatura_regular_id', '=', 'm.asignatura_id')
-                ->join('asignaturas as a_form', 'a_form.id', '=', 'af.asignatura_formacion_id')
-                ->join('asignaturas_departamentos as ad_form', 'ad_form.asignatura_id', '=', 'a_form.id')
-                ->join('unidades as u_form', function ($join) {
-                    $join->on('u_form.id', '=', 'ad_form.id_unidad')
-                        ->on('u_form.sede_id', '=', 'ce.sede_id');
-                })
-                ->where('ce.carrera_id', $carreraId)
-                ->where('ce.sede_id', $sedeId)
-                ->where('ce.codigo_carrera', $codigoCarrera)
-                ->where('ce.vigencia_desde', $vigenciaDesde)
-                ->where('ce.vigencia_hasta', $vigenciaHasta)
-                ->whereIn('a_form.tipo', $tiposFormacionFiltro)
-                ->select('ad_form.codigo_asignatura as codigo')
-                ->distinct()
-                ->get();
-        }
-
-        // Combinar todas las asignaturas
-        $asignaturas = $asignaturasRegulares->concat($asignaturasFormacion);
-
-        if ($asignaturas->isEmpty()) {
+        // Mismo conjunto de asignaturas que la tabla del reporte (vw_mallas por sede + carrera + código del plan).
+        // $tiposFormacionFiltro = null aplica los filtros guardados del plan (o todos por defecto).
+        $codigosAsignaturas = $this->codigosAsignaturasPlan($carreraId, $codigoCarrera, $sedeId, $vigenciaDesde, $vigenciaHasta, $tiposFormacionFiltro);
+        if (empty($codigosAsignaturas)) {
             return 'Sin información';
         }
-
-        // Obtener códigos de asignaturas
-        $codigosAsignaturas = $asignaturas->pluck('codigo')->toArray();
 
         // Contar títulos declarados únicos
         $titulosDeclarados = DB::table('bibliografias_declaradas')
@@ -273,61 +228,73 @@ class ReporteController extends BaseController
     }
 
     /**
+     * Tipos de formación a incluir para un plan: los filtros guardados del propio plan
+     * o, si no tiene, todos los tipos por defecto.
+     */
+    private function tiposFormacionDelPlan($plan): array
+    {
+        $filtros = DB::table('filtros_formaciones')->where('id_carrera_espejo', $plan->id)->first();
+        return $filtros ? $this->tiposFormacionDesdeRegistro($filtros) : $this->tiposFormacionDisponiblesPorDefecto();
+    }
+
+    /**
+     * Códigos de asignatura que entran en la cobertura de un plan, con el mismo criterio que la tabla del
+     * reporte: regulares + asignaturas de formación de los tipos indicados, desde vw_mallas (sede + carrera +
+     * código del plan). $tiposFormacion = null usa los filtros del propio plan. Devuelve null si el plan no existe.
+     */
+    private function codigosAsignaturasPlan($carreraId, $codigoCarrera, $sedeId, $vigenciaDesde = null, $vigenciaHasta = null, ?array $tiposFormacion = null): ?array
+    {
+        $query = DB::table('carreras_espejos')
+            ->where('carrera_id', $carreraId)
+            ->where('sede_id', $sedeId)
+            ->where('codigo_carrera', $codigoCarrera);
+        if ($vigenciaDesde !== null && $vigenciaDesde !== '') {
+            $query->where('vigencia_desde', $vigenciaDesde);
+        }
+        if ($vigenciaHasta !== null && $vigenciaHasta !== '') {
+            $query->where('vigencia_hasta', $vigenciaHasta);
+        }
+        $plan = $query->orderByDesc('vigencia_desde')->orderByDesc('id')->first();
+        if (!$plan) {
+            return null;
+        }
+        if ($tiposFormacion === null) {
+            $tiposFormacion = $this->tiposFormacionDelPlan($plan);
+        }
+        $codigos = DB::table('vw_mallas')
+            ->where('id_sede', $sedeId)
+            ->where('id_carrera', $carreraId)
+            ->where('codigo_carrera', $plan->codigo_carrera)
+            ->where('tipo_asignatura', 'REGULAR')
+            ->distinct()
+            ->pluck('codigo_asignatura')
+            ->all();
+        if (!empty($tiposFormacion)) {
+            $formacion = DB::table('vw_mallas')
+                ->where('id_sede', $sedeId)
+                ->where('id_carrera', $carreraId)
+                ->where('codigo_carrera', $plan->codigo_carrera)
+                ->whereIn('tipo_asignatura', $tiposFormacion)
+                ->whereNotNull('codigo_asignatura_formacion')
+                ->distinct()
+                ->pluck('codigo_asignatura_formacion')
+                ->all();
+            $codigos = array_merge($codigos, $formacion);
+        }
+        return array_values(array_unique(array_filter($codigos)));
+    }
+
+    /**
      * Calcula la cobertura complementaria en tiempo real para una carrera específica
      */
-    private function calcularCoberturaComplementariaTiempoReal($carreraId, $codigoCarrera, $sedeId, $vigenciaDesde = null, $vigenciaHasta = null, $tiposFormacionFiltro = [])
+    private function calcularCoberturaComplementariaTiempoReal($carreraId, $codigoCarrera, $sedeId, $vigenciaDesde = null, $vigenciaHasta = null, $tiposFormacionFiltro = null)
     {
-        // Obtener asignaturas regulares de la carrera (acotado por plan: carrera + sede + codigo + vigencias)
-        $asignaturasRegulares = DB::table('mallas as m')
-            ->join('asignaturas as a', 'a.id', '=', 'm.asignatura_id')
-            ->join('asignaturas_departamentos as ad', 'ad.asignatura_id', '=', 'a.id')
-            ->join('unidades as u', 'u.id', '=', 'ad.id_unidad')
-            ->join('carreras_espejos as ce', function ($join) {
-                $join->on('ce.carrera_id', '=', 'm.carrera_id')
-                    ->on('ce.sede_id', '=', 'u.sede_id');
-            })
-            ->where('ce.carrera_id', $carreraId)
-            ->where('ce.sede_id', $sedeId)
-            ->where('ce.codigo_carrera', $codigoCarrera)
-            ->where('ce.vigencia_desde', $vigenciaDesde)
-            ->where('ce.vigencia_hasta', $vigenciaHasta)
-            ->where('a.tipo', 'REGULAR')
-            ->select('ad.codigo_asignatura as codigo')
-            ->distinct()
-            ->get();
-
-        // Obtener asignaturas de formación si hay filtros aplicados
-        $asignaturasFormacion = collect();
-        if (!empty($tiposFormacionFiltro)) {
-            $asignaturasFormacion = DB::table('mallas as m')
-                ->join('carreras_espejos as ce', 'ce.carrera_id', '=', 'm.carrera_id')
-                ->join('asignaturas_formacion as af', 'af.asignatura_regular_id', '=', 'm.asignatura_id')
-                ->join('asignaturas as a_form', 'a_form.id', '=', 'af.asignatura_formacion_id')
-                ->join('asignaturas_departamentos as ad_form', 'ad_form.asignatura_id', '=', 'a_form.id')
-                ->join('unidades as u_form', function ($join) {
-                    $join->on('u_form.id', '=', 'ad_form.id_unidad')
-                        ->on('u_form.sede_id', '=', 'ce.sede_id');
-                })
-                ->where('ce.carrera_id', $carreraId)
-                ->where('ce.sede_id', $sedeId)
-                ->where('ce.codigo_carrera', $codigoCarrera)
-                ->where('ce.vigencia_desde', $vigenciaDesde)
-                ->where('ce.vigencia_hasta', $vigenciaHasta)
-                ->whereIn('a_form.tipo', $tiposFormacionFiltro)
-                ->select('ad_form.codigo_asignatura as codigo')
-                ->distinct()
-                ->get();
-        }
-
-        // Combinar todas las asignaturas
-        $asignaturas = $asignaturasRegulares->concat($asignaturasFormacion);
-
-        if ($asignaturas->isEmpty()) {
+        // Mismo conjunto de asignaturas que la tabla del reporte (vw_mallas por sede + carrera + código del plan).
+        // $tiposFormacionFiltro = null aplica los filtros guardados del plan (o todos por defecto).
+        $codigosAsignaturas = $this->codigosAsignaturasPlan($carreraId, $codigoCarrera, $sedeId, $vigenciaDesde, $vigenciaHasta, $tiposFormacionFiltro);
+        if (empty($codigosAsignaturas)) {
             return 'Sin información';
         }
-
-        // Obtener códigos de asignaturas
-        $codigosAsignaturas = $asignaturas->pluck('codigo')->toArray();
 
         // Contar títulos declarados únicos
         $titulosDeclarados = DB::table('bibliografias_declaradas')
@@ -442,21 +409,8 @@ class ReporteController extends BaseController
             return $filtros;
         }
 
-        $fallback = DB::table('filtros_formaciones as ff')
-            ->join('carreras_espejos as ce', 'ce.id', '=', 'ff.id_carrera_espejo')
-            ->where('ce.sede_id', $sedeId);
-
-        if (!empty($codigoCarrera)) {
-            $fallback->where('ce.codigo_carrera', $codigoCarrera);
-        } else {
-            $fallback->where('ce.carrera_id', $carreraId);
-        }
-
-        return $fallback
-            ->orderByDesc('ce.vigencia_desde')
-            ->orderByDesc('ce.id')
-            ->select('ff.*')
-            ->first();
+        // Sin filtros propios del plan: se usan todos los tipos por defecto (no se heredan de otro plan)
+        return null;
     }
 
     /**
@@ -1735,6 +1689,8 @@ class ReporteController extends BaseController
             $tiposFormacionFiltro = [$tiposFormacionFiltro];
         }
         $tiposFormacionVacio = $urlParams['tipos_formacion_vacio'] ?? null;
+        // Sin filtro explícito en la URL, cada plan usa sus propios filtros guardados (o todos por defecto)
+        $filtrosListadoExplicitos = array_key_exists('tipos_formacion', $urlParams) || array_key_exists('tipos_formacion_vacio', $urlParams);
         
         // Si no hay filtros en la URL, intentar cargar filtros guardados globales
         if (empty($tiposFormacionFiltro) && !$tiposFormacionVacio) {
@@ -1888,7 +1844,7 @@ class ReporteController extends BaseController
                 $carreraItem->sede_id,
                 $carreraItem->vigencia_desde ?? null,
                 $carreraItem->vigencia_hasta ?? null,
-                $tiposFormacionFiltro
+                $filtrosListadoExplicitos ? ($tiposFormacionVacio ? [] : $tiposFormacionFiltro) : null
             );
         }
 
@@ -1902,7 +1858,7 @@ class ReporteController extends BaseController
                 $carreraItem->sede_id,
                 $carreraItem->vigencia_desde ?? null,
                 $carreraItem->vigencia_hasta ?? null,
-                $tiposFormacionFiltro
+                $filtrosListadoExplicitos ? ($tiposFormacionVacio ? [] : $tiposFormacionFiltro) : null
             );
         }
 
@@ -2079,6 +2035,22 @@ class ReporteController extends BaseController
         $todosFiltrosGuardadosEnCero = $filtrosGuardadosAplicados && empty($tiposFormacionFiltro) && $tiposFormacionVacio;
 
         // Obtener asignaturas REGULARES de la sede específica
+        // Plan pedido (código + vigencias); evita tomar el código de otro plan de la misma carrera
+        $planMalla = $this->resolverCarreraEspejo(
+            (int) $carreraId,
+            (int) $sedeId,
+            $request->getQueryParams()['codigo'] ?? null,
+            $request->getQueryParams()['vigencia_desde'] ?? null,
+            $request->getQueryParams()['vigencia_hasta'] ?? null
+        );
+        if (!$planMalla) {
+            $response->getBody()->write('Plan de carrera no encontrado');
+            return $response->withStatus(404);
+        }
+        if ($carrera) {
+            $carrera->codigo = $planMalla->codigo_carrera;
+        }
+
         $regulares = DB::table('vw_mallas')
             ->where('id_sede', $sedeId)
             ->where('id_carrera', $carreraId)
@@ -2275,9 +2247,6 @@ class ReporteController extends BaseController
             $carrera->vigencia_hasta ?? null,
             $tiposFormacionFiltro
         );
-        if (is_numeric($coberturaBasicaTiempoReal)) {
-            $coberturaBasicaTotal = (float) $coberturaBasicaTiempoReal;
-        }
 
         // Obtener datos de sesión para la plantilla
         if (session_status() === PHP_SESSION_NONE) {
@@ -2906,6 +2875,22 @@ class ReporteController extends BaseController
         error_log('ReporteController@reporteBibliografiaBasicaExpandido: Carrera encontrada: ' . $carrera->nombre);
 
         // Obtener asignaturas REGULARES (siempre incluidas)
+        // Plan pedido (código + vigencias); evita tomar el código de otro plan de la misma carrera
+        $planMalla = $this->resolverCarreraEspejo(
+            (int) $carreraId,
+            (int) $sedeId,
+            $request->getQueryParams()['codigo'] ?? null,
+            $request->getQueryParams()['vigencia_desde'] ?? null,
+            $request->getQueryParams()['vigencia_hasta'] ?? null
+        );
+        if (!$planMalla) {
+            $response->getBody()->write('Plan de carrera no encontrado');
+            return $response->withStatus(404);
+        }
+        if ($carrera) {
+            $carrera->codigo = $planMalla->codigo_carrera;
+        }
+
         $regulares = DB::table('vw_mallas')
             ->where('id_sede', $sedeId)
             ->where('id_carrera', $carreraId)
@@ -3175,7 +3160,7 @@ class ReporteController extends BaseController
         
         // Sumar ejemplares de todas las filas (estos sí se suman)
         foreach ($datosBibliografia as $fila) {
-            $totalesCarrera['ejemplares_impresos'] += $fila['ejemplares_impresos'] ?? 0;
+            $totalesCarrera['ejemplares_impresos'] += max(0, (int) ($fila['ejemplares_impresos'] ?? 0));
         }
         
         // Calcular total de ejemplares digitales considerando valores especiales
@@ -3195,9 +3180,6 @@ class ReporteController extends BaseController
             $carrera->vigencia_hasta ?? null,
             $tiposFormacionFiltro
         );
-        if (is_numeric($coberturaBasicaTiempoReal)) {
-            $coberturaBasicaTotal = (float) $coberturaBasicaTiempoReal;
-        }
 
         // Renderizar la vista Twig con los datos del reporte expandido
         if (session_status() === PHP_SESSION_NONE) {
@@ -3267,6 +3249,22 @@ class ReporteController extends BaseController
         $tiposFormacionVacio = $queryParams['tipos_formacion_vacio'] ?? null;
         
         // Obtener asignaturas REGULARES (siempre incluidas)
+        // Plan pedido (código + vigencias); evita tomar el código de otro plan de la misma carrera
+        $planMalla = $this->resolverCarreraEspejo(
+            (int) $carreraId,
+            (int) $sedeId,
+            $request->getQueryParams()['codigo'] ?? null,
+            $request->getQueryParams()['vigencia_desde'] ?? null,
+            $request->getQueryParams()['vigencia_hasta'] ?? null
+        );
+        if (!$planMalla) {
+            $response->getBody()->write('Plan de carrera no encontrado');
+            return $response->withStatus(404);
+        }
+        if ($carrera) {
+            $carrera->codigo = $planMalla->codigo_carrera;
+        }
+
         $regulares = DB::table('vw_mallas')
             ->where('id_sede', $sedeId)
             ->where('id_carrera', $carreraId)
@@ -3542,6 +3540,22 @@ class ReporteController extends BaseController
             }
 
             // Obtener asignaturas REGULARES (siempre incluidas)
+        // Plan pedido (código + vigencias); evita tomar el código de otro plan de la misma carrera
+        $planMalla = $this->resolverCarreraEspejo(
+            (int) $carreraId,
+            (int) $sedeId,
+            $request->getQueryParams()['codigo'] ?? null,
+            $request->getQueryParams()['vigencia_desde'] ?? null,
+            $request->getQueryParams()['vigencia_hasta'] ?? null
+        );
+        if (!$planMalla) {
+            $response->getBody()->write('Plan de carrera no encontrado');
+            return $response->withStatus(404);
+        }
+        if ($carrera) {
+            $carrera->codigo = $planMalla->codigo_carrera;
+        }
+
             $regulares = DB::table('vw_mallas')
                 ->where('id_sede', $sedeId)
                 ->where('id_carrera', $carreraId)
@@ -3559,6 +3573,7 @@ class ReporteController extends BaseController
                 // Si hay filtros aplicados explícitamente, usar solo los seleccionados
                 $formaciones = DB::table('vw_mallas')
                     ->where('id_sede', $sedeId)
+                    ->where('id_carrera', $carreraId)
                     ->where('codigo_carrera', $carrera->codigo)
                     ->whereIn('tipo_asignatura', $tiposFormacionFiltro)
                     ->whereNotNull('codigo_asignatura_formacion')
@@ -3704,8 +3719,8 @@ class ReporteController extends BaseController
             
             // Sumar ejemplares de todas las filas (estos sí se suman)
             foreach ($datosBibliografia as $fila) {
-                $totalesCarrera['ejemplares_impresos'] += $fila['ejemplares_impresos'] ?? 0;
-                $totalesCarrera['ejemplares_digitales'] += is_numeric($fila['ejemplares_digitales']) ? $fila['ejemplares_digitales'] : 0;
+                $totalesCarrera['ejemplares_impresos'] += max(0, (int) ($fila['ejemplares_impresos'] ?? 0));
+                $totalesCarrera['ejemplares_digitales'] += (is_numeric($fila['ejemplares_digitales']) && $fila['ejemplares_digitales'] > 0) ? $fila['ejemplares_digitales'] : 0;
             }
             
             $totalesCarrera['titulos_declarados'] = $titulosDeclaradosUnicos;
@@ -3988,6 +4003,22 @@ class ReporteController extends BaseController
         }
 
         // Obtener asignaturas REGULARES (siempre incluidas)
+        // Plan pedido (código + vigencias); evita tomar el código de otro plan de la misma carrera
+        $planMalla = $this->resolverCarreraEspejo(
+            (int) $carreraId,
+            (int) $sedeId,
+            $request->getQueryParams()['codigo'] ?? null,
+            $request->getQueryParams()['vigencia_desde'] ?? null,
+            $request->getQueryParams()['vigencia_hasta'] ?? null
+        );
+        if (!$planMalla) {
+            $response->getBody()->write('Plan de carrera no encontrado');
+            return $response->withStatus(404);
+        }
+        if ($carrera) {
+            $carrera->codigo = $planMalla->codigo_carrera;
+        }
+
         $regulares = DB::table('vw_mallas')
             ->where('id_sede', $sedeId)
             ->where('id_carrera', $carreraId)
@@ -4135,7 +4166,7 @@ class ReporteController extends BaseController
         
         // Sumar ejemplares de todas las asignaturas (estos sí se suman)
         foreach ($asignaturas as $asig) {
-            $totalesCarrera['ejemplares_impresos'] += $asig->ejemplares_impresos ?? 0;
+            $totalesCarrera['ejemplares_impresos'] += max(0, (int) ($asig->ejemplares_impresos ?? 0));
         }
         
         // Calcular total de ejemplares digitales considerando valores especiales
@@ -4155,9 +4186,6 @@ class ReporteController extends BaseController
             $carrera->vigencia_hasta ?? null,
             $tiposFormacionFiltro
         );
-        if (is_numeric($coberturaComplementariaTiempoReal)) {
-            $coberturaComplementariaTotalValor = (float) $coberturaComplementariaTiempoReal;
-        }
 
         $coberturaComplementariaTotal = [
             'total_titulos_declarados' => $totalesCarrera['titulos_declarados'],
@@ -4406,6 +4434,22 @@ class ReporteController extends BaseController
         error_log('ReporteController@reporteBibliografiaComplementariaExpandido: Sede ID: ' . $sedeId . ', Carrera ID: ' . $carreraId);
 
             // Obtener asignaturas REGULARES (siempre incluidas)
+        // Plan pedido (código + vigencias); evita tomar el código de otro plan de la misma carrera
+        $planMalla = $this->resolverCarreraEspejo(
+            (int) $carreraId,
+            (int) $sedeId,
+            $request->getQueryParams()['codigo'] ?? null,
+            $request->getQueryParams()['vigencia_desde'] ?? null,
+            $request->getQueryParams()['vigencia_hasta'] ?? null
+        );
+        if (!$planMalla) {
+            $response->getBody()->write('Plan de carrera no encontrado');
+            return $response->withStatus(404);
+        }
+        if ($carrera) {
+            $carrera->codigo = $planMalla->codigo_carrera;
+        }
+
             $regulares = DB::table('vw_mallas')
                 ->where('id_sede', $sedeId)
                 ->where('id_carrera', $carreraId)
@@ -4619,7 +4663,7 @@ class ReporteController extends BaseController
         
         // Sumar ejemplares de todas las filas (estos sí se suman)
         foreach ($datosBibliografia as $fila) {
-            $totalesCarrera['ejemplares_impresos'] += $fila['ejemplares_impresos'] ?? 0;
+            $totalesCarrera['ejemplares_impresos'] += max(0, (int) ($fila['ejemplares_impresos'] ?? 0));
         }
         
         // Calcular total de ejemplares digitales considerando valores especiales
@@ -4639,9 +4683,6 @@ class ReporteController extends BaseController
             $carrera->vigencia_hasta ?? null,
             $tiposFormacionFiltro
         );
-        if (is_numeric($coberturaComplementariaTiempoReal)) {
-            $coberturaComplementariaTotal = (float) $coberturaComplementariaTiempoReal;
-        }
 
         $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
         $template = $view->load('reportes/coberturas_complementaria/carrera_expandido.twig');
@@ -4880,6 +4921,22 @@ class ReporteController extends BaseController
 
 
         // Obtener asignaturas REGULARES (siempre incluidas)
+        // Plan pedido (código + vigencias); evita tomar el código de otro plan de la misma carrera
+        $planMalla = $this->resolverCarreraEspejo(
+            (int) $carreraId,
+            (int) $sedeId,
+            $request->getQueryParams()['codigo'] ?? null,
+            $request->getQueryParams()['vigencia_desde'] ?? null,
+            $request->getQueryParams()['vigencia_hasta'] ?? null
+        );
+        if (!$planMalla) {
+            $response->getBody()->write('Plan de carrera no encontrado');
+            return $response->withStatus(404);
+        }
+        if ($carrera) {
+            $carrera->codigo = $planMalla->codigo_carrera;
+        }
+
         $regulares = DB::table('vw_mallas')
             ->where('id_sede', $sedeId)
             ->where('id_carrera', $carreraId)
@@ -4973,6 +5030,7 @@ class ReporteController extends BaseController
             $bibliografiasDeclaradasUnicas = DB::table('asignaturas_bibliografias')
                 ->join('asignaturas_departamentos', 'asignaturas_bibliografias.asignatura_id', '=', 'asignaturas_departamentos.asignatura_id')
                 ->where('asignaturas_bibliografias.tipo_bibliografia', 'complementaria')
+                ->where('asignaturas_bibliografias.estado', 'activa')
                 ->whereIn('asignaturas_departamentos.codigo_asignatura', $codigosAsignaturas)
                 ->distinct('asignaturas_bibliografias.bibliografia_id')
                 ->pluck('asignaturas_bibliografias.bibliografia_id');
@@ -4981,6 +5039,7 @@ class ReporteController extends BaseController
                 ->join('asignaturas_departamentos', 'asignaturas_bibliografias.asignatura_id', '=', 'asignaturas_departamentos.asignatura_id')
                 ->join('bibliografias_disponibles', 'asignaturas_bibliografias.bibliografia_id', '=', 'bibliografias_disponibles.bibliografia_declarada_id')
                 ->where('asignaturas_bibliografias.tipo_bibliografia', 'complementaria')
+                ->where('asignaturas_bibliografias.estado', 'activa')
                 ->where('bibliografias_disponibles.estado', 1)
                 ->whereIn('asignaturas_departamentos.codigo_asignatura', $codigosAsignaturas)
                 ->where(function ($query) use ($sedeId) {
@@ -5182,6 +5241,22 @@ class ReporteController extends BaseController
 
 
         // Obtener asignaturas REGULARES (siempre incluidas)
+        // Plan pedido (código + vigencias); evita tomar el código de otro plan de la misma carrera
+        $planMalla = $this->resolverCarreraEspejo(
+            (int) $carreraId,
+            (int) $sedeId,
+            $request->getQueryParams()['codigo'] ?? null,
+            $request->getQueryParams()['vigencia_desde'] ?? null,
+            $request->getQueryParams()['vigencia_hasta'] ?? null
+        );
+        if (!$planMalla) {
+            $response->getBody()->write('Plan de carrera no encontrado');
+            return $response->withStatus(404);
+        }
+        if ($carrera) {
+            $carrera->codigo = $planMalla->codigo_carrera;
+        }
+
         $regulares = DB::table('vw_mallas')
             ->where('id_sede', $sedeId)
             ->where('id_carrera', $carreraId)
@@ -5366,7 +5441,7 @@ class ReporteController extends BaseController
         
         // Sumar ejemplares de todas las filas (estos sí se suman)
         foreach ($datosBibliografia as $fila) {
-            $totalesCarrera['ejemplares_impresos'] += $fila['ejemplares_impresos'] ?? 0;
+            $totalesCarrera['ejemplares_impresos'] += max(0, (int) ($fila['ejemplares_impresos'] ?? 0));
         }
         
         // Calcular total de ejemplares digitales considerando valores especiales
@@ -5758,12 +5833,6 @@ class ReporteController extends BaseController
             $carrera->vigencia_hasta ?? null,
             $tiposFormacionFiltro
         );
-        if (is_numeric($coberturaBasicaTiempoReal)) {
-            $coberturaBasica = (float) $coberturaBasicaTiempoReal;
-        }
-        if (is_numeric($coberturaComplementariaTiempoReal)) {
-            $coberturaComplementaria = (float) $coberturaComplementariaTiempoReal;
-        }
 
         // Calcular totales
         $totalesBasica = [
