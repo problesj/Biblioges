@@ -258,245 +258,39 @@ function ejecutarReporteComplementarioExpandido($tarea) {
 }
 
 /**
- * Obtener detalles de cobertura básica para guardado
+ * Detalle de cobertura del plan más reciente de la carrera en la sede, calculado con la misma lógica que los
+ * reportes (ReporteController::detalleCoberturaPlan): mismas asignaturas, filtros de formación del plan
+ * (o todos por defecto) y la misma regla de disponibilidad.
  */
-function obtenerDetallesCoberturaBasica($sedeId, $carreraId) {
-    $planEspejo = DB::table('carreras_espejos')
+function obtenerDetallesCoberturaPlan($sedeId, $carreraId, $tipo) {
+    $plan = DB::table('carreras_espejos')
         ->where('carrera_id', $carreraId)
         ->where('sede_id', $sedeId)
         ->orderByDesc('vigencia_desde')
         ->first();
-    if (!$planEspejo) {
+    if (!$plan) {
         return [];
     }
-    $idPlanMalla = (int) $planEspejo->id;
-
-    // Obtener asignaturas REGULARES (siempre incluidas)
-    $regulares = DB::table('vw_mallas')
-        ->where('id_sede', $sedeId)
-        ->where('id_carrera', $carreraId)
-        ->where('id_carrera_espejo', $idPlanMalla)
-        ->where('tipo_asignatura', 'REGULAR')
-        ->select('codigo_asignatura as codigo', 'asignatura as nombre', 'tipo_asignatura')
-        ->distinct()
-        ->get();
-
-    $tiposFormacionFiltro = [];
-    $filtrosGuardados = DB::table('filtros_formaciones')
-        ->where('id_carrera_espejo', $idPlanMalla)
-        ->first();
-    if ($filtrosGuardados) {
-        if ($filtrosGuardados->basica) $tiposFormacionFiltro[] = 'FORMACION_BASICA';
-        if ($filtrosGuardados->general) $tiposFormacionFiltro[] = 'FORMACION_GENERAL';
-        if ($filtrosGuardados->idioma) $tiposFormacionFiltro[] = 'FORMACION_IDIOMAS';
-        if ($filtrosGuardados->profesional) $tiposFormacionFiltro[] = 'FORMACION_PROFESIONAL';
-        if ($filtrosGuardados->valores) $tiposFormacionFiltro[] = 'FORMACION_VALORES';
-        if ($filtrosGuardados->especialidad) $tiposFormacionFiltro[] = 'FORMACION_ESPECIALIDAD';
-        if ($filtrosGuardados->especial) $tiposFormacionFiltro[] = 'FORMACION_ESPECIAL';
-    }
-
-    // Obtener asignaturas de formación según filtros guardados
-    $formaciones = collect();
-    if (!empty($tiposFormacionFiltro)) {
-        $formaciones = DB::table('vw_mallas')
-            ->where('id_sede', $sedeId)
-            ->where('id_carrera', $carreraId)
-            ->where('id_carrera_espejo', $idPlanMalla)
-            ->whereIn('tipo_asignatura', $tiposFormacionFiltro)
-            ->whereNotNull('codigo_asignatura_formacion')
-            ->select(
-                'codigo_asignatura_formacion as codigo', 
-                'asignatura_formacion as nombre', 
-                'tipo_asignatura'
-            )
-            ->distinct()
-            ->get();
-    }
-
-    // Unir ambos conjuntos
-    $asignaturas = $regulares->merge($formaciones)->unique('codigo')->values();
-
-    // Generar detalles de cobertura básica
-    $detalles = [];
-    foreach ($asignaturas as $asignatura) {
-        $asignaturaId = DB::table('asignaturas_departamentos')
-            ->where('codigo_asignatura', $asignatura->codigo)
-            ->value('asignatura_id');
-        
-        if ($asignaturaId) {
-            $bibliografias = DB::table('asignaturas_bibliografias')
-                ->join('bibliografias_declaradas', 'asignaturas_bibliografias.bibliografia_id', '=', 'bibliografias_declaradas.id')
-                ->where('asignaturas_bibliografias.asignatura_id', $asignaturaId)
-                ->where('asignaturas_bibliografias.tipo_bibliografia', 'basica')
-                ->where('asignaturas_bibliografias.estado', 'activa')
-                ->select('bibliografias_declaradas.id')
-                ->get();
-            
-            foreach ($bibliografias as $bibliografia) {
-                // Ejemplares impresos
-                $ejemplaresImpresos = DB::table('vw_bib_declarada_sede_noejem')
-                    ->where('id_bib_declarada', $bibliografia->id)
-                    ->where('id_sede', $sedeId)
-                    ->value('no_ejem_imp_sede') ?? 0;
-                    
-                // Ejemplares digitales
-                $ejemplaresDigitales = DB::table('bibliografias_disponibles')
-                    ->where('bibliografia_declarada_id', $bibliografia->id)
-                    ->where('disponibilidad', '!=', 'impreso')
-                    ->pluck('ejemplares_digitales');
-                $ejemplaresDigitales = $ejemplaresDigitales->contains(0) ? 0 : $ejemplaresDigitales->sum();
-                
-                // Disponibilidad
-                $disponible = DB::table('bibliografias_disponibles')
-                    ->where('bibliografia_declarada_id', $bibliografia->id)
-                    ->where('estado', 1)
-                    ->where(function ($query) use ($sedeId) {
-                        $query->whereIn('disponibilidad', ['electronico', 'ambos'])
-                              ->orWhere(function ($q) use ($sedeId) {
-                                  $q->where('disponibilidad', 'impreso')
-                                    ->whereExists(function ($sub) use ($sedeId) {
-                                        $sub->select(DB::raw(1))
-                                            ->from('bibliografias_disponibles_sedes')
-                                            ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
-                                            ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
-                                            ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
-                                    });
-                              });
-                    })
-                    ->exists();
-                
-                $detalles[] = [
-                    'codigo_asignatura' => $asignatura->codigo,
-                    'id_bibliografia_declarada' => $bibliografia->id,
-                    'ejemplares_impresos' => $ejemplaresImpresos,
-                    'ejemplares_digitales' => $ejemplaresDigitales,
-                    'disponible' => $disponible ? 1 : 0
-                ];
-            }
+    static $controlador = null;
+    if ($controlador === null) {
+        if (!isset($GLOBALS['twig'])) {
+            $GLOBALS['twig'] = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/templates'));
         }
+        $controlador = new \App\Controllers\ReporteController();
     }
-    
-    return $detalles;
+    return $controlador->detalleCoberturaPlan($plan, $tipo, null);
+}
+
+/**
+ * Obtener detalles de cobertura básica para guardado
+ */
+function obtenerDetallesCoberturaBasica($sedeId, $carreraId) {
+    return obtenerDetallesCoberturaPlan($sedeId, $carreraId, 'basica');
 }
 
 /**
  * Obtener detalles de cobertura complementaria para guardado
  */
 function obtenerDetallesCoberturaComplementaria($sedeId, $carreraId) {
-    $planEspejo = DB::table('carreras_espejos')
-        ->where('carrera_id', $carreraId)
-        ->where('sede_id', $sedeId)
-        ->orderByDesc('vigencia_desde')
-        ->first();
-    if (!$planEspejo) {
-        return [];
-    }
-    $idPlanMalla = (int) $planEspejo->id;
-
-    // Obtener asignaturas REGULARES (siempre incluidas)
-    $regulares = DB::table('vw_mallas')
-        ->where('id_sede', $sedeId)
-        ->where('id_carrera', $carreraId)
-        ->where('id_carrera_espejo', $idPlanMalla)
-        ->where('tipo_asignatura', 'REGULAR')
-        ->select('codigo_asignatura as codigo', 'asignatura as nombre', 'tipo_asignatura')
-        ->distinct()
-        ->get();
-
-    $tiposFormacionFiltro = [];
-    $filtrosGuardados = DB::table('filtros_formaciones')
-        ->where('id_carrera_espejo', $idPlanMalla)
-        ->first();
-    if ($filtrosGuardados) {
-        if ($filtrosGuardados->basica) $tiposFormacionFiltro[] = 'FORMACION_BASICA';
-        if ($filtrosGuardados->general) $tiposFormacionFiltro[] = 'FORMACION_GENERAL';
-        if ($filtrosGuardados->idioma) $tiposFormacionFiltro[] = 'FORMACION_IDIOMAS';
-        if ($filtrosGuardados->profesional) $tiposFormacionFiltro[] = 'FORMACION_PROFESIONAL';
-        if ($filtrosGuardados->valores) $tiposFormacionFiltro[] = 'FORMACION_VALORES';
-        if ($filtrosGuardados->especialidad) $tiposFormacionFiltro[] = 'FORMACION_ESPECIALIDAD';
-        if ($filtrosGuardados->especial) $tiposFormacionFiltro[] = 'FORMACION_ESPECIAL';
-    }
-
-    // Obtener asignaturas de formación según filtros guardados
-    $formaciones = collect();
-    if (!empty($tiposFormacionFiltro)) {
-        $formaciones = DB::table('vw_mallas')
-            ->where('id_sede', $sedeId)
-            ->where('id_carrera', $carreraId)
-            ->where('id_carrera_espejo', $idPlanMalla)
-            ->whereIn('tipo_asignatura', $tiposFormacionFiltro)
-            ->whereNotNull('codigo_asignatura_formacion')
-            ->select(
-                'codigo_asignatura_formacion as codigo', 
-                'asignatura_formacion as nombre', 
-                'tipo_asignatura'
-            )
-            ->distinct()
-            ->get();
-    }
-
-    // Unir ambos conjuntos
-    $asignaturas = $regulares->merge($formaciones)->unique('codigo')->values();
-
-    // Generar detalles de cobertura complementaria
-    $detalles = [];
-    foreach ($asignaturas as $asignatura) {
-        $asignaturaId = DB::table('asignaturas_departamentos')
-            ->where('codigo_asignatura', $asignatura->codigo)
-            ->value('asignatura_id');
-        
-        if ($asignaturaId) {
-            $bibliografias = DB::table('asignaturas_bibliografias')
-                ->join('bibliografias_declaradas', 'asignaturas_bibliografias.bibliografia_id', '=', 'bibliografias_declaradas.id')
-                ->where('asignaturas_bibliografias.asignatura_id', $asignaturaId)
-                ->where('asignaturas_bibliografias.tipo_bibliografia', 'complementaria')
-                ->where('asignaturas_bibliografias.estado', 'activa')
-                ->select('bibliografias_declaradas.id')
-                ->get();
-            
-            foreach ($bibliografias as $bibliografia) {
-                // Ejemplares impresos
-                $ejemplaresImpresos = DB::table('vw_bib_declarada_sede_noejem')
-                    ->where('id_bib_declarada', $bibliografia->id)
-                    ->where('id_sede', $sedeId)
-                    ->value('no_ejem_imp_sede') ?? 0;
-                    
-                // Ejemplares digitales
-                $ejemplaresDigitales = DB::table('bibliografias_disponibles')
-                    ->where('bibliografia_declarada_id', $bibliografia->id)
-                    ->where('disponibilidad', '!=', 'impreso')
-                    ->pluck('ejemplares_digitales');
-                $ejemplaresDigitales = $ejemplaresDigitales->contains(0) ? 0 : $ejemplaresDigitales->sum();
-                
-                // Disponibilidad
-                $disponible = DB::table('bibliografias_disponibles')
-                    ->where('bibliografia_declarada_id', $bibliografia->id)
-                    ->where('estado', 1)
-                    ->where(function ($query) use ($sedeId) {
-                        $query->whereIn('disponibilidad', ['electronico', 'ambos'])
-                              ->orWhere(function ($q) use ($sedeId) {
-                                  $q->where('disponibilidad', 'impreso')
-                                    ->whereExists(function ($sub) use ($sedeId) {
-                                        $sub->select(DB::raw(1))
-                                            ->from('bibliografias_disponibles_sedes')
-                                            ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
-                                            ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
-                                            ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
-                                    });
-                              });
-                    })
-                    ->exists();
-                
-                $detalles[] = [
-                    'codigo_asignatura' => $asignatura->codigo,
-                    'id_bibliografia_declarada' => $bibliografia->id,
-                    'ejemplares_impresos' => $ejemplaresImpresos,
-                    'ejemplares_digitales' => $ejemplaresDigitales,
-                    'disponible' => $disponible ? 1 : 0
-                ];
-            }
-        }
-    }
-    
-    return $detalles;
-} 
+    return obtenerDetallesCoberturaPlan($sedeId, $carreraId, 'complementaria');
+}

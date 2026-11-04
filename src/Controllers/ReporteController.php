@@ -285,6 +285,83 @@ class ReporteController extends BaseController
     }
 
     /**
+     * Detalle de cobertura de un plan (una fila por asignatura × título declarado), calculado en el servidor
+     * con el mismo criterio que los totales del reporte: mismas asignaturas, títulos activos del tipo pedido
+     * y la misma regla de disponibilidad. Lo usan el guardado de coberturas y las tareas programadas (cron).
+     *
+     * @param object      $plan           Registro de carreras_espejos
+     * @param string      $tipo           'basica' | 'complementaria'
+     * @param array|null  $tiposFormacion null = filtros guardados del plan (o todos por defecto)
+     */
+    public function detalleCoberturaPlan($plan, string $tipo, ?array $tiposFormacion = null): array
+    {
+        $codigos = $this->codigosAsignaturasPlan(
+            (int) $plan->carrera_id,
+            (string) $plan->codigo_carrera,
+            (int) $plan->sede_id,
+            $plan->vigencia_desde,
+            $plan->vigencia_hasta,
+            $tiposFormacion
+        );
+        if (empty($codigos)) {
+            return [];
+        }
+        $sedeId = (int) $plan->sede_id;
+
+        $filas = DB::table('asignaturas_departamentos as ad')
+            ->join('asignaturas_bibliografias as ab', 'ab.asignatura_id', '=', 'ad.asignatura_id')
+            ->join('bibliografias_declaradas as bd', 'bd.id', '=', 'ab.bibliografia_id')
+            ->whereIn('ad.codigo_asignatura', $codigos)
+            ->where('ab.tipo_bibliografia', $tipo)
+            ->where('ab.estado', 'activa')
+            ->select('ad.codigo_asignatura', 'bd.id as id_bibliografia_declarada')
+            ->distinct()
+            ->get();
+        if ($filas->isEmpty()) {
+            return [];
+        }
+        $ids = $filas->pluck('id_bibliografia_declarada')->unique()->values()->all();
+
+        // Disponible: electrónico o ambos, o impreso con ejemplares en la sede (misma regla que los totales)
+        $disponibles = DB::table('bibliografias_disponibles')
+            ->whereIn('bibliografia_declarada_id', $ids)
+            ->where('estado', 1)
+            ->where(function ($q) use ($sedeId) {
+                $q->whereIn('disponibilidad', ['electronico', 'ambos'])
+                    ->orWhere(function ($q2) use ($sedeId) {
+                        $q2->where('disponibilidad', 'impreso')
+                            ->whereExists(function ($sub) use ($sedeId) {
+                                $sub->select(DB::raw(1))
+                                    ->from('bibliografias_disponibles_sedes')
+                                    ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
+                                    ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
+                                    ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
+                            });
+                    });
+            })
+            ->distinct()
+            ->pluck('bibliografia_declarada_id')
+            ->flip();
+
+        $ejemplares = [];
+        $detalle = [];
+        foreach ($filas as $fila) {
+            $id = (int) $fila->id_bibliografia_declarada;
+            if (!isset($ejemplares[$id])) {
+                $ejemplares[$id] = $this->calcularEjemplaresExpandido($id, $sedeId);
+            }
+            $detalle[] = [
+                'codigo_asignatura' => $fila->codigo_asignatura,
+                'id_bibliografia_declarada' => $id,
+                'ejemplares_impresos' => (int) $ejemplares[$id]['ejemplares_impresos'],
+                'ejemplares_digitales' => (int) $ejemplares[$id]['ejemplares_digitales'],
+                'disponible' => isset($disponibles[$id]) ? 1 : 0,
+            ];
+        }
+        return $detalle;
+    }
+
+    /**
      * Calcula la cobertura complementaria en tiempo real para una carrera específica
      */
     private function calcularCoberturaComplementariaTiempoReal($carreraId, $codigoCarrera, $sedeId, $vigenciaDesde = null, $vigenciaHasta = null, $tiposFormacionFiltro = null)
@@ -4720,12 +4797,10 @@ class ReporteController extends BaseController
         error_log('Data decodificada: ' . print_r($data, true));
         
         try {
-            if (!$data || !isset($data['detalles']) || !is_array($data['detalles'])) {
-                $response->getBody()->write(json_encode(['error' => 'Datos de detalles inválidos']));
-                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            if (!is_array($data)) {
+                $data = [];
             }
             
-            $detalles = $data['detalles'];
             $fechaMedicion = $data['fecha_medicion'] ?? date('Y-m-d H:i:s');
             $queryParams = $request->getQueryParams();
             // Convertir fecha_medicion a formato MySQL compatible si viene en ISO 8601
@@ -4749,6 +4824,17 @@ class ReporteController extends BaseController
 
             $codigoCarrera = $carreraEspejo->codigo_carrera;
             $carreraEspejoId = $carreraEspejo->id;
+
+            // El detalle se calcula en el servidor con el mismo criterio que la tabla del reporte;
+            // no se usan los valores enviados por el navegador. Los filtros vienen de la URL del reporte
+            // (o, si no vienen, se usan los filtros guardados del plan).
+            $tiposGuardado = null;
+            if (!empty($queryParams['tipos_formacion_vacio'])) {
+                $tiposGuardado = [];
+            } elseif (array_key_exists('tipos_formacion', $queryParams)) {
+                $tiposGuardado = array_values((array) $queryParams['tipos_formacion']);
+            }
+            $detalles = $this->detalleCoberturaPlan($carreraEspejo, 'basica', $tiposGuardado);
 
             // Obtener el id del reporte de coberturas básicas
             $reporte = DB::table('reportes')->where('nombre', 'Reporte de Coberturas Básicas')->first();
@@ -4807,12 +4893,10 @@ class ReporteController extends BaseController
         error_log('Data decodificada: ' . print_r($data, true));
         
         try {
-            if (!$data || !isset($data['detalles']) || !is_array($data['detalles'])) {
-                $response->getBody()->write(json_encode(['error' => 'Datos de detalles inválidos']));
-                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            if (!is_array($data)) {
+                $data = [];
             }
             
-            $detalles = $data['detalles'];
             $fechaMedicion = $data['fecha_medicion'] ?? date('Y-m-d H:i:s');
             $queryParams = $request->getQueryParams();
             // Convertir fecha_medicion a formato MySQL compatible si viene en ISO 8601
@@ -4836,6 +4920,17 @@ class ReporteController extends BaseController
 
             $codigoCarrera = $carreraEspejo->codigo_carrera;
             $carreraEspejoId = $carreraEspejo->id;
+
+            // El detalle se calcula en el servidor con el mismo criterio que la tabla del reporte;
+            // no se usan los valores enviados por el navegador. Los filtros vienen de la URL del reporte
+            // (o, si no vienen, se usan los filtros guardados del plan).
+            $tiposGuardado = null;
+            if (!empty($queryParams['tipos_formacion_vacio'])) {
+                $tiposGuardado = [];
+            } elseif (array_key_exists('tipos_formacion', $queryParams)) {
+                $tiposGuardado = array_values((array) $queryParams['tipos_formacion']);
+            }
+            $detalles = $this->detalleCoberturaPlan($carreraEspejo, 'complementaria', $tiposGuardado);
 
             // Obtener el id del reporte de coberturas complementarias
             $reporte = DB::table('reportes')->where('nombre', 'Reporte de Coberturas Complementarias')->first();

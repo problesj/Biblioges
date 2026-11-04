@@ -103,7 +103,7 @@ class DashboardController extends BaseController
             LIMIT 5
         ")->fetchAll();
 
-        // Obtener datos de cobertura básica por carrera usando las tablas de reportes guardados
+        // Cobertura básica por plan (carrera + sede + código) usando las mediciones guardadas; no se mezclan planes
         $anioActual = date('Y');
         
         // Obtener el año más reciente con datos disponibles
@@ -118,8 +118,8 @@ class DashboardController extends BaseController
         
         $coberturaCarreras = $this->pdo->query("
             SELECT 
-                c.nombre as carrera_nombre,
-                rcb.codigo_carrera as carrera_codigo,
+                CONCAT(c.nombre, ' - ', s.nombre) as carrera_nombre,
+                ce.codigo_carrera as carrera_codigo,
                 ROUND(
                     LEAST(
                         COUNT(DISTINCT CASE WHEN rcb.no_bib_disponible_basica > 0 THEN rcb.id_bibliografia_declarada END) * 100.0 / 
@@ -128,16 +128,13 @@ class DashboardController extends BaseController
                     ), 2
                 ) as cobertura_basica
             FROM reporte_coberturas_carreras_basicas rcb
-            INNER JOIN carreras c ON c.id = (
-                SELECT ce.carrera_id 
-                FROM carreras_espejos ce 
-                WHERE ce.codigo_carrera = rcb.codigo_carrera 
-                LIMIT 1
-            )
+            INNER JOIN carreras_espejos ce ON ce.id = rcb.id_carrera_espejo
+            INNER JOIN carreras c ON c.id = ce.carrera_id
+            INNER JOIN sedes s ON s.id = ce.sede_id
             WHERE YEAR(rcb.fecha_medicion) = {$anioConsulta}
             AND c.estado = 1
             AND c.tipo_programa = 'P'
-            GROUP BY rcb.codigo_carrera, c.nombre
+            GROUP BY rcb.id_carrera_espejo, c.nombre, s.nombre, ce.codigo_carrera
             HAVING cobertura_basica > 0
             ORDER BY cobertura_basica DESC
             LIMIT 10
