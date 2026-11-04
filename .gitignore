@@ -21,3 +21,6 @@ biblioges-installer.tar.gz
 # Excel generados por la aplicación (no versionar)
 /public/reportes/
 /public/exports/
+
+# Caché compilada de Twig (se regenera sola)
+/cache/twig/
