@@ -115,7 +115,7 @@
                         </div>
                         {% if bibliografia.disponibles|length > 0 and bibliografia.tiene_disponibles %}
                         <button type="button" class="btn btn-primary btn-sm ms-2" 
-                                onclick="mostrarBibliografiasDisponibles({{ bibliografia.id }}, '{{ bibliografia.titulo|e('js') }}')">
+                                onclick="mostrarBibliografiasDisponibles({{ bibliografia.id|e('js') }}, '{{ bibliografia.titulo|e('js') }}')">
                             <i class="fas fa-list me-1 text-white"></i>
                             Ver Disponibles
                         </button>
@@ -143,7 +143,7 @@
                         </div>
                         {% if bibliografia.disponibles|length > 0 and bibliografia.tiene_disponibles %}
                         <button type="button" class="btn btn-primary btn-sm ms-2" 
-                                onclick="mostrarBibliografiasDisponibles({{ bibliografia.id }}, '{{ bibliografia.titulo|e('js') }}')">
+                                onclick="mostrarBibliografiasDisponibles({{ bibliografia.id|e('js') }}, '{{ bibliografia.titulo|e('js') }}')">
                             <i class="fas fa-list me-1 text-white"></i>
                             Ver Disponibles
                         </button>
@@ -171,7 +171,7 @@
                         </div>
                         {% if bibliografia.disponibles|length > 0 and bibliografia.tiene_disponibles %}
                         <button type="button" class="btn btn-primary btn-sm ms-2" 
-                                onclick="mostrarBibliografiasDisponibles({{ bibliografia.id }}, '{{ bibliografia.titulo|e('js') }}')">
+                                onclick="mostrarBibliografiasDisponibles({{ bibliografia.id|e('js') }}, '{{ bibliografia.titulo|e('js') }}')">
                             <i class="fas fa-list me-1 text-white"></i>
                             Ver Disponibles
                         </button>
@@ -291,6 +291,24 @@ function mostrarDetallesAsignatura() {
     modal.show();
 }
 
+// Escapa texto antes de insertarlo como HTML (los datos pueden venir de catálogos externos)
+function escHtml(valor) {
+    return String(valor ?? '').replace(/[&<>"']/g, function (c) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c];
+    });
+}
+
+// Solo permite enlaces http(s); descarta javascript:, data: y cualquier otro esquema
+function urlSegura(url) {
+    if (!url) return '';
+    try {
+        var u = new URL(String(url), window.location.origin);
+        return (u.protocol === 'http:' || u.protocol === 'https:') ? escHtml(u.href) : '';
+    } catch (e) {
+        return '';
+    }
+}
+
 function mostrarBibliografiasDisponibles(bibliografiaId, titulo) {
     // Mostrar loading
     document.getElementById('modalContent').innerHTML = `
@@ -305,7 +323,7 @@ function mostrarBibliografiasDisponibles(bibliografiaId, titulo) {
     // Actualizar título del modal
     document.getElementById('modalBibliografiasDisponiblesLabel').innerHTML = `
         <i class="fas fa-book me-2"></i>
-        Bibliografías Disponibles: ${titulo}
+        Bibliografías Disponibles: ${escHtml(titulo)}
     `;
     
     // Mostrar modal
@@ -327,7 +345,7 @@ function mostrarBibliografiasDisponibles(bibliografiaId, titulo) {
                 document.getElementById('modalContent').innerHTML = `
                     <div class="alert alert-danger">
                         <i class="fas fa-exclamation-triangle me-2"></i>
-                        Error al cargar las bibliografías: ${data.message}
+                        Error al cargar las bibliografías: ${escHtml(data.message)}
                     </div>
                 `;
             }
@@ -336,7 +354,7 @@ function mostrarBibliografiasDisponibles(bibliografiaId, titulo) {
             document.getElementById('modalContent').innerHTML = `
                 <div class="alert alert-danger">
                     <i class="fas fa-exclamation-triangle me-2"></i>
-                    Error de conexión: ${error.message}
+                    Error de conexión: ${escHtml(error.message)}
                 </div>
             `;
         });
@@ -360,27 +378,27 @@ function mostrarBibliografiasEnModal(bibliografias) {
             <div class="col-12 mb-3">
                 <div class="card">
                     <div class="card-body">
-                        <h6 class="card-title">${bib.titulo}</h6>
+                        <h6 class="card-title">${escHtml(bib.titulo)}</h6>
                         <div class="row">
                             <div class="col-md-8">
-                                <p class="mb-1"><strong>Autor(es):</strong> ${bib.autores || 'No especificado'}</p>
-                                <p class="mb-1"><strong>Año:</strong> ${bib.anio_edicion}</p>
-                                <p class="mb-1"><strong>Editorial:</strong> ${bib.editorial || 'No especificada'}</p>
+                                <p class="mb-1"><strong>Autor(es):</strong> ${escHtml(bib.autores || 'No especificado')}</p>
+                                <p class="mb-1"><strong>Año:</strong> ${escHtml(bib.anio_edicion)}</p>
+                                <p class="mb-1"><strong>Editorial:</strong> ${escHtml(bib.editorial || 'No especificada')}</p>
                                 <p class="mb-1"><strong>Disponibilidad:</strong> 
                                     <span class="badge bg-${bib.disponibilidad === 'electronico' ? 'success' : bib.disponibilidad === 'impreso' ? 'primary' : 'info'}">
-                                        ${bib.disponibilidad}
+                                        ${escHtml(bib.disponibilidad)}
                                     </span>
                                 </p>
                             </div>
                             <div class="col-md-4 text-end">
-                                ${bib.url_acceso ? `
-                                    <a href="${bib.url_acceso}" target="_blank" class="btn btn-success btn-sm mb-1 w-100">
+                                ${urlSegura(bib.url_acceso) ? `
+                                    <a href="${urlSegura(bib.url_acceso)}" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm mb-1 w-100">
                                         <i class="fas fa-external-link-alt me-1"></i>
                                         Acceso Directo
                                     </a>
                                 ` : ''}
-                                ${bib.url_catalogo ? `
-                                    <a href="${bib.url_catalogo}" target="_blank" class="btn btn-primary btn-sm w-100">
+                                ${urlSegura(bib.url_catalogo) ? `
+                                    <a href="${urlSegura(bib.url_catalogo)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm w-100">
                                         <i class="fas fa-search me-1"></i>
                                         Ver en Catálogo
                                     </a>

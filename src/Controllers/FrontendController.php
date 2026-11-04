@@ -93,7 +93,7 @@ class FrontendController
             'carreras' => $carreras,
             'sedes' => $sedes,
             'sede_filtro' => $sedeFiltro,
-            'bibliografias_busqueda_json' => json_encode($bibliografiasBusqueda, JSON_UNESCAPED_UNICODE),
+            'bibliografias_busqueda_json' => json_encode($bibliografiasBusqueda, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP),
         ]);
 
         $response->getBody()->write($html);
@@ -846,9 +846,10 @@ class FrontendController
             return $response->withHeader('Content-Type', 'application/json');
 
         } catch (\Exception $e) {
+            error_log('FrontendController::apiGetBibliografiasDisponibles: ' . $e->getMessage());
             $response->getBody()->write(json_encode([
                 'success' => false,
-                'message' => 'Error al obtener bibliografías disponibles: ' . $e->getMessage()
+                'message' => 'No fue posible obtener las bibliografías disponibles'
             ]));
         return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
     }

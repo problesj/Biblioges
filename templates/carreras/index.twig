@@ -343,10 +343,10 @@
                     <tbody>
                         {% for carrera in carreras %}
                         <tr>
-                            <td>{{ carrera.codigos_carrera|replace({',': '<br>'})|raw }}</td>
+                            <td>{{ carrera.codigos_carrera|default('')|e|replace({',': '<br>'})|raw }}</td>
                             <td>{{ carrera.nombre }}</td>
-                            <td>{{ carrera.vigencias_desde|replace({',': '<br>'})|raw }}</td>
-                            <td>{{ carrera.vigencias_hasta|replace({',': '<br>'})|raw }}</td>
+                            <td>{{ carrera.vigencias_desde|default('')|e|replace({',': '<br>'})|raw }}</td>
+                            <td>{{ carrera.vigencias_hasta|default('')|e|replace({',': '<br>'})|raw }}</td>
                             <td>
                                 {% if carrera.tipo_programa == 'P' %}
                                     Pregrado
