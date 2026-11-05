@@ -184,7 +184,7 @@ sudo mv composer.phar /usr/local/bin/composer
 ### Cron
 - **Propósito:** Ejecución de tareas programadas
 - **Verificación:** `sudo systemctl status cron`
-- **Configuración:** `sudo crontab -u www-data -e`
+- **Configuración:** `sudo crontab -u webadm -e`
 - **Logs:** `/var/log/cron_tareas.log`
 
 ### MySQL/MariaDB
@@ -274,7 +274,7 @@ ls -la public/uploads/ | head -1 | grep "drwxrwxr-x" || echo "❌ Permisos incor
 
 echo -e "\n6. Verificando tareas programadas..."
 sudo systemctl status cron | grep "active (running)" || echo "❌ Servicio cron no está activo"
-sudo crontab -u www-data -l | grep "cron_ejecutar_tareas.php" || echo "❌ Crontab no configurado"
+sudo crontab -u webadm -l | grep "cron_ejecutar_tareas.php" || echo "❌ Crontab no configurado"
 
 echo -e "\n=== VERIFICACIÓN COMPLETADA ==="
 ```
@@ -375,11 +375,12 @@ El archivo `database/init_db.php` es responsable de crear la base de datos y con
 - **Crea la base de datos** si no existe
 - **Crea el usuario** de la base de datos si no existe
 - **Ejecuta el esquema SQL** (`database/schema.sql`)
-- **Inserta datos iniciales** (usuarios administradores, etc.)
+- **Inserta los datos requeridos** (sede y unidad especiales, catálogo de reportes)
+- Con `--datos-ejemplo` carga además `database/datos_ejemplo.sql` (solo desarrollo; no se aplica si la base ya tiene datos)
 
 #### Requisitos previos:
 1. **Archivo `.env` configurado** con las credenciales de base de datos
-2. **Usuario root de MySQL** con permisos para crear bases de datos y usuarios
+2. **Cuenta administradora de MySQL** con permisos para crear bases de datos y usuarios (`DB_ROOT_USERNAME` / `DB_ROOT_PASSWORD` en `.env`; si no se definen se usa `root` con `DB_PASSWORD`). `DB_PASSWORD` debe cumplir la política de contraseñas de MySQL
 3. **PHP con extensión PDO** habilitada
 
 #### Ejecución:
@@ -389,6 +390,9 @@ cat .env | grep DB_
 
 # Ejecutar el script de inicialización
 php database/init_db.php
+
+# Crear el primer administrador (pide los datos y la contraseña por consola)
+php database/crear_admin.php
 ```
 
 #### Verificación de funcionamiento:
@@ -418,8 +422,11 @@ El archivo `cron_ejecutar_tareas.php` es responsable de ejecutar tareas automát
 
 #### Configuración del crontab:
 ```bash
-# Editar el crontab del usuario www-data
-sudo crontab -u www-data -e
+# El log debe pertenecer a webadm; si no puede escribirlo, cron no ejecuta el comando
+sudo touch /var/log/cron_tareas.log && sudo chown webadm:webadm /var/log/cron_tareas.log
+
+# Editar el crontab del usuario webadm
+sudo crontab -u webadm -e
 
 # Agregar la siguiente línea para ejecutar tareas cada 5 minutos:
 */5 * * * * /usr/bin/php /var/www/html/biblioges/cron_ejecutar_tareas.php >> /var/log/cron_tareas.log 2>&1
@@ -431,13 +438,13 @@ sudo crontab -u www-data -e
 sudo systemctl status cron
 
 # Verificar las tareas programadas
-sudo crontab -u www-data -l
+sudo crontab -u webadm -l
 
 # Verificar logs de tareas programadas
 tail -f /var/log/cron_tareas.log
 
 # Probar ejecución manual
-sudo -u www-data php /var/www/html/biblioges/cron_ejecutar_tareas.php
+sudo -u webadm -H sh -c '/usr/bin/php /var/www/html/biblioges/cron_ejecutar_tareas.php >> /var/log/cron_tareas.log 2>&1'
 ```
 
 #### Tareas que se ejecutan automáticamente:
@@ -516,13 +523,13 @@ php database/init_db.php
 sudo systemctl status cron
 
 # Verificar que el crontab está configurado
-sudo crontab -u www-data -l
+sudo crontab -u webadm -l
 
 # Verificar logs de tareas programadas
 tail -f /var/log/cron_tareas.log
 
 # Probar ejecución manual del script
-sudo -u www-data php /var/www/html/biblioges/cron_ejecutar_tareas.php
+sudo -u webadm -H sh -c '/usr/bin/php /var/www/html/biblioges/cron_ejecutar_tareas.php >> /var/log/cron_tareas.log 2>&1'
 
 # Verificar permisos del archivo
 ls -la /var/www/html/biblioges/cron_ejecutar_tareas.php

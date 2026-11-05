@@ -1,135 +1,142 @@
 <?php
+/**
+ * Instalación de la base de datos de Biblioges en un servidor nuevo.
+ *
+ * Crea la base de datos y el usuario de la aplicación definidos en .env, carga database/schema.sql
+ * (tablas, vistas, triggers y datos requeridos) y, opcionalmente, los datos de ejemplo.
+ *
+ *   php database/init_db.php                  # base de datos + usuario + esquema
+ *   php database/init_db.php --datos-ejemplo  # además carga database/datos_ejemplo.sql (solo desarrollo)
+ *
+ * Variables de .env usadas: DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD y una cuenta
+ * de MySQL con permisos para crear bases de datos y usuarios: DB_ROOT_USERNAME / DB_ROOT_PASSWORD
+ * (si no están definidas se usa "root" con DB_PASSWORD).
+ *
+ * Después cree el primer administrador con:  php database/crear_admin.php
+ * Para actualizar una base existente use los scripts de migración database/AAAA-MM-*.sql.
+ */
 
-require_once __DIR__ . '/../vendor/autoload.php';
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit;
+}
 
-// Cargar variables de entorno
-$envFile = __DIR__ . '/../.env';
-if (file_exists($envFile)) {
-    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
-    $dotenv->load();
-} else {
+$raiz = dirname(__DIR__);
+require_once $raiz . '/vendor/autoload.php';
+require_once __DIR__ . '/lib/dividir_sql.php';
+
+if (!is_file($raiz . '/.env')) {
     fwrite(STDERR, "Falta el archivo .env: configure las credenciales de la base de datos\n");
     exit(1);
 }
+Dotenv\Dotenv::createImmutable($raiz)->load();
 
-// Configuración de la base de datos ROOT (para crear usuario y base de datos)
-$rootConfig = [
-    'host' => $_ENV['DB_HOST'] ?? 'localhost',
-    'port' => $_ENV['DB_PORT'] ?? '3306',
-    'user' => 'root',
-    'password' => $_ENV['DB_PASSWORD'] ?? '' // Se asume que el root usa la misma contraseña, ajustar si es necesario
-];
+function cfg(string $clave, string $porDefecto = ''): string
+{
+    $valor = $_ENV[$clave] ?? getenv($clave);
 
-// Datos de producción
-$prodDbName = $_ENV['DB_DATABASE'] ?? 'bibliografia';
-$prodUser = $_ENV['DB_USERNAME'] ?? 'biblioges';
-$prodPassword = $_ENV['DB_PASSWORD'] ?? '';
+    return ($valor === false || $valor === null || $valor === '') ? $porDefecto : (string) $valor;
+}
 
-try {
-    // Conectar a MySQL como root sin seleccionar base de datos
-    $pdo = new PDO(
-        "mysql:host={$rootConfig['host']};port={$rootConfig['port']};charset=utf8mb4",
-        $rootConfig['user'],
-        $rootConfig['password'],
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-    );
-
-    echo "Conectado como root. Creando base de datos de producción...\n";
-    echo "Host: {$rootConfig['host']}:{$rootConfig['port']}\n";
-    echo "Base de datos: {$prodDbName}\n";
-    echo "Usuario: {$prodUser}\n";
-
-    // Crear base de datos de producción si no existe
-    $pdo->exec("CREATE DATABASE IF NOT EXISTS {$prodDbName} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-    echo "Base de datos '{$prodDbName}' creada/verificada.\n";
-
-    // Crear usuario de producción si no existe
-    $pdo->exec("CREATE USER IF NOT EXISTS '{$prodUser}'@'%' IDENTIFIED BY '{$prodPassword}'");
-    echo "Usuario '{$prodUser}' creado/verificado.\n";
-
-    // Otorgar todos los privilegios al usuario sobre la base de datos de producción
-    $pdo->exec("GRANT ALL PRIVILEGES ON {$prodDbName}.* TO '{$prodUser}'@'%'");
-    $pdo->exec("FLUSH PRIVILEGES");
-    echo "Privilegios otorgados a '{$prodUser}' sobre '{$prodDbName}'.\n";
-
-    // Cambiar a la base de datos de producción
-    $pdo->exec("USE {$prodDbName}");
-
-    // Leer el esquema y dividirlo en sentencias (respeta DELIMITER, necesario para los triggers)
-    require_once __DIR__ . '/lib/dividir_sql.php';
-    $sentencias = dividirSentenciasSql(file_get_contents(__DIR__ . '/schema.sql'));
-    $maxRetries = 3;
-
-    for ($retryCount = 0; $retryCount <= $maxRetries && $sentencias; $retryCount++) {
-        if ($retryCount > 0) {
-            echo "\n🔄 Reintento #{$retryCount} de declaraciones con dependencias...\n";
-        }
+/**
+ * Ejecuta un archivo SQL sentencia por sentencia. Reintenta las que fallan por dependencias
+ * (vistas o tablas que aún no existen). Devuelve la cantidad de sentencias con error.
+ */
+function ejecutarArchivoSql(PDO $pdo, string $archivo, int $maxReintentos = 3): int
+{
+    $sentencias = dividirSentenciasSql(file_get_contents($archivo));
+    $total = count($sentencias);
+    $errores = [];
+    for ($intento = 0; $intento <= $maxReintentos && $sentencias; $intento++) {
         $pendientes = [];
-        foreach ($sentencias as $statement) {
-            if (preg_match('/^(DROP DATABASE|CREATE DATABASE|USE)\s+/i', $statement)) {
-                echo "Saltando comando de base de datos: " . substr($statement, 0, 50) . "...\n";
+        $errores = [];
+        foreach ($sentencias as $sentencia) {
+            if (preg_match('/^(DROP DATABASE|CREATE DATABASE|USE)\s+/i', $sentencia)) {
                 continue;
             }
             try {
-                $pdo->exec($statement);
-                echo "Ejecutado: " . substr($statement, 0, 50) . "...\n";
+                $pdo->exec($sentencia);
             } catch (PDOException $e) {
-                $errorMsg = $e->getMessage();
-                if (strpos($errorMsg, 'already exists') !== false) {
-                    echo "Ignorando (ya existe): " . substr($statement, 0, 50) . "...\n";
-                } elseif (strpos($errorMsg, 'Failed to open the referenced table') !== false ||
-                          strpos($errorMsg, "doesn't exist") !== false ||
-                          strpos($errorMsg, 'Base table or view not found') !== false) {
-                    echo "⚠️  Error de dependencia: " . substr($statement, 0, 50) . "... Se reintentará.\n";
-                    $pendientes[] = $statement;
-                } else {
-                    echo "Error ejecutando: " . substr($statement, 0, 50) . "...\n";
-                    echo "Error: " . $errorMsg . "\n";
+                $mensaje = $e->getMessage();
+                if (strpos($mensaje, "doesn't exist") !== false
+                    || strpos($mensaje, 'Failed to open the referenced table') !== false
+                    || strpos($mensaje, 'Base table or view not found') !== false) {
+                    $pendientes[] = $sentencia;
                 }
+                $errores[] = substr(preg_replace('/\s+/', ' ', $sentencia), 0, 70) . ' => ' . $mensaje;
             }
         }
-        $sentencias = $pendientes;
-    }
-    if ($sentencias) {
-        echo "\n❌ Las siguientes declaraciones no se pudieron ejecutar después de {$maxRetries} reintentos:\n";
-        foreach ($sentencias as $failedStatement) {
-            echo "   - " . substr($failedStatement, 0, 80) . "...\n";
+        // Solo se reintentan los errores de dependencias; el resto se informa al final
+        if (count($pendientes) === count($errores)) {
+            $sentencias = $pendientes;
+        } else {
+            break;
         }
     }
-    echo "\n📊 Verificando tablas creadas...\n";
-    try {
-        $stmt = $pdo->query("SHOW TABLES");
-        $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        echo "✅ Tablas creadas exitosamente (" . count($tables) . "):\n";
-        foreach ($tables as $table) {
-            echo "   - {$table}\n";
-        }
-        $expectedTables = ['reportes', 'reporte_coberturas_carreras_basicas', 'reporte_coberturas_carreras_complementarias'];
-        echo "\n🔍 Verificando tablas críticas:\n";
-        foreach ($expectedTables as $expectedTable) {
-            if (in_array($expectedTable, $tables)) {
-                echo "   ✅ {$expectedTable} - EXISTE\n";
-            } else {
-                echo "   ❌ {$expectedTable} - NO EXISTE\n";
-            }
-        }
-    } catch (PDOException $e) {
-        echo "Error verificando tablas: " . $e->getMessage() . "\n";
+    echo '  ' . basename($archivo) . ": $total sentencias, " . count($errores) . " con error\n";
+    foreach ($errores as $error) {
+        echo "  ✗ $error\n";
     }
-    $seederFile = __DIR__ . '/seeders/DatabaseSeeder.php';
-    if (file_exists($seederFile)) {
-        require_once $seederFile;
-        if (class_exists('DatabaseSeeder')) {
-            $seeder = new DatabaseSeeder();
-            $seeder->run();
-        }
-    }
-    echo "\n=== RESUMEN ===\n";
-    echo "Base de datos de producción: {$prodDbName}\n";
-    echo "Usuario creado: {$prodUser}\n";
-    echo "Host: {$rootConfig['host']}:{$rootConfig['port']}\n";
-    echo "\nBase de datos de producción inicializada correctamente.\n";
 
+    return count($errores);
+}
+
+$host = cfg('DB_HOST', 'localhost');
+$puerto = cfg('DB_PORT', '3306');
+$baseDatos = cfg('DB_DATABASE', 'bibliografia');
+$usuarioApp = cfg('DB_USERNAME', 'biblioges');
+$claveApp = cfg('DB_PASSWORD');
+$usuarioRoot = cfg('DB_ROOT_USERNAME', 'root');
+$claveRoot = cfg('DB_ROOT_PASSWORD', $claveApp);
+$conDatosEjemplo = in_array('--datos-ejemplo', $argv, true);
+
+foreach (['DB_DATABASE' => $baseDatos, 'DB_USERNAME' => $usuarioApp] as $clave => $valor) {
+    if (!preg_match('/^[A-Za-z0-9_]{1,64}$/', $valor)) {
+        fwrite(STDERR, "$clave solo puede contener letras, números y guion bajo\n");
+        exit(1);
+    }
+}
+if ($claveApp === '') {
+    fwrite(STDERR, "DB_PASSWORD está vacío en .env\n");
+    exit(1);
+}
+
+try {
+    $pdo = new PDO("mysql:host=$host;port=$puerto;charset=utf8mb4", $usuarioRoot, $claveRoot, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    ]);
+    echo "Conectado a MySQL $host:$puerto como $usuarioRoot\n";
+
+    $pdo->exec("CREATE DATABASE IF NOT EXISTS `$baseDatos` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+    echo "Base de datos '$baseDatos' creada/verificada\n";
+
+    $pdo->exec('CREATE USER IF NOT EXISTS ' . $pdo->quote($usuarioApp) . "@'%' IDENTIFIED BY " . $pdo->quote($claveApp));
+    $pdo->exec("GRANT ALL PRIVILEGES ON `$baseDatos`.* TO " . $pdo->quote($usuarioApp) . "@'%'");
+    echo "Usuario '$usuarioApp' creado/verificado con permisos sobre '$baseDatos'\n";
+
+    $pdo->exec("USE `$baseDatos`");
+
+    echo "Cargando esquema...\n";
+    $errores = ejecutarArchivoSql($pdo, __DIR__ . '/schema.sql');
+
+    $tablas = $pdo->query('SHOW FULL TABLES')->fetchAll(PDO::FETCH_NUM);
+    $tipos = array_count_values(array_column($tablas, 1));
+    echo 'Tablas: ' . ($tipos['BASE TABLE'] ?? 0) . ', vistas: ' . ($tipos['VIEW'] ?? 0) . "\n";
+
+    if ($conDatosEjemplo) {
+        $conDatos = (int) $pdo->query('SELECT COUNT(*) FROM sedes WHERE id <> 0')->fetchColumn();
+        if ($conDatos > 0) {
+            echo "Datos de ejemplo NO cargados: la base ya tiene sedes registradas\n";
+        } else {
+            echo "Cargando datos de ejemplo (solo desarrollo)...\n";
+            $errores += ejecutarArchivoSql($pdo, __DIR__ . '/datos_ejemplo.sql');
+        }
+    }
+
+    echo "\nBase de datos '$baseDatos' lista" . ($errores ? " con $errores error(es); revise los mensajes" : '') . ".\n";
+    echo "Siguiente paso: crear el primer administrador con  php database/crear_admin.php\n";
+    exit($errores ? 1 : 0);
 } catch (PDOException $e) {
-    die("Error: " . $e->getMessage() . "\n");
-} 
+    fwrite(STDERR, 'Error: ' . $e->getMessage() . "\n");
+    exit(1);
+}
