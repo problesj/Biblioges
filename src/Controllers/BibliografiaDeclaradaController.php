@@ -1630,55 +1630,6 @@ class BibliografiaDeclaradaController
     }
 
     /**
-     * Desvincula una asignatura de la bibliografía.
-     */
-    public function desvincularSingle($id = null, $vinculacionId = null, Request $request = null, Response $response = null): Response
-    {
-        // Verificar autenticación
-        if (!$this->session->get('user_id')) {
-            header('Content-Type: application/json');
-            echo json_encode([
-                'success' => false,
-                'message' => 'Por favor inicie sesión para continuar',
-                'redirect' => Config::get('app_url') . 'login'
-            ]);
-            exit;
-        }
-
-        try {
-            $this->pdo->beginTransaction();
-
-            // Eliminar la vinculación
-            $stmt = $this->pdo->prepare("
-                DELETE FROM bibliografias_asignaturas 
-                WHERE id = ? AND bibliografia_id = ?
-            ");
-            $stmt->execute([$vinculacionId, $id]);
-
-            $this->pdo->commit();
-
-            header('Content-Type: application/json');
-            echo json_encode([
-                'success' => true,
-                'message' => 'Asignatura desvinculada exitosamente'
-            ]);
-            exit;
-
-        } catch (\Exception $e) {
-            if ($this->pdo->inTransaction()) {
-                $this->pdo->rollBack();
-            }
-
-            header('Content-Type: application/json');
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error al desvincular la asignatura: ' . $e->getMessage()
-            ]);
-            exit;
-        }
-    }
-
-    /**
      * Vincula múltiples asignaturas a la bibliografía.
      */
     public function vincularMultiple(Request $request, Response $response, array $args)

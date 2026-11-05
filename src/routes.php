@@ -176,7 +176,6 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->post('/bibliografias-declaradas/{id}/vincularMultiple', [BibliografiaDeclaradaController::class, 'vincularMultiple'])->setName('bibliografias-declaradas.vincularMultiple');
     $group->post('/bibliografias-declaradas/{id}/desvincularMultiple', [BibliografiaDeclaradaController::class, 'desvincularMultiple'])->setName('bibliografias-declaradas.desvincularMultiple');
     $group->post('/bibliografias-declaradas/{id}/vincularSingle', [BibliografiaDeclaradaController::class, 'vincularSingle'])->setName('bibliografias-declaradas.vincularSingle');
-    $group->post('/bibliografias-declaradas/{id}/desvincularSingle/{vinculacionId}', [BibliografiaDeclaradaController::class, 'desvincularSingle'])->setName('bibliografias-declaradas.desvincularSingle');
 
     // Rutas para búsqueda en catálogo
     $group->get('/bibliografias-declaradas/{id}/buscarCatalogo', [BibliografiaDeclaradaController::class, 'buscarCatalogo']);

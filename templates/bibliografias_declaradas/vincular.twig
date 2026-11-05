@@ -891,36 +891,6 @@ function agregarAsignatura(asignaturaId) {
     });
 }
 
-// Función para quitar una asignatura
-function quitarAsignatura(vinculacionId) {
-    if (!confirm('¿Está seguro de quitar esta asignatura?')) {
-        return;
-    }
-
-    const url = `{{ app_url ~ 'bibliografias-declaradas/' ~ bibliografia.id ~ '/desvincularSingle/' }}${vinculacionId}`;
-    
-    fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json'
-        }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-            window.location.reload();
-            } else {
-            alert(data.message || 'Error al desvincular la asignatura');
-            }
-        })
-        .catch(error => {
-        console.error('Error:', error);
-        alert('Error al desvincular la asignatura');
-    });
-}
-
 // Agregar evento para el checkbox "Seleccionar todas" en asignaturas disponibles
 document.getElementById('seleccionarTodasDisponibles').addEventListener('change', function() {
     const checkboxes = document.querySelectorAll('#tablaAsignaturas tbody input[type="checkbox"]');
