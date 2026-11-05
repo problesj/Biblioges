@@ -1623,6 +1623,59 @@ class AsignaturaController extends BaseController
     }
 
     /**
+     * Quita la vinculación de una bibliografía declarada con la asignatura.
+     * No elimina la bibliografía declarada ni sus bibliografías disponibles.
+     */
+    public function desvincularBibliografia(Request $request, ResponseInterface $response, array $args = [])
+    {
+        $json = static function (ResponseInterface $response, array $datos, int $estado = 200) {
+            $response->getBody()->write(json_encode($datos, JSON_UNESCAPED_UNICODE));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus($estado);
+        };
+
+        if (!$this->session->get('user_id')) {
+            return $json($response, ['success' => false, 'message' => 'No autorizado'], 401);
+        }
+
+        $asignaturaId = (int) ($args['id'] ?? 0);
+        $bibliografiaId = (int) ($args['bibliografia_id'] ?? 0);
+        if ($asignaturaId <= 0 || $bibliografiaId <= 0) {
+            return $json($response, ['success' => false, 'message' => 'Datos no válidos'], 400);
+        }
+
+        try {
+            $stmt = $this->db->prepare('
+                SELECT ab.tipo_bibliografia
+                FROM asignaturas_bibliografias ab
+                WHERE ab.asignatura_id = ? AND ab.bibliografia_id = ?
+            ');
+            $stmt->execute([$asignaturaId, $bibliografiaId]);
+            if ($stmt->fetch(\PDO::FETCH_ASSOC) === false) {
+                return $json($response, ['success' => false, 'message' => 'La bibliografía ya no está vinculada a esta asignatura'], 404);
+            }
+
+            $stmt = $this->db->prepare('DELETE FROM asignaturas_bibliografias WHERE asignatura_id = ? AND bibliografia_id = ?');
+            $stmt->execute([$asignaturaId, $bibliografiaId]);
+
+            error_log(sprintf(
+                'AsignaturaController@desvincularBibliografia: usuario %s desvinculó la bibliografía %d de la asignatura %d',
+                $this->session->get('user_id'),
+                $bibliografiaId,
+                $asignaturaId
+            ));
+
+            return $json($response, [
+                'success' => true,
+                'message' => 'Bibliografía desvinculada de la asignatura. La bibliografía declarada no se eliminó.',
+            ]);
+        } catch (\Throwable $e) {
+            error_log('Error en AsignaturaController@desvincularBibliografia: ' . $e->getMessage());
+
+            return $json($response, ['success' => false, 'message' => 'No se pudo desvincular la bibliografía'], 500);
+        }
+    }
+
+    /**
      * Obtiene las asignaturas por unidad (para AJAX).
      */
     public function getAsignaturasByUnidad(Request $request, ResponseInterface $response, array $args = [])

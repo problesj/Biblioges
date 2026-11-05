@@ -224,6 +224,9 @@
                                                             <i class="fas fa-eye"></i>
                                                         </button>
                                                     {% endif %}
+                                                    <button type="button" class="btn btn-sm btn-danger btn-desvincular" data-bibliografia-id="{{ bib.id }}" data-titulo="{{ bib.titulo }}" title="Desvincular de la asignatura">
+                                                        <i class="fas fa-unlink"></i>
+                                                    </button>
                                                 </div>
                                                 {% if bib.total_disponibles == 0 %}
                                                     <div class="mt-1"><small class="text-muted">Sin Bib. Disponibles</small></div>
@@ -296,6 +299,9 @@
                                                             <i class="fas fa-eye"></i>
                                                         </button>
                                                     {% endif %}
+                                                    <button type="button" class="btn btn-sm btn-danger btn-desvincular" data-bibliografia-id="{{ bib.id }}" data-titulo="{{ bib.titulo }}" title="Desvincular de la asignatura">
+                                                        <i class="fas fa-unlink"></i>
+                                                    </button>
                                                 </div>
                                                 {% if bib.total_disponibles == 0 %}
                                                     <div class="mt-1"><small class="text-muted">Sin Bib. Disponibles</small></div>
@@ -368,6 +374,9 @@
                                                             <i class="fas fa-eye"></i>
                                                         </button>
                                                     {% endif %}
+                                                    <button type="button" class="btn btn-sm btn-danger btn-desvincular" data-bibliografia-id="{{ bib.id }}" data-titulo="{{ bib.titulo }}" title="Desvincular de la asignatura">
+                                                        <i class="fas fa-unlink"></i>
+                                                    </button>
                                                 </div>
                                                 {% if bib.total_disponibles == 0 %}
                                                     <div class="mt-1"><small class="text-muted">Sin Bib. Disponibles</small></div>
@@ -521,5 +530,59 @@ function mostrarBibliografiasDisponiblesEnModal(bibliografias, titulo) {
     
     document.getElementById('modalBibliografiasDisponiblesBody').innerHTML = html;
 }
+</script>
+<script>
+// Desvincular una bibliografía declarada de esta asignatura (no la elimina)
+(function () {
+    const URL_DESVINCULAR = {{ (app_url ~ 'asignaturas/' ~ asignatura.id ~ '/bibliografias/')|json_encode|raw }};
+    const NOMBRE_TIPO = {basica: 'básica', complementaria: 'complementaria', otro: 'de tipo otro'};
+    const escHtml = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+
+    // Volver a la pestaña en la que se estaba después de recargar
+    const pestana = window.location.hash.replace('#', '');
+    if (['basica', 'complementaria', 'otro'].includes(pestana)) {
+        const boton = document.getElementById(pestana + '-tab');
+        if (boton && window.bootstrap) { bootstrap.Tab.getOrCreateInstance(boton).show(); }
+    }
+
+    document.addEventListener('click', function (e) {
+        const boton = e.target.closest('.btn-desvincular');
+        if (!boton) { return; }
+        const id = parseInt(boton.dataset.bibliografiaId, 10);
+        if (!id) { return; }
+        const panel = boton.closest('.tab-pane');
+        const tipo = panel ? panel.id : '';
+
+        Swal.fire({
+            title: '¿Desvincular bibliografía?',
+            html: 'Se quitará <strong>' + escHtml(boton.dataset.titulo) + '</strong> de la bibliografía ' + (NOMBRE_TIPO[tipo] || '') + ' de esta asignatura.' +
+                  '<br><small class="text-muted">La bibliografía declarada no se elimina y sigue vinculada a las demás asignaturas.</small>',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Sí, desvincular',
+            cancelButtonText: 'Cancelar'
+        }).then((resultado) => {
+            if (!resultado.isConfirmed) { return; }
+            fetch(URL_DESVINCULAR + id + '/desvincular', {
+                method: 'POST',
+                headers: {'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest'}
+            })
+                .then(res => res.json().catch(() => ({success: false, message: 'Respuesta inesperada del servidor (' + res.status + ')'})))
+                .then(datos => {
+                    if (datos.success) {
+                        Swal.fire({icon: 'success', title: 'Desvinculada', text: datos.message, timer: 1800, showConfirmButton: false})
+                            .then(() => {
+                                if (tipo) { window.location.hash = tipo; }
+                                window.location.reload();
+                            });
+                    } else {
+                        Swal.fire('Error', datos.message || 'No se pudo desvincular la bibliografía', 'error');
+                    }
+                })
+                .catch(() => Swal.fire('Error', 'Error de conexión al desvincular la bibliografía', 'error'));
+        });
+    });
+})();
 </script>
 {% endblock %} 

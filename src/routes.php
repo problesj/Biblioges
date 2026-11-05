@@ -125,6 +125,7 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->get('/asignaturas/vinculacion/{id}', [AsignaturaController::class, 'getVinculacion'])->setName('asignaturas.vinculacion.get');
     $group->post('/asignaturas/vinculacion/{id}/agregar', [AsignaturaController::class, 'agregarVinculacion'])->setName('asignaturas.vinculacion.agregar');
     $group->post('/asignaturas/vinculacion/{id}/quitar', [AsignaturaController::class, 'quitarVinculacion'])->setName('asignaturas.vinculacion.quitar');
+    $group->post('/asignaturas/{id}/bibliografias/{bibliografia_id}/desvincular', [AsignaturaController::class, 'desvincularBibliografia'])->setName('asignaturas.bibliografias.desvincular');
     $group->get('/asignaturas/create', [AsignaturaController::class, 'create'])->setName('asignaturas.create');
     $group->post('/asignaturas', [AsignaturaController::class, 'store'])->setName('asignaturas.store');
     $group->get('/asignaturas/{id}/edit', [AsignaturaController::class, 'edit'])->setName('asignaturas.edit');
