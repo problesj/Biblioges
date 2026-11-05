@@ -196,6 +196,21 @@ class ListStateManager
                 ];
                 break;
 
+            case 'reporte_antiguedad':
+                $defaults['sort'] = 'titulo';
+                $defaults['allowed_columns'] = ['titulo', 'autores', 'anio_publicacion', 'editorial', 'estado', 'num_asignaturas', 'anios_disponibles', 'antiguedad'];
+                $defaults['filters'] = [
+                    'titulo' => '',
+                    'autor' => '',
+                    'editorial' => '',
+                    'estado' => '',
+                    'tipo' => '',
+                    'tipo_bibliografia' => 'ambas',
+                    'carrera_id' => '',
+                    'antiguedad' => ''
+                ];
+                break;
+
             case 'tareas_programadas':
                 $defaults['sort'] = 'fecha_programada';
                 $defaults['direction'] = 'DESC';

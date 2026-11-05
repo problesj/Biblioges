@@ -184,6 +184,8 @@ $twig->addFunction(new \Twig\TwigFunction('build_sort_url', function ($column, $
         $section = 'reportes/coberturas';
     } elseif ($currentSection === 'listado-bibliografias') {
         $section = 'reportes/listado-bibliografias';
+    } elseif ($currentSection === 'antiguedad-bibliografias') {
+        $section = 'reportes/antiguedad-bibliografias';
     } elseif ($currentSection === 'sedes') {
         $section = 'sedes';
     } elseif ($currentSection === 'unidades') {
@@ -240,6 +242,8 @@ $twig->addFunction(new \Twig\TwigFunction('build_page_url', function ($page, $so
         $section = 'reportes/coberturas';
     } elseif ($currentSection === 'listado-bibliografias') {
         $section = 'reportes/listado-bibliografias';
+    } elseif ($currentSection === 'antiguedad-bibliografias') {
+        $section = 'reportes/antiguedad-bibliografias';
     } elseif ($currentSection === 'sedes') {
         $section = 'sedes';
     } elseif ($currentSection === 'unidades') {
@@ -304,6 +308,8 @@ $twig->addFunction(new \Twig\TwigFunction('build_per_page_url', function ($perPa
         $section = 'reportes/coberturas';
     } elseif ($currentSection === 'listado-bibliografias') {
         $section = 'reportes/listado-bibliografias';
+    } elseif ($currentSection === 'antiguedad-bibliografias') {
+        $section = 'reportes/antiguedad-bibliografias';
     } elseif ($currentSection === 'sedes') {
         $section = 'sedes';
     } elseif ($currentSection === 'unidades') {

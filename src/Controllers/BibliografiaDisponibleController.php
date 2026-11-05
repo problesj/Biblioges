@@ -922,8 +922,8 @@ class BibliografiaDisponibleController extends BaseController
 
     /**
      * Ruta interna (relativa a la URL de la aplicación) a la que volver después de una acción.
-     * Solo acepta segmentos con letras, números, guion y guion bajo, para no permitir redirecciones
-     * a otros sitios. Devuelve null si la ruta no es válida.
+     * Solo acepta segmentos con letras, números, guion y guion bajo (y la consulta fija ?origen=antiguedad),
+     * para no permitir redirecciones a otros sitios. Devuelve null si la ruta no es válida.
      */
     private function rutaRetornoSegura($ruta): ?string
     {
@@ -932,7 +932,7 @@ class BibliografiaDisponibleController extends BaseController
         }
         $ruta = ltrim(trim($ruta), '/');
 
-        return preg_match('#^[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*$#', $ruta) ? $ruta : null;
+        return preg_match('#^[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*(\?origen=antiguedad)?$#', $ruta) ? $ruta : null;
     }
 
     /**

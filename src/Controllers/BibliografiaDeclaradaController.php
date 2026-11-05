@@ -793,10 +793,14 @@ class BibliografiaDeclaradaController
             $stmt->execute([$id]);
             $bibliografiasDisponibles = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
+            // Vista de origen para el botón Volver (lista fija: no se aceptan rutas arbitrarias)
+            $origen = ($request->getQueryParams()['origen'] ?? '') === 'antiguedad' ? 'antiguedad' : '';
+
             return $this->render($response, 'bibliografias_declaradas/show.twig', [
                 'bibliografia' => $bibliografia,
                 'asignaturas' => $asignaturas,
-                'bibliografias_disponibles' => $bibliografiasDisponibles
+                'bibliografias_disponibles' => $bibliografiasDisponibles,
+                'origen' => $origen
             ]);
             
         } catch (\Exception $e) {
