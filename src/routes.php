@@ -150,7 +150,6 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
         $group->post('', [BibliografiaDisponibleController::class, 'store']);
         $group->post('/{id}/delete', [BibliografiaDisponibleController::class, 'destroy']);
         $group->post('/{id}/update', [BibliografiaDisponibleController::class, 'update']);
-        $group->post('/{id}/vincular', [BibliografiaDisponibleController::class, 'vincularBibliografiaDisponible']);
         $group->get('/{id}/edit', [BibliografiaDisponibleController::class, 'edit']);
         $group->put('/{id}', [BibliografiaDisponibleController::class, 'update']);
         $group->delete('/{id}', [BibliografiaDisponibleController::class, 'destroy']);

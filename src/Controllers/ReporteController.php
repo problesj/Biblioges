@@ -1124,14 +1124,13 @@ class ReporteController extends BaseController
                     echo json_encode([
                         'success' => false,
                         'message' => 'Por favor inicie sesión para acceder a los reportes',
-                        'redirect' => '/login'
+                        'redirect' => app_url('login')
                     ]);
                     return $response;
                 }
                 
                 $_SESSION['error'] = 'Por favor inicie sesión para acceder a los reportes';
-                header('Location: /login');
-                exit;
+                return $response->withHeader('Location', app_url('login'))->withStatus(302);
             }
 
             // Limpiar el estado del listado
@@ -1140,18 +1139,18 @@ class ReporteController extends BaseController
             $stateManager->clearState();
 
             return $response
-                ->withHeader('Location', '/reportes/coberturas')
+                ->withHeader('Location', app_url('reportes/coberturas'))
                 ->withStatus(302);
 
         } catch (\Exception $e) {
             error_log("Error en ReporteController@clearState: " . $e->getMessage());
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Error al limpiar los filtros'
+            ]));
             return $response
                 ->withHeader('Content-Type', 'application/json')
-                ->withStatus(500)
-                ->withBody($response->getBody()->write(json_encode([
-                    'success' => false,
-                    'message' => 'Error al limpiar los filtros: ' . $e->getMessage()
-                ])));
+                ->withStatus(500);
         }
     }
 
@@ -1165,14 +1164,13 @@ class ReporteController extends BaseController
                     echo json_encode([
                         'success' => false,
                         'message' => 'Por favor inicie sesión para acceder a los reportes',
-                        'redirect' => '/login'
+                        'redirect' => app_url('login')
                     ]);
                     return $response;
                 }
                 
                 $_SESSION['error'] = 'Por favor inicie sesión para acceder a los reportes';
-                header('Location: /login');
-                exit;
+                return $response->withHeader('Location', app_url('login'))->withStatus(302);
             }
 
             // Limpiar el estado del listado
@@ -1181,18 +1179,18 @@ class ReporteController extends BaseController
             $stateManager->clearState();
 
             return $response
-                ->withHeader('Location', '/biblioges/reportes/listado-bibliografias')
+                ->withHeader('Location', app_url('reportes/listado-bibliografias'))
                 ->withStatus(302);
 
         } catch (\Exception $e) {
             error_log("Error en ReporteController@clearStateBibliografias: " . $e->getMessage());
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Error al limpiar los filtros'
+            ]));
             return $response
                 ->withHeader('Content-Type', 'application/json')
-                ->withStatus(500)
-                ->withBody($response->getBody()->write(json_encode([
-                    'success' => false,
-                    'message' => 'Error al limpiar los filtros: ' . $e->getMessage()
-                ])));
+                ->withStatus(500);
         }
     }
     

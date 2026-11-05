@@ -283,13 +283,13 @@ class BibliografiaDisponibleController extends BaseController
 
         } catch (\Exception $e) {
             error_log("Error en BibliografiaDisponibleController@clearState: " . $e->getMessage());
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Error al limpiar los filtros'
+            ]));
             return $response
                 ->withHeader('Content-Type', 'application/json')
-                ->withStatus(500)
-                ->withBody($response->getBody()->write(json_encode([
-                    'success' => false,
-                    'message' => 'Error al limpiar los filtros: ' . $e->getMessage()
-                ])));
+                ->withStatus(500);
         }
     }
 
@@ -921,34 +921,6 @@ class BibliografiaDisponibleController extends BaseController
             $_SESSION['error'] = 'Error al eliminar la bibliografía disponible: ' . $e->getMessage();
             header('Location: ' . Config::get('app_url') . 'bibliografias-disponibles');
             exit;
-        }
-    }
-
-    /**
-     * Vincula una bibliografía disponible con una bibliografía declarada
-     */
-    public function vincularBibliografiaDisponible(Request $request, Response $response, array $args): Response
-    {
-        $data = $this->validate([
-            'bibliografia_declarada_id' => 'required|exists:bibliografias_declaradas,id'
-        ]);
-
-        try {
-            $bibliografia = BibliografiaDisponible::findOrFail($args['id']);
-            $bibliografia->bibliografia_declarada_id = $data['bibliografia_declarada_id'];
-            $bibliografia->save();
-
-            return $response->withHeader('Location', '/bibliografias-disponibles')
-                ->withStatus(302)
-                ->with('success', 'Bibliografía disponible vinculada exitosamente');
-        } catch (\Exception $e) {
-            return $this->render($response, 'bibliografias_disponibles/form.twig', [
-                'error' => 'Error al vincular la bibliografía disponible: ' . $e->getMessage(),
-                'bibliografia' => BibliografiaDisponible::find($args['id']),
-                'bibliografiasDeclaradas' => BibliografiaDeclarada::where('estado', true)->get(),
-                'sedes' => Sede::where('estado', true)->get(),
-                'data' => $data
-            ]);
         }
     }
 
