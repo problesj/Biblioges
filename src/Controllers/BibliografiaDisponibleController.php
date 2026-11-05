@@ -901,27 +901,38 @@ class BibliografiaDisponibleController extends BaseController
      */
     public function destroy(Request $request, Response $response, array $args): Response
     {
-        error_log('BibliografiaDisponibleController@destroy: Iniciando eliminación');
-        error_log('ID recibido: ' . ($args['id'] ?? 'NO_ID'));
-        error_log('Método HTTP: ' . $request->getMethod());
-        error_log('URI: ' . $request->getUri()->getPath());
-        
+        // Vista a la que volver (p. ej. el detalle de la bibliografía declarada); por defecto, el listado
+        $cuerpo = $request->getParsedBody();
+        $volver = $this->rutaRetornoSegura(is_array($cuerpo) ? ($cuerpo['volver'] ?? null) : ($_POST['volver'] ?? null))
+            ?? 'bibliografias-disponibles';
+
         try {
             $bibliografia = BibliografiaDisponible::findOrFail($args['id']);
-            error_log('Bibliografía encontrada: ' . $bibliografia->id);
-            
             $bibliografia->delete();
-            error_log('Bibliografía eliminada exitosamente');
-            
             $_SESSION['success'] = 'Bibliografía disponible eliminada exitosamente';
-            header('Location: ' . Config::get('app_url') . 'bibliografias-disponibles');
-            exit;
         } catch (\Exception $e) {
-            error_log('Error al eliminar bibliografía: ' . $e->getMessage());
-            $_SESSION['error'] = 'Error al eliminar la bibliografía disponible: ' . $e->getMessage();
-            header('Location: ' . Config::get('app_url') . 'bibliografias-disponibles');
-            exit;
+            error_log('BibliografiaDisponibleController@destroy (id ' . ($args['id'] ?? '?') . '): ' . $e->getMessage());
+            $_SESSION['error'] = 'No se pudo eliminar la bibliografía disponible';
         }
+
+        return $response
+            ->withHeader('Location', app_url($volver))
+            ->withStatus(302);
+    }
+
+    /**
+     * Ruta interna (relativa a la URL de la aplicación) a la que volver después de una acción.
+     * Solo acepta segmentos con letras, números, guion y guion bajo, para no permitir redirecciones
+     * a otros sitios. Devuelve null si la ruta no es válida.
+     */
+    private function rutaRetornoSegura($ruta): ?string
+    {
+        if (!is_string($ruta)) {
+            return null;
+        }
+        $ruta = ltrim(trim($ruta), '/');
+
+        return preg_match('#^[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*$#', $ruta) ? $ruta : null;
     }
 
     /**

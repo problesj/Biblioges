@@ -215,6 +215,13 @@ function confirmarEliminacion(id, titulo) {
             methodInput.value = 'DELETE';
             form.appendChild(methodInput);
             
+            // Volver a esta misma vista después de eliminar
+            const volverInput = document.createElement('input');
+            volverInput.type = 'hidden';
+            volverInput.name = 'volver';
+            volverInput.value = {{ ('bibliografias-declaradas/' ~ bibliografia.id)|json_encode|raw }};
+            form.appendChild(volverInput);
+            
             // Agregar token CSRF si es necesario
             const csrfToken = '{{ csrf_token() }}';
             if (csrfToken && csrfToken !== '') {
