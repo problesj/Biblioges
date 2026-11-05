@@ -297,10 +297,13 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->get('/tareas-programadas', [TareaProgramadaController::class, 'index']);
     $group->post('/tareas-programadas', [TareaProgramadaController::class, 'crear']);
     $group->get('/tareas-programadas/listar', [TareaProgramadaController::class, 'listar']);
-    $group->post('/tareas-programadas/{id}/cancelar', [TareaProgramadaController::class, 'cancelar']);
-    
-    // Ruta para ejecutar tareas pendientes (para cron)
+    // Ejecutar todas las pendientes vencidas (misma lógica que el cron)
     $group->post('/tareas-programadas/ejecutar', [TareaProgramadaController::class, 'ejecutarTareasPendientes']);
+    $group->get('/tareas-programadas/{id:[0-9]+}', [TareaProgramadaController::class, 'obtener']);
+    $group->post('/tareas-programadas/{id:[0-9]+}', [TareaProgramadaController::class, 'actualizar']);
+    $group->post('/tareas-programadas/{id:[0-9]+}/cancelar', [TareaProgramadaController::class, 'cancelar']);
+    $group->get('/tareas-programadas/{id:[0-9]+}/historial', [TareaProgramadaController::class, 'historial']);
+    $group->post('/tareas-programadas/{id:[0-9]+}/ejecutar', [TareaProgramadaController::class, 'ejecutarAhora']);
 
     // API para actualizar el perfil del usuario autenticado
     $group->post('/perfil/actualizar', [UsuarioController::class, 'actualizarPerfil']);

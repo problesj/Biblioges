@@ -4,188 +4,60 @@
 
 {% block head %}
 <style>
-    /* Estilos personalizados para la tabla de tareas programadas */
     .tareas-table {
         font-size: 0.8rem !important;
         width: 100% !important;
-        table-layout: auto !important;
-        word-wrap: break-word !important;
     }
-    
     .tareas-table thead th {
         background: linear-gradient(135deg, #4e73df 0%, #224abe 100%) !important;
         color: white !important;
         font-weight: 600 !important;
-        font-size: 0.75rem !important;
+        font-size: 0.72rem !important;
         text-transform: uppercase !important;
         letter-spacing: 0.3px !important;
         padding: 8px 4px !important;
         border: none !important;
         vertical-align: middle !important;
         white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
     }
-    
-    /* Distribución de columnas optimizada */
-    .tareas-table thead th:first-child {
-        width: 6% !important;
-        min-width: 60px !important;
-    }
-    
-    .tareas-table thead th:nth-child(2) {
-        width: 18% !important;
-        min-width: 150px !important;
-    }
-    
-    .tareas-table thead th:nth-child(3) {
-        width: 15% !important;
-        min-width: 140px !important;
-    }
-    
-    .tareas-table thead th:nth-child(4) {
-        width: 12% !important;
-        min-width: 120px !important;
-    }
-    
-    .tareas-table thead th:nth-child(5) {
-        width: 15% !important;
-        min-width: 140px !important;
-    }
-    
-    .tareas-table thead th:nth-child(6) {
-        width: 12% !important;
-        min-width: 120px !important;
-    }
-    
-    .tareas-table thead th:nth-child(7) {
-        width: 8% !important;
-        min-width: 80px !important;
-    }
-    
-    .tareas-table thead th:nth-child(8) {
-        width: 12% !important;
-        min-width: 120px !important;
-    }
-    
-    .tareas-table thead th:last-child {
-        width: 8% !important;
-        min-width: 80px !important;
-    }
-    
     .tareas-table thead th a {
         color: white !important;
         text-decoration: none !important;
         display: block !important;
-        width: 100% !important;
-        height: 100% !important;
-        transition: all 0.3s ease !important;
-        padding: 8px !important;
+        padding: 6px !important;
         border-radius: 4px !important;
     }
-    
     .tareas-table thead th a:hover {
         background: linear-gradient(135deg, #224abe 0%, #1a3a8f 100%) !important;
-        color: #f8f9fc !important;
-        text-decoration: none !important;
-        transform: translateY(-1px) !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
     }
-    
-    .tareas-table thead th a:active {
-        transform: translateY(0) !important;
-    }
-    
     .tareas-table thead th a .fas {
         margin-left: 4px !important;
         font-size: 0.7rem !important;
         opacity: 0.8 !important;
     }
-    
-    .tareas-table thead th a:hover .fas {
-        opacity: 1 !important;
-    }
-    
-    .tareas-table thead th.text-center {
-        text-align: center !important;
-    }
-    
-    /* Estilos para el contenido de la tabla */
     .tareas-table tbody td {
         font-size: 0.8rem !important;
         padding: 8px 6px !important;
         vertical-align: middle !important;
         line-height: 1.3 !important;
-        word-wrap: break-word !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        white-space: nowrap !important;
-        max-width: 0 !important;
     }
-    
-    .tareas-table tbody td:first-child {
-        font-weight: 500 !important;
-        color: #495057 !important;
-        text-align: center !important;
+    .tareas-table .col-nombre {
+        max-width: 280px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: 500;
+        color: #2c3e50;
     }
-    
-    .tareas-table tbody td:nth-child(2) {
-        font-weight: 500 !important;
-        color: #2c3e50 !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
+    .tareas-table .col-carrera {
+        max-width: 220px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
-    
-    .tareas-table tbody td:nth-child(3) {
-        text-align: center !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-    }
-    
-    .tareas-table tbody td:nth-child(4) {
-        text-align: center !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-    }
-    
-    .tareas-table tbody td:nth-child(5) {
-        text-align: center !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-    }
-    
-    .tareas-table tbody td:nth-child(6) {
-        text-align: center !important;
-        font-weight: 500 !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-    }
-    
-    .tareas-table tbody td:nth-child(7) {
-        text-align: center !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-    }
-    
-    .tareas-table tbody td:nth-child(8) {
-        text-align: center !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-    }
-    
-    .tareas-table tbody td:last-child {
-        text-align: center !important;
-        white-space: nowrap !important;
-    }
-    
-    /* Estilos para badges */
+    .tareas-table .nowrap { white-space: nowrap; }
+    .fecha-inactiva { color: #9aa0ac; }
+
     .badge {
         font-size: 0.7rem !important;
         padding: 0.3em 0.6em !important;
@@ -193,236 +65,50 @@
         border-radius: 0.375rem !important;
         white-space: nowrap !important;
     }
-    
-    /* Estilos para botones de acción */
     .btn-action {
-        width: 32px !important;
-        height: 32px !important;
+        width: 30px !important;
+        height: 30px !important;
         padding: 0 !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
         border-radius: 4px !important;
-        margin: 0 2px !important;
-        font-size: 0.8rem !important;
-        transition: all 0.2s ease !important;
-    }
-    
-    .btn-action:hover {
-        transform: translateY(-1px) !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
-    }
-    
-    .btn-action.btn-view {
-        background-color: #4e73df !important;
-        border-color: #4e73df !important;
-        color: white !important;
-    }
-    
-    .btn-action.btn-edit {
-        background-color: #f6c23e !important;
-        border-color: #f6c23e !important;
-        color: #2c3e50 !important;
-    }
-    
-    .btn-action.btn-cancel {
-        background-color: #e74a3b !important;
-        border-color: #e74a3b !important;
-        color: white !important;
-    }
-    
-    .btn-action.btn-delete {
-        background-color: #e74a3b !important;
-        border-color: #e74a3b !important;
-        color: white !important;
-    }
-    
-    /* Estilos para filtros */
-    .card-header {
-        background-color: #f8f9fc !important;
-        border-bottom: 1px solid #e3e6f0 !important;
-    }
-    
-    .card-header h6 {
-        color: #4e73df !important;
-        font-weight: 600 !important;
-        font-size: 0.9rem !important;
-    }
-    
-    .form-control,
-    .form-select {
-        border-radius: 0.375rem !important;
-        border: 1px solid #d1d3e2 !important;
-        font-size: 0.8rem !important;
-        transition: all 0.2s ease !important;
-    }
-    
-    .form-control:focus,
-    .form-select:focus {
-        border-color: #4e73df !important;
-        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25) !important;
-    }
-    
-    /* Estilos para botones */
-    .btn {
-        border-radius: 0.375rem !important;
-        font-weight: 500 !important;
-        font-size: 0.8rem !important;
-        transition: all 0.2s ease !important;
-    }
-    
-    .btn:hover {
-        transform: translateY(-1px) !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
-    }
-    
-    /* Estilos para paginación */
-    .pagination {
-        margin-top: 1.25rem !important;
-        justify-content: center !important;
-    }
-    
-    .page-link {
-        border-radius: 0.375rem !important;
-        margin: 0 2px !important;
-        border: 1px solid #d1d3e2 !important;
-        color: #4e73df !important;
-        font-weight: 500 !important;
-        font-size: 0.8rem !important;
-        padding: 0.4rem 0.6rem !important;
-        transition: all 0.2s ease !important;
-    }
-    
-    .page-link:hover {
-        background-color: #4e73df !important;
-        border-color: #4e73df !important;
-        color: white !important;
-        transform: translateY(-1px) !important;
-    }
-    
-    .page-item.active .page-link {
-        background-color: #4e73df !important;
-        border-color: #4e73df !important;
-        color: white !important;
-    }
-    
-    .page-item.disabled .page-link {
-        color: #858796 !important;
-        background-color: #f8f9fc !important;
-        border-color: #d1d3e2 !important;
-    }
-    
-    /* Estilos para selector de registros por página */
-    .per-page-selector {
-        background: rgba(78, 115, 223, 0.1) !important;
-        border-radius: 0.5rem !important;
-        padding: 0.4rem 0.8rem !important;
-        border: 1px solid rgba(78, 115, 223, 0.2) !important;
-    }
-    
-    .per-page-selector label {
-        color: #4e73df !important;
-        font-weight: 600 !important;
-        margin-bottom: 0 !important;
         font-size: 0.8rem !important;
     }
-    
-    .per-page-selector select {
-        border: 1px solid rgba(78, 115, 223, 0.3) !important;
-        border-radius: 0.375rem !important;
-        color: #4e73df !important;
-        font-weight: 500 !important;
-        background-color: white !important;
-        font-size: 0.8rem !important;
-    }
-    
-    .records-counter {
-        color: #6c757d !important;
-        font-size: 0.8rem !important;
-        font-weight: 500 !important;
-    }
-    
-    /* Estilos para el contenedor principal */
-    .container-fluid {
-        padding: 0 1rem !important;
-    }
-    
+    .btn-action.btn-run { background-color: #1cc88a !important; border-color: #1cc88a !important; color: white !important; }
+    .btn-action.btn-edit { background-color: #f6c23e !important; border-color: #f6c23e !important; color: #2c3e50 !important; }
+    .btn-action.btn-history { background-color: #4e73df !important; border-color: #4e73df !important; color: white !important; }
+    .btn-action.btn-cancel { background-color: #e74a3b !important; border-color: #e74a3b !important; color: white !important; }
+
     .card {
         margin-bottom: 1.5rem !important;
         border-radius: 0.75rem !important;
         box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
     }
-    
     .card-header {
         background: linear-gradient(135deg, #f8f9fc 0%, #e3e6f0 100%) !important;
         border-bottom: 1px solid #d1d3e2 !important;
         padding: 1rem 1.25rem !important;
         border-radius: 0.75rem 0.75rem 0 0 !important;
     }
-    
-    .card-body {
-        padding: 1.25rem !important;
+    .card-header h6 { color: #4e73df !important; font-weight: 600 !important; font-size: 0.9rem !important; }
+    .form-control, .form-select { font-size: 0.8rem !important; }
+    .btn { font-size: 0.8rem !important; }
+    .page-link { font-size: 0.8rem !important; }
+
+    /* Lista de carreras del formulario */
+    .lista-carreras {
+        max-height: 230px;
+        overflow-y: auto;
+        border: 1px solid #d1d3e2;
+        border-radius: 0.375rem;
+        padding: 0.35rem 0.6rem;
+        background: #fff;
     }
-    
-    /* Responsive */
-    @media (max-width: 1200px) {
-        .tareas-table thead th,
-        .tareas-table tbody td {
-            font-size: 0.75rem !important;
-            padding: 6px 4px !important;
-        }
-        
-        .tareas-table thead th a {
-            padding: 4px !important;
-        }
-        
-        .badge {
-            font-size: 0.65rem !important;
-            padding: 0.25em 0.5em !important;
-        }
-    }
-    
-    @media (max-width: 768px) {
-        .tareas-table thead th,
-        .tareas-table tbody td {
-            font-size: 0.7rem !important;
-            padding: 4px 2px !important;
-        }
-        
-        .filters-section {
-            padding: 1rem !important;
-        }
-        
-        .filter-buttons {
-            justify-content: center !important;
-        }
-        
-        .card-header {
-            padding: 0.75rem 1rem !important;
-        }
-        
-        .card-body {
-            padding: 1rem !important;
-        }
-    }
-    
-    /* Optimización para pantallas grandes */
-    @media (min-width: 1400px) {
-        .tareas-table thead th,
-        .tareas-table tbody td {
-            font-size: 0.85rem !important;
-            padding: 10px 8px !important;
-        }
-        
-        .tareas-table thead th a {
-            padding: 8px !important;
-        }
-        
-        .badge {
-            font-size: 0.75rem !important;
-            padding: 0.35em 0.65em !important;
-        }
-    }
+    .lista-carreras .form-check { margin-bottom: 0.15rem; font-size: 0.8rem; }
+    .lista-carreras .vacia { color: #858796; font-size: 0.8rem; padding: 0.3rem 0; }
+    .tabla-historial { font-size: 0.78rem; }
+    .tabla-historial td, .tabla-historial th { padding: 4px 6px !important; vertical-align: top; }
 </style>
 {% endblock %}
 
@@ -430,80 +116,72 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <!-- Header principal -->
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div class="d-flex align-items-center">
                     <i class="fas fa-clock fa-2x text-dark me-3"></i>
                     <h2 class="mb-0 text-dark fw-bold">Gestión de Tareas Programadas</h2>
                 </div>
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevaTarea">
+                <button type="button" class="btn btn-primary" id="btnNuevaTarea">
                     <i class="fas fa-plus me-2"></i>Nueva Tarea
                 </button>
             </div>
 
-            <!-- Filtros de Búsqueda -->
+            <!-- Filtros -->
             <div class="card shadow mb-4">
                 <div class="card-header bg-white">
-                    <h6 class="text-primary fw-bold mb-3">
-                        <i class="fas fa-filter me-2"></i>Filtros de Búsqueda
-                    </h6>
+                    <h6 class="text-primary fw-bold mb-3"><i class="fas fa-filter me-2"></i>Filtros de Búsqueda</h6>
                     <form method="GET" class="row g-3">
-                        <div class="col-md-4">
-                            <input type="text" class="form-control" id="search" name="search" 
-                                   value="{{ filtros.search }}" placeholder="Nombre, sede o carrera">
+                        <div class="col-md-3">
+                            <input type="text" class="form-control" name="search" value="{{ filtros.search }}" placeholder="Nombre, sede o carrera">
                         </div>
                         <div class="col-md-3">
-                            <select class="form-select" id="tipo_reporte" name="tipo_reporte">
+                            <select class="form-select" name="tipo_reporte">
                                 <option value="">Todos los tipos</option>
                                 {% for key, value in tiposReporte %}
-                                    <option value="{{ key }}" {% if filtros.tipo_reporte == key %}selected{% endif %}>
-                                        {{ value }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <select class="form-select" id="estado" name="estado">
-                                <option value="">Todos los estados</option>
-                                {% for key, value in estados %}
-                                    <option value="{{ key }}" {% if filtros.estado == key %}selected{% endif %}>
-                                        {{ value }}
-                                    </option>
+                                    <option value="{{ key }}" {% if filtros.tipo_reporte == key %}selected{% endif %}>{{ value }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="fas fa-chevron-down me-2"></i>Aplicar Filtros
-                        </button>
+                            <select class="form-select" name="frecuencia">
+                                <option value="">Todas las frecuencias</option>
+                                {% for key, value in frecuencias %}
+                                    <option value="{{ key }}" {% if filtros.frecuencia == key %}selected{% endif %}>{{ value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" name="estado">
+                                <option value="">Todos los estados</option>
+                                {% for key, value in estados %}
+                                    <option value="{{ key }}" {% if filtros.estado == key %}selected{% endif %}>{{ value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search me-2"></i>Aplicar Filtros</button>
                         </div>
                     </form>
                     <div class="mt-3">
-                        <a href="{{ app_url }}tareas-programadas" class="btn btn-secondary">
-                            <i class="fas fa-times me-2"></i>Limpiar Filtros
-                        </a>
+                        <a href="{{ app_url }}tareas-programadas" class="btn btn-secondary"><i class="fas fa-times me-2"></i>Limpiar Filtros</a>
                     </div>
                 </div>
             </div>
 
-            <!-- Listado de Tareas -->
+            <!-- Listado -->
             <div class="card shadow">
                 <div class="card-header bg-white">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="text-primary fw-bold mb-0">
-                            <i class="fas fa-list me-2"></i>Listado de Tareas Programadas
-                        </h6>
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h6 class="text-primary fw-bold mb-0"><i class="fas fa-list me-2"></i>Listado de Tareas Programadas</h6>
                         <div class="d-flex align-items-center gap-3">
                             <span class="text-muted">Registros por página:</span>
                             <select id="per_page" class="form-select form-select-sm" style="width: auto;">
                                 {% for option in paginacion.allowed_per_page %}
-                                    <option value="{{ option }}" {% if paginacion.per_page == option %}selected{% endif %}>
-                                        {{ option }}
-                                    </option>
+                                    <option value="{{ option }}" {% if paginacion.per_page == option %}selected{% endif %}>{{ option }}</option>
                                 {% endfor %}
                             </select>
                             <span class="text-muted">
-                                Mostrando {{ paginacion.per_page }} de {{ paginacion.total_records }} registros
+                                Mostrando {{ tareas|length }} de {{ paginacion.total_records }} registros
                             </span>
                         </div>
                     </div>
@@ -513,74 +191,55 @@
                         <table class="table table-striped table-hover tareas-table mb-0">
                             <thead>
                                 <tr>
-                                    <th>
-                                        <a href="{{ build_sort_url('id', ordenamiento.column, ordenamiento.direction, filtros, paginacion.current_page, paginacion.per_page) }}">
-                                            ID
-                                            <i class="fas {{ get_sort_icon('id', ordenamiento.column, ordenamiento.direction) }}"></i>
-                                        </a>
-                                    </th>
-                                    <th>
-                                        <a href="{{ build_sort_url('nombre', ordenamiento.column, ordenamiento.direction, filtros, paginacion.current_page, paginacion.per_page) }}">
-                                            NOMBRE
-                                            <i class="fas {{ get_sort_icon('nombre', ordenamiento.column, ordenamiento.direction) }}"></i>
-                                        </a>
-                                    </th>
-                                    <th class="text-center">
-                                        <a href="{{ build_sort_url('tipo_reporte', ordenamiento.column, ordenamiento.direction, filtros, paginacion.current_page, paginacion.per_page) }}">
-                                            TIPO DE<br>REPORTE
-                                            <i class="fas {{ get_sort_icon('tipo_reporte', ordenamiento.column, ordenamiento.direction) }}"></i>
-                                        </a>
-                                    </th>
-                                    <th class="text-center">
-                                        <a href="{{ build_sort_url('sede_nombre', ordenamiento.column, ordenamiento.direction, filtros, paginacion.current_page, paginacion.per_page) }}">
-                                            SEDE
-                                            <i class="fas {{ get_sort_icon('sede_nombre', ordenamiento.column, ordenamiento.direction) }}"></i>
-                                        </a>
-                                    </th>
-                                    <th class="text-center">
-                                        <a href="{{ build_sort_url('carrera_nombre', ordenamiento.column, ordenamiento.direction, filtros, paginacion.current_page, paginacion.per_page) }}">
-                                            CARRERA
-                                            <i class="fas {{ get_sort_icon('carrera_nombre', ordenamiento.column, ordenamiento.direction) }}"></i>
-                                        </a>
-                                    </th>
-                                    <th class="text-center">
-                                        <a href="{{ build_sort_url('fecha_programada', ordenamiento.column, ordenamiento.direction, filtros, paginacion.current_page, paginacion.per_page) }}">
-                                            FECHA<br>PROGRAMADA
-                                            <i class="fas {{ get_sort_icon('fecha_programada', ordenamiento.column, ordenamiento.direction) }}"></i>
-                                        </a>
-                                    </th>
-                                    <th class="text-center">
-                                        <a href="{{ build_sort_url('estado', ordenamiento.column, ordenamiento.direction, filtros, paginacion.current_page, paginacion.per_page) }}">
-                                            ESTADO
-                                            <i class="fas {{ get_sort_icon('estado', ordenamiento.column, ordenamiento.direction) }}"></i>
-                                        </a>
-                                    </th>
-                                    <th class="text-center">
-                                        <a href="{{ build_sort_url('fecha_creacion', ordenamiento.column, ordenamiento.direction, filtros, paginacion.current_page, paginacion.per_page) }}">
-                                            FECHA
-                                            <i class="fas {{ get_sort_icon('fecha_creacion', ordenamiento.column, ordenamiento.direction) }}"></i>
-                                        </a>
-                                    </th>
-                                    <th class="text-center">ACCIONES</th>
+                                    {% set columnas = [
+                                        ['id', 'ID'], ['nombre', 'Nombre'], ['tipo_reporte', 'Tipo de reporte'], ['sede_nombre', 'Sede'],
+                                        ['carrera_nombre', 'Carrera'], ['frecuencia', 'Frecuencia'], ['fecha_programada', 'Próxima ejecución'],
+                                        ['estado', 'Estado'], ['ultima_ejecucion', 'Última ejecución']
+                                    ] %}
+                                    {% for col in columnas %}
+                                        <th class="text-center">
+                                            <a href="{{ build_sort_url(col[0], ordenamiento.column, ordenamiento.direction, filtros, paginacion.current_page, paginacion.per_page) }}">
+                                                {{ col[1] }}
+                                                <i class="fas {{ get_sort_icon(col[0], ordenamiento.column, ordenamiento.direction) }}"></i>
+                                            </a>
+                                        </th>
+                                    {% endfor %}
+                                    <th class="text-center">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for tarea in tareas %}
                                 <tr>
-                                    <td>{{ tarea.id }}</td>
-                                    <td title="{{ tarea.nombre }}">{{ tarea.nombre }}</td>
+                                    <td class="text-center">{{ tarea.id }}</td>
+                                    <td class="col-nombre" title="{{ tarea.nombre }}">{{ tarea.nombre }}</td>
                                     <td class="text-center">
                                         {% if tarea.tipo_reporte == 'cobertura_basica_expandido' %}
-                                            <span class="badge bg-info text-dark">Cobertura Básica Expandido</span>
+                                            <span class="badge bg-info text-dark">Básica</span>
                                         {% elseif tarea.tipo_reporte == 'cobertura_complementaria_expandido' %}
-                                            <span class="badge bg-warning text-dark">Cobertura Complementaria Expandido</span>
+                                            <span class="badge bg-warning text-dark">Complementaria</span>
+                                        {% elseif tarea.tipo_reporte == 'cobertura_ambas_expandido' %}
+                                            <span class="badge bg-info text-dark">Básica</span>
+                                            <span class="badge bg-warning text-dark">Complementaria</span>
                                         {% else %}
                                             <span class="badge bg-secondary">Sin tipo</span>
                                         {% endif %}
                                     </td>
-                                    <td class="text-center" title="{{ tarea.sede_nombre }}">{{ tarea.sede_nombre }}</td>
-                                    <td class="text-center" title="{{ tarea.carrera_nombre }}">{{ tarea.carrera_nombre }}</td>
-                                    <td class="text-center">{{ tarea.fecha_programada|date('d/m/Y H:i') }}</td>
+                                    <td class="text-center">{{ tarea.sede_nombre }}</td>
+                                    <td class="text-center col-carrera" title="{{ tarea.carrera_nombre }}">{{ tarea.carrera_nombre }}</td>
+                                    <td class="text-center">
+                                        {% if tarea.frecuencia and tarea.frecuencia != 'unica' %}
+                                            <span class="badge bg-light text-dark border"><i class="fas fa-redo me-1"></i>{{ frecuencias[tarea.frecuencia] ?? tarea.frecuencia }}</span>
+                                        {% else %}
+                                            <span class="text-muted">Única</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center nowrap {% if tarea.estado != 'pendiente' %}fecha-inactiva{% endif %}"
+                                        {% if tarea.estado != 'pendiente' %}title="Fecha programada (la tarea no está pendiente)"{% endif %}>
+                                        {{ tarea.fecha_programada|date('d/m/Y H:i') }}
+                                        {% if tarea.frecuencia and tarea.frecuencia != 'unica' and tarea.fecha_fin %}
+                                            <div class="small text-muted">hasta {{ tarea.fecha_fin|date('d/m/Y') }}</div>
+                                        {% endif %}
+                                    </td>
                                     <td class="text-center">
                                         {% if tarea.estado == 'pendiente' %}
                                             <span class="badge bg-secondary">Pendiente</span>
@@ -596,100 +255,83 @@
                                             <span class="badge bg-secondary">Desconocido</span>
                                         {% endif %}
                                     </td>
-                                    <td class="text-center">{{ tarea.fecha_creacion|date('d/m/Y H:i') }}</td>
-                                    <td class="text-center">
-                                        <div class="d-flex gap-1 justify-content-center">
+                                    <td class="text-center nowrap">
+                                        {% set ultima = tarea.ultima_ejecucion ?: tarea.fecha_ejecucion %}
+                                        {% if ultima %}
+                                            {% if tarea.error_mensaje %}
+                                                <i class="fas fa-times-circle text-danger" title="Con errores; ver historial"></i>
+                                            {% else %}
+                                                <i class="fas fa-check-circle text-success" title="Sin errores"></i>
+                                            {% endif %}
+                                            {{ ultima|date('d/m/Y H:i') }}
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center nowrap">
+                                        {% if tarea.estado != 'en_proceso' %}
+                                            <button type="button" class="btn btn-action btn-run" data-accion="ejecutar" data-id="{{ tarea.id }}" title="Ejecutar ahora">
+                                                <i class="fas fa-play"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-action btn-edit" data-accion="editar" data-id="{{ tarea.id }}" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        {% endif %}
+                                        <button type="button" class="btn btn-action btn-history" data-accion="historial" data-id="{{ tarea.id }}" title="Historial de ejecuciones">
+                                            <i class="fas fa-history"></i>
+                                        </button>
                                         {% if tarea.estado == 'pendiente' %}
-                                                <button type="button" class="btn btn-action btn-cancel" 
-                                                        onclick="cancelarTarea({{ tarea.id }})" title="Cancelar">
-                                                    <i class="fas fa-times"></i>
+                                            <button type="button" class="btn btn-action btn-cancel" data-accion="cancelar" data-id="{{ tarea.id }}" title="Cancelar">
+                                                <i class="fas fa-ban"></i>
                                             </button>
                                         {% endif %}
-                                        {% if tarea.estado == 'error' %}
-                                                <button type="button" class="btn btn-action btn-view" 
-                                                        onclick="verError({{ tarea.id }}, '{{ tarea.error_mensaje|escape }}')" title="Ver Error">
-                                                    <i class="fas fa-exclamation-triangle"></i>
-                                            </button>
-                                        {% endif %}
-                                        </div>
                                     </td>
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="9" class="text-center">No se encontraron tareas programadas</td>
+                                    <td colspan="10" class="text-center">No se encontraron tareas programadas</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
 
-                    <!-- Paginación -->
                     {% if paginacion.total_pages > 1 %}
                     <div class="card-footer">
                         <nav aria-label="Navegación de páginas">
                             <ul class="pagination justify-content-center mb-0">
-                                <!-- Botón Anterior -->
                                 {% if paginacion.has_previous %}
                                     <li class="page-item">
-                                        <a class="page-link" href="{{ build_page_url(paginacion.previous_page, ordenamiento.column, ordenamiento.direction, filtros, paginacion.per_page) }}">
-                                            <i class="fas fa-chevron-left"></i> Anterior
-                                        </a>
+                                        <a class="page-link" href="{{ build_page_url(paginacion.previous_page, ordenamiento.column, ordenamiento.direction, filtros, paginacion.per_page) }}"><i class="fas fa-chevron-left"></i> Anterior</a>
                                     </li>
                                 {% else %}
-                                    <li class="page-item disabled">
-                                        <span class="page-link"><i class="fas fa-chevron-left"></i> Anterior</span>
-                                    </li>
+                                    <li class="page-item disabled"><span class="page-link"><i class="fas fa-chevron-left"></i> Anterior</span></li>
                                 {% endif %}
 
-                                <!-- Números de página -->
                                 {% set start_page = max(1, paginacion.current_page - 2) %}
                                 {% set end_page = min(paginacion.total_pages, paginacion.current_page + 2) %}
-
                                 {% if start_page > 1 %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="{{ build_page_url(1, ordenamiento.column, ordenamiento.direction, filtros, paginacion.per_page) }}">1</a>
-                                    </li>
-                                    {% if start_page > 2 %}
-                                        <li class="page-item disabled">
-                                            <span class="page-link">...</span>
-                                        </li>
-                                    {% endif %}
+                                    <li class="page-item"><a class="page-link" href="{{ build_page_url(1, ordenamiento.column, ordenamiento.direction, filtros, paginacion.per_page) }}">1</a></li>
+                                    {% if start_page > 2 %}<li class="page-item disabled"><span class="page-link">...</span></li>{% endif %}
                                 {% endif %}
-
                                 {% for page_num in start_page..end_page %}
                                     {% if page_num == paginacion.current_page %}
-                                        <li class="page-item active">
-                                            <span class="page-link">{{ page_num }}</span>
-                                        </li>
+                                        <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
                                     {% else %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="{{ build_page_url(page_num, ordenamiento.column, ordenamiento.direction, filtros, paginacion.per_page) }}">{{ page_num }}</a>
-                                        </li>
+                                        <li class="page-item"><a class="page-link" href="{{ build_page_url(page_num, ordenamiento.column, ordenamiento.direction, filtros, paginacion.per_page) }}">{{ page_num }}</a></li>
                                     {% endif %}
                                 {% endfor %}
-
                                 {% if end_page < paginacion.total_pages %}
-                                    {% if end_page < paginacion.total_pages - 1 %}
-                                        <li class="page-item disabled">
-                                            <span class="page-link">...</span>
-                                        </li>
-                                    {% endif %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="{{ build_page_url(paginacion.total_pages, ordenamiento.column, ordenamiento.direction, filtros, paginacion.per_page) }}">{{ paginacion.total_pages }}</a>
-                                    </li>
+                                    {% if end_page < paginacion.total_pages - 1 %}<li class="page-item disabled"><span class="page-link">...</span></li>{% endif %}
+                                    <li class="page-item"><a class="page-link" href="{{ build_page_url(paginacion.total_pages, ordenamiento.column, ordenamiento.direction, filtros, paginacion.per_page) }}">{{ paginacion.total_pages }}</a></li>
                                 {% endif %}
 
-                                <!-- Botón Siguiente -->
                                 {% if paginacion.has_next %}
                                     <li class="page-item">
-                                        <a class="page-link" href="{{ build_page_url(paginacion.next_page, ordenamiento.column, ordenamiento.direction, filtros, paginacion.per_page) }}">
-                                            Siguiente <i class="fas fa-chevron-right"></i>
-                                        </a>
+                                        <a class="page-link" href="{{ build_page_url(paginacion.next_page, ordenamiento.column, ordenamiento.direction, filtros, paginacion.per_page) }}">Siguiente <i class="fas fa-chevron-right"></i></a>
                                     </li>
                                 {% else %}
-                                    <li class="page-item disabled">
-                                        <span class="page-link">Siguiente <i class="fas fa-chevron-right"></i></span>
-                                    </li>
+                                    <li class="page-item disabled"><span class="page-link">Siguiente <i class="fas fa-chevron-right"></i></span></li>
                                 {% endif %}
                             </ul>
                         </nav>
@@ -701,72 +343,106 @@
     </div>
 </div>
 
-<!-- Modal Nueva Tarea -->
-<div class="modal fade" id="modalNuevaTarea" tabindex="-1" role="dialog" aria-labelledby="modalNuevaTareaLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
+<!-- Modal Crear / Editar Tarea -->
+<div class="modal fade" id="modalTarea" tabindex="-1" aria-labelledby="modalTareaTitulo" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalNuevaTareaLabel">
-                    <i class="fas fa-plus"></i> Nueva Tarea Programada
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="modalTareaTitulo"><i class="fas fa-plus"></i> Nueva Tarea Programada</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
-            <form id="formNuevaTarea">
+                <form id="formTarea" autocomplete="off" onsubmit="return false;">
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="nombre" class="form-label">Nombre de la Tarea *</label>
-                                <input type="text" class="form-control" id="nombre" name="nombre" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="tipo_reporte" class="form-label">Tipo de Reporte *</label>
-                                <select class="form-select" id="tipo_reporte" name="tipo_reporte" required>
-                                    <option value="">Seleccione un tipo</option>
-                                    <option value="cobertura_basica_expandido">Cobertura Básica Expandido</option>
-                                    <option value="cobertura_complementaria_expandido">Cobertura Complementaria Expandido</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="sede_id" class="form-label">Sede *</label>
-                                <select class="form-select" id="sede_id" name="sede_id" required>
-                                    <option value="">Seleccione una sede</option>
-                                    {% for sede in sedes %}
+                        <div class="col-md-6 mb-3">
+                            <label for="tarea_sede" class="form-label">Sede *</label>
+                            <select class="form-select" id="tarea_sede" required>
+                                <option value="">Seleccione una sede</option>
+                                {% for sede in sedes %}
                                     <option value="{{ sede.id }}">{{ sede.sede }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
+                                {% endfor %}
+                            </select>
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="carrera_id" class="form-label">Carrera *</label>
-                                <select class="form-select" id="carrera_id" name="carrera_id" required>
-                                    <option value="">Seleccione una carrera</option>
-                                </select>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label d-block">Tipos de reporte *</label>
+                            <div class="form-check form-check-inline mt-1">
+                                <input class="form-check-input" type="checkbox" id="tipo_basica" value="basica" checked>
+                                <label class="form-check-label" for="tipo_basica">Cobertura Básica</label>
+                            </div>
+                            <div class="form-check form-check-inline mt-1">
+                                <input class="form-check-input" type="checkbox" id="tipo_complementaria" value="complementaria">
+                                <label class="form-check-label" for="tipo_complementaria">Cobertura Complementaria</label>
                             </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="fecha_programada" class="form-label">Fecha y Hora Programada *</label>
-                                <input type="datetime-local" class="form-control" id="fecha_programada" name="fecha_programada" required>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-end mb-1">
+                            <label class="form-label mb-0" id="etiquetaCarreras">Carreras *</label>
+                            <div class="small" id="accionesCarreras">
+                                <a href="#" id="marcarCarreras">Marcar visibles</a> ·
+                                <a href="#" id="desmarcarCarreras">Desmarcar todas</a>
+                                <span class="text-muted ms-2" id="contadorCarreras">0 seleccionadas</span>
                             </div>
                         </div>
-                </div>
-            </form>
+                        <input type="text" class="form-control form-control-sm mb-1" id="buscarCarrera" placeholder="Buscar por código o nombre..." disabled>
+                        <div class="form-text mt-0 mb-1">Solo se muestran carreras activas, con el código del plan vigente que usará la tarea.</div>
+                        <div class="lista-carreras" id="listaCarreras">
+                            <div class="vacia">Seleccione primero una sede</div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="tarea_frecuencia" class="form-label">Frecuencia *</label>
+                            <select class="form-select" id="tarea_frecuencia">
+                                {% for key, value in frecuencias %}
+                                    <option value="{{ key }}">{{ value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="tarea_fecha" class="form-label" id="etiquetaFecha">Fecha y hora *</label>
+                            <input type="datetime-local" class="form-control" id="tarea_fecha" required>
+                        </div>
+                        <div class="col-md-4 mb-3" id="grupoFechaFin" style="display:none;">
+                            <label for="tarea_fecha_fin" class="form-label">Repetir hasta <span class="text-muted">(opcional)</span></label>
+                            <input type="date" class="form-control" id="tarea_fecha_fin">
+                        </div>
+                    </div>
+                    <div class="small text-muted mb-3" id="ayudaFrecuencia"></div>
+
+                    <div class="mb-1">
+                        <label for="tarea_nombre" class="form-label">Nombre de la tarea *</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="tarea_nombre" maxlength="255">
+                            <button class="btn btn-outline-secondary" type="button" id="regenerarNombre" title="Volver al nombre automático">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                        <div class="form-text" id="ayudaNombre">Se genera automáticamente según la carrera; puede modificarlo.</div>
+                    </div>
+                </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="crearTarea()">
-                    <i class="fas fa-save"></i> Crear Tarea
-                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarTarea"><i class="fas fa-save"></i> <span>Crear tarea</span></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Historial -->
+<div class="modal fade" id="modalHistorial" tabindex="-1" aria-labelledby="modalHistorialTitulo" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalHistorialTitulo"><i class="fas fa-history"></i> Historial de ejecuciones</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body" id="contenidoHistorial"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
@@ -775,157 +451,356 @@
 
 {% block scripts %}
 <script>
-    // Evento para cambiar registros por página
-    document.getElementById('per_page').addEventListener('change', function() {
-        const perPage = this.value;
-        const currentUrl = new URL(window.location);
-        
-        // Actualizar parámetro per_page
-        currentUrl.searchParams.set('per_page', perPage);
-        
-        // Resetear a la primera página cuando se cambia el número de registros
-        currentUrl.searchParams.set('page', '1');
-        
-        // Redirigir a la nueva URL
-        window.location.href = currentUrl.toString();
-    });
+(function () {
+    const URL_BASE = {{ (app_url ~ 'tareas-programadas')|json_encode|raw }};
+    const CARRERAS = {{ carreras|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+    const FRECUENCIAS = {{ frecuencias|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP'))|raw }};
 
-    // Filtrar carreras según la sede seleccionada
-    document.getElementById('sede_id').addEventListener('change', function() {
-        const sedeId = this.value;
-        const carreraSelect = document.getElementById('carrera_id');
-        
-        // Limpiar opciones actuales
-        carreraSelect.innerHTML = '<option value="">Seleccione una carrera</option>';
-        
-        if (sedeId) {
-            // Filtrar carreras por sede
-            const carreras = {{ carreras|json_encode|raw }};
-            const carrerasFiltradas = carreras.filter(carrera => carrera.id_sede == sedeId);
-            
-            carrerasFiltradas.forEach(carrera => {
-                const option = document.createElement('option');
-                option.value = carrera.id;
-                option.textContent = carrera.carrera;
-                carreraSelect.appendChild(option);
-            });
-        }
-    });
+    const modalTarea = new bootstrap.Modal(document.getElementById('modalTarea'));
+    const modalHistorial = new bootstrap.Modal(document.getElementById('modalHistorial'));
+    const el = (id) => document.getElementById(id);
 
-    // Función para crear nueva tarea
-    function crearTarea() {
-        const form = document.getElementById('formNuevaTarea');
-        const formData = new FormData(form);
-        
-        // Convertir FormData a objeto
-        const data = {};
-        formData.forEach((value, key) => {
-            data[key] = value;
-        });
-        
-        // Validar que todos los campos requeridos estén completos
-        if (!data.nombre || !data.tipo_reporte || !data.sede_id || !data.carrera_id || !data.fecha_programada) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                text: 'Por favor complete todos los campos requeridos'
-            });
-            return;
+    let modo = 'crear';        // 'crear' | 'editar'
+    let tareaId = null;
+    let nombreEditado = false;
+    let carreraExtra = null;   // carrera inactiva de una tarea que se está editando
+
+    function escHtml(v) {
+        return String(v ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+    }
+    function formatoFecha(v) {
+        if (!v) return '—';
+        const m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+        return m ? `${m[3]}/${m[2]}/${m[1]} ${m[4]}:${m[5]}` : escHtml(v);
+    }
+    function ahoraLocal() {
+        const d = new Date();
+        d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+        return d.toISOString().slice(0, 16);
+    }
+    function alerta(icono, titulo, texto) {
+        return Swal.fire({icon: icono, title: titulo, text: texto});
+    }
+    async function pedir(url, opciones = {}) {
+        const resp = await fetch(url, Object.assign({headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}}, opciones));
+        let datos = {};
+        try { datos = await resp.json(); } catch (e) { datos = {message: 'Respuesta inesperada del servidor (' + resp.status + ')'}; }
+        if (!resp.ok || datos.success === false) {
+            throw new Error(datos.message || datos.error || 'Error ' + resp.status);
         }
-        
-        // Enviar petición AJAX
-        fetch('{{ app_url }}tareas-programadas', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Éxito',
-                    text: result.message
-                }).then(() => {
-                    window.location.reload();
-                });
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: result.message || 'Error al crear la tarea'
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Error de conexión al crear la tarea'
-            });
-        });
+        return datos;
     }
 
-    // Función para cancelar tarea
-    function cancelarTarea(tareaId) {
-    Swal.fire({
-            title: '¿Está seguro?',
-        text: "Esta acción cancelará la tarea programada",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sí, cancelar',
-        cancelButtonText: 'No, mantener'
-    }).then((result) => {
-        if (result.isConfirmed) {
-                fetch('{{ app_url }}tareas-programadas/' + tareaId + '/cancelar', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Éxito',
-                            text: result.message
-                        }).then(() => {
-                            window.location.reload();
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: result.message || 'Error al cancelar la tarea'
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Error de conexión al cancelar la tarea'
-                    });
-            });
+    // ---------- Registros por página ----------
+    el('per_page').addEventListener('change', function () {
+        const url = new URL(window.location);
+        url.searchParams.set('per_page', this.value);
+        url.searchParams.set('page', '1');
+        window.location.href = url.toString();
+    });
+
+    // ---------- Carreras ----------
+    function carrerasDeSede(sedeId) {
+        const vistas = new Set();
+        const lista = CARRERAS.filter(c => String(c.id_sede) === String(sedeId) && !vistas.has(c.id) && vistas.add(c.id));
+        if (carreraExtra && String(carreraExtra.id_sede) === String(sedeId) && !vistas.has(carreraExtra.id)) {
+            lista.unshift(carreraExtra);
+        }
+        return lista;
+    }
+    function etiquetaCarrera(c) {
+        return (c.codigo ? c.codigo + ' - ' : '') + c.carrera + (c.inactiva ? ' (inactiva)' : '');
+    }
+    function pintarCarreras(seleccionadas = []) {
+        const sedeId = el('tarea_sede').value;
+        const lista = el('listaCarreras');
+        const tipoInput = modo === 'editar' ? 'radio' : 'checkbox';
+        el('buscarCarrera').value = '';
+        el('buscarCarrera').disabled = !sedeId;
+        if (!sedeId) {
+            lista.innerHTML = '<div class="vacia">Seleccione primero una sede</div>';
+            actualizarContador();
+            return;
+        }
+        const carreras = carrerasDeSede(sedeId);
+        if (!carreras.length) {
+            lista.innerHTML = '<div class="vacia">La sede no tiene carreras con malla</div>';
+            actualizarContador();
+            return;
+        }
+        lista.innerHTML = carreras.map(c => {
+            const id = 'car_' + parseInt(c.id, 10);
+            const marcada = seleccionadas.map(String).includes(String(c.id)) ? ' checked' : '';
+            const etiqueta = etiquetaCarrera(c);
+            return `<div class="form-check" data-nombre="${escHtml(etiqueta.toLowerCase())}">
+                        <input class="form-check-input" type="${tipoInput}" name="carrera_sel" id="${id}" value="${parseInt(c.id, 10)}" data-nombre="${escHtml(c.carrera)}"${marcada}>
+                        <label class="form-check-label${c.inactiva ? ' text-muted' : ''}" for="${id}">${c.codigo ? '<span class="text-muted">' + escHtml(c.codigo) + '</span> - ' : ''}${escHtml(c.carrera)}${c.inactiva ? ' <em>(inactiva)</em>' : ''}</label>
+                    </div>`;
+        }).join('');
+        actualizarContador();
+    }
+    function carrerasMarcadas() {
+        return Array.from(document.querySelectorAll('#listaCarreras input[name="carrera_sel"]:checked'));
+    }
+    function actualizarContador() {
+        const n = carrerasMarcadas().length;
+        el('contadorCarreras').textContent = n === 1 ? '1 seleccionada' : n + ' seleccionadas';
+        actualizarNombre();
+    }
+    el('tarea_sede').addEventListener('change', () => pintarCarreras([]));
+    el('listaCarreras').addEventListener('change', actualizarContador);
+    el('buscarCarrera').addEventListener('input', function () {
+        const texto = this.value.trim().toLowerCase();
+        document.querySelectorAll('#listaCarreras .form-check').forEach(div => {
+            div.style.display = !texto || div.dataset.nombre.includes(texto) ? '' : 'none';
+        });
+    });
+    el('marcarCarreras').addEventListener('click', e => {
+        e.preventDefault();
+        document.querySelectorAll('#listaCarreras .form-check').forEach(div => {
+            if (div.style.display !== 'none') div.querySelector('input').checked = true;
+        });
+        actualizarContador();
+    });
+    el('desmarcarCarreras').addEventListener('click', e => {
+        e.preventDefault();
+        document.querySelectorAll('#listaCarreras input[name="carrera_sel"]').forEach(i => { i.checked = false; });
+        actualizarContador();
+    });
+
+    // ---------- Tipos, frecuencia y nombre ----------
+    function tiposMarcados() {
+        return ['basica', 'complementaria'].filter(t => el('tipo_' + t).checked);
+    }
+    function nombreAutomatico(carrera) {
+        const sedeSel = el('tarea_sede');
+        const sede = sedeSel.value ? sedeSel.options[sedeSel.selectedIndex].text : '';
+        const tipos = tiposMarcados();
+        const etiquetaTipos = tipos.length === 2 ? 'Básica y Complementaria' : (tipos[0] === 'complementaria' ? 'Complementaria' : 'Básica');
+        const frecuencia = FRECUENCIAS[el('tarea_frecuencia').value] || 'Única';
+        return [carrera, sede, etiquetaTipos, frecuencia].map(s => String(s).trim()).join(' - ').slice(0, 255);
+    }
+    function actualizarNombre() {
+        const marcadas = carrerasMarcadas();
+        const input = el('tarea_nombre');
+        if (marcadas.length > 1) {
+            input.disabled = true;
+            input.value = '';
+            input.placeholder = 'Se generará un nombre para cada una de las ' + marcadas.length + ' carreras';
+            el('regenerarNombre').disabled = true;
+            el('ayudaNombre').textContent = 'Ejemplo: ' + nombreAutomatico(marcadas[0].dataset.nombre);
+            return;
+        }
+        input.disabled = false;
+        el('regenerarNombre').disabled = false;
+        input.placeholder = marcadas.length ? '' : 'Seleccione una carrera';
+        el('ayudaNombre').textContent = 'Se genera automáticamente según la carrera; puede modificarlo.';
+        if (!nombreEditado) {
+            input.value = marcadas.length ? nombreAutomatico(marcadas[0].dataset.nombre) : '';
+        }
+    }
+    el('tarea_nombre').addEventListener('input', () => { nombreEditado = el('tarea_nombre').value.trim() !== ''; });
+    el('regenerarNombre').addEventListener('click', () => { nombreEditado = false; actualizarNombre(); });
+    ['tipo_basica', 'tipo_complementaria'].forEach(id => el(id).addEventListener('change', actualizarNombre));
+
+    function actualizarFrecuencia() {
+        const f = el('tarea_frecuencia').value;
+        const recurrente = f !== 'unica';
+        el('grupoFechaFin').style.display = recurrente ? '' : 'none';
+        el('etiquetaFecha').textContent = recurrente ? 'Primera ejecución *' : 'Fecha y hora *';
+        const ayuda = {
+            unica: 'Se ejecuta una sola vez en la fecha indicada.',
+            diaria: 'Se repite todos los días a la misma hora.',
+            semanal: 'Se repite cada semana, el mismo día y hora de la primera ejecución.',
+            mensual: 'Se repite cada mes el mismo día (si el mes no tiene ese día, se usa el último día del mes).',
+            anual: 'Se repite cada año en la misma fecha y hora.'
+        };
+        el('ayudaFrecuencia').textContent = ayuda[f] || '';
+        actualizarNombre();
+    }
+    el('tarea_frecuencia').addEventListener('change', actualizarFrecuencia);
+
+    // ---------- Abrir formulario ----------
+    function prepararFormulario(nuevoModo) {
+        modo = nuevoModo;
+        nombreEditado = false;
+        el('formTarea').reset();
+        el('tarea_fecha').min = ahoraLocal();
+        el('etiquetaCarreras').textContent = modo === 'editar' ? 'Carrera *' : 'Carreras * (puede seleccionar varias)';
+        el('accionesCarreras').style.display = modo === 'editar' ? 'none' : '';
+        el('modalTareaTitulo').innerHTML = modo === 'editar'
+            ? '<i class="fas fa-edit"></i> Editar Tarea Programada'
+            : '<i class="fas fa-plus"></i> Nueva Tarea Programada';
+        el('btnGuardarTarea').querySelector('span').textContent = modo === 'editar' ? 'Guardar y programar' : 'Crear tarea';
+        carreraExtra = null;
+    }
+
+    el('btnNuevaTarea').addEventListener('click', () => {
+        prepararFormulario('crear');
+        tareaId = null;
+        el('tipo_basica').checked = true;
+        el('tipo_complementaria').checked = false;
+        pintarCarreras([]);
+        actualizarFrecuencia();
+        modalTarea.show();
+    });
+
+    async function editarTarea(id) {
+        try {
+            const datos = await pedir(URL_BASE + '/' + id);
+            const t = datos.tarea;
+            prepararFormulario('editar');
+            tareaId = t.id;
+            if (!t.carrera_activa) {
+                carreraExtra = {id: t.carrera_id, carrera: t.carrera_nombre, codigo: t.carrera_codigo, id_sede: t.sede_id, inactiva: true};
+            }
+            el('tarea_sede').value = String(t.sede_id);
+            el('tipo_basica').checked = t.tipos.includes('basica');
+            el('tipo_complementaria').checked = t.tipos.includes('complementaria');
+            el('tarea_frecuencia').value = t.frecuencia;
+            const futura = t.fecha_programada > ahoraLocal();
+            el('tarea_fecha').value = futura ? t.fecha_programada : '';
+            el('tarea_fecha_fin').value = t.fecha_fin || '';
+            pintarCarreras([t.carrera_id]);
+            actualizarFrecuencia();
+            el('tarea_nombre').value = t.nombre;
+            nombreEditado = t.nombre !== nombreAutomatico((carrerasMarcadas()[0] || {dataset: {}}).dataset.nombre || '');
+            modalTarea.show();
+            if (!futura) {
+                setTimeout(() => el('tarea_fecha').focus(), 400);
+            }
+        } catch (e) {
+            alerta('error', 'Error', e.message);
+        }
+    }
+
+    // ---------- Guardar ----------
+    el('btnGuardarTarea').addEventListener('click', async () => {
+        const marcadas = carrerasMarcadas();
+        const datos = {
+            sede_id: el('tarea_sede').value,
+            carrera_ids: marcadas.map(i => i.value),
+            tipos: tiposMarcados(),
+            frecuencia: el('tarea_frecuencia').value,
+            fecha_programada: el('tarea_fecha').value,
+            fecha_fin: el('tarea_frecuencia').value !== 'unica' ? el('tarea_fecha_fin').value : '',
+            nombre: marcadas.length === 1 ? el('tarea_nombre').value.trim() : ''
+        };
+        let falta = '';
+        if (!datos.sede_id) falta = 'Seleccione una sede';
+        else if (!datos.carrera_ids.length) falta = 'Seleccione al menos una carrera';
+        else if (!datos.tipos.length) falta = 'Seleccione al menos un tipo de reporte';
+        else if (!datos.fecha_programada) falta = 'Indique la fecha y hora';
+        else if (datos.fecha_programada <= ahoraLocal()) falta = 'La fecha y hora deben ser futuras';
+        else if (marcadas.length === 1 && !datos.nombre) falta = 'Indique un nombre para la tarea';
+        if (falta) {
+            alerta('warning', 'Revise el formulario', falta);
+            return;
+        }
+
+        const boton = el('btnGuardarTarea');
+        boton.disabled = true;
+        try {
+            const url = modo === 'editar' ? URL_BASE + '/' + tareaId : URL_BASE;
+            const r = await pedir(url, {method: 'POST', body: JSON.stringify(datos)});
+            modalTarea.hide();
+            await alerta('success', 'Listo', r.message);
+            window.location.reload();
+        } catch (e) {
+            alerta('error', 'No se pudo guardar', e.message);
+        } finally {
+            boton.disabled = false;
         }
     });
-}
 
-    // Función para ver error
-    function verError(tareaId, errorMensaje) {
-        Swal.fire({
-            title: 'Error en Tarea #' + tareaId,
-            text: errorMensaje || 'No hay información de error disponible',
-            icon: 'error',
-            confirmButtonText: 'Cerrar'
+    // ---------- Acciones de la tabla ----------
+    async function ejecutarAhora(id) {
+        const conf = await Swal.fire({
+            title: '¿Ejecutar ahora?',
+            text: 'Se calculará y guardará la cobertura de inmediato. La programación de la tarea no cambia.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, ejecutar',
+            cancelButtonText: 'No'
         });
-}
+        if (!conf.isConfirmed) return;
+        Swal.fire({title: 'Ejecutando...', text: 'Esto puede tardar unos segundos', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+        try {
+            const r = await pedir(URL_BASE + '/' + id + '/ejecutar', {method: 'POST', body: '{}'});
+            await alerta('success', 'Ejecución completada', r.message);
+        } catch (e) {
+            await alerta('error', 'Error en la ejecución', e.message);
+        }
+        window.location.reload();
+    }
+
+    async function cancelarTarea(id) {
+        const conf = await Swal.fire({
+            title: '¿Está seguro?',
+            text: 'Esta acción cancelará la tarea programada. Podrá reprogramarla editándola.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Sí, cancelar',
+            cancelButtonText: 'No, mantener'
+        });
+        if (!conf.isConfirmed) return;
+        try {
+            const r = await pedir(URL_BASE + '/' + id + '/cancelar', {method: 'POST', body: '{}'});
+            await alerta('success', 'Listo', r.message);
+            window.location.reload();
+        } catch (e) {
+            alerta('error', 'Error', e.message);
+        }
+    }
+
+    async function verHistorial(id) {
+        const cont = el('contenidoHistorial');
+        cont.innerHTML = '<div class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
+        modalHistorial.show();
+        try {
+            const d = await pedir(URL_BASE + '/' + id + '/historial');
+            const t = d.tarea;
+            let html = `<p class="mb-1"><strong>${escHtml(t.nombre)}</strong></p>
+                        <p class="small text-muted mb-2">Frecuencia: ${escHtml(FRECUENCIAS[t.frecuencia] || t.frecuencia)} ·
+                        Próxima/programada: ${formatoFecha(t.fecha_programada)} · Última ejecución: ${formatoFecha(t.ultima_ejecucion)}</p>`;
+            if (t.error_mensaje) {
+                html += `<div class="alert alert-danger py-2 small mb-2"><strong>Último error:</strong> ${escHtml(t.error_mensaje)}</div>`;
+            }
+            if (!d.ejecuciones.length) {
+                html += '<p class="text-muted small mb-0">No hay ejecuciones registradas en el historial (las ejecuciones anteriores a esta versión no quedaron registradas).</p>';
+            } else {
+                html += `<div class="table-responsive"><table class="table table-sm table-striped tabla-historial mb-0">
+                    <thead><tr><th>Inicio</th><th>Fin</th><th>Reporte</th><th>Origen</th><th>Estado</th><th class="text-end">Registros</th><th>Mensaje</th></tr></thead><tbody>`;
+                d.ejecuciones.forEach(x => {
+                    const estado = x.estado === 'completada'
+                        ? '<span class="badge bg-success">Completada</span>'
+                        : '<span class="badge bg-danger">Error</span>';
+                    html += `<tr>
+                        <td class="text-nowrap">${formatoFecha(x.fecha_inicio)}</td>
+                        <td class="text-nowrap">${formatoFecha(x.fecha_fin)}</td>
+                        <td>${x.tipo_reporte === 'basica' ? 'Básica' : 'Complementaria'}</td>
+                        <td>${parseInt(x.manual, 10) ? 'Manual' : 'Programada'}</td>
+                        <td>${estado}</td>
+                        <td class="text-end">${x.registros === null ? '—' : parseInt(x.registros, 10)}</td>
+                        <td>${escHtml(x.mensaje || '')}</td>
+                    </tr>`;
+                });
+                html += '</tbody></table></div>';
+            }
+            cont.innerHTML = html;
+        } catch (e) {
+            cont.innerHTML = `<div class="alert alert-danger">${escHtml(e.message)}</div>`;
+        }
+    }
+
+    document.querySelector('.tareas-table').addEventListener('click', e => {
+        const boton = e.target.closest('button[data-accion]');
+        if (!boton) return;
+        const id = parseInt(boton.dataset.id, 10);
+        if (!id) return;
+        ({ejecutar: ejecutarAhora, editar: editarTarea, historial: verHistorial, cancelar: cancelarTarea})[boton.dataset.accion](id);
+    });
+})();
 </script>
-{% endblock %} 
+{% endblock %}
