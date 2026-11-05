@@ -55,95 +55,44 @@ try {
     // Cambiar a la base de datos de producción
     $pdo->exec("USE {$prodDbName}");
 
-    // Leer el esquema
-    $schema = file_get_contents(__DIR__ . '/schema.sql');
-    
-    // Eliminar líneas DELIMITER
-    $schema = preg_replace('/^DELIMITER .+$/m', '', $schema);
-    
-    // NO reemplazar referencias de base de datos
-    
-    // Procesar el SQL línea por línea
-    $lines = explode("\n", $schema);
-    $statement = '';
-    $inBlock = false;
-    $blockStarters = ['CREATE TRIGGER', 'CREATE PROCEDURE', 'CREATE FUNCTION'];
-    $retryStatements = [];
+    // Leer el esquema y dividirlo en sentencias (respeta DELIMITER, necesario para los triggers)
+    require_once __DIR__ . '/lib/dividir_sql.php';
+    $sentencias = dividirSentenciasSql(file_get_contents(__DIR__ . '/schema.sql'));
     $maxRetries = 3;
-    
-    for ($retryCount = 0; $retryCount <= $maxRetries; $retryCount++) {
+
+    for ($retryCount = 0; $retryCount <= $maxRetries && $sentencias; $retryCount++) {
         if ($retryCount > 0) {
             echo "\n🔄 Reintento #{$retryCount} de declaraciones con dependencias...\n";
-            $lines = array_map(function($stmt) { return $stmt . "\n"; }, $retryStatements);
-            $retryStatements = [];
         }
-        
-        foreach ($lines as $line) {
-            $trimmedLine = trim($line);
-            if ($trimmedLine === '' || strpos($trimmedLine, '--') === 0) continue;
-            
-            if (!$inBlock) {
-                foreach ($blockStarters as $starter) {
-                    if (stripos($trimmedLine, $starter) === 0) {
-                        $inBlock = true;
-                        break;
-                    }
-                }
+        $pendientes = [];
+        foreach ($sentencias as $statement) {
+            if (preg_match('/^(DROP DATABASE|CREATE DATABASE|USE)\s+/i', $statement)) {
+                echo "Saltando comando de base de datos: " . substr($statement, 0, 50) . "...\n";
+                continue;
             }
-            
-            $statement .= $line . "\n";
-            
-            if ($inBlock) {
-                if (preg_match('/END;\s*$/i', $trimmedLine)) {
-                    try {
-                        $pdo->exec($statement);
-                        echo "Ejecutado bloque: " . substr($statement, 0, 50) . "...\n";
-                    } catch (PDOException $e) {
-                        echo "Error ejecutando bloque: " . substr($statement, 0, 50) . "...\n";
-                        echo "Error: " . $e->getMessage() . "\n";
-                    }
-                    $statement = '';
-                    $inBlock = false;
-                }
-            } else {
-                if (preg_match('/;\s*$/', $trimmedLine)) {
-                    if (preg_match('/^(DROP DATABASE|CREATE DATABASE|USE)\s+/i', $statement)) {
-                        echo "Saltando comando de base de datos: " . substr($statement, 0, 50) . "...\n";
-                        $statement = '';
-                        continue;
-                    }
-                    try {
-                        $pdo->exec($statement);
-                        echo "Ejecutado: " . substr($statement, 0, 50) . "...\n";
-                    } catch (PDOException $e) {
-                        $errorMsg = $e->getMessage();
-                        if (strpos($errorMsg, 'already exists') !== false) {
-                            echo "Ignorando error (tabla ya existe): " . substr($statement, 0, 50) . "...\n";
-                        } else if (strpos($errorMsg, 'Failed to open the referenced table') !== false ||
-                                 strpos($errorMsg, "doesn't exist") !== false ||
-                                 strpos($errorMsg, 'Base table or view not found') !== false) {
-                            echo "⚠️  Error de dependencia: " . substr($statement, 0, 50) . "...\n";
-                            echo "   La tabla/vista referenciada no existe aún. Se reintentará.\n";
-                            $retryStatements[] = $statement;
-                        } else if (strpos($errorMsg, 'foreign key') !== false || 
-                                   strpos($errorMsg, 'Integrity constraint violation') !== false) {
-                            echo "Ignorando error de foreign key: " . substr($statement, 0, 50) . "...\n";
-                        } else {
-                            echo "Error ejecutando: " . substr($statement, 0, 50) . "...\n";
-                            echo "Error: " . $errorMsg . "\n";
-                        }
-                    }
-                    $statement = '';
+            try {
+                $pdo->exec($statement);
+                echo "Ejecutado: " . substr($statement, 0, 50) . "...\n";
+            } catch (PDOException $e) {
+                $errorMsg = $e->getMessage();
+                if (strpos($errorMsg, 'already exists') !== false) {
+                    echo "Ignorando (ya existe): " . substr($statement, 0, 50) . "...\n";
+                } elseif (strpos($errorMsg, 'Failed to open the referenced table') !== false ||
+                          strpos($errorMsg, "doesn't exist") !== false ||
+                          strpos($errorMsg, 'Base table or view not found') !== false) {
+                    echo "⚠️  Error de dependencia: " . substr($statement, 0, 50) . "... Se reintentará.\n";
+                    $pendientes[] = $statement;
+                } else {
+                    echo "Error ejecutando: " . substr($statement, 0, 50) . "...\n";
+                    echo "Error: " . $errorMsg . "\n";
                 }
             }
         }
-        if (empty($retryStatements)) {
-            break;
-        }
+        $sentencias = $pendientes;
     }
-    if (!empty($retryStatements)) {
+    if ($sentencias) {
         echo "\n❌ Las siguientes declaraciones no se pudieron ejecutar después de {$maxRetries} reintentos:\n";
-        foreach ($retryStatements as $failedStatement) {
+        foreach ($sentencias as $failedStatement) {
             echo "   - " . substr($failedStatement, 0, 80) . "...\n";
         }
     }
@@ -178,7 +127,6 @@ try {
     echo "\n=== RESUMEN ===\n";
     echo "Base de datos de producción: {$prodDbName}\n";
     echo "Usuario creado: {$prodUser}\n";
-    echo "Contraseña del usuario: {$prodPassword}\n";
     echo "Host: {$rootConfig['host']}:{$rootConfig['port']}\n";
     echo "\nBase de datos de producción inicializada correctamente.\n";
 

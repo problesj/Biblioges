@@ -1,851 +1,631 @@
 -- =====================================================
 -- ESQUEMA DE BASE DE DATOS BIBLIOGES
 -- =====================================================
--- Archivo reorganizado: Tablas -> Vistas -> Triggers -> Datos
+-- Generado a partir de la estructura en uso (2026-11-05, MySQL 8.0.46-0ubuntu0.24.04.4).
+-- Instalación nueva (base de datos vacía):
+--   mysql -u <usuario> -p <base_de_datos> < database/schema.sql
+-- Datos de ejemplo, solo para desarrollo/pruebas (NO en producción):
+--   mysql -u <usuario> -p <base_de_datos> < database/datos_ejemplo.sql
+-- Para actualizar una base existente use los scripts de migración database/AAAA-MM-*.sql.
+-- Secciones: 1) Tablas  2) Vistas  3) Triggers  4) Datos requeridos
 -- =====================================================
 
+SET NAMES utf8mb4;
+SET @OLD_FOREIGN_KEY_CHECKS = @@FOREIGN_KEY_CHECKS;
+SET FOREIGN_KEY_CHECKS = 0;
+
 -- =====================================================
--- SECCIÓN 1: CREACIÓN DE TABLAS (en orden de dependencias)
+-- SECCIÓN 1: TABLAS
 -- =====================================================
 
--- Tabla de sedes
-CREATE TABLE IF NOT EXISTS sedes (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    codigo VARCHAR(10) NOT NULL UNIQUE,
-    nombre VARCHAR(250) NOT NULL,
-    estado TINYINT(1) DEFAULT 1,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+-- Sedes de la universidad
+CREATE TABLE IF NOT EXISTS `sedes` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `codigo` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nombre` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `estado` tinyint(1) DEFAULT '1',
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `codigo` (`codigo`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
--- Tabla de unidades
-CREATE TABLE IF NOT EXISTS unidades (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    codigo VARCHAR(10) NOT NULL UNIQUE,
-    nombre VARCHAR(250) NOT NULL,
-    sede_id INT NOT NULL,
-    id_unidad_padre VARCHAR(255) NULL,
-    estado TINYINT(1) DEFAULT 1,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE
-) ENGINE=InnoDB;
+-- Unidades académicas (departamentos) por sede
+CREATE TABLE IF NOT EXISTS `unidades` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `codigo` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nombre` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `sede_id` int NOT NULL,
+  `id_unidad_padre` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `estado` tinyint(1) DEFAULT '1',
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `codigo` (`codigo`),
+  KEY `unidades_ibfk_1` (`sede_id`),
+  CONSTRAINT `unidades_ibfk_1` FOREIGN KEY (`sede_id`) REFERENCES `sedes` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
--- Tabla de carreras
-CREATE TABLE IF NOT EXISTS carreras (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(250) NOT NULL,
-    tipo_programa ENUM('P', 'G', 'O') NOT NULL,
-    cantidad_semestres int DEFAULT 10,
-    estado TINYINT(1) DEFAULT 1,
-    url_libro VARCHAR(500) DEFAULT NULL,
-    url_imagen VARCHAR(500) DEFAULT NULL,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+-- Carreras
+CREATE TABLE IF NOT EXISTS `carreras` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tipo_programa` enum('P','G','O') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `cantidad_semestres` int DEFAULT '10',
+  `estado` tinyint(1) DEFAULT '1',
+  `url_libro` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `imagen_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
--- Tabla de carreras espejos
-CREATE TABLE carreras_espejos (
-    id INT AUTO_INCREMENT,
-    carrera_id INT NOT NULL,
-    codigo_carrera VARCHAR(20) NOT NULL,
-    vigencia_desde CHAR(6) NOT NULL,
-    vigencia_hasta CHAR(6) NOT NULL DEFAULT '999999',
-    sede_id INT NOT NULL,
-    id_unidad INT NULL,
-    estado TINYINT(1) DEFAULT 1,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (id, carrera_id, codigo_carrera, vigencia_desde, vigencia_hasta, sede_id),
-    FOREIGN KEY (carrera_id) REFERENCES carreras(id),
-    FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
-    FOREIGN KEY (id_unidad) REFERENCES unidades(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_carrera_espejo (carrera_id, codigo_carrera, sede_id),
-    KEY idx_id_unidad (id_unidad)
-);
+-- Planes de estudio de cada carrera por sede (código y vigencia)
+CREATE TABLE IF NOT EXISTS `carreras_espejos` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `carrera_id` int NOT NULL,
+  `codigo_carrera` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `vigencia_desde` char(6) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `vigencia_hasta` char(6) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '999999',
+  `sede_id` int NOT NULL,
+  `id_unidad` int DEFAULT NULL,
+  `estado` tinyint(1) DEFAULT '1',
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`,`codigo_carrera`,`carrera_id`,`sede_id`),
+  UNIQUE KEY `unique_carrera_espejo` (`carrera_id`,`codigo_carrera`,`sede_id`),
+  KEY `idx_id_unidad` (`id_unidad`),
+  KEY `carreras_espejos_ibfk_3` (`sede_id`),
+  CONSTRAINT `carreras_espejos_ibfk_1` FOREIGN KEY (`carrera_id`) REFERENCES `carreras` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `carreras_espejos_ibfk_3` FOREIGN KEY (`sede_id`) REFERENCES `sedes` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_carreras_espejos_unidad` FOREIGN KEY (`id_unidad`) REFERENCES `unidades` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
--- Tabla de asignaturas
-CREATE TABLE IF NOT EXISTS asignaturas (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(250) NOT NULL,
-    tipo ENUM(
-        'REGULAR',
-        'FORMACION_BASICA',
-        'FORMACION_GENERAL',
-        'FORMACION_IDIOMAS',
-        'FORMACION_PROFESIONAL',
-        'FORMACION_VALORES',
-        'FORMACION_ESPECIALIDAD',
-        'FORMACION_ELECTIVA',
-        'FORMACION_ESPECIAL'
-    ) NOT NULL,
-    vigencia_desde VARCHAR(6) NOT NULL COMMENT 'Formato: AAAA-SS (Año-Secuencia)',
-    vigencia_hasta VARCHAR(6) NOT NULL DEFAULT '999999' COMMENT 'Formato: AAAA-SS (Año-Secuencia), 999999 indica vigencia actual',
-    estado TINYINT(1) DEFAULT 1,
-    periodicidad ENUM('anual', 'semestral') NOT NULL,
-    url_programa VARCHAR(500),
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT chk_vigencia_formato CHECK (
-        (vigencia_desde REGEXP '^[0-9]{6}$') AND
-        (vigencia_hasta REGEXP '^[0-9]{6}$') AND
-        (vigencia_hasta = '999999' OR vigencia_hasta > vigencia_desde)
-    )
-) ENGINE=InnoDB;
+-- Asignaturas
+CREATE TABLE IF NOT EXISTS `asignaturas` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tipo` enum('REGULAR','FORMACION_BASICA','FORMACION_GENERAL','FORMACION_IDIOMAS','FORMACION_PROFESIONAL','FORMACION_VALORES','FORMACION_ESPECIALIDAD','FORMACION_ELECTIVA','FORMACION_ESPECIAL') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `vigencia_desde` varchar(6) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Formato: AAAA-SS (Año-Secuencia)',
+  `vigencia_hasta` varchar(6) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '999999' COMMENT 'Formato: AAAA-SS (Año-Secuencia), 999999 indica vigencia actual',
+  `estado` tinyint(1) DEFAULT '1',
+  `periodicidad` enum('anual','semestral') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `url_programa` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `chk_vigencia_formato` CHECK ((regexp_like(`vigencia_desde`,_utf8mb4'^[0-9]{6}$') and regexp_like(`vigencia_hasta`,_utf8mb4'^[0-9]{6}$') and ((`vigencia_hasta` = _utf8mb4'999999') or (`vigencia_hasta` > `vigencia_desde`))))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
--- Tabla de relación asignatura-padre-hijo
-CREATE TABLE IF NOT EXISTS asignaturas_formacion (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    asignatura_formacion_id INT NOT NULL COMMENT 'ID de la asignatura de formación (padre)',
-    asignatura_regular_id INT NOT NULL COMMENT 'ID de la asignatura formacion (hijo)',
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (asignatura_formacion_id) REFERENCES asignaturas(id) ON DELETE CASCADE,
-    FOREIGN KEY (asignatura_regular_id) REFERENCES asignaturas(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_formacion_regular (asignatura_formacion_id, asignatura_regular_id)
-) ENGINE=InnoDB;
+-- Relación asignatura de formación electiva -> asignaturas que la componen
+CREATE TABLE IF NOT EXISTS `asignaturas_formacion` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `asignatura_formacion_id` int NOT NULL COMMENT 'ID de la asignatura de formación (padre)',
+  `asignatura_regular_id` int NOT NULL COMMENT 'ID de la asignatura formacion (hijo)',
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_formacion_regular` (`asignatura_formacion_id`,`asignatura_regular_id`),
+  KEY `asignaturas_formacion_ibfk_2` (`asignatura_regular_id`),
+  CONSTRAINT `asignaturas_formacion_ibfk_1` FOREIGN KEY (`asignatura_formacion_id`) REFERENCES `asignaturas` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `asignaturas_formacion_ibfk_2` FOREIGN KEY (`asignatura_regular_id`) REFERENCES `asignaturas` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
--- Tabla de mallas curriculares
-CREATE TABLE IF NOT EXISTS mallas (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    carrera_id INT NOT NULL,
-    asignatura_id INT NOT NULL,
-    semestre INT NOT NULL,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (carrera_id) REFERENCES carreras(id) ON DELETE CASCADE,
-    FOREIGN KEY (asignatura_id) REFERENCES asignaturas(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_carrera_asignatura_semestre (carrera_id, asignatura_id, semestre)
-) ENGINE=InnoDB;
+-- Mallas curriculares (asignaturas por carrera y semestre)
+CREATE TABLE IF NOT EXISTS `mallas` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `carrera_id` int NOT NULL,
+  `asignatura_id` int NOT NULL,
+  `semestre` int NOT NULL,
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_carrera_asignatura_semestre` (`carrera_id`,`asignatura_id`,`semestre`),
+  KEY `mallas_ibfk_2` (`asignatura_id`),
+  CONSTRAINT `FK_mallas_asignaturas_id` FOREIGN KEY (`asignatura_id`) REFERENCES `asignaturas` (`id`),
+  CONSTRAINT `mallas_ibfk_1` FOREIGN KEY (`carrera_id`) REFERENCES `carreras` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `mallas_ibfk_2` FOREIGN KEY (`asignatura_id`) REFERENCES `asignaturas` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
--- Tabla de asignaturas-departamentos
-CREATE TABLE IF NOT EXISTS asignaturas_departamentos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    asignatura_id INT NOT NULL,
-    id_unidad INT NOT NULL,
-    codigo_asignatura VARCHAR(20) NOT NULL,
-    cantidad_alumnos INT NOT NULL DEFAULT 0,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (asignatura_id) REFERENCES asignaturas(id) ON DELETE CASCADE,
-    FOREIGN KEY (id_unidad) REFERENCES unidades(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_asignatura_unidad (asignatura_id, id_unidad)
-) ENGINE=InnoDB;
+-- Códigos de asignatura por unidad
+CREATE TABLE IF NOT EXISTS `asignaturas_departamentos` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `asignatura_id` int NOT NULL,
+  `codigo_asignatura` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `cantidad_alumnos` int NOT NULL DEFAULT '0',
+  `id_unidad` int NOT NULL,
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `codigo_asignatura` (`codigo_asignatura`),
+  UNIQUE KEY `unique_asignatura_unidad_codigo` (`asignatura_id`,`id_unidad`,`codigo_asignatura`),
+  KEY `idx_id_unidad` (`id_unidad`),
+  CONSTRAINT `FK_asignaturas_departamentos_asignaturas_id` FOREIGN KEY (`asignatura_id`) REFERENCES `asignaturas` (`id`),
+  CONSTRAINT `fk_asignaturas_departamentos_unidad` FOREIGN KEY (`id_unidad`) REFERENCES `unidades` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
--- Tabla de usuarios
-CREATE TABLE IF NOT EXISTS usuarios (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    rut VARCHAR(10) NOT NULL UNIQUE,
-    nombre VARCHAR(250) NOT NULL,
-    email VARCHAR(100) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    rol ENUM('admin', 'admin_bidoc', 'usuario') NOT NULL,
-    estado TINYINT(1) DEFAULT 1,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+-- Usuarios del sistema
+CREATE TABLE IF NOT EXISTS `usuarios` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `rut` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nombre` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `rol` enum('admin','admin_bidoc','usuario') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `estado` tinyint(1) DEFAULT '1',
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
--- Tabla de autores
-CREATE TABLE IF NOT EXISTS autores (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    apellidos VARCHAR(250) NOT NULL,
-    nombres VARCHAR(250) NOT NULL,
-    genero ENUM('Femenino', 'Masculino', 'Otro') NOT NULL,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+-- Autores
+CREATE TABLE IF NOT EXISTS `autores` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `apellidos` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nombres` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `genero` enum('Femenino','Masculino','Otro') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
--- Tabla de alias de autores
-CREATE TABLE IF NOT EXISTS alias_autores (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    autor_id INT NOT NULL,
-    nombre_variacion VARCHAR(250) NOT NULL,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (autor_id) REFERENCES autores(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_autor_variacion (autor_id, nombre_variacion)
-) ENGINE=InnoDB;
+-- Variaciones de nombre de autores
+CREATE TABLE IF NOT EXISTS `alias_autores` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `autor_id` int NOT NULL,
+  `nombre_variacion` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `FK_alias_autores_autores_id` (`autor_id`),
+  CONSTRAINT `FK_alias_autores_autores_id` FOREIGN KEY (`autor_id`) REFERENCES `autores` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
--- Tabla de bibliografías declaradas
-CREATE TABLE IF NOT EXISTS bibliografias_declaradas (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    titulo VARCHAR(250) NOT NULL,
-    tipo ENUM('libro', 'articulo', 'tesis', 'software', 'sitio_web', 'generico') NOT NULL,
-    anio_publicacion INT,
-    editorial VARCHAR(250),
-    edicion VARCHAR(50),
-    url VARCHAR(500),
-    nota TEXT,
-    formato ENUM('impreso', 'electronico', 'ambos') NOT NULL,
-    isbn VARCHAR(13),
-    doi VARCHAR(100),
-    asignatura_id INT,
-    estado TINYINT(1) DEFAULT 1,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (asignatura_id) REFERENCES asignaturas(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
+-- Bibliografías declaradas en los programas
+CREATE TABLE IF NOT EXISTS `bibliografias_declaradas` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `titulo` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tipo` enum('libro','articulo','tesis','software','sitio_web','otro','generico') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `anio_publicacion` int DEFAULT NULL,
+  `editorial` varchar(250) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `edicion` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nota` text COLLATE utf8mb4_unicode_ci,
+  `formato` enum('impreso','electronico','ambos') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `isbn` varchar(13) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `doi` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `asignatura_id` int DEFAULT NULL,
+  `estado` tinyint(1) DEFAULT '1',
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `asignatura_id` (`asignatura_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
--- Tabla de Libros
-CREATE TABLE IF NOT EXISTS libros (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    bibliografia_id INT NOT NULL,
-    isbn VARCHAR(20) NOT NULL,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (bibliografia_id) REFERENCES bibliografias_declaradas(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_bibliografia_libro (bibliografia_id)
-) ENGINE=InnoDB;
+-- Detalle de bibliografías tipo libro
+CREATE TABLE IF NOT EXISTS `libros` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `bibliografia_id` int NOT NULL,
+  `isbn` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_bibliografia_libro` (`bibliografia_id`),
+  CONSTRAINT `libros_ibfk_1` FOREIGN KEY (`bibliografia_id`) REFERENCES `bibliografias_declaradas` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
--- Tabla de Artículos
-CREATE TABLE IF NOT EXISTS articulos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    bibliografia_id INT NOT NULL,
-    issn VARCHAR(9) NOT NULL,
-    titulo_revista VARCHAR(250) NOT NULL,
-    cronologia VARCHAR(100) NOT NULL,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (bibliografia_id) REFERENCES bibliografias_declaradas(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_bibliografia_articulo (bibliografia_id)
-) ENGINE=InnoDB;
+-- Detalle de bibliografías tipo artículo
+CREATE TABLE IF NOT EXISTS `articulos` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `bibliografia_id` int NOT NULL,
+  `issn` varchar(9) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `titulo_revista` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `cronologia` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_bibliografia_articulo` (`bibliografia_id`),
+  CONSTRAINT `articulos_ibfk_1` FOREIGN KEY (`bibliografia_id`) REFERENCES `bibliografias_declaradas` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
--- Tabla de Tesis
-CREATE TABLE IF NOT EXISTS tesis (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    bibliografia_id INT NOT NULL,
-    nombre_carrera VARCHAR(300) NOT NULL,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (bibliografia_id) REFERENCES bibliografias_declaradas(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_bibliografia_tesis (bibliografia_id)
-) ENGINE=InnoDB;
+-- Detalle de bibliografías tipo tesis
+CREATE TABLE IF NOT EXISTS `tesis` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `bibliografia_id` int NOT NULL,
+  `nombre_carrera` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_bibliografia_tesis` (`bibliografia_id`),
+  CONSTRAINT `tesis_ibfk_1` FOREIGN KEY (`bibliografia_id`) REFERENCES `bibliografias_declaradas` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
--- Tabla de Software
-CREATE TABLE IF NOT EXISTS software (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    bibliografia_id INT NOT NULL,
-    version VARCHAR(50) NOT NULL,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (bibliografia_id) REFERENCES bibliografias_declaradas(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_bibliografia_software (bibliografia_id)
-) ENGINE=InnoDB;
+-- Detalle de bibliografías tipo software
+CREATE TABLE IF NOT EXISTS `software` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `bibliografia_id` int NOT NULL,
+  `version` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_bibliografia_software` (`bibliografia_id`),
+  CONSTRAINT `software_ibfk_1` FOREIGN KEY (`bibliografia_id`) REFERENCES `bibliografias_declaradas` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
--- Tabla de Sitios Web
-CREATE TABLE IF NOT EXISTS sitios_web (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    bibliografia_id INT NOT NULL,
-    fecha_consulta DATE NOT NULL,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (bibliografia_id) REFERENCES bibliografias_declaradas(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_bibliografia_sitio (bibliografia_id)
-) ENGINE=InnoDB;
+-- Detalle de bibliografías tipo sitio web
+CREATE TABLE IF NOT EXISTS `sitios_web` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `bibliografia_id` int NOT NULL,
+  `fecha_consulta` date NOT NULL,
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_bibliografia_sitio` (`bibliografia_id`),
+  CONSTRAINT `sitios_web_ibfk_1` FOREIGN KEY (`bibliografia_id`) REFERENCES `bibliografias_declaradas` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
--- Tabla de Genéricos
-CREATE TABLE IF NOT EXISTS genericos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    bibliografia_id INT NOT NULL,
-    descripcion TEXT NOT NULL,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (bibliografia_id) REFERENCES bibliografias_declaradas(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_bibliografia_generico (bibliografia_id)
-) ENGINE=InnoDB;
+-- Detalle de bibliografías genéricas
+CREATE TABLE IF NOT EXISTS `genericos` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `bibliografia_id` int NOT NULL,
+  `descripcion` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_bibliografia_generico` (`bibliografia_id`),
+  CONSTRAINT `genericos_ibfk_1` FOREIGN KEY (`bibliografia_id`) REFERENCES `bibliografias_declaradas` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
--- Tabla de relación bibliografías-autores
-CREATE TABLE IF NOT EXISTS bibliografias_autores (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    bibliografia_id INT NOT NULL,
-    autor_id INT NOT NULL,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (bibliografia_id) REFERENCES bibliografias_declaradas(id) ON DELETE CASCADE,
-    FOREIGN KEY (autor_id) REFERENCES autores(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_bibliografia_autor (bibliografia_id, autor_id)
-) ENGINE=InnoDB;
+-- Autores de cada bibliografía declarada
+CREATE TABLE IF NOT EXISTS `bibliografias_autores` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `bibliografia_id` int NOT NULL,
+  `autor_id` int NOT NULL,
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_bibliografia_autor` (`bibliografia_id`,`autor_id`),
+  KEY `bibliografias_autores_ibfk_2` (`autor_id`),
+  CONSTRAINT `bibliografias_autores_ibfk_1` FOREIGN KEY (`bibliografia_id`) REFERENCES `bibliografias_declaradas` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `bibliografias_autores_ibfk_2` FOREIGN KEY (`autor_id`) REFERENCES `autores` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
--- Tabla de relación asignaturas-bibliografías
-CREATE TABLE IF NOT EXISTS asignaturas_bibliografias (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    asignatura_id INT NOT NULL,
-    bibliografia_id INT NOT NULL,
-    tipo_bibliografia ENUM('basica', 'complementaria', 'otro') NOT NULL,
-    estado ENUM('activa', 'no_activa') NOT NULL DEFAULT 'activa',
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (asignatura_id) REFERENCES asignaturas(id) ON DELETE CASCADE,
-    FOREIGN KEY (bibliografia_id) REFERENCES bibliografias_declaradas(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_asignatura_bibliografia (asignatura_id, bibliografia_id)
-) ENGINE=InnoDB;
+-- Bibliografías (básica/complementaria) de cada asignatura
+CREATE TABLE IF NOT EXISTS `asignaturas_bibliografias` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `asignatura_id` int NOT NULL,
+  `bibliografia_id` int NOT NULL,
+  `tipo_bibliografia` enum('basica','complementaria','otro') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `estado` enum('activa','no_activa') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'activa',
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_asignatura_bibliografia` (`asignatura_id`,`bibliografia_id`),
+  KEY `asignaturas_bibliografias_ibfk_2` (`bibliografia_id`),
+  CONSTRAINT `asignaturas_bibliografias_ibfk_1` FOREIGN KEY (`asignatura_id`) REFERENCES `asignaturas` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `asignaturas_bibliografias_ibfk_2` FOREIGN KEY (`bibliografia_id`) REFERENCES `bibliografias_declaradas` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
--- Eliminar tablas existentes si existen
-DROP TABLE IF EXISTS bibliografias_disponibles_sedes;
-DROP TABLE IF EXISTS bibliografias_disponibles;
+-- Bibliografías disponibles en biblioteca (impresas/electrónicas)
+CREATE TABLE IF NOT EXISTS `bibliografias_disponibles` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `bibliografia_declarada_id` int DEFAULT NULL,
+  `titulo` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `anio_edicion` int NOT NULL,
+  `editorial` varchar(250) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `url_acceso` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `url_catalogo` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `disponibilidad` enum('impreso','electronico','ambos') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id_mms` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ejemplares_digitales` int DEFAULT NULL,
+  `estado` tinyint(1) DEFAULT '1',
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `id_mms` (`id_mms`),
+  KEY `bibliografias_disponibles_ibfk_1` (`bibliografia_declarada_id`),
+  CONSTRAINT `bibliografias_disponibles_ibfk_1` FOREIGN KEY (`bibliografia_declarada_id`) REFERENCES `bibliografias_declaradas` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
--- Crear tabla bibliografias_disponibles
-CREATE TABLE bibliografias_disponibles (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    bibliografia_declarada_id INT,
-    titulo VARCHAR(250) NOT NULL,
-    anio_edicion INT NOT NULL,
-    editorial VARCHAR(250),
-    url_acceso VARCHAR(500),
-    url_catalogo VARCHAR(500),
-    disponibilidad ENUM('impreso', 'electronico', 'ambos') NOT NULL,
-    id_mms VARCHAR(50),
-    ejemplares_digitales INT,
-    estado BOOLEAN DEFAULT TRUE,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (bibliografia_declarada_id) REFERENCES bibliografias_declaradas(id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Ejemplares impresos disponibles por sede
+CREATE TABLE IF NOT EXISTS `bibliografias_disponibles_sedes` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `bibliografia_disponible_id` int NOT NULL,
+  `sede_id` int NOT NULL,
+  `ejemplares` int NOT NULL,
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_bibliografia_sede` (`bibliografia_disponible_id`,`sede_id`),
+  KEY `bibliografias_disponibles_sedes_ibfk_2` (`sede_id`),
+  CONSTRAINT `bibliografias_disponibles_sedes_ibfk_1` FOREIGN KEY (`bibliografia_disponible_id`) REFERENCES `bibliografias_disponibles` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `bibliografias_disponibles_sedes_ibfk_2` FOREIGN KEY (`sede_id`) REFERENCES `sedes` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
--- Crear tabla bibliografias_disponibles_sedes
-CREATE TABLE bibliografias_disponibles_sedes (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    bibliografia_disponible_id INT NOT NULL,
-    sede_id INT NOT NULL,
-    ejemplares INT NOT NULL,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (bibliografia_disponible_id) REFERENCES bibliografias_disponibles(id) ON DELETE CASCADE,
-    FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_bibliografia_sede (bibliografia_disponible_id, sede_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Tabla de relación entre bibliografías disponibles y autores
+-- Autores de cada bibliografía disponible
 CREATE TABLE IF NOT EXISTS `bibliografias_disponibles_autores` (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `bibliografia_disponible_id` INT NOT NULL,
-    `autor_id` INT NOT NULL,
-    `fecha_creacion` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    `fecha_actualizacion` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE KEY `unique_bibliografia_autor` (`bibliografia_disponible_id`, `autor_id`),
-    KEY `fk_bda_autor` (`autor_id`),
-    CONSTRAINT `fk_bda_bibliografia` FOREIGN KEY (`bibliografia_disponible_id`) REFERENCES `bibliografias_disponibles` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_bda_autor` FOREIGN KEY (`autor_id`) REFERENCES `autores` (`id`) ON DELETE CASCADE
+  `id` int NOT NULL AUTO_INCREMENT,
+  `bibliografia_disponible_id` int NOT NULL,
+  `autor_id` int NOT NULL,
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_bibliografia_autor` (`bibliografia_disponible_id`,`autor_id`),
+  KEY `fk_bda_autor` (`autor_id`),
+  CONSTRAINT `fk_bda_autor` FOREIGN KEY (`autor_id`) REFERENCES `autores` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_bda_bibliografia` FOREIGN KEY (`bibliografia_disponible_id`) REFERENCES `bibliografias_disponibles` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+-- Catálogo de reportes (requerido por el guardado de coberturas)
+CREATE TABLE IF NOT EXISTS `reportes` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descripcion` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `fecha_creacion` date DEFAULT NULL,
+  `fecha_actualizacion` date DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+-- Mediciones guardadas de cobertura básica por plan
+CREATE TABLE IF NOT EXISTS `reporte_coberturas_carreras_basicas` (
+  `id_reporte` int NOT NULL,
+  `codigo_carrera` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id_carrera_espejo` int DEFAULT NULL,
+  `codigo_asignatura` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id_bibliografia_declarada` int NOT NULL,
+  `fecha_medicion` datetime NOT NULL,
+  `no_ejem_imp` int DEFAULT NULL,
+  `no_ejem_dig` int DEFAULT NULL,
+  `no_bib_disponible_basica` int DEFAULT NULL,
+  PRIMARY KEY (`id_reporte`,`fecha_medicion`,`codigo_carrera`,`codigo_asignatura`,`id_bibliografia_declarada`),
+  KEY `FK_coberturas_carreras_basicas_asig_depto_codigo_asig` (`codigo_asignatura`),
+  KEY `idx_id_carrera_espejo_basica` (`id_carrera_espejo`),
+  KEY `idx_plan_anio_basica` (`id_carrera_espejo`,`fecha_medicion`),
+  CONSTRAINT `FK_coberturas_carreras_basicas_reportes_id` FOREIGN KEY (`id_reporte`) REFERENCES `reportes` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+-- Mediciones guardadas de cobertura complementaria por plan
+CREATE TABLE IF NOT EXISTS `reporte_coberturas_carreras_complementarias` (
+  `id_reporte` int NOT NULL,
+  `codigo_carrera` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id_carrera_espejo` int DEFAULT NULL,
+  `codigo_asignatura` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id_bibliografia_declarada` int NOT NULL,
+  `fecha_medicion` datetime NOT NULL,
+  `no_ejem_imp` int DEFAULT NULL,
+  `no_ejem_dig` int DEFAULT NULL,
+  `no_bib_disponible_complementaria` int DEFAULT NULL,
+  PRIMARY KEY (`id_reporte`,`fecha_medicion`,`codigo_carrera`,`codigo_asignatura`,`id_bibliografia_declarada`),
+  KEY `FK_coberturas_carreras_basicas_asig_depto_codigo_asig` (`codigo_asignatura`),
+  KEY `idx_id_carrera_espejo_compl` (`id_carrera_espejo`),
+  KEY `idx_plan_anio_compl` (`id_carrera_espejo`,`fecha_medicion`),
+  CONSTRAINT `FK_reporte_coberturas_carreras_complementarias_reportes_id` FOREIGN KEY (`id_reporte`) REFERENCES `reportes` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+-- Coberturas por asignatura
+CREATE TABLE IF NOT EXISTS `coberturas_asignaturas` (
+  `id` int NOT NULL,
+  `id_reporte` int NOT NULL,
+  `codigo_asignatura` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `fecha_medicion` datetime NOT NULL,
+  `cobertura_basica` int DEFAULT NULL,
+  `cobertura_complementaria` int DEFAULT NULL,
+  PRIMARY KEY (`fecha_medicion`,`id_reporte`,`codigo_asignatura`,`id`),
+  KEY `FK_coberturas_asig_asig_depto_codigo_asignatura` (`codigo_asignatura`),
+  KEY `FK_coberturas_asignaturas_reportes_id` (`id_reporte`),
+  CONSTRAINT `FK_coberturas_asignaturas_reportes_id` FOREIGN KEY (`id_reporte`) REFERENCES `reportes` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+-- Filtros de tipos de formación guardados por plan
+CREATE TABLE IF NOT EXISTS `filtros_formaciones` (
+  `id_carrera_espejo` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `basica` int NOT NULL,
+  `general` int NOT NULL,
+  `idioma` int NOT NULL,
+  `profesional` int NOT NULL,
+  `valores` int NOT NULL,
+  `especialidad` int NOT NULL,
+  `especial` int NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+-- Tareas programadas de reportes (únicas o recurrentes)
+CREATE TABLE IF NOT EXISTS `tareas_programadas` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tipo_reporte` enum('cobertura_basica_expandido','cobertura_complementaria_expandido','cobertura_ambas_expandido') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `sede_id` int NOT NULL,
+  `carrera_id` int NOT NULL,
+  `fecha_programada` datetime NOT NULL,
+  `frecuencia` enum('unica','diaria','semanal','mensual','anual') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'unica',
+  `fecha_inicio` datetime DEFAULT NULL COMMENT 'Primera ejecución; base para calcular las repeticiones',
+  `fecha_fin` datetime DEFAULT NULL,
+  `estado` enum('pendiente','en_proceso','completada','error','cancelada') COLLATE utf8mb4_unicode_ci DEFAULT 'pendiente',
+  `filtros_formacion` json DEFAULT NULL,
+  `resultado` text COLLATE utf8mb4_unicode_ci,
+  `error_mensaje` text COLLATE utf8mb4_unicode_ci,
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_ejecucion` timestamp NULL DEFAULT NULL,
+  `ultima_ejecucion` datetime DEFAULT NULL,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `creado_por` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_estado` (`estado`),
+  KEY `idx_fecha_programada` (`fecha_programada`),
+  KEY `idx_sede_carrera` (`sede_id`,`carrera_id`),
+  KEY `idx_tipo_reporte` (`tipo_reporte`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+-- Historial de ejecuciones de las tareas programadas
+CREATE TABLE IF NOT EXISTS `tareas_programadas_ejecuciones` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `tarea_id` int NOT NULL,
+  `tipo_reporte` enum('basica','complementaria') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `manual` tinyint(1) NOT NULL DEFAULT '0' COMMENT '1 = lanzada con Ejecutar ahora',
+  `fecha_inicio` datetime NOT NULL,
+  `fecha_fin` datetime DEFAULT NULL,
+  `estado` enum('completada','error') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `registros` int DEFAULT NULL,
+  `mensaje` text COLLATE utf8mb4_unicode_ci,
+  PRIMARY KEY (`id`),
+  KEY `idx_tarea` (`tarea_id`,`fecha_inicio`),
+  CONSTRAINT `fk_ejec_tarea` FOREIGN KEY (`tarea_id`) REFERENCES `tareas_programadas` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Tabla de reportes
-CREATE TABLE IF NOT EXISTS reportes (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(250) NOT NULL,
-    descripcion TEXT,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Tabla de reporte de coberturas básicas por carrera
-CREATE TABLE IF NOT EXISTS reporte_coberturas_carreras_basicas (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    id_reporte INT NOT NULL,
-    codigo_carrera VARCHAR(20) NOT NULL,
-    id_carrera_espejo INT NULL,
-    codigo_asignatura VARCHAR(20) NOT NULL,
-    id_bibliografia_declarada INT NOT NULL,
-    fecha_medicion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    no_ejem_imp INT DEFAULT 0,
-    no_ejem_dig INT DEFAULT 0,
-    no_bib_disponible_basica TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (id_reporte) REFERENCES reportes(id) ON DELETE CASCADE,
-    FOREIGN KEY (id_bibliografia_declarada) REFERENCES bibliografias_declaradas(id) ON DELETE CASCADE,
-    INDEX idx_carrera_asignatura (codigo_carrera, codigo_asignatura),
-    INDEX idx_id_carrera_espejo_basica (id_carrera_espejo),
-    INDEX idx_plan_anio_basica (id_carrera_espejo, fecha_medicion),
-    INDEX idx_fecha_medicion (fecha_medicion)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Tabla de reporte de coberturas complementarias por carrera
-CREATE TABLE IF NOT EXISTS reporte_coberturas_carreras_complementarias (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    id_reporte INT NOT NULL,
-    codigo_carrera VARCHAR(20) NOT NULL,
-    id_carrera_espejo INT NULL,
-    codigo_asignatura VARCHAR(20) NOT NULL,
-    id_bibliografia_declarada INT NOT NULL,
-    fecha_medicion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    no_ejem_imp INT DEFAULT 0,
-    no_ejem_dig INT DEFAULT 0,
-    no_bib_disponible_complementaria TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (id_reporte) REFERENCES reportes(id) ON DELETE CASCADE,
-    FOREIGN KEY (id_bibliografia_declarada) REFERENCES bibliografias_declaradas(id) ON DELETE CASCADE,
-    INDEX idx_carrera_asignatura (codigo_carrera, codigo_asignatura),
-    INDEX idx_id_carrera_espejo_compl (id_carrera_espejo),
-    INDEX idx_plan_anio_compl (id_carrera_espejo, fecha_medicion),
-    INDEX idx_fecha_medicion (fecha_medicion)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Tabla para almacenar filtros de formación por carrera
-CREATE TABLE IF NOT EXISTS filtros_formaciones (
-    id_carrera_espejo INT NOT NULL,
-    basica INT NOT NULL DEFAULT 0,
-    general INT NOT NULL DEFAULT 0,
-    idioma INT NOT NULL DEFAULT 0,
-    profesional INT NOT NULL DEFAULT 0,
-    valores INT NOT NULL DEFAULT 0,
-    especialidad INT NOT NULL DEFAULT 0,
-    especial INT NOT NULL DEFAULT 0,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (id_carrera_espejo),
-    FOREIGN KEY (id_carrera_espejo) REFERENCES carreras_espejos(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci; 
-
-CREATE TABLE IF NOT EXISTS tareas_programadas (
-  id INT NOT NULL AUTO_INCREMENT,
-  nombre VARCHAR(255) NOT NULL,
-  tipo_reporte ENUM('cobertura_basica_expandido','cobertura_complementaria_expandido') NOT NULL,
-  sede_id INT NOT NULL,
-  carrera_id INT NOT NULL,
-  fecha_programada DATETIME NOT NULL,
-  estado ENUM('pendiente','en_proceso','completada','error','cancelada') DEFAULT 'pendiente',
-  filtros_formacion JSON DEFAULT NULL,
-  resultado TEXT,
-  error_mensaje TEXT,
-  fecha_creacion TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-  fecha_ejecucion TIMESTAMP NULL DEFAULT NULL,
-  fecha_actualizacion TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  KEY idx_fecha_programada (fecha_programada),
-  KEY idx_estado (estado),
-  KEY idx_tipo_reporte (tipo_reporte),
-  KEY idx_sede_carrera (sede_id, carrera_id),
-  FOREIGN KEY (sede_id) REFERENCES sedes(id) ON DELETE CASCADE,
-  FOREIGN KEY (carrera_id) REFERENCES carreras(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci; 
 
 -- =====================================================
 -- SECCIÓN 2: VISTAS
 -- =====================================================
 
--- Vista actualizada de mallas basada en unidades
-CREATE OR REPLACE VIEW vw_mallas AS
--- Asignaturas regulares
-SELECT
-  sedes.id AS id_sede,
-  sedes.nombre AS sede,
-  unidades.id AS id_unidad,
-  unidades.nombre AS unidad,
-  carreras_espejos.codigo_carrera AS codigo_carrera,
-  carreras.id AS id_carrera,
-  carreras.nombre AS carrera,
-  carreras_espejos.id AS id_carrera_espejo,
-  carreras_espejos.vigencia_desde AS vigencia_desde,
-  carreras_espejos.vigencia_hasta AS vigencia_hasta,
-  codigo_asignatura AS codigo_asignatura,
-  asignaturas.id AS id_asignatura,
-  asignaturas.nombre AS asignatura,
-  tipo AS tipo_asignatura,
-  NULL AS codigo_asignatura_formacion,
-  NULL AS id_asignatura_formacion,
-  NULL AS asignatura_formacion
-FROM mallas
-  INNER JOIN asignaturas
-    ON mallas.asignatura_id = asignaturas.id
-  INNER JOIN carreras_espejos
-    ON mallas.carrera_id = carreras_espejos.carrera_id
-  INNER JOIN carreras
-    ON mallas.carrera_id = carreras.id
-  INNER JOIN asignaturas_departamentos
-    ON asignaturas_departamentos.asignatura_id = asignaturas.id
-  INNER JOIN sedes
-    ON carreras_espejos.sede_id = sedes.id
-  INNER JOIN unidades
-    ON asignaturas_departamentos.id_unidad = unidades.id
-    AND unidades.sede_id = sedes.id
+-- Vista vw_asig_bib_declarada
+CREATE OR REPLACE VIEW `vw_asig_bib_declarada` AS select `asignaturas`.`id` AS `id_asignatura`,`asignaturas_bibliografias`.`bibliografia_id` AS `id_bib_declarada`,`asignaturas_bibliografias`.`tipo_bibliografia` AS `tipo_bibliografia`,`bibliografias_declaradas`.`titulo` AS `titulo`,`bibliografias_declaradas`.`tipo` AS `tipo`,`bibliografias_declaradas`.`anio_publicacion` AS `anio_publicacion`,`bibliografias_declaradas`.`editorial` AS `editorial`,`bibliografias_declaradas`.`formato` AS `formato` from ((`asignaturas_bibliografias` join `asignaturas` on((`asignaturas_bibliografias`.`asignatura_id` = `asignaturas`.`id`))) join `bibliografias_declaradas` on((`asignaturas_bibliografias`.`bibliografia_id` = `bibliografias_declaradas`.`id`))) order by `asignaturas`.`id`,`asignaturas_bibliografias`.`tipo_bibliografia`,`bibliografias_declaradas`.`titulo`;
 
-UNION
+-- Vista vw_bib_declarada_sede_noejem
+CREATE OR REPLACE VIEW `vw_bib_declarada_sede_noejem` AS select `bibliografias_declaradas`.`id` AS `id_bib_declarada`,`bibliografias_disponibles_sedes`.`sede_id` AS `id_sede`,sum(`bibliografias_disponibles_sedes`.`ejemplares`) AS `no_ejem_imp_sede` from ((`bibliografias_disponibles_sedes` join `bibliografias_disponibles` on((`bibliografias_disponibles_sedes`.`bibliografia_disponible_id` = `bibliografias_disponibles`.`id`))) join `bibliografias_declaradas` on((`bibliografias_disponibles`.`bibliografia_declarada_id` = `bibliografias_declaradas`.`id`))) where (`bibliografias_disponibles`.`disponibilidad` in ('impreso','ambos')) group by `bibliografias_disponibles_sedes`.`sede_id`,`bibliografias_declaradas`.`id` order by `id_bib_declarada`,`id_sede`;
 
-SELECT
-  sedes.id AS id_sede,
-  sedes.nombre AS sede,
-  unidades.id AS id_unidad,
-  unidades.nombre AS unidad,
-  carreras_espejos.codigo_carrera AS codigo_carrera,
-  carreras_espejos.carrera_id AS id_carrera,
-  carreras.nombre AS carrera,
-  carreras_espejos.id AS id_carrera_espejo,
-  carreras_espejos.vigencia_desde AS vigencia_desde,
-  carreras_espejos.vigencia_hasta AS vigencia_hasta,
-  asignaturas_departamentos.codigo_asignatura AS codigo_asignatura,
-  asignaturas_departamentos.asignatura_id AS id_asignatura,
-  asignaturas.nombre AS asignatura,
-  asignaturas_1.tipo AS tipo_asignatura,
-  asignaturas_departamentos_1.codigo_asignatura AS codigo_asignatura_formacion,
-  asignaturas_1.id AS id_asignatura_formacion,
-  asignaturas_1.nombre AS asignatura_formacion
-FROM unidades
-  INNER JOIN sedes
-    ON unidades.sede_id = sedes.id
-  CROSS JOIN asignaturas_departamentos
-  INNER JOIN asignaturas
-    ON asignaturas.id = asignaturas_departamentos.asignatura_id
-  INNER JOIN asignaturas_formacion
-    ON asignaturas_formacion.asignatura_formacion_id = asignaturas.id
-  INNER JOIN asignaturas_departamentos asignaturas_departamentos_1
-    ON asignaturas_formacion.asignatura_regular_id = asignaturas_departamentos_1.asignatura_id
-    AND asignaturas_departamentos_1.id_unidad = unidades.id
-  INNER JOIN asignaturas asignaturas_1
-    ON asignaturas_departamentos_1.asignatura_id = asignaturas_1.id
-  CROSS JOIN carreras_espejos
-  INNER JOIN carreras
-    ON carreras_espejos.carrera_id = carreras.id
-    AND carreras_espejos.sede_id = sedes.id
-  INNER JOIN mallas
-    ON mallas.carrera_id = carreras.id
-    AND mallas.asignatura_id = asignaturas_departamentos.asignatura_id
+-- Vista vw_car_basica_bib_declarada
+CREATE OR REPLACE VIEW `vw_car_basica_bib_declarada` AS select `rb`.`id_carrera_espejo` AS `id_carrera_espejo`,`rb`.`codigo_carrera` AS `codigo_carrera`,year(`rb`.`fecha_medicion`) AS `anho`,count(distinct `rb`.`id_bibliografia_declarada`) AS `no_bib_declarada` from `reporte_coberturas_carreras_basicas` `rb` group by `rb`.`id_carrera_espejo`,`rb`.`codigo_carrera`,year(`rb`.`fecha_medicion`);
 
-ORDER BY codigo_carrera, sede, asignatura;
+-- Vista vw_car_basica_bib_disponible
+CREATE OR REPLACE VIEW `vw_car_basica_bib_disponible` AS select `rb`.`id_carrera_espejo` AS `id_carrera_espejo`,`rb`.`codigo_carrera` AS `codigo_carrera`,year(`rb`.`fecha_medicion`) AS `anho`,sum(`rb`.`no_bib_disponible_basica`) AS `no_bib_disp` from `reporte_coberturas_carreras_basicas` `rb` group by `rb`.`id_carrera_espejo`,`rb`.`codigo_carrera`,year(`rb`.`fecha_medicion`);
 
--- Vista de asignaturas con bibliografías declaradas
-CREATE OR REPLACE VIEW vw_asig_bib_declarada AS
-SELECT 
-    asignaturas.id AS id_asignatura,
-    asignaturas_bibliografias.bibliografia_id AS id_bib_declarada,
-    asignaturas_bibliografias.tipo_bibliografia AS tipo_bibliografia,
-    bibliografias_declaradas.titulo AS titulo,
-    bibliografias_declaradas.tipo AS tipo,
-    bibliografias_declaradas.anio_publicacion AS anio_publicacion,
-    bibliografias_declaradas.editorial AS editorial,
-    bibliografias_declaradas.formato AS formato
-FROM asignaturas_bibliografias 
-JOIN asignaturas ON asignaturas_bibliografias.asignatura_id = asignaturas.id
-JOIN bibliografias_declaradas ON asignaturas_bibliografias.bibliografia_id = bibliografias_declaradas.id
-ORDER BY asignaturas.id, asignaturas_bibliografias.tipo_bibliografia, bibliografias_declaradas.titulo;
+-- Vista vw_car_cobertura_basica
+CREATE OR REPLACE VIEW `vw_car_cobertura_basica` AS select `d`.`id_carrera_espejo` AS `id_carrera_espejo`,`d`.`codigo_carrera` AS `codigo_carrera`,`d`.`anho` AS `anho`,`d`.`no_bib_declarada` AS `no_bib_declarada`,`s`.`no_bib_disp` AS `no_bib_disp`,((`s`.`no_bib_disp` / nullif(`d`.`no_bib_declarada`,0)) * 100) AS `cobertura_basica` from (`vw_car_basica_bib_declarada` `d` join `vw_car_basica_bib_disponible` `s` on(((`d`.`codigo_carrera` = `s`.`codigo_carrera`) and (`d`.`anho` = `s`.`anho`) and (`d`.`id_carrera_espejo` <=> `s`.`id_carrera_espejo`))));
 
--- Vista de bibliografías declaradas por sede y ejemplares
-CREATE OR REPLACE VIEW vw_bib_declarada_sede_noejem AS
-SELECT 
-    bibliografias_declaradas.id AS id_bib_declarada,
-    bibliografias_disponibles_sedes.sede_id AS id_sede,
-    SUM(bibliografias_disponibles_sedes.ejemplares) AS no_ejem_imp_sede
-FROM bibliografias_disponibles_sedes 
-JOIN bibliografias_disponibles ON bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id
-JOIN bibliografias_declaradas ON bibliografias_disponibles.bibliografia_declarada_id = bibliografias_declaradas.id
-GROUP BY bibliografias_disponibles_sedes.sede_id, bibliografias_declaradas.id
-ORDER BY id_bib_declarada, id_sede;
+-- Vista vw_car_compl_bib_declarada
+CREATE OR REPLACE VIEW `vw_car_compl_bib_declarada` AS select `rc`.`id_carrera_espejo` AS `id_carrera_espejo`,`rc`.`codigo_carrera` AS `codigo_carrera`,year(`rc`.`fecha_medicion`) AS `anho`,count(distinct `rc`.`id_bibliografia_declarada`) AS `no_bib_declaradas` from `reporte_coberturas_carreras_complementarias` `rc` group by `rc`.`id_carrera_espejo`,`rc`.`codigo_carrera`,year(`rc`.`fecha_medicion`);
 
--- Vista de carreras con bibliografías básicas declaradas
-CREATE OR REPLACE VIEW vw_car_basica_bib_declarada AS
-SELECT 
-    reporte_coberturas_carreras_basicas.id_carrera_espejo AS id_carrera_espejo,
-    reporte_coberturas_carreras_basicas.codigo_carrera AS codigo_carrera,
-    YEAR(reporte_coberturas_carreras_basicas.fecha_medicion) AS anho,
-    COUNT(DISTINCT reporte_coberturas_carreras_basicas.id_bibliografia_declarada) AS no_bib_declarada
-FROM reporte_coberturas_carreras_basicas 
-GROUP BY reporte_coberturas_carreras_basicas.id_carrera_espejo, reporte_coberturas_carreras_basicas.codigo_carrera, YEAR(reporte_coberturas_carreras_basicas.fecha_medicion);
+-- Vista vw_car_compl_bib_disponible
+CREATE OR REPLACE VIEW `vw_car_compl_bib_disponible` AS select `rc`.`id_carrera_espejo` AS `id_carrera_espejo`,`rc`.`codigo_carrera` AS `codigo_carrera`,year(`rc`.`fecha_medicion`) AS `anho`,sum(`rc`.`no_bib_disponible_complementaria`) AS `no_bib_disponible` from `reporte_coberturas_carreras_complementarias` `rc` group by `rc`.`id_carrera_espejo`,`rc`.`codigo_carrera`,year(`rc`.`fecha_medicion`);
 
--- Vista de carreras con bibliografías básicas disponibles
-CREATE OR REPLACE VIEW vw_car_basica_bib_disponible AS
-SELECT 
-    reporte_coberturas_carreras_basicas.id_carrera_espejo AS id_carrera_espejo,
-    reporte_coberturas_carreras_basicas.codigo_carrera AS codigo_carrera,
-    YEAR(reporte_coberturas_carreras_basicas.fecha_medicion) AS anho,
-    SUM(reporte_coberturas_carreras_basicas.no_bib_disponible_basica) AS no_bib_disp
-FROM reporte_coberturas_carreras_basicas 
-GROUP BY reporte_coberturas_carreras_basicas.id_carrera_espejo, reporte_coberturas_carreras_basicas.codigo_carrera, YEAR(reporte_coberturas_carreras_basicas.fecha_medicion);
+-- Vista vw_car_cobertura_complementaria
+CREATE OR REPLACE VIEW `vw_car_cobertura_complementaria` AS select `d`.`id_carrera_espejo` AS `id_carrera_espejo`,`d`.`codigo_carrera` AS `codigo_carrera`,`d`.`anho` AS `anho`,`d`.`no_bib_declaradas` AS `no_bib_declaradas`,`s`.`no_bib_disponible` AS `no_bib_disponible`,((`s`.`no_bib_disponible` / nullif(`d`.`no_bib_declaradas`,0)) * 100) AS `cobertura_complementaria` from (`vw_car_compl_bib_declarada` `d` join `vw_car_compl_bib_disponible` `s` on(((`d`.`codigo_carrera` = `s`.`codigo_carrera`) and (`d`.`anho` = `s`.`anho`) and (`d`.`id_carrera_espejo` <=> `s`.`id_carrera_espejo`))));
 
--- Vista de carreras con bibliografías complementarias declaradas
-CREATE OR REPLACE VIEW vw_car_compl_bib_declarada AS
-SELECT 
-    reporte_coberturas_carreras_complementarias.id_carrera_espejo AS id_carrera_espejo,
-    reporte_coberturas_carreras_complementarias.codigo_carrera AS codigo_carrera,
-    YEAR(reporte_coberturas_carreras_complementarias.fecha_medicion) AS anho,
-    COUNT(DISTINCT reporte_coberturas_carreras_complementarias.id_bibliografia_declarada) AS no_bib_declaradas
-FROM reporte_coberturas_carreras_complementarias 
-GROUP BY reporte_coberturas_carreras_complementarias.id_carrera_espejo, reporte_coberturas_carreras_complementarias.codigo_carrera, YEAR(reporte_coberturas_carreras_complementarias.fecha_medicion);
-
--- Vista de carreras con bibliografías complementarias disponibles
-CREATE OR REPLACE VIEW vw_car_compl_bib_disponible AS
-SELECT 
-    reporte_coberturas_carreras_complementarias.id_carrera_espejo AS id_carrera_espejo,
-    reporte_coberturas_carreras_complementarias.codigo_carrera AS codigo_carrera,
-    YEAR(reporte_coberturas_carreras_complementarias.fecha_medicion) AS anho,
-    SUM(reporte_coberturas_carreras_complementarias.no_bib_disponible_complementaria) AS no_bib_disponible
-FROM reporte_coberturas_carreras_complementarias 
-GROUP BY reporte_coberturas_carreras_complementarias.id_carrera_espejo, reporte_coberturas_carreras_complementarias.codigo_carrera, YEAR(reporte_coberturas_carreras_complementarias.fecha_medicion);
-
--- Vista de cobertura básica por carrera
-CREATE OR REPLACE VIEW vw_car_cobertura_basica AS
-SELECT 
-    vw_car_basica_bib_declarada.id_carrera_espejo AS id_carrera_espejo,
-    vw_car_basica_bib_declarada.codigo_carrera AS codigo_carrera,
-    vw_car_basica_bib_declarada.anho AS anho,
-    vw_car_basica_bib_declarada.no_bib_declarada AS no_bib_declarada,
-    vw_car_basica_bib_disponible.no_bib_disp AS no_bib_disp,
-    ((vw_car_basica_bib_disponible.no_bib_disp / vw_car_basica_bib_declarada.no_bib_declarada) * 100) AS cobertura_basica
-FROM vw_car_basica_bib_declarada 
-JOIN vw_car_basica_bib_disponible ON vw_car_basica_bib_declarada.codigo_carrera = vw_car_basica_bib_disponible.codigo_carrera AND vw_car_basica_bib_declarada.anho = vw_car_basica_bib_disponible.anho AND vw_car_basica_bib_declarada.id_carrera_espejo <=> vw_car_basica_bib_disponible.id_carrera_espejo;
-
--- Vista de cobertura complementaria por carrera
-CREATE OR REPLACE VIEW vw_car_cobertura_complementaria AS
-SELECT 
-    vw_car_compl_bib_declarada.id_carrera_espejo AS id_carrera_espejo,
-    vw_car_compl_bib_declarada.codigo_carrera AS codigo_carrera,
-    vw_car_compl_bib_declarada.anho AS anho,
-    vw_car_compl_bib_declarada.no_bib_declaradas AS no_bib_declaradas,
-    vw_car_compl_bib_disponible.no_bib_disponible AS no_bib_disponible,
-    ((vw_car_compl_bib_disponible.no_bib_disponible / vw_car_compl_bib_declarada.no_bib_declaradas) * 100) AS cobertura_complementaria
-FROM vw_car_compl_bib_declarada 
-JOIN vw_car_compl_bib_disponible ON vw_car_compl_bib_declarada.codigo_carrera = vw_car_compl_bib_disponible.codigo_carrera AND vw_car_compl_bib_declarada.anho = vw_car_compl_bib_disponible.anho AND vw_car_compl_bib_declarada.id_carrera_espejo <=> vw_car_compl_bib_disponible.id_carrera_espejo; 
+-- Vista vw_mallas
+CREATE OR REPLACE VIEW `vw_mallas` AS select `sedes`.`id` AS `id_sede`,`sedes`.`nombre` AS `sede`,`unidades`.`id` AS `id_unidad`,`unidades`.`nombre` AS `unidad`,`carreras_espejos`.`codigo_carrera` AS `codigo_carrera`,`carreras`.`id` AS `id_carrera`,`carreras`.`nombre` AS `carrera`,`asignaturas_departamentos`.`codigo_asignatura` AS `codigo_asignatura`,`asignaturas`.`id` AS `id_asignatura`,`asignaturas`.`nombre` AS `asignatura`,`asignaturas`.`tipo` AS `tipo_asignatura`,NULL AS `codigo_asignatura_formacion`,NULL AS `id_asignatura_formacion`,NULL AS `asignatura_formacion` from ((((((`mallas` join `asignaturas` on((`mallas`.`asignatura_id` = `asignaturas`.`id`))) join `carreras_espejos` on((`mallas`.`carrera_id` = `carreras_espejos`.`carrera_id`))) join `carreras` on((`mallas`.`carrera_id` = `carreras`.`id`))) join `asignaturas_departamentos` on((`asignaturas_departamentos`.`asignatura_id` = `asignaturas`.`id`))) join `sedes` on((`carreras_espejos`.`sede_id` = `sedes`.`id`))) join `unidades` on(((`asignaturas_departamentos`.`id_unidad` = `unidades`.`id`) and (`unidades`.`sede_id` = `sedes`.`id`)))) union select `sedes`.`id` AS `id_sede`,`sedes`.`nombre` AS `sede`,`unidades`.`id` AS `id_unidad`,`unidades`.`nombre` AS `unidad`,`carreras_espejos`.`codigo_carrera` AS `codigo_carrera`,`carreras_espejos`.`carrera_id` AS `id_carrera`,`carreras`.`nombre` AS `carrera`,`asignaturas_departamentos`.`codigo_asignatura` AS `codigo_asignatura`,`asignaturas_departamentos`.`asignatura_id` AS `id_asignatura`,`asignaturas`.`nombre` AS `asignatura`,`asignaturas_1`.`tipo` AS `tipo_asignatura`,`asignaturas_departamentos_1`.`codigo_asignatura` AS `codigo_asignatura_formacion`,`asignaturas_1`.`id` AS `id_asignatura_formacion`,`asignaturas_1`.`nombre` AS `asignatura_formacion` from (((((((((`unidades` join `sedes` on((`unidades`.`sede_id` = `sedes`.`id`))) join `asignaturas_departamentos`) join `asignaturas` on((`asignaturas`.`id` = `asignaturas_departamentos`.`asignatura_id`))) join `asignaturas_formacion` on((`asignaturas_formacion`.`asignatura_formacion_id` = `asignaturas`.`id`))) join `asignaturas_departamentos` `asignaturas_departamentos_1` on(((`asignaturas_formacion`.`asignatura_regular_id` = `asignaturas_departamentos_1`.`asignatura_id`) and (`asignaturas_departamentos_1`.`id_unidad` = `unidades`.`id`)))) join `asignaturas` `asignaturas_1` on((`asignaturas_departamentos_1`.`asignatura_id` = `asignaturas_1`.`id`))) join `carreras_espejos`) join `carreras` on(((`carreras_espejos`.`carrera_id` = `carreras`.`id`) and (`carreras_espejos`.`sede_id` = `sedes`.`id`)))) join `mallas` on(((`mallas`.`carrera_id` = `carreras`.`id`) and (`mallas`.`asignatura_id` = `asignaturas_departamentos`.`asignatura_id`)))) order by `codigo_carrera`,`sede`,`asignatura`;
 
 -- =====================================================
--- SECCIÓN 3: TRIGGERS Y PROCEDIMIENTOS
+-- SECCIÓN 3: TRIGGERS
 -- =====================================================
 
--- Triggers para validación de tipos de asignaturas
-CREATE TRIGGER before_insert_asignaturas_formacion
-BEFORE INSERT ON asignaturas_formacion
-FOR EACH ROW
-BEGIN
-    DECLARE tipo_formacion VARCHAR(50);
-    DECLARE tipo_regular VARCHAR(50);
-    
-    -- Obtener tipos de las asignaturas
-    SELECT tipo INTO tipo_formacion FROM asignaturas WHERE id = NEW.asignatura_formacion_id;
-    SELECT tipo INTO tipo_regular FROM asignaturas WHERE id = NEW.asignatura_regular_id;
-    
-    -- Validar tipos
-    IF tipo_formacion != 'FORMACION_ELECTIVA' THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'La asignatura padre debe ser de tipo formación electiva';
-    END IF;
-    
-    IF tipo_regular = 'REGULAR' || tipo_regular = 'FORMACION_ELECTIVA' THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'La asignatura hijo debe ser distinta de tipo regular o formación electiva';
-    END IF;
-END;
+DROP TRIGGER IF EXISTS `before_insert_asignaturas_bibliografias`;
+DELIMITER $$
+CREATE TRIGGER `before_insert_asignaturas_bibliografias` BEFORE INSERT ON `asignaturas_bibliografias` FOR EACH ROW BEGIN
+  DECLARE tipo_asignatura varchar(50);
 
-CREATE TRIGGER before_update_asignaturas_formacion
-BEFORE UPDATE ON asignaturas_formacion
-FOR EACH ROW
-BEGIN
-    DECLARE tipo_formacion VARCHAR(50);
-    DECLARE tipo_regular VARCHAR(50);
-    
-    -- Obtener tipos de las asignaturas
-    SELECT tipo INTO tipo_formacion FROM asignaturas WHERE id = NEW.asignatura_formacion_id;
-    SELECT tipo INTO tipo_regular FROM asignaturas WHERE id = NEW.asignatura_regular_id;
-    
-    -- Validar tipos
-    IF tipo_formacion != 'FORMACION_ELECTIVA' THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'La asignatura padre debe ser de tipo formación electiva';
-    END IF;
-    
-    IF tipo_regular = 'REGULAR' || tipo_regular = 'FORMACION_ELECTIVA' THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'La asignatura hijo debe ser distinta de tipo regular o formación electiva';
-    END IF;
-END;
 
-CREATE TRIGGER before_insert_asignaturas_bibliografias
-BEFORE INSERT ON asignaturas_bibliografias
-FOR EACH ROW
-BEGIN
-    DECLARE tipo_asignatura VARCHAR(50);
-    
-    -- Obtener tipo de la asignatura
-    SELECT tipo INTO tipo_asignatura FROM asignaturas WHERE id = NEW.asignatura_id;
-    
-    -- Validar tipo
-    IF tipo_asignatura = 'FORMACION_ELECTIVA' THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'No se puede vincular bibliografías con asignaturas de tipo FORMACION_ELECTIVA';
-    END IF;
-END;
+  SELECT
+    tipo INTO tipo_asignatura
+  FROM asignaturas
+  WHERE id = NEW.asignatura_id;
 
-CREATE TRIGGER before_update_asignaturas_bibliografias
-BEFORE UPDATE ON asignaturas_bibliografias
-FOR EACH ROW
-BEGIN
-    DECLARE tipo_asignatura VARCHAR(50);
-    
-    -- Obtener tipo de la asignatura
-    SELECT tipo INTO tipo_asignatura FROM asignaturas WHERE id = NEW.asignatura_id;
-    
-    -- Validar tipo
-    IF tipo_asignatura = 'FORMACION_ELECTIVA' THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'No se puede vincular bibliografías con asignaturas de tipo FORMACION_ELECTIVA';
-    END IF;
-END; 
+
+  IF tipo_asignatura = 'FORMACION_ELECTIVA' THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'No se puede vincular bibliografías con asignaturas de tipo FORMACION_ELECTIVA';
+  END IF;
+END$$
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `before_update_asignaturas_bibliografias`;
+DELIMITER $$
+CREATE TRIGGER `before_update_asignaturas_bibliografias` BEFORE UPDATE ON `asignaturas_bibliografias` FOR EACH ROW BEGIN
+  DECLARE tipo_asignatura varchar(50);
+
+
+  SELECT
+    tipo INTO tipo_asignatura
+  FROM asignaturas
+  WHERE id = NEW.asignatura_id;
+
+
+  IF tipo_asignatura = 'FORMACION_ELECTIVA' THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'No se puede vincular bibliografías con asignaturas de tipo FORMACION_ELECTIVA';
+  END IF;
+END$$
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `before_insert_asignaturas_formacion`;
+DELIMITER $$
+CREATE TRIGGER `before_insert_asignaturas_formacion` BEFORE INSERT ON `asignaturas_formacion` FOR EACH ROW BEGIN
+  DECLARE tipo_formacion varchar(50);
+  DECLARE tipo_regular varchar(50);
+
+
+  SELECT
+    tipo INTO tipo_formacion
+  FROM asignaturas
+  WHERE id = NEW.asignatura_formacion_id;
+  SELECT
+    tipo INTO tipo_regular
+  FROM asignaturas
+  WHERE id = NEW.asignatura_regular_id;
+
+
+  IF tipo_formacion != 'FORMACION_ELECTIVA' THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'La asignatura padre debe ser de tipo formación electiva';
+  END IF;
+
+  IF tipo_regular = 'REGULAR'
+    || tipo_regular = 'FORMACION_ELECTIVA' THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'La asignatura hijo debe ser distinta de tipo regular o formación electiva';
+  END IF;
+END$$
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `before_update_asignaturas_formacion`;
+DELIMITER $$
+CREATE TRIGGER `before_update_asignaturas_formacion` BEFORE UPDATE ON `asignaturas_formacion` FOR EACH ROW BEGIN
+  DECLARE tipo_formacion varchar(50);
+  DECLARE tipo_regular varchar(50);
+
+
+  SELECT
+    tipo INTO tipo_formacion
+  FROM asignaturas
+  WHERE id = NEW.asignatura_formacion_id;
+  SELECT
+    tipo INTO tipo_regular
+  FROM asignaturas
+  WHERE id = NEW.asignatura_regular_id;
+
+
+  IF tipo_formacion != 'FORMACION_ELECTIVA' THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'La asignatura padre debe ser de tipo formación electiva';
+  END IF;
+
+  IF tipo_regular = 'REGULAR'
+    || tipo_regular = 'FORMACION_ELECTIVA' THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'La asignatura hijo debe ser distinta de tipo regular o formación electiva';
+  END IF;
+END$$
+DELIMITER ;
 
 -- =====================================================
--- SECCIÓN 4: DATOS DE EJEMPLO
+-- SECCIÓN 4: DATOS REQUERIDOS POR LA APLICACIÓN
 -- =====================================================
+SET @OLD_SQL_MODE = @@SQL_MODE;
+SET SESSION SQL_MODE = CONCAT(@@SQL_MODE, ',NO_AUTO_VALUE_ON_ZERO');
 
--- Insertar datos de ejemplo
-INSERT INTO sedes (codigo, nombre) VALUES 
-('SEDE1', 'Sede Central'),
-('SEDE2', 'Sede Norte'),
-('SEDE3', 'Sede Sur');
+-- Sede especial para registros sin sede
+INSERT INTO `sedes` (`id`, `codigo`, `nombre`, `estado`) VALUES
+('0', 'S000', 'Sin Sede', '1')
+ON DUPLICATE KEY UPDATE `id` = `id`;
 
--- Sede especial para casos sin sede
-INSERT INTO sedes (id, codigo, nombre) VALUES (0, 'S000', 'Sin sede')
-    ON DUPLICATE KEY UPDATE nombre = 'Sin sede';
+-- Unidad especial para registros sin unidad
+INSERT INTO `unidades` (`id`, `codigo`, `nombre`, `sede_id`, `id_unidad_padre`, `estado`) VALUES
+('0', 'SIN_UNIDAD', 'Sin Unidad', '0', NULL, '1')
+ON DUPLICATE KEY UPDATE `id` = `id`;
 
--- Unidad especial para casos sin unidad, vinculada a 'Sin sede'
-INSERT INTO unidades (id, codigo, nombre, sede_id, id_unidad_padre) VALUES (0, 'SIN_UNIDAD', 'Sin unidad', 0, NULL)
-    ON DUPLICATE KEY UPDATE nombre = 'Sin unidad', sede_id = 0, id_unidad_padre = NULL;
-INSERT INTO unidades (codigo, nombre, sede_id, id_unidad_padre) VALUES 
-('105', 'Departamento de Ingeniería', 1, NULL),
-('106', 'Departamento de Informática', 1, NULL),
-('107', 'Departamento de Matemática', 1, NULL),
-('108', 'Departamento de Inglés', 1, NULL),
-('109', 'Departamento de Ética Profesional', 1, NULL);
+-- Reportes de cobertura (el guardado de coberturas los busca por nombre)
+INSERT INTO `reportes` (`id`, `nombre`, `descripcion`) VALUES
+('1', 'Reporte de Coberturas Básicas', 'Este reporte genera un listado de las carreras con las coberuras de bibliografia basica'),
+('2', 'Reporte de Coberturas Complementarias', 'Este reporte genera un listado de las carreras con las coberuras de bibliografía complementaria')
+ON DUPLICATE KEY UPDATE `id` = `id`;
 
-INSERT INTO carreras (nombre, tipo_programa, estado) VALUES 
-('Ingeniería en Sistemas', 'P', 1),
-('Licenciatura en Informática', 'P', 1),
-('Tecnicatura en Programación', 'P', 1);
-
--- Ejemplo de asignaturas
-INSERT INTO asignaturas (nombre, tipo, vigencia_desde, vigencia_hasta, periodicidad) VALUES 
--- Asignaturas regulares
-('Programación I', 'FORMACION_PROFESIONAL', '201910', '999999', 'semestral'),
-('Base de Datos', 'FORMACION_PROFESIONAL', '201910', '999999', 'semestral'),
-('Matemática I', 'REGULAR', '201910', '999999', 'anual'),
-('Inglés I', 'FORMACION_IDIOMAS', '201910', '999999', 'semestral'),
-('Ética Profesional', 'FORMACION_VALORES', '201910', '999999', 'semestral'),
--- Asignaturas de formación
-('Formación Básica en Programación', 'FORMACION_ELECTIVA', '201910', '999999', 'semestral'),
-('Formación General en Idiomas', 'FORMACION_ELECTIVA', '201910', '999999', 'semestral'),
-('Formación en Valores', 'FORMACION_ELECTIVA', '201910', '999999', 'semestral');
-
-INSERT INTO asignaturas_departamentos (asignatura_id, id_unidad, cantidad_alumnos, codigo_asignatura) VALUES 
-(1, 1, 50, 'PROG-00123'),
-(1, 2, 30, 'PROG-00124'),
-(2, 1, 45, 'BD-00123'),
-(3, 3, 60, 'MAT-00123');
-
-INSERT INTO usuarios (rut, nombre, email, password, rol) VALUES 
-('12345678-9', 'Administrador del Sistema', 'admin@biblioges.cl', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin'),
-('23456789-0', 'Administrador Biblioteca', 'admin_bidoc@biblioges.cl', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin_bidoc'),
-('34567890-1', 'Usuario Ejemplo', 'usuario@biblioges.cl', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'usuario');
-
--- Ejemplo de autores
-INSERT INTO autores (apellidos, nombres, genero) VALUES 
-('Pérez', 'Juan', 'Masculino'),
-('García', 'María', 'Femenino'),
-('López', 'Carlos', 'Masculino');
-
--- Ejemplo de bibliografías declaradas
-INSERT INTO bibliografias_declaradas (titulo, tipo, anio_publicacion, editorial, edicion, formato) VALUES 
-('Introducción a la Programación', 'libro', 2020, 'Editorial ABC', '1ra Edición', 'impreso'),
-('Base de Datos Relacionales', 'libro', 2019, 'Editorial XYZ', '2da Edición', 'ambos'),
-('Investigación en IA', 'articulo', 2021, 'Revista Científica', 'Vol. 5', 'impreso'),
-('Tesis de Grado', 'tesis', 2022, NULL, NULL, 'impreso'),
-('Sistema de Gestión', 'software', 2023, NULL, NULL, 'electronico'),
-('Portal Educativo', 'sitio_web', 2023, NULL, NULL, 'electronico'),
-('Documento Técnico', 'generico', 2023, NULL, NULL, 'impreso');
-
--- Ejemplo de libros
-INSERT INTO libros (bibliografia_id, isbn) VALUES 
-(1, '9781234567890'),
-(2, '9780987654321');
-
--- Ejemplo de artículos
-INSERT INTO articulos (bibliografia_id, issn, titulo_revista, cronologia) VALUES 
-(3, '1234-5678', 'Revista de Ciencias de la Computación', 'Vol. 5, No. 2, 2021');
-
--- Ejemplo de tesis
-INSERT INTO tesis (bibliografia_id, carrera_id) VALUES 
-(4, 1);
-
--- Ejemplo de software
-INSERT INTO software (bibliografia_id, version) VALUES 
-(5, '1.0.0');
-
--- Ejemplo de sitios web
-INSERT INTO sitios_web (bibliografia_id, fecha_consulta) VALUES 
-(6, '2023-12-01');
-
--- Ejemplo de genéricos
-INSERT INTO genericos (bibliografia_id, descripcion) VALUES 
-(7, 'Documento técnico sobre metodologías de desarrollo');
-
--- Ejemplo de relación bibliografías-autores
-INSERT INTO bibliografias_autores (bibliografia_id, autor_id) VALUES 
-(1, 1),
-(2, 2);
-
--- Ejemplo de relación asignatura-padre-hijo
-INSERT INTO asignaturas_formacion (asignatura_formacion_id, asignatura_regular_id) VALUES 
-(6, 1), -- Formación Básica en Programación -> Programación I
-(6, 2), -- Formación Básica en Programación -> Base de Datos
-(7, 4), -- Formación General en Idiomas -> Inglés I
-(8, 5); -- Formación en Valores -> Ética Profesional
-
--- Ejemplo de mallas curriculares
-INSERT INTO mallas (carrera_id, asignatura_id, semestre) VALUES 
-(1, 1, 1), -- Ingeniería en Sistemas -> Programación I -> Semestre 1
-(1, 2, 2), -- Ingeniería en Sistemas -> Base de Datos -> Semestre 2
-(1, 3, 1), -- Ingeniería en Sistemas -> Matemática I -> Semestre 1
-(1, 4, 1), -- Ingeniería en Sistemas -> Inglés I -> Semestre 1
-(1, 5, 3); -- Ingeniería en Sistemas -> Ética Profesional -> Semestre 3
-
--- Ejemplo de relación asignaturas-bibliografías
-INSERT INTO asignaturas_bibliografias (asignatura_id, bibliografia_id, tipo_bibliografia, estado) VALUES 
-(1, 1, 'basica', 'activa'),      -- Programación I -> Introducción a la Programación (Básica)
-(1, 2, 'complementaria', 'activa'), -- Programación I -> Base de Datos Relacionales (Complementaria)
-(2, 2, 'basica', 'activa'),      -- Base de Datos -> Base de Datos Relacionales (Básica)
-(3, 3, 'complementaria', 'activa'); -- Matemática I -> Investigación en IA (Complementaria)
-
--- Ejemplo de bibliografías disponibles
-INSERT INTO bibliografias_disponibles (
-    bibliografia_declarada_id,
-    titulo,
-    anio_edicion,
-    editorial,
-    url_acceso,
-    url_catalogo,
-    disponibilidad,
-    id_mms,
-    ejemplares_digitales
-) VALUES 
--- Para "Introducción a la Programación"
-(1, 'Introducción a la Programación - Edición 2020', 2020,'Editorial ABC', NULL, 'https://ucn.primo.exlibrisgroup.com/permalink/56UCN_INST/ia6i7p/alma990000172070107936', 'impreso', 'MMS001', null),
-(1, 'Introducción a la Programación - Edición Digital', 2020, 'Editorial ABC', 'https://ejemplo.com/libro1', NULL, 'electronico', null, 0),
-
--- Para "Base de Datos Relacionales"
-(2, 'Base de Datos Relacionales - Edición 2019', 2019, 'Editorial XYZ', null, 'https://ucn.primo.exlibrisgroup.com/permalink/56UCN_INST/ia6i7p/alma990000172070107936', 'impreso', 'MMS003', NULL),
-(2, 'Base de Datos Relacionales - Edición Digital', 2019, 'Editorial XYZ', 'https://ejemplo.com/libro2', NULL, 'electronico', null, 0),
-
--- Para "Investigación en IA"
-(3, 'Investigación en IA - Revista Vol. 5', 2021, 'Revista Científica', null, 'https://ucn.primo.exlibrisgroup.com/permalink/56UCN_INST/ia6i7p/alma990000172070107936', 'impreso', 'MMS004', NULL),
-(3, 'Investigación en IA - Revista Vol. 5', 2021, 'Revista Científica', 'https://ejemplo.com/articulo1', NULL, 'electronico', null, 0),
-
--- Ejemplares físicos en Sede Norte
-(1, 'Introducción a la Programación - Edición 2020', 2020, 'Editorial ABC', null, 'https://ucn.primo.exlibrisgroup.com/permalink/56UCN_INST/ia6i7p/alma990000172070107936', 'impreso', 'MMS006', NULL),
-(2, 'Base de Datos Relacionales - Edición 2019', 2019, 'Editorial XYZ', null, 'https://ucn.primo.exlibrisgroup.com/permalink/56UCN_INST/ia6i7p/alma990000172070107936', 'impreso', 'MMS007', NULL),
-
--- Ejemplares físicos en Sede Sur
-(1, 'Introducción a la Programación - Edición 2020', 2020, 'Editorial ABC', null, 'https://ucn.primo.exlibrisgroup.com/permalink/56UCN_INST/ia6i7p/alma990000172070107936', 'impreso', 'MMS008', NULL),
-(2, 'Base de Datos Relacionales - Edición 2019', 2019, 'Editorial XYZ', null, 'https://ucn.primo.exlibrisgroup.com/permalink/56UCN_INST/ia6i7p/alma990000172070107936', 'impreso', 'MMS009', NULL);
-
--- Insertar datos de ejemplo en bibliografias_disponibles_sedes
-INSERT INTO bibliografias_disponibles_sedes (
-    bibliografia_disponible_id,
-    sede_id,
-    ejemplares
-) VALUES 
--- Ejemplares en Sede Norte (id: 1)
-(1, 1, 5), -- Introducción a la Programación
-(3, 1, 3), -- Base de Datos Relacionales
-
--- Ejemplares en Sede Sur (id: 2)
-(1, 2, 3), -- Introducción a la Programación
-(3, 2, 2), -- Base de Datos Relacionales
-
--- Ejemplares en Sede Este (id: 3)
-(1, 3, 4), -- Introducción a la Programación
-(3, 3, 3); -- Base de Datos Relacionales 
-
--- Insertar datos de ejemplo para reportes
-INSERT INTO reportes (nombre, descripcion) VALUES 
-('Reporte de Coberturas Básicas', 'Reporte de cobertura de bibliografía básica por carrera y asignatura'),
-('Reporte de Coberturas Complementarias', 'Reporte de cobertura de bibliografía complementaria por carrera y asignatura'); 
+SET SESSION SQL_MODE = @OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS = @OLD_FOREIGN_KEY_CHECKS;
