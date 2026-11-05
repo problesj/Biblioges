@@ -158,9 +158,8 @@ $twig->addFunction(new \Twig\TwigFunction('build_sort_url', function ($column, $
         'sort' => $column,
         'direction' => $direction
     ]);
-    if ($page > 1) {
-        $params['page'] = $page;
-    }
+    // Al cambiar el orden se vuelve a la primera página
+    $params['page'] = 1;
     if ($perPage != 10) {
         $params['per_page'] = $perPage;
     }
@@ -213,9 +212,8 @@ $twig->addFunction(new \Twig\TwigFunction('build_page_url', function ($page, $so
         $params['direction'] = $direction;
     }
     
-    if ($page > 1) {
-        $params['page'] = $page;
-    }
+    // Siempre explícita: sin ella el listado recuperaría la página guardada en la sesión
+    $params['page'] = max(1, (int) $page);
     
     if ($perPage != 10) {
         $params['per_page'] = $perPage;

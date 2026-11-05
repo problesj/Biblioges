@@ -423,6 +423,183 @@ class ReporteController extends BaseController
     }
 
     /**
+     * Clave de un plan en los listados de coberturas (carrera + sede + código + vigencias).
+     */
+    private static function clavePlanCobertura($plan): string
+    {
+        return implode('|', [
+            $plan->carrera_id ?? '',
+            $plan->sede_id ?? '',
+            $plan->codigo ?? '',
+            $plan->vigencia_desde ?? '',
+            $plan->vigencia_hasta ?? '',
+        ]);
+    }
+
+    /**
+     * Cobertura básica y complementaria en tiempo real de varios planes a la vez.
+     * Usa exactamente la misma regla que calcularCoberturaBasicaTiempoReal() y
+     * calcularCoberturaComplementariaTiempoReal() (mismo plan, mismas asignaturas de vw_mallas, títulos activos
+     * y disponibilidad por sede), pero con unas pocas consultas en total en lugar de varias por plan.
+     *
+     * @param iterable   $planes         filas con carrera_id, codigo, sede_id, vigencia_desde, vigencia_hasta
+     * @param array|null $tiposFormacion null = filtros guardados de cada plan (o todos por defecto)
+     * @return array<string, array{basica: mixed, complementaria: mixed}> indexado por clavePlanCobertura()
+     */
+    public function coberturasTiempoRealLote(iterable $planes, ?array $tiposFormacion = null): array
+    {
+        $lista = [];
+        foreach ($planes as $p) {
+            $lista[] = $p;
+        }
+        if (!$lista) {
+            return [];
+        }
+        $norm = static function ($valor): string {
+            return mb_strtolower(rtrim((string) $valor));
+        };
+        $carreraIds = array_values(array_unique(array_map(static fn ($p) => (int) $p->carrera_id, $lista)));
+
+        // 1) Registro de carreras_espejos de cada plan (mismo orden que codigosAsignaturasPlan)
+        $espejos = [];
+        $filasEspejos = DB::table('carreras_espejos')->whereIn('carrera_id', $carreraIds)
+            ->orderByDesc('vigencia_desde')->orderByDesc('id')->get();
+        foreach ($filasEspejos as $ce) {
+            $espejos[(int) $ce->carrera_id . '|' . (int) $ce->sede_id . '|' . $norm($ce->codigo_carrera)][] = $ce;
+        }
+        $buscarPlan = static function ($p) use ($espejos, $norm) {
+            foreach ($espejos[(int) $p->carrera_id . '|' . (int) $p->sede_id . '|' . $norm($p->codigo)] ?? [] as $ce) {
+                $desde = (string) ($p->vigencia_desde ?? '');
+                $hasta = (string) ($p->vigencia_hasta ?? '');
+                if ($desde !== '' && $norm($ce->vigencia_desde) !== $norm($desde)) {
+                    continue;
+                }
+                if ($hasta !== '' && $norm($ce->vigencia_hasta) !== $norm($hasta)) {
+                    continue;
+                }
+                return $ce;
+            }
+            return null;
+        };
+
+        // 2) Filtros de formación guardados por plan (solo si no vienen explícitos)
+        $filtrosPorPlan = [];
+        if ($tiposFormacion === null) {
+            foreach (DB::table('filtros_formaciones')->get() as $filtro) {
+                if ($filtro->id_carrera_espejo === null || trim((string) $filtro->id_carrera_espejo) === '') {
+                    continue;
+                }
+                $id = (int) trim((string) $filtro->id_carrera_espejo);
+                if (!isset($filtrosPorPlan[$id])) {
+                    $filtrosPorPlan[$id] = $filtro;
+                }
+            }
+        }
+
+        // 3) Asignaturas de cada plan desde vw_mallas (regulares y de formación por tipo)
+        $regulares = [];
+        $formacion = [];
+        $mallas = DB::table('vw_mallas')->whereIn('id_carrera', $carreraIds)
+            ->select('id_sede', 'id_carrera', 'codigo_carrera', 'tipo_asignatura', 'codigo_asignatura', 'codigo_asignatura_formacion')
+            ->distinct()->get();
+        foreach ($mallas as $m) {
+            $k = (int) $m->id_sede . '|' . (int) $m->id_carrera . '|' . $norm($m->codigo_carrera);
+            $tipo = strtoupper((string) $m->tipo_asignatura);
+            if ($tipo === 'REGULAR' && $m->codigo_asignatura) {
+                $regulares[$k][$norm($m->codigo_asignatura)] = true;
+            }
+            if ($m->codigo_asignatura_formacion !== null && $m->codigo_asignatura_formacion) {
+                $formacion[$k][$tipo][$norm($m->codigo_asignatura_formacion)] = true;
+            }
+        }
+
+        $porDefecto = $this->tiposFormacionDisponiblesPorDefecto();
+        $codigosPorPlan = [];
+        $todosCodigos = [];
+        foreach ($lista as $p) {
+            $clave = self::clavePlanCobertura($p);
+            if (array_key_exists($clave, $codigosPorPlan)) {
+                continue;
+            }
+            $ce = $buscarPlan($p);
+            if (!$ce) {
+                $codigosPorPlan[$clave] = null;
+                continue;
+            }
+            $tipos = $tiposFormacion ?? (isset($filtrosPorPlan[(int) $ce->id])
+                ? $this->tiposFormacionDesdeRegistro($filtrosPorPlan[(int) $ce->id])
+                : $porDefecto);
+            $k = (int) $p->sede_id . '|' . (int) $p->carrera_id . '|' . $norm($ce->codigo_carrera);
+            $codigos = $regulares[$k] ?? [];
+            foreach ($tipos as $t) {
+                $codigos += $formacion[$k][strtoupper((string) $t)] ?? [];
+            }
+            $codigosPorPlan[$clave] = ['sede' => (int) $p->sede_id, 'codigos' => $codigos];
+            $todosCodigos += $codigos;
+        }
+
+        // 4) Títulos activos (básica / complementaria) por código de asignatura
+        $titulos = [];
+        foreach (array_chunk(array_map('strval', array_keys($todosCodigos)), 1000) as $loteCodigos) {
+            $filas = DB::table('bibliografias_declaradas as bd')
+                ->join('asignaturas_bibliografias as ab', 'bd.id', '=', 'ab.bibliografia_id')
+                ->join('asignaturas as a', 'ab.asignatura_id', '=', 'a.id')
+                ->join('asignaturas_departamentos as ad', 'a.id', '=', 'ad.asignatura_id')
+                ->whereIn('ad.codigo_asignatura', $loteCodigos)
+                ->whereIn('ab.tipo_bibliografia', ['basica', 'complementaria'])
+                ->where('ab.estado', 'activa')
+                ->select('ad.codigo_asignatura', 'bd.id', 'ab.tipo_bibliografia')
+                ->distinct()->get();
+            foreach ($filas as $fila) {
+                $titulos[$norm($fila->codigo_asignatura)][$fila->tipo_bibliografia][(int) $fila->id] = true;
+            }
+        }
+
+        // 5) Disponibilidad: electrónico/ambos (cualquier sede) o impreso con ejemplares en la sede
+        $electronicos = array_flip(array_map('intval', DB::table('bibliografias_disponibles')
+            ->where('estado', 1)->whereIn('disponibilidad', ['electronico', 'ambos'])
+            ->whereNotNull('bibliografia_declarada_id')->distinct()->pluck('bibliografia_declarada_id')->all()));
+        $impresos = [];
+        $filasImpresos = DB::table('bibliografias_disponibles as bdis')
+            ->join('bibliografias_disponibles_sedes as bds', 'bds.bibliografia_disponible_id', '=', 'bdis.id')
+            ->where('bdis.estado', 1)->where('bdis.disponibilidad', 'impreso')->where('bds.ejemplares', '>', 0)
+            ->whereNotNull('bdis.bibliografia_declarada_id')
+            ->select('bdis.bibliografia_declarada_id', 'bds.sede_id')->distinct()->get();
+        foreach ($filasImpresos as $fila) {
+            $impresos[(int) $fila->sede_id][(int) $fila->bibliografia_declarada_id] = true;
+        }
+
+        // 6) Porcentajes por plan
+        $resultado = [];
+        foreach ($codigosPorPlan as $clave => $datos) {
+            if ($datos === null || !$datos['codigos']) {
+                $resultado[$clave] = ['basica' => 'Sin información', 'complementaria' => 'Sin información'];
+                continue;
+            }
+            foreach (['basica', 'complementaria'] as $tipoBib) {
+                $ids = [];
+                foreach ($datos['codigos'] as $codigo => $_) {
+                    $ids += $titulos[$codigo][$tipoBib] ?? [];
+                }
+                $declarados = count($ids);
+                if ($declarados === 0) {
+                    $resultado[$clave][$tipoBib] = 0;
+                    continue;
+                }
+                $disponibles = 0;
+                foreach ($ids as $id => $_) {
+                    if (isset($electronicos[$id]) || isset($impresos[$datos['sede']][$id])) {
+                        $disponibles++;
+                    }
+                }
+                $resultado[$clave][$tipoBib] = round(($disponibles / $declarados) * 100, 2);
+            }
+        }
+
+        return $resultado;
+    }
+
+    /**
      * Tipos de formación soportados por filtros de cobertura.
      */
     private function tiposFormacionDisponiblesPorDefecto(): array
@@ -1821,7 +1998,7 @@ class ReporteController extends BaseController
         $anioActual = date('Y');
         
         // Construir la consulta base para contar total de registros
-        $countSql = "SELECT COUNT(DISTINCT CONCAT(ce.sede_id, '-', ce.carrera_id)) as total
+        $countSql = "SELECT COUNT(*) as total
         FROM carreras c
         JOIN carreras_espejos ce ON c.id = ce.carrera_id
         JOIN sedes s ON ce.sede_id = s.id
@@ -1887,81 +2064,55 @@ class ReporteController extends BaseController
             'tipo_programa' => 'c.tipo_programa',
             'estado' => 'c.estado',
         ];
-        if ($sortColumn === 'cobertura_basica' || $sortColumn === 'cobertura_complementaria') {
-            $sql .= " ORDER BY c.nombre ASC LIMIT {$perPage} OFFSET {$offset}";
+        $direccionSql = strtoupper((string) $sortDirection) === 'DESC' ? 'DESC' : 'ASC';
+        // Desempate fijo para que el orden sea estable entre páginas
+        $desempate = 'c.nombre ASC, s.nombre ASC, ce.codigo_carrera ASC, ce.id ASC';
+        $ordenPorCobertura = $sortColumn === 'cobertura_basica' || $sortColumn === 'cobertura_complementaria';
+        if ($ordenPorCobertura) {
+            // El % se calcula en PHP: se obtienen todas las filas filtradas, se ordenan y luego se pagina
+            $sql .= " ORDER BY {$desempate}";
         } else {
             $orderExpr = $sortSqlMap[$sortColumn] ?? 'c.nombre';
-            $sql .= " ORDER BY {$orderExpr} {$sortDirection} LIMIT {$perPage} OFFSET {$offset}";
+            $sql .= " ORDER BY {$orderExpr} {$direccionSql}, {$desempate} LIMIT {$perPage} OFFSET {$offset}";
         }
-        
-        $stmt = $this->pdo->prepare($sql);
+                $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
         $carreras = $stmt->fetchAll(\PDO::FETCH_OBJ);
         
         error_log('ReporteController@coberturaBasica: Total carreras encontradas: ' . count($carreras));
 
-        // Cobertura por plan (carrera + sede + código + vigencias) para evitar mezclar espejos
-        $buildPlanKey = static function ($carrera): string {
-            return implode('|', [
-                $carrera->carrera_id ?? '',
-                $carrera->sede_id ?? '',
-                $carrera->codigo ?? '',
-                $carrera->vigencia_desde ?? '',
-                $carrera->vigencia_hasta ?? '',
-            ]);
-        };
-
-        // Cobertura básica por carrera - Calculada en tiempo real
-        $coberturasBasicas = [];
-        foreach ($carreras as $carreraItem) {
-            $planKey = $buildPlanKey($carreraItem);
-            $coberturasBasicas[$planKey] = $this->calcularCoberturaBasicaTiempoReal(
-                $carreraItem->carrera_id,
-                $carreraItem->codigo,
-                $carreraItem->sede_id,
-                $carreraItem->vigencia_desde ?? null,
-                $carreraItem->vigencia_hasta ?? null,
-                $filtrosListadoExplicitos ? ($tiposFormacionVacio ? [] : $tiposFormacionFiltro) : null
-            );
-        }
-
-        // Cobertura complementaria por carrera - Calculada en tiempo real
-        $coberturasComplementarias = [];
-        foreach ($carreras as $carreraItem) {
-            $planKey = $buildPlanKey($carreraItem);
-            $coberturasComplementarias[$planKey] = $this->calcularCoberturaComplementariaTiempoReal(
-                $carreraItem->carrera_id,
-                $carreraItem->codigo,
-                $carreraItem->sede_id,
-                $carreraItem->vigencia_desde ?? null,
-                $carreraItem->vigencia_hasta ?? null,
-                $filtrosListadoExplicitos ? ($tiposFormacionVacio ? [] : $tiposFormacionFiltro) : null
-            );
-        }
-
-        // Agregar datos de cobertura a cada carrera
+        // Cobertura en tiempo real por plan, calculada en lote
+        $coberturas = $this->coberturasTiempoRealLote(
+            $carreras,
+            $filtrosListadoExplicitos ? ($tiposFormacionVacio ? [] : $tiposFormacionFiltro) : null
+        );
         foreach ($carreras as $carrera) {
-            $planKey = $buildPlanKey($carrera);
-            $coberturaBasica = $coberturasBasicas[$planKey] ?? 'Sin información';
-            $coberturaComplementaria = $coberturasComplementarias[$planKey] ?? 'Sin información';
-            $carrera->cobertura_basica = $coberturaBasica;
-            $carrera->cobertura_complementaria = $coberturaComplementaria;
-        }
-        
-        // Ordenar por cobertura si es necesario (después de obtener los datos)
-        if ($sortColumn === 'cobertura_basica' || $sortColumn === 'cobertura_complementaria') {
-            usort($carreras, function($a, $b) use ($sortColumn, $sortDirection) {
-                $aVal = is_numeric($a->$sortColumn) ? $a->$sortColumn : 0;
-                $bVal = is_numeric($b->$sortColumn) ? $b->$sortColumn : 0;
-                
-                if ($sortDirection === 'ASC') {
-                    return $aVal <=> $bVal;
-                } else {
-                    return $bVal <=> $aVal;
-                }
-            });
+            $calculo = $coberturas[self::clavePlanCobertura($carrera)] ?? null;
+            $carrera->cobertura_basica = $calculo['basica'] ?? 'Sin información';
+            $carrera->cobertura_complementaria = $calculo['complementaria'] ?? 'Sin información';
         }
 
+        // Orden por cobertura sobre el listado completo y luego paginación
+        if ($ordenPorCobertura) {
+            $filas = [];
+            foreach (array_values($carreras) as $i => $carrera) {
+                $valor = $carrera->$sortColumn;
+                $filas[] = [is_numeric($valor) ? (float) $valor : null, $i, $carrera];
+            }
+            usort($filas, static function ($a, $b) use ($direccionSql) {
+                // "Sin información" siempre al final, en ambas direcciones
+                if ($a[0] === null || $b[0] === null) {
+                    $cmp = ($a[0] === null) <=> ($b[0] === null);
+                } else {
+                    $cmp = $a[0] <=> $b[0];
+                    if ($direccionSql === 'DESC') {
+                        $cmp = -$cmp;
+                    }
+                }
+                return $cmp !== 0 ? $cmp : $a[1] <=> $b[1];
+            });
+            $carreras = array_slice(array_column($filas, 2), $offset, $perPage);
+        }
         global $twig;
         $html = $twig->render('reportes/coberturas/index.twig', [
             'carreras' => $carreras,
@@ -6349,52 +6500,13 @@ class ReporteController extends BaseController
         
         error_log('ReporteController@exportarCoberturasExcel: Total carreras encontradas: ' . count($carreras));
 
-        // Cobertura por plan (carrera + sede + código + vigencias) para evitar mezclar espejos
-        $buildPlanKey = static function ($carrera): string {
-            return implode('|', [
-                $carrera->carrera_id ?? '',
-                $carrera->sede_id ?? '',
-                $carrera->codigo ?? '',
-                $carrera->vigencia_desde ?? '',
-                $carrera->vigencia_hasta ?? '',
-            ]);
-        };
-
-        // Cobertura básica por carrera
-        $coberturasBasicas = [];
-        foreach ($carreras as $carreraItem) {
-            $planKey = $buildPlanKey($carreraItem);
-            $coberturasBasicas[$planKey] = $this->calcularCoberturaBasicaTiempoReal(
-                $carreraItem->carrera_id,
-                $carreraItem->codigo,
-                $carreraItem->sede_id,
-                $carreraItem->vigencia_desde ?? null,
-                $carreraItem->vigencia_hasta ?? null
-            );
-        }
-
-        // Cobertura complementaria por carrera - Calculada en tiempo real
-        $coberturasComplementarias = [];
-        foreach ($carreras as $carreraItem) {
-            $planKey = $buildPlanKey($carreraItem);
-            $coberturasComplementarias[$planKey] = $this->calcularCoberturaComplementariaTiempoReal(
-                $carreraItem->carrera_id,
-                $carreraItem->codigo,
-                $carreraItem->sede_id,
-                $carreraItem->vigencia_desde ?? null,
-                $carreraItem->vigencia_hasta ?? null
-            );
-        }
-
-        // Agregar datos de cobertura a cada carrera
+        // Cobertura en tiempo real por plan, calculada en lote
+        $coberturas = $this->coberturasTiempoRealLote($carreras, null);
         foreach ($carreras as $carrera) {
-            $planKey = $buildPlanKey($carrera);
-            $coberturaBasica = $coberturasBasicas[$planKey] ?? 'Sin información';
-            $coberturaComplementaria = $coberturasComplementarias[$planKey] ?? 'Sin información';
-            $carrera->cobertura_basica = $coberturaBasica;
-            $carrera->cobertura_complementaria = $coberturaComplementaria;
+            $calculo = $coberturas[self::clavePlanCobertura($carrera)] ?? null;
+            $carrera->cobertura_basica = $calculo['basica'] ?? 'Sin información';
+            $carrera->cobertura_complementaria = $calculo['complementaria'] ?? 'Sin información';
         }
-
         // Crear el archivo Excel
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
