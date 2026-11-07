@@ -1,0 +1,80 @@
+{% extends "base.twig" %}
+
+{% block title %}Copias desde Alma - Sistema de Bibliografía{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h2 class="mb-0 text-dark fw-bold h4"><i class="fas fa-sync-alt me-2"></i>Actualización de copias desde Alma</h2>
+        <div class="d-flex gap-2">
+            <a href="{{ app_url }}tareas-programadas/ejecuciones/{{ ejecucion.id }}/exportar{{ filtro_accion ? '?accion=' ~ filtro_accion : '' }}" class="btn btn-success"><i class="fas fa-file-excel me-1"></i> Exportar a Excel</a>
+            <a href="{{ app_url }}tareas-programadas" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i> Volver</a>
+        </div>
+    </div>
+
+    <div class="card shadow mb-3">
+        <div class="card-body">
+            <p class="mb-1"><strong>{{ tarea.nombre }}</strong>
+                {% if ejecucion.simulacion %}<span class="badge bg-info text-dark ms-1">Simulación: no modifica datos</span>{% endif %}
+                {% if ejecucion.estado == 'completada' %}<span class="badge bg-success ms-1">Completada</span>
+                {% elseif ejecucion.estado == 'detenida' %}<span class="badge bg-warning text-dark ms-1">Detenida</span>
+                {% else %}<span class="badge bg-danger ms-1">Error</span>{% endif %}
+            </p>
+            <p class="small text-muted mb-1">Inicio: {{ ejecucion.fecha_inicio|date('d/m/Y H:i') }} · Fin: {{ ejecucion.fecha_fin ? ejecucion.fecha_fin|date('d/m/Y H:i') : 'en curso' }}
+                · Filas consideradas: {{ resumen.consideradas ?? 0 }} · MMS consultados: {{ resumen.mms_consultados ?? 0 }} · Sin cambios: {{ resumen.sin_cambios ?? 0 }}</p>
+            {% if ejecucion.mensaje %}<div class="border border-warning rounded bg-warning-subtle p-2 small mt-2">{{ ejecucion.mensaje }}</div>{% endif %}
+            {% if (resumen.declaradas_sin_disponibles ?? 0) > 0 %}<div class="border border-danger rounded bg-danger-subtle p-2 small mt-2"><strong>{{ resumen.declaradas_sin_disponibles }}</strong> bibliografía(s) declarada(s) {{ ejecucion.simulacion ? 'quedarían' : 'quedaron' }} sin bibliografías disponibles activas.</div>{% endif %}
+        </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <a href="{{ app_url }}tareas-programadas/ejecuciones/{{ ejecucion.id }}" class="btn btn-sm {{ filtro_accion ? 'btn-outline-secondary' : 'btn-secondary' }}">Todas ({{ total_detalle }})</a>
+        {% for clave, etiqueta in acciones %}
+            <a href="{{ app_url }}tareas-programadas/ejecuciones/{{ ejecucion.id }}?accion={{ clave }}" class="btn btn-sm {{ filtro_accion == clave ? 'btn-primary' : 'btn-outline-primary' }}">{{ etiqueta }} ({{ conteos[clave] ?? 0 }})</a>
+        {% endfor %}
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0" style="font-size: .8rem;">
+                    <thead class="table-dark">
+                        <tr><th>Acción</th><th>Disponible</th><th>Declarada</th><th style="min-width:240px;">Título</th><th>Año</th><th>MMS</th><th>Copias antes</th><th>Copias después</th><th style="min-width:200px;">Observación</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for d in detalle %}
+                        <tr>
+                            <td class="text-nowrap"><span class="badge {{ colores[d.accion] ?? 'bg-secondary' }}">{{ acciones[d.accion] ?? d.accion }}</span></td>
+                            <td class="text-nowrap">
+                                {% if d.existe %}
+                                    <a href="{{ app_url }}bibliografias-disponibles/{{ d.bibliografia_disponible_id }}" target="_blank" rel="noopener" title="Ver bibliografía disponible">{{ d.bibliografia_disponible_id }} <i class="fas fa-external-link-alt small"></i></a>
+                                {% else %}
+                                    {{ d.bibliografia_disponible_id }}<br><span class="small text-danger">{{ d.accion == 'eliminada' and not ejecucion.simulacion ? 'Eliminada' : 'Ya no existe' }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{% if d.bibliografia_declarada_id %}<a href="{{ app_url }}bibliografias-declaradas/{{ d.bibliografia_declarada_id }}">{{ d.bibliografia_declarada_id }}</a>{% else %}—{% endif %}</td>
+                            <td>{{ d.titulo }}</td>
+                            <td>{{ d.anio_edicion }}</td>
+                            <td class="text-nowrap">{{ d.id_mms }}{% if d.id_mms_nuevo %}<br>{% if d.accion == 'discrepancia' %}<span class="small text-muted">Sugerido, sin aplicar:</span><br>{% else %}<i class="fas fa-arrow-right text-success"></i> {% endif %}{{ d.id_mms_nuevo }}{% endif %}</td>
+                            <td class="text-nowrap">{{ d.antes_texto }}</td>
+                            <td class="text-nowrap">{{ d.despues_texto }}</td>
+                            <td>{{ d.mensaje }}{% if d.declarada_sin_disponibles %}<br><span class="text-danger">La declarada queda sin disponibles</span>{% endif %}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="9" class="text-center text-muted py-4">No hay cambios para mostrar.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% if total_paginas > 1 %}
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            {% set q = filtro_accion ? '&accion=' ~ filtro_accion : '' %}
+            <a class="btn btn-sm btn-outline-primary {{ pagina <= 1 ? 'disabled' }}" href="{{ app_url }}tareas-programadas/ejecuciones/{{ ejecucion.id }}?pagina={{ pagina - 1 }}{{ q }}"><i class="fas fa-chevron-left"></i> Anterior</a>
+            <span class="small text-muted">Página {{ pagina }} de {{ total_paginas }}</span>
+            <a class="btn btn-sm btn-outline-primary {{ pagina >= total_paginas ? 'disabled' }}" href="{{ app_url }}tareas-programadas/ejecuciones/{{ ejecucion.id }}?pagina={{ pagina + 1 }}{{ q }}">Siguiente <i class="fas fa-chevron-right"></i></a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

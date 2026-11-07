@@ -52,6 +52,11 @@ try {
         $errores = count(array_filter($resultados, static fn ($r) => !$r['exito']));
         $log('Proceso completado: ' . count($resultados) . ' tarea(s), ' . $errores . ' con errores.');
     }
+    // Las copias desde Alma tardan más de una hora: corren en un proceso aparte
+    if (App\Services\ActualizadorCopiasAlma::hayPendientes() && !App\Services\ActualizadorCopiasAlma::hayEnProceso()) {
+        $log('Iniciando actualización de copias desde Alma en segundo plano.');
+        App\Services\ActualizadorCopiasAlma::lanzarEnSegundoPlano();
+    }
     exit(0);
 } catch (\Throwable $e) {
     $log('Error general: ' . $e->getMessage());

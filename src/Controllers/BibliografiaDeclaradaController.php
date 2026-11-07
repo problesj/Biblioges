@@ -3661,80 +3661,23 @@ class BibliografiaDeclaradaController
 
     private function obtenerEjemplares($recordId) {
         try {
-            // API key específica para holdings y ejemplares
-            $apiKey = $_ENV['ALMA_API_KEY'] ?? '';
-            $url = "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/{$recordId}/holdings?apikey={$apiKey}";
-            //error_log('URL de holdings: ' . $url);
-            
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Accept: application/json',
-                'Content-Type: application/json; charset=UTF-8'
-            ]);
-            
-            $result = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
-
-            if ($httpCode !== 200) {
-                //error_log("Error al obtener holdings. Código HTTP: " . $httpCode);
-                return [];
-            }
-
-            $data = json_decode($result, true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                //error_log("Error al decodificar respuesta de holdings: " . json_last_error_msg());
-                return [];
-            }
-
+            // Mismo criterio que la tarea de copias: no cuentan los ítems extraviados
+            $items = (new \App\Services\AlmaCatalogoService())->itemsPorBiblioteca((string) $recordId);
             $ejemplares = [];
-            if (isset($data['holding']) && is_array($data['holding'])) {
-                foreach ($data['holding'] as $holding) {
-                    if (isset($holding['library'])) {
-                        // Obtener la cantidad de ejemplares para este holding
-                        $holdingId = $holding['holding_id'];
-                        $itemsUrl = "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/{$recordId}/holdings/{$holdingId}/items?offset=0&order_by=none&direction=desc&view=brief&apikey={$apiKey}";
-                        //error_log('URL de items: ' . $itemsUrl);
-                        
-                        $ch = curl_init();
-                        curl_setopt($ch, CURLOPT_URL, $itemsUrl);
-                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-                        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                            'Accept: application/json',
-                            'Content-Type: application/json; charset=UTF-8'
-                        ]);
-
-                        $itemsResult = curl_exec($ch);
-                        $itemsHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                        curl_close($ch);
-
-                        $cantidadEjemplares = 0;
-                        if ($itemsHttpCode === 200) {
-                            $itemsData = json_decode($itemsResult, true);
-                            if (isset($itemsData['total_record_count'])) {
-                                $cantidadEjemplares = (int)$itemsData['total_record_count'];
-                            }
-                        }
-
-                        $ejemplares[] = [
-                            'biblioteca' => $holding['library']['desc'],
-                            'codigo_biblioteca' => $holding['library']['value'],
-                            'ubicacion' => $holding['location']['desc'] ?? '',
-                            'codigo_ubicacion' => $holding['location']['value'] ?? '',
-                            'signatura' => $holding['call_number'] ?? '',
-                            'cantidad_ejemplares' => $cantidadEjemplares
-                        ];
-                    }
+            foreach ($items['por_biblioteca'] as $codigo => $biblioteca) {
+                if ($biblioteca['contables'] > 0) {
+                    $ejemplares[] = [
+                        'biblioteca' => $biblioteca['nombre'],
+                        'codigo_biblioteca' => $codigo,
+                        'cantidad_ejemplares' => $biblioteca['contables'],
+                    ];
                 }
             }
 
             return $ejemplares;
         } catch (\Exception $e) {
-            //error_log("Error al obtener ejemplares: " . $e->getMessage());
+            error_log('Error al obtener ejemplares de Alma: ' . $e->getMessage());
+
             return [];
         }
     }
@@ -3950,13 +3893,8 @@ class BibliografiaDeclaradaController
                     // Validar y limpiar el año de edición
                     $anio = !empty($bibliografia['anio']) ? trim($bibliografia['anio']) : '';
                     if (!empty($anio)) {
-                        // Extraer solo los dígitos del año
-                        $anioNumerico = preg_replace('/[^0-9]/', '', $anio);
-                        if (!empty($anioNumerico)) {
-                            $anio = (int)$anioNumerico;
-                        } else {
-                            $anio = 0;
-                        }
+                        // Primer año del texto ("1972 [1961]" => 1972); antes se unían todos los dígitos
+                        $anio = \App\Services\AlmaCatalogoService::extraerAnio($anio);
                     } else {
                         $anio = 0;
                     }
@@ -3976,30 +3914,12 @@ class BibliografiaDeclaradaController
                             $ejemplares = $this->obtenerEjemplares($idMms);
                             error_log('Ejemplares obtenidos: ' . json_encode($ejemplares));
                             
-                            // Verificar portafolios
-                            $portfoliosUrl = "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/{$idMms}/portfolios?limit=10&offset=0&apikey=" . ($_ENV['ALMA_API_KEY'] ?? '');
-                            error_log('Consultando portafolios: ' . $portfoliosUrl);
-                            $portfoliosResponse = @file_get_contents($portfoliosUrl);
-                            if ($portfoliosResponse !== false) {
-                                $xml = @simplexml_load_string($portfoliosResponse);
-                                if ($xml !== false) {
-                                    $tienePortafolios = isset($xml['total_record_count']) && (int)$xml['total_record_count'] > 0;
-                                    error_log('Tiene portafolios: ' . ($tienePortafolios ? 'Sí' : 'No'));
-                                }
-                            }
-                            
-                            // Verificar representaciones digitales
-                            $representationsUrl = "https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs/{$idMms}/representations?limit=10&offset=0&use_updated_terminology=false&apikey=" . ($_ENV['ALMA_API_KEY'] ?? '');
-                            error_log('Consultando representaciones: ' . $representationsUrl);
-                            $representationsResponse = @file_get_contents($representationsUrl);
-                            if ($representationsResponse !== false) {
-                                $xml = @simplexml_load_string($representationsResponse);
-                                if ($xml !== false) {
-                                    $tieneRepresentaciones = isset($xml['total_record_count']) && (int)$xml['total_record_count'] > 0;
-                                    error_log('Tiene representaciones: ' . ($tieneRepresentaciones ? 'Sí' : 'No'));
-                                }
-                            }
-                            
+                            // Verificar portafolios y representaciones digitales
+                            $acceso = (new \App\Services\AlmaCatalogoService())->accesoElectronico((string) $idMms);
+                            $tienePortafolios = $acceso['portafolios'];
+                            $tieneRepresentaciones = $acceso['representaciones'];
+                            error_log('Tiene portafolios: ' . ($tienePortafolios ? 'Sí' : 'No') . ', representaciones: ' . ($tieneRepresentaciones ? 'Sí' : 'No'));
+
                             // Determinar disponibilidad para registros locales
                             if ($tienePortafolios && $tieneRepresentaciones && !empty($ejemplares)) {
                                 $disponibilidad = 'ambos';

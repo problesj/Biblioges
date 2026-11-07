@@ -120,6 +120,10 @@
                             </td>
                         </tr>
                         <tr>
+                            <th class="bg-light">MMS ID</th>
+                            <td>{{ bibliografia.id_mms ?: 'No disponible' }}</td>
+                        </tr>
+                        <tr>
                             <th class="bg-light">Disponibilidad</th>
                             <td>
                                 {% if bibliografia.disponibilidad == 'impreso' %}

@@ -307,6 +307,8 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->post('/tareas-programadas/{id:[0-9]+}/cancelar', [TareaProgramadaController::class, 'cancelar']);
     $group->get('/tareas-programadas/{id:[0-9]+}/historial', [TareaProgramadaController::class, 'historial']);
     $group->post('/tareas-programadas/{id:[0-9]+}/ejecutar', [TareaProgramadaController::class, 'ejecutarAhora']);
+    $group->get('/tareas-programadas/ejecuciones/{id:[0-9]+}', [TareaProgramadaController::class, 'detalleAlma']);
+    $group->get('/tareas-programadas/ejecuciones/{id:[0-9]+}/exportar', [TareaProgramadaController::class, 'exportarDetalleAlma']);
 
     // API para actualizar el perfil del usuario autenticado
     $group->post('/perfil/actualizar', [UsuarioController::class, 'actualizarPerfil']);

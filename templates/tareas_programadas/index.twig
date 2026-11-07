@@ -220,12 +220,15 @@
                                         {% elseif tarea.tipo_reporte == 'cobertura_ambas_expandido' %}
                                             <span class="badge bg-info text-dark">Básica</span>
                                             <span class="badge bg-warning text-dark">Complementaria</span>
+                                        {% elseif tarea.tipo_reporte == 'actualizar_copias_alma' %}
+                                            <span class="badge bg-primary">Copias Alma</span>
+                                            {% if tarea.simulacion %}<span class="badge bg-light text-dark border">Simulación</span>{% endif %}
                                         {% else %}
                                             <span class="badge bg-secondary">Sin tipo</span>
                                         {% endif %}
                                     </td>
-                                    <td class="text-center">{{ tarea.sede_nombre }}</td>
-                                    <td class="text-center col-carrera" title="{{ tarea.carrera_nombre }}">{{ tarea.carrera_nombre }}</td>
+                                    <td class="text-center">{{ tarea.sede_nombre ?: '—' }}</td>
+                                    <td class="text-center col-carrera" title="{{ tarea.carrera_nombre }}">{{ tarea.carrera_nombre ?: '—' }}</td>
                                     <td class="text-center">
                                         {% if tarea.frecuencia and tarea.frecuencia != 'unica' %}
                                             <span class="badge bg-light text-dark border"><i class="fas fa-redo me-1"></i>{{ frecuencias[tarea.frecuencia] ?? tarea.frecuencia }}</span>
@@ -245,6 +248,7 @@
                                             <span class="badge bg-secondary">Pendiente</span>
                                         {% elseif tarea.estado == 'en_proceso' %}
                                             <span class="badge bg-primary">En Proceso</span>
+                                            {% if tarea.progreso_total %}<div class="small text-muted">{{ tarea.progreso_actual ?: 0 }} / {{ tarea.progreso_total }}</div>{% endif %}
                                         {% elseif tarea.estado == 'completada' %}
                                             <span class="badge bg-success">Completada</span>
                                         {% elseif tarea.estado == 'error' %}
@@ -270,7 +274,7 @@
                                     </td>
                                     <td class="text-center nowrap">
                                         {% if tarea.estado != 'en_proceso' %}
-                                            <button type="button" class="btn btn-action btn-run" data-accion="ejecutar" data-id="{{ tarea.id }}" title="Ejecutar ahora">
+                                            <button type="button" class="btn btn-action btn-run" data-accion="ejecutar" data-id="{{ tarea.id }}" data-alma="{{ tarea.tipo_reporte == 'actualizar_copias_alma' ? 1 : 0 }}" data-simulacion="{{ tarea.simulacion ? 1 : 0 }}" title="Ejecutar ahora">
                                                 <i class="fas fa-play"></i>
                                             </button>
                                             <button type="button" class="btn btn-action btn-edit" data-accion="editar" data-id="{{ tarea.id }}" title="Editar">
@@ -353,7 +357,17 @@
             </div>
             <div class="modal-body">
                 <form id="formTarea" autocomplete="off" onsubmit="return false;">
-                    <div class="row">
+                    <div class="mb-3">
+                        <label for="tarea_tipo" class="form-label">Tipo de tarea *</label>
+                        <select class="form-select" id="tarea_tipo">
+                            <option value="coberturas">Reporte de cobertura por carrera</option>
+                            <option value="copias_alma">Actualizar copias impresas desde Alma</option>
+                        </select>
+                    </div>
+                    <div class="border rounded bg-light p-2 small mb-3" id="ayudaAlma" style="display:none;">
+                        Actualiza las copias por sede de todas las bibliografías disponibles activas (impresas o ambas). Las que no tengan copias ni acceso electrónico se eliminan. El detalle queda en el historial.
+                    </div>
+                    <div class="row" id="grupoCoberturaSede">
                         <div class="col-md-6 mb-3">
                             <label for="tarea_sede" class="form-label">Sede *</label>
                             <select class="form-select" id="tarea_sede" required>
@@ -376,7 +390,7 @@
                         </div>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-3" id="grupoCoberturaCarreras">
                         <div class="d-flex justify-content-between align-items-end mb-1">
                             <label class="form-label mb-0" id="etiquetaCarreras">Carreras *</label>
                             <div class="small" id="accionesCarreras">
@@ -411,6 +425,10 @@
                         </div>
                     </div>
                     <div class="small text-muted mb-3" id="ayudaFrecuencia"></div>
+                    <div class="form-check mb-3" id="grupoSimulacion" style="display:none;">
+                        <input class="form-check-input" type="checkbox" id="tarea_simulacion">
+                        <label class="form-check-label" for="tarea_simulacion"><strong>Simulación:</strong> calcula y reporta los cambios sin modificar ningún dato</label>
+                    </div>
 
                     <div class="mb-1">
                         <label for="tarea_nombre" class="form-label">Nombre de la tarea *</label>
@@ -580,9 +598,39 @@
         const frecuencia = FRECUENCIAS[el('tarea_frecuencia').value] || 'Única';
         return [carrera, sede, etiquetaTipos, frecuencia].map(s => String(s).trim()).join(' - ').slice(0, 255);
     }
+    function esAlma() {
+        return el('tarea_tipo').value === 'copias_alma';
+    }
+    function aplicarTipoTarea() {
+        const alma = esAlma();
+        el('grupoCoberturaSede').style.display = alma ? 'none' : '';
+        el('grupoCoberturaCarreras').style.display = alma ? 'none' : '';
+        el('grupoSimulacion').style.display = alma ? '' : 'none';
+        el('ayudaAlma').style.display = alma ? '' : 'none';
+        const frecuencia = el('tarea_frecuencia');
+        Array.from(frecuencia.options).forEach(o => {
+            o.disabled = alma && !['mensual', 'anual'].includes(o.value);
+        });
+        if (alma && !['mensual', 'anual'].includes(frecuencia.value)) {
+            frecuencia.value = 'mensual';
+        }
+        actualizarFrecuencia();
+    }
+    function nombreAlma() {
+        const f = FRECUENCIAS[el('tarea_frecuencia').value] || '';
+        return 'Copias desde Alma - ' + f + (el('tarea_simulacion').checked ? ' (simulación)' : '');
+    }
     function actualizarNombre() {
         const marcadas = carrerasMarcadas();
         const input = el('tarea_nombre');
+        if (esAlma()) {
+            input.disabled = false;
+            el('regenerarNombre').disabled = false;
+            input.placeholder = '';
+            el('ayudaNombre').textContent = 'Se genera automáticamente; puede modificarlo.';
+            if (!nombreEditado) { input.value = nombreAlma(); }
+            return;
+        }
         if (marcadas.length > 1) {
             input.disabled = true;
             input.value = '';
@@ -619,6 +667,8 @@
         actualizarNombre();
     }
     el('tarea_frecuencia').addEventListener('change', actualizarFrecuencia);
+    el('tarea_tipo').addEventListener('change', () => { nombreEditado = false; aplicarTipoTarea(); });
+    el('tarea_simulacion').addEventListener('change', actualizarNombre);
 
     // ---------- Abrir formulario ----------
     function prepararFormulario(nuevoModo) {
@@ -632,6 +682,7 @@
             ? '<i class="fas fa-edit"></i> Editar Tarea Programada'
             : '<i class="fas fa-plus"></i> Nueva Tarea Programada';
         el('btnGuardarTarea').querySelector('span').textContent = modo === 'editar' ? 'Guardar y programar' : 'Crear tarea';
+        el('tarea_tipo').disabled = modo === 'editar';
         carreraExtra = null;
     }
 
@@ -641,7 +692,7 @@
         el('tipo_basica').checked = true;
         el('tipo_complementaria').checked = false;
         pintarCarreras([]);
-        actualizarFrecuencia();
+        aplicarTipoTarea();
         modalTarea.show();
     });
 
@@ -661,10 +712,12 @@
             const futura = t.fecha_programada > ahoraLocal();
             el('tarea_fecha').value = futura ? t.fecha_programada : '';
             el('tarea_fecha_fin').value = t.fecha_fin || '';
-            pintarCarreras([t.carrera_id]);
-            actualizarFrecuencia();
+            el('tarea_tipo').value = t.tipo_tarea;
+            el('tarea_simulacion').checked = !!t.simulacion;
+            pintarCarreras(t.tipo_tarea === 'copias_alma' ? [] : [t.carrera_id]);
+            aplicarTipoTarea();
             el('tarea_nombre').value = t.nombre;
-            nombreEditado = t.nombre !== nombreAutomatico((carrerasMarcadas()[0] || {dataset: {}}).dataset.nombre || '');
+            nombreEditado = t.tipo_tarea === 'copias_alma' ? t.nombre !== nombreAlma() : t.nombre !== nombreAutomatico((carrerasMarcadas()[0] || {dataset: {}}).dataset.nombre || '');
             modalTarea.show();
             if (!futura) {
                 setTimeout(() => el('tarea_fecha').focus(), 400);
@@ -678,21 +731,23 @@
     el('btnGuardarTarea').addEventListener('click', async () => {
         const marcadas = carrerasMarcadas();
         const datos = {
+            tipo_tarea: el('tarea_tipo').value,
+            simulacion: el('tarea_simulacion').checked,
             sede_id: el('tarea_sede').value,
             carrera_ids: marcadas.map(i => i.value),
             tipos: tiposMarcados(),
             frecuencia: el('tarea_frecuencia').value,
             fecha_programada: el('tarea_fecha').value,
             fecha_fin: el('tarea_frecuencia').value !== 'unica' ? el('tarea_fecha_fin').value : '',
-            nombre: marcadas.length === 1 ? el('tarea_nombre').value.trim() : ''
+            nombre: (marcadas.length === 1 || esAlma()) ? el('tarea_nombre').value.trim() : ''
         };
         let falta = '';
-        if (!datos.sede_id) falta = 'Seleccione una sede';
-        else if (!datos.carrera_ids.length) falta = 'Seleccione al menos una carrera';
-        else if (!datos.tipos.length) falta = 'Seleccione al menos un tipo de reporte';
+        if (!esAlma() && !datos.sede_id) falta = 'Seleccione una sede';
+        else if (!esAlma() && !datos.carrera_ids.length) falta = 'Seleccione al menos una carrera';
+        else if (!esAlma() && !datos.tipos.length) falta = 'Seleccione al menos un tipo de reporte';
         else if (!datos.fecha_programada) falta = 'Indique la fecha y hora';
         else if (datos.fecha_programada <= ahoraLocal()) falta = 'La fecha y hora deben ser futuras';
-        else if (marcadas.length === 1 && !datos.nombre) falta = 'Indique un nombre para la tarea';
+        else if (!esAlma() && marcadas.length === 1 && !datos.nombre) falta = 'Indique un nombre para la tarea';
         if (falta) {
             alerta('warning', 'Revise el formulario', falta);
             return;
@@ -714,10 +769,14 @@
     });
 
     // ---------- Acciones de la tabla ----------
-    async function ejecutarAhora(id) {
+    async function ejecutarAhora(id, boton) {
+        const alma = boton.dataset.alma === '1';
+        const simulacion = boton.dataset.simulacion === '1';
         const conf = await Swal.fire({
-            title: '¿Ejecutar ahora?',
-            text: 'Se calculará y guardará la cobertura de inmediato. La programación de la tarea no cambia.',
+            title: alma && !simulacion ? '¿Ejecutar la actualización real?' : '¿Ejecutar ahora?',
+            text: !alma ? 'Se calculará y guardará la cobertura de inmediato. La programación de la tarea no cambia.'
+                : (simulacion ? 'Se calcularán los cambios sin modificar datos. Corre en segundo plano y puede tardar más de una hora.'
+                    : 'Se actualizarán las copias y se ELIMINARÁN las bibliografías disponibles sin copias. Corre en segundo plano y puede tardar más de una hora.'),
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: 'Sí, ejecutar',
@@ -727,7 +786,7 @@
         Swal.fire({title: 'Ejecutando...', text: 'Esto puede tardar unos segundos', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
         try {
             const r = await pedir(URL_BASE + '/' + id + '/ejecutar', {method: 'POST', body: '{}'});
-            await alerta('success', 'Ejecución completada', r.message);
+            await alerta('success', alma ? 'Ejecución iniciada' : 'Ejecución completada', r.message);
         } catch (e) {
             await alerta('error', 'Error en la ejecución', e.message);
         }
@@ -771,19 +830,23 @@
                 html += '<p class="text-muted small mb-0">No hay ejecuciones registradas en el historial (las ejecuciones anteriores a esta versión no quedaron registradas).</p>';
             } else {
                 html += `<div class="table-responsive"><table class="table table-sm table-striped tabla-historial mb-0">
-                    <thead><tr><th>Inicio</th><th>Fin</th><th>Reporte</th><th>Origen</th><th>Estado</th><th class="text-end">Registros</th><th>Mensaje</th></tr></thead><tbody>`;
+                    <thead><tr><th>Inicio</th><th>Fin</th><th>Reporte</th><th>Origen</th><th>Estado</th><th class="text-end">Registros</th><th>Mensaje</th><th></th></tr></thead><tbody>`;
                 d.ejecuciones.forEach(x => {
                     const estado = x.estado === 'completada'
                         ? '<span class="badge bg-success">Completada</span>'
-                        : '<span class="badge bg-danger">Error</span>';
+                        : (x.estado === 'detenida' ? '<span class="badge bg-warning text-dark">Detenida</span>' : '<span class="badge bg-danger">Error</span>');
+                    const esCopias = x.tipo_reporte === 'copias_alma';
+                    const nombreReporte = esCopias ? 'Copias Alma' + (parseInt(x.simulacion, 10) ? ' (simulación)' : '') : (x.tipo_reporte === 'basica' ? 'Básica' : 'Complementaria');
+                    const enlace = esCopias ? `<a class="btn btn-sm btn-outline-primary text-nowrap" href="${URL_BASE}/ejecuciones/${parseInt(x.id, 10)}">Ver detalle</a>` : '';
                     html += `<tr>
                         <td class="text-nowrap">${formatoFecha(x.fecha_inicio)}</td>
                         <td class="text-nowrap">${formatoFecha(x.fecha_fin)}</td>
-                        <td>${x.tipo_reporte === 'basica' ? 'Básica' : 'Complementaria'}</td>
+                        <td>${nombreReporte}</td>
                         <td>${parseInt(x.manual, 10) ? 'Manual' : 'Programada'}</td>
                         <td>${estado}</td>
                         <td class="text-end">${x.registros === null ? '—' : parseInt(x.registros, 10)}</td>
                         <td>${escHtml(x.mensaje || '')}</td>
+                        <td>${enlace}</td>
                     </tr>`;
                 });
                 html += '</tbody></table></div>';
@@ -799,7 +862,7 @@
         if (!boton) return;
         const id = parseInt(boton.dataset.id, 10);
         if (!id) return;
-        ({ejecutar: ejecutarAhora, editar: editarTarea, historial: verHistorial, cancelar: cancelarTarea})[boton.dataset.accion](id);
+        ({ejecutar: ejecutarAhora, editar: editarTarea, historial: verHistorial, cancelar: cancelarTarea})[boton.dataset.accion](id, boton);
     });
 })();
 </script>

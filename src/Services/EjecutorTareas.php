@@ -139,8 +139,10 @@ class EjecutorTareas
     {
         $this->liberarInterrumpidas();
 
+        // Las tareas de copias desde Alma corren en su propio proceso (ActualizadorCopiasAlma)
         $ids = DB::table('tareas_programadas')
             ->where('estado', 'pendiente')
+            ->where('tipo_reporte', '!=', ActualizadorCopiasAlma::TIPO)
             ->where('fecha_programada', '<=', self::ahora())
             ->orderBy('fecha_programada')
             ->pluck('id');
@@ -342,6 +344,7 @@ class EjecutorTareas
 
         $tareas = DB::table('tareas_programadas')
             ->where('estado', 'en_proceso')
+            ->where('tipo_reporte', '!=', ActualizadorCopiasAlma::TIPO)
             ->where('fecha_ejecucion', '<', $limite)
             ->get();
 
