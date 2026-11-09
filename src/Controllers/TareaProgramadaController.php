@@ -110,6 +110,7 @@ class TareaProgramadaController extends BaseController
                 'estados' => self::ESTADOS,
                 'frecuencias' => EjecutorTareas::FRECUENCIAS,
                 'dias_semana' => EjecutorTareas::DIAS_SEMANA,
+                'correo_usuario' => (string) ($_SESSION['user_email'] ?? ''),
                 'ahora' => EjecutorTareas::ahora(),
                 'session' => $_SESSION ?? [],
                 'app_url' => app_url(),
@@ -156,6 +157,7 @@ class TareaProgramadaController extends BaseController
             [$entrada, $dias] = $this->prepararSemanal($entrada);
             $datos = $this->validar($entrada, true);
             $datos['dias_semana'] = $dias;
+            $datos['correo_notificacion'] = $this->leerCorreo($entrada);
 
             $ids = [];
             DB::connection()->transaction(function () use ($datos, &$ids) {
@@ -170,6 +172,7 @@ class TareaProgramadaController extends BaseController
                         'fecha_programada' => $datos['fecha_programada'],
                         'frecuencia' => $datos['frecuencia'],
                         'dias_semana' => $datos['dias_semana'] ?? null,
+                        'correo_notificacion' => $datos['correo_notificacion'] ?? null,
                         'fecha_inicio' => $datos['fecha_programada'],
                         'fecha_fin' => $datos['fecha_fin'],
                         'estado' => 'pendiente',
@@ -219,6 +222,7 @@ class TareaProgramadaController extends BaseController
             'frecuencia' => $tarea->frecuencia ?? 'unica',
             'fecha_programada' => date('Y-m-d\TH:i', strtotime($tarea->fecha_programada)),
             'dias_semana' => EjecutorTareas::diasSemana($tarea->dias_semana ?? null),
+            'correo_notificacion' => $tarea->correo_notificacion ?? '',
             'hora' => date('H:i', strtotime($tarea->fecha_inicio ?: $tarea->fecha_programada)),
             'fecha_fin' => $tarea->fecha_fin ? date('Y-m-d', strtotime($tarea->fecha_fin)) : '',
             'estado' => $tarea->estado,
@@ -246,6 +250,7 @@ class TareaProgramadaController extends BaseController
             [$entrada, $dias] = $this->prepararSemanal($this->leerJson($request));
             $datos = $this->validar($entrada, false, (int) $tarea->carrera_id);
             $datos['dias_semana'] = $dias;
+            $datos['correo_notificacion'] = $this->leerCorreo($entrada);
             $carrera = $datos['carreras'][0];
 
             $actualizadas = DB::table('tareas_programadas')
@@ -261,6 +266,7 @@ class TareaProgramadaController extends BaseController
                     'fecha_programada' => $datos['fecha_programada'],
                     'frecuencia' => $datos['frecuencia'],
                     'dias_semana' => $datos['dias_semana'] ?? null,
+                    'correo_notificacion' => $datos['correo_notificacion'] ?? null,
                     'fecha_inicio' => $datos['fecha_programada'],
                     'fecha_fin' => $datos['fecha_fin'],
                     'estado' => 'pendiente',
@@ -586,6 +592,7 @@ class TareaProgramadaController extends BaseController
                 'fecha_programada' => $fecha->format('Y-m-d H:i:00'),
                 'frecuencia' => $frecuencia,
                 'dias_semana' => $dias,
+                'correo_notificacion' => $this->leerCorreo($data),
                 'simulacion' => $simulacion ? 1 : 0,
                 'fecha_inicio' => $fecha->format('Y-m-d H:i:00'),
                 'fecha_fin' => $fechaFin,
@@ -773,6 +780,20 @@ class TareaProgramadaController extends BaseController
         $data['fecha_programada'] = str_replace(' ', 'T', substr($primera, 0, 16));
 
         return [$data, $lista];
+    }
+
+    /** Correo para el aviso; null si se dejó vacío. */
+    private function leerCorreo(array $data): ?string
+    {
+        $correo = trim((string) ($data['correo_notificacion'] ?? ''));
+        if ($correo === '') {
+            return null;
+        }
+        if (mb_strlen($correo) > 255 || !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+            throw new \InvalidArgumentException('El correo para el aviso no es válido');
+        }
+
+        return $correo;
     }
 
     private function leerJson(Request $request): array

@@ -13,6 +13,7 @@ if (PHP_SAPI !== 'cli') {
 }
 
 require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/src/helpers.php';
 
 // El PHP de línea de comandos puede venir en UTC; las fechas de las tareas están en hora de Chile.
 date_default_timezone_set('America/Santiago');

@@ -55,6 +55,16 @@ class EjecutorTareas
     private $log;
     private $reporteController = null;
 
+    private ?NotificadorTareas $notificador = null;
+
+    /** Permite reemplazar el envío de avisos (pruebas). */
+    public function usarNotificador(NotificadorTareas $notificador): self
+    {
+        $this->notificador = $notificador;
+
+        return $this;
+    }
+
     public function __construct(?callable $log = null)
     {
         $this->log = $log ?? static function (string $mensaje): void {
@@ -188,6 +198,7 @@ class EjecutorTareas
             return null;
         }
 
+        $comienzo = self::ahora();
         $this->escribir("Tarea {$id} - {$tarea->nombre}" . ($manual ? ' (manual)' : ''));
 
         $tipos = self::TIPOS[$tarea->tipo_reporte] ?? [];
@@ -251,6 +262,20 @@ class EjecutorTareas
         DB::table('tareas_programadas')->where('id', $id)->update($cambios);
 
         $this->escribir('  => ' . $cambios['estado'] . (isset($cambios['fecha_programada']) ? ', próxima: ' . $cambios['fecha_programada'] : ''));
+
+        if (!empty($tarea->correo_notificacion)) {
+            $this->notificador = $this->notificador ?? new NotificadorTareas();
+            $enviado = $this->notificador->coberturas($tarea, [
+                'manual' => $manual,
+                'inicio' => $comienzo,
+                'fin' => $fin,
+                'exito' => $exito,
+                'registros' => $registros,
+                'errores' => $errores,
+                'proxima' => $cambios['estado'] === 'pendiente' ? ($cambios['fecha_programada'] ?? $tarea->fecha_programada) : null,
+            ]);
+            $this->escribir('  aviso a ' . $tarea->correo_notificacion . ($enviado ? ': enviado' : ': NO se pudo enviar (ver registro de errores)'));
+        }
 
         return [
             'id' => $id,

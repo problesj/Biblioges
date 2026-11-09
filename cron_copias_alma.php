@@ -10,6 +10,7 @@ if (PHP_SAPI !== 'cli') {
 }
 
 require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/src/helpers.php';
 date_default_timezone_set('America/Santiago');
 set_time_limit(0);
 

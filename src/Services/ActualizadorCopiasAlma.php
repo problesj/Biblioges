@@ -42,6 +42,16 @@ class ActualizadorCopiasAlma
 
     private bool $huboEscrituras = false;
 
+    private ?NotificadorTareas $notificador = null;
+
+    /** Permite reemplazar el envío de avisos (pruebas). */
+    public function usarNotificador(NotificadorTareas $notificador): self
+    {
+        $this->notificador = $notificador;
+
+        return $this;
+    }
+
     public function __construct(?AlmaCatalogoService $alma = null, ?callable $log = null)
     {
         $this->alma = $alma ?? new AlmaCatalogoService();
@@ -159,6 +169,16 @@ class ActualizadorCopiasAlma
             ]);
 
             $this->cerrarTarea($tarea, $estadoPrevio, $manual, $estado, $mensaje, $resumen, $fin);
+
+            if (!empty($tarea->correo_notificacion)) {
+                $actual = DB::table('tareas_programadas')->where('id', $id)->first(['estado', 'fecha_programada']);
+                $this->notificador = $this->notificador ?? new NotificadorTareas();
+                $this->notificador->copiasAlma($tarea, [
+                    'manual' => $manual, 'simulacion' => $simulacion, 'inicio' => $inicio, 'fin' => $fin,
+                    'estado' => $estado, 'mensaje' => $mensaje, 'resumen' => $resumen, 'ejecucion_id' => $ejecucionId,
+                    'proxima' => $actual && $actual->estado === 'pendiente' ? $actual->fecha_programada : null,
+                ]);
+            }
 
             return ['id' => $id, 'ejecucion_id' => $ejecucionId, 'estado' => $estado, 'mensaje' => $mensaje, 'resumen' => $resumen];
         } finally {

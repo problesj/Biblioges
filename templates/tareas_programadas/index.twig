@@ -446,6 +446,12 @@
                         <label class="form-check-label" for="tarea_simulacion"><strong>Simulación:</strong> calcula y reporta los cambios sin modificar ningún dato</label>
                     </div>
 
+                    <div class="mb-3">
+                        <label for="tarea_correo" class="form-label">Avisar por correo a <span class="text-muted">(opcional)</span></label>
+                        <input type="email" class="form-control" id="tarea_correo" maxlength="255" placeholder="Dejar vacío para no recibir aviso">
+                        <div class="form-text">Se envía un aviso con el resultado cada vez que la tarea se ejecuta.</div>
+                    </div>
+
                     <div class="mb-1">
                         <label for="tarea_nombre" class="form-label">Nombre de la tarea *</label>
                         <div class="input-group">
@@ -489,6 +495,7 @@
     const URL_BASE = {{ (app_url ~ 'tareas-programadas')|json_encode|raw }};
     const CARRERAS = {{ carreras|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
     const FRECUENCIAS = {{ frecuencias|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP'))|raw }};
+    const CORREO_USUARIO = {{ correo_usuario|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 
     const modalTarea = new bootstrap.Modal(document.getElementById('modalTarea'));
     const modalHistorial = new bootstrap.Modal(document.getElementById('modalHistorial'));
@@ -741,6 +748,7 @@
 
     el('btnNuevaTarea').addEventListener('click', () => {
         prepararFormulario('crear');
+        el('tarea_correo').value = CORREO_USUARIO || '';
         tareaId = null;
         el('tipo_basica').checked = true;
         el('tipo_complementaria').checked = false;
@@ -767,6 +775,7 @@
             el('tarea_fecha_fin').value = t.fecha_fin || '';
             marcarDias(t.dias_semana || []);
             el('tarea_hora').value = t.hora || '';
+            el('tarea_correo').value = t.correo_notificacion || '';
             el('tarea_tipo').value = t.tipo_tarea;
             el('tarea_simulacion').checked = !!t.simulacion;
             pintarCarreras(t.tipo_tarea === 'copias_alma' ? [] : [t.carrera_id]);
@@ -795,6 +804,7 @@
             frecuencia: el('tarea_frecuencia').value,
             dias_semana: diasMarcados(),
             hora: el('tarea_hora').value,
+            correo_notificacion: el('tarea_correo').value.trim(),
             fecha_programada: el('tarea_fecha').value,
             fecha_fin: el('tarea_frecuencia').value !== 'unica' ? el('tarea_fecha_fin').value : '',
             nombre: (marcadas.length === 1 || esAlma()) ? el('tarea_nombre').value.trim() : ''
@@ -804,6 +814,7 @@
         else if (!esAlma() && !datos.carrera_ids.length) falta = 'Seleccione al menos una carrera';
         else if (!esAlma() && !datos.tipos.length) falta = 'Seleccione al menos un tipo de reporte';
         else if (!datos.fecha_programada) falta = datos.frecuencia === 'semanal' ? 'Seleccione al menos un día y la hora' : 'Indique la fecha y hora';
+        else if (datos.correo_notificacion && !el('tarea_correo').checkValidity()) falta = 'El correo para el aviso no es válido';
         else if (datos.fecha_programada <= ahoraLocal()) falta = 'La fecha y hora deben ser futuras';
         else if (!esAlma() && marcadas.length === 1 && !datos.nombre) falta = 'Indique un nombre para la tarea';
         if (falta) {

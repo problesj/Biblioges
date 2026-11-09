@@ -433,6 +433,7 @@ CREATE TABLE IF NOT EXISTS `filtros_formaciones` (
 CREATE TABLE IF NOT EXISTS `tareas_programadas` (
   `id` int NOT NULL AUTO_INCREMENT,
   `nombre` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `correo_notificacion` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Correo que recibe un aviso tras cada ejecución; NULL = sin aviso',
   `tipo_reporte` enum('cobertura_basica_expandido','cobertura_complementaria_expandido','cobertura_ambas_expandido','actualizar_copias_alma') COLLATE utf8mb4_unicode_ci NOT NULL,
   `sede_id` int DEFAULT NULL,
   `carrera_id` int DEFAULT NULL,
