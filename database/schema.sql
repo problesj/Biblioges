@@ -433,12 +433,14 @@ CREATE TABLE IF NOT EXISTS `filtros_formaciones` (
 CREATE TABLE IF NOT EXISTS `tareas_programadas` (
   `id` int NOT NULL AUTO_INCREMENT,
   `nombre` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `tipo_reporte` enum('cobertura_basica_expandido','cobertura_complementaria_expandido','cobertura_ambas_expandido','actualizar_copias_alma') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tipo_reporte` enum('cobertura_basica_expandido','cobertura_complementaria_expandido','cobertura_ambas_expandido','actualizar_copias_alma') COLLATE utf8mb4_unicode_ci NOT NULL,
   `sede_id` int DEFAULT NULL,
   `carrera_id` int DEFAULT NULL,
   `fecha_programada` datetime NOT NULL,
   `frecuencia` enum('unica','diaria','semanal','mensual','anual') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'unica',
+  `dias_semana` varchar(13) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Solo frecuencia semanal: días ISO (1 = lunes ... 7 = domingo) separados por coma',
   `simulacion` tinyint(1) NOT NULL DEFAULT '0' COMMENT '1 = calcula y reporta sin modificar datos',
+  `accion_sin_copias` enum('eliminar','mantener') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'mantener' COMMENT 'Bibliografias impresas sin copias ni acceso electronico',
   `fecha_inicio` datetime DEFAULT NULL COMMENT 'Primera ejecución; base para calcular las repeticiones',
   `fecha_fin` datetime DEFAULT NULL,
   `estado` enum('pendiente','en_proceso','completada','error','cancelada') COLLATE utf8mb4_unicode_ci DEFAULT 'pendiente',
@@ -463,24 +465,24 @@ CREATE TABLE IF NOT EXISTS `tareas_programadas` (
 CREATE TABLE IF NOT EXISTS `tareas_programadas_ejecuciones` (
   `id` int NOT NULL AUTO_INCREMENT,
   `tarea_id` int NOT NULL,
-  `tipo_reporte` enum('basica','complementaria','copias_alma') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tipo_reporte` enum('basica','complementaria','copias_alma') COLLATE utf8mb4_unicode_ci NOT NULL,
   `manual` tinyint(1) NOT NULL DEFAULT '0' COMMENT '1 = lanzada con Ejecutar ahora',
   `simulacion` tinyint(1) NOT NULL DEFAULT '0',
   `fecha_inicio` datetime NOT NULL,
   `fecha_fin` datetime DEFAULT NULL,
-  `estado` enum('completada','error','detenida') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `estado` enum('completada','error','detenida') COLLATE utf8mb4_unicode_ci NOT NULL,
   `registros` int DEFAULT NULL,
   `resumen` json DEFAULT NULL,
   `mensaje` text COLLATE utf8mb4_unicode_ci,
   PRIMARY KEY (`id`),
   KEY `idx_tarea` (`tarea_id`,`fecha_inicio`),
   CONSTRAINT `fk_ejec_tarea` FOREIGN KEY (`tarea_id`) REFERENCES `tareas_programadas` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 -- Tabla bibliografias_declaradas_historial
 CREATE TABLE IF NOT EXISTS `bibliografias_declaradas_historial` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `accion` enum('fusion','eliminacion') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `accion` enum('fusion','eliminacion') COLLATE utf8mb4_unicode_ci NOT NULL,
   `bibliografia_id` int NOT NULL COMMENT 'Declarada eliminada',
   `bibliografia_destino_id` int DEFAULT NULL COMMENT 'Declarada que se mantuvo, si fue una fusión',
   `usuario_id` int DEFAULT NULL,
@@ -490,30 +492,30 @@ CREATE TABLE IF NOT EXISTS `bibliografias_declaradas_historial` (
   PRIMARY KEY (`id`),
   KEY `idx_bibliografia` (`bibliografia_id`),
   KEY `idx_destino` (`bibliografia_destino_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 -- Tabla tareas_alma_detalle
 CREATE TABLE IF NOT EXISTS `tareas_alma_detalle` (
   `id` int NOT NULL AUTO_INCREMENT,
   `ejecucion_id` int NOT NULL,
-  `accion` enum('actualizada','mms_corregido','a_electronico','eliminada','duplicada','revisar','discrepancia') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `accion` enum('actualizada','mms_discrepante','a_electronico','eliminada','sin_copias','duplicada','revisar','discrepancia') COLLATE utf8mb4_unicode_ci NOT NULL,
   `bibliografia_disponible_id` int NOT NULL,
   `bibliografia_declarada_id` int DEFAULT NULL,
-  `titulo` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `titulo` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
   `anio_edicion` int DEFAULT NULL,
-  `id_mms` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `id_mms_nuevo` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id_mms` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id_mms_nuevo` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `copias_antes` json DEFAULT NULL COMMENT 'Ejemplares por sede antes del cambio',
   `copias_despues` json DEFAULT NULL COMMENT 'Ejemplares por sede después del cambio',
   `copia_fila` json DEFAULT NULL COMMENT 'Copia completa de la fila eliminada, con sus sedes y autores',
   `declarada_sin_disponibles` tinyint(1) NOT NULL DEFAULT '0' COMMENT '1 = la declarada quedó sin disponibles activas',
-  `mensaje` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `mensaje` text COLLATE utf8mb4_unicode_ci,
   `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `idx_ejecucion_accion` (`ejecucion_id`,`accion`),
   KEY `idx_disponible` (`bibliografia_disponible_id`),
+  KEY `idx_ejecucion_accion` (`ejecucion_id`,`accion`),
   CONSTRAINT `fk_tareas_alma_detalle_ejecucion` FOREIGN KEY (`ejecucion_id`) REFERENCES `tareas_programadas_ejecuciones` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 -- =====================================================
 -- SECCIÓN 2: VISTAS

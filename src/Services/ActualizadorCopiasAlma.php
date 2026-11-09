@@ -180,7 +180,7 @@ class ActualizadorCopiasAlma
             // Una ejecución manual no altera la programación
             $cambios['estado'] = $estadoPrevio;
         } else {
-            $siguiente = EjecutorTareas::siguienteFecha($tarea->fecha_inicio ?: $tarea->fecha_programada, $tarea->fecha_programada, (string) $tarea->frecuencia, $tarea->fecha_fin ?? null, $fin);
+            $siguiente = EjecutorTareas::siguienteFecha($tarea->fecha_inicio ?: $tarea->fecha_programada, $tarea->fecha_programada, (string) $tarea->frecuencia, $tarea->fecha_fin ?? null, $fin, $tarea->dias_semana ?? null);
             if ($siguiente === null) {
                 $cambios['estado'] = $exito ? 'completada' : 'error';
             } else {

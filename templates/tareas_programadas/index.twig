@@ -231,7 +231,7 @@
                                     <td class="text-center col-carrera" title="{{ tarea.carrera_nombre }}">{{ tarea.carrera_nombre ?: '—' }}</td>
                                     <td class="text-center">
                                         {% if tarea.frecuencia and tarea.frecuencia != 'unica' %}
-                                            <span class="badge bg-light text-dark border"><i class="fas fa-redo me-1"></i>{{ frecuencias[tarea.frecuencia] ?? tarea.frecuencia }}</span>
+                                            <span class="badge bg-light text-dark border"><i class="fas fa-redo me-1"></i>{{ frecuencias[tarea.frecuencia] ?? tarea.frecuencia }}{% if tarea.frecuencia == 'semanal' and tarea.dias_semana %}: {% for d in tarea.dias_semana|split(',') %}{{ (dias_semana[d] ?? d)|slice(0, 3) }}{{ not loop.last ? ', ' }}{% endfor %}{% endif %}</span>
                                         {% else %}
                                             <span class="text-muted">Única</span>
                                         {% endif %}
@@ -415,13 +415,29 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-4 mb-3" id="grupoFecha">
                             <label for="tarea_fecha" class="form-label" id="etiquetaFecha">Fecha y hora *</label>
                             <input type="datetime-local" class="form-control" id="tarea_fecha" required>
                         </div>
                         <div class="col-md-4 mb-3" id="grupoFechaFin" style="display:none;">
                             <label for="tarea_fecha_fin" class="form-label">Repetir hasta <span class="text-muted">(opcional)</span></label>
                             <input type="date" class="form-control" id="tarea_fecha_fin">
+                        </div>
+                    </div>
+                    <div class="mb-3" id="grupoDiasSemana" style="display:none;">
+                        <label class="form-label d-block">Días de ejecución *</label>
+                        <div class="d-flex flex-wrap gap-3 mb-2">
+                            {% for num, dia in dias_semana %}
+                            <div class="form-check m-0">
+                                <input class="form-check-input" type="checkbox" id="dia_{{ num }}" name="dia_semana" value="{{ num }}">
+                                <label class="form-check-label" for="dia_{{ num }}">{{ dia }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <label for="tarea_hora" class="form-label mb-0">Hora *</label>
+                            <input type="time" class="form-control" id="tarea_hora" style="max-width: 140px;">
+                            <span class="small text-muted" id="proximaSemanal"></span>
                         </div>
                     </div>
                     <div class="small text-muted mb-3" id="ayudaFrecuencia"></div>
@@ -609,9 +625,9 @@
         el('ayudaAlma').style.display = alma ? '' : 'none';
         const frecuencia = el('tarea_frecuencia');
         Array.from(frecuencia.options).forEach(o => {
-            o.disabled = alma && !['mensual', 'anual'].includes(o.value);
+            o.disabled = alma && !['semanal', 'mensual', 'anual'].includes(o.value);
         });
-        if (alma && !['mensual', 'anual'].includes(frecuencia.value)) {
+        if (alma && !['semanal', 'mensual', 'anual'].includes(frecuencia.value)) {
             frecuencia.value = 'mensual';
         }
         actualizarFrecuencia();
@@ -651,15 +667,52 @@
     el('regenerarNombre').addEventListener('click', () => { nombreEditado = false; actualizarNombre(); });
     ['tipo_basica', 'tipo_complementaria'].forEach(id => el(id).addEventListener('change', actualizarNombre));
 
+    function diasMarcados() {
+        return Array.from(document.querySelectorAll('input[name="dia_semana"]:checked')).map(c => parseInt(c.value, 10));
+    }
+    function marcarDias(dias) {
+        const lista = (dias || []).map(Number);
+        document.querySelectorAll('input[name="dia_semana"]').forEach(c => { c.checked = lista.includes(parseInt(c.value, 10)); });
+    }
+    const NOMBRES_DIA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    // Primera fecha que cae en uno de los días marcados, a la hora indicada (el servidor la vuelve a calcular)
+    function proximaSemanal() {
+        const dias = diasMarcados();
+        const hora = el('tarea_hora').value;
+        if (!dias.length || !/^\d{2}:\d{2}$/.test(hora)) return null;
+        const ahora = new Date();
+        for (let i = 0; i <= 7; i++) {
+            const d = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() + i, parseInt(hora.slice(0, 2), 10), parseInt(hora.slice(3, 5), 10));
+            if (d > ahora && dias.includes(d.getDay() === 0 ? 7 : d.getDay())) return d;
+        }
+        return null;
+    }
+    function sincronizarSemanal() {
+        if (el('tarea_frecuencia').value !== 'semanal') {
+            el('proximaSemanal').textContent = '';
+            return;
+        }
+        const d = proximaSemanal();
+        const p = n => String(n).padStart(2, '0');
+        el('tarea_fecha').value = d ? `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}` : '';
+        el('proximaSemanal').textContent = d ? `Primera ejecución: ${NOMBRES_DIA[d.getDay()]} ${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}` : '';
+    }
+    document.querySelectorAll('input[name="dia_semana"]').forEach(c => c.addEventListener('change', sincronizarSemanal));
+    el('tarea_hora').addEventListener('input', sincronizarSemanal);
+    el('tarea_hora').addEventListener('change', sincronizarSemanal);
+
     function actualizarFrecuencia() {
         const f = el('tarea_frecuencia').value;
         const recurrente = f !== 'unica';
         el('grupoFechaFin').style.display = recurrente ? '' : 'none';
+        el('grupoFecha').style.display = f === 'semanal' ? 'none' : '';
+        el('grupoDiasSemana').style.display = f === 'semanal' ? '' : 'none';
+        sincronizarSemanal();
         el('etiquetaFecha').textContent = recurrente ? 'Primera ejecución *' : 'Fecha y hora *';
         const ayuda = {
             unica: 'Se ejecuta una sola vez en la fecha indicada.',
             diaria: 'Se repite todos los días a la misma hora.',
-            semanal: 'Se repite cada semana, el mismo día y hora de la primera ejecución.',
+            semanal: 'Se repite cada semana en los días marcados, a la hora indicada.',
             mensual: 'Se repite cada mes el mismo día (si el mes no tiene ese día, se usa el último día del mes).',
             anual: 'Se repite cada año en la misma fecha y hora.'
         };
@@ -712,6 +765,8 @@
             const futura = t.fecha_programada > ahoraLocal();
             el('tarea_fecha').value = futura ? t.fecha_programada : '';
             el('tarea_fecha_fin').value = t.fecha_fin || '';
+            marcarDias(t.dias_semana || []);
+            el('tarea_hora').value = t.hora || '';
             el('tarea_tipo').value = t.tipo_tarea;
             el('tarea_simulacion').checked = !!t.simulacion;
             pintarCarreras(t.tipo_tarea === 'copias_alma' ? [] : [t.carrera_id]);
@@ -729,6 +784,7 @@
 
     // ---------- Guardar ----------
     el('btnGuardarTarea').addEventListener('click', async () => {
+        sincronizarSemanal();
         const marcadas = carrerasMarcadas();
         const datos = {
             tipo_tarea: el('tarea_tipo').value,
@@ -737,6 +793,8 @@
             carrera_ids: marcadas.map(i => i.value),
             tipos: tiposMarcados(),
             frecuencia: el('tarea_frecuencia').value,
+            dias_semana: diasMarcados(),
+            hora: el('tarea_hora').value,
             fecha_programada: el('tarea_fecha').value,
             fecha_fin: el('tarea_frecuencia').value !== 'unica' ? el('tarea_fecha_fin').value : '',
             nombre: (marcadas.length === 1 || esAlma()) ? el('tarea_nombre').value.trim() : ''
@@ -745,7 +803,7 @@
         if (!esAlma() && !datos.sede_id) falta = 'Seleccione una sede';
         else if (!esAlma() && !datos.carrera_ids.length) falta = 'Seleccione al menos una carrera';
         else if (!esAlma() && !datos.tipos.length) falta = 'Seleccione al menos un tipo de reporte';
-        else if (!datos.fecha_programada) falta = 'Indique la fecha y hora';
+        else if (!datos.fecha_programada) falta = datos.frecuencia === 'semanal' ? 'Seleccione al menos un día y la hora' : 'Indique la fecha y hora';
         else if (datos.fecha_programada <= ahoraLocal()) falta = 'La fecha y hora deben ser futuras';
         else if (!esAlma() && marcadas.length === 1 && !datos.nombre) falta = 'Indique un nombre para la tarea';
         if (falta) {

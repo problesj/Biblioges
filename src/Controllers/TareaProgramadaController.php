@@ -109,6 +109,7 @@ class TareaProgramadaController extends BaseController
                 'tiposReporte' => self::TIPOS_REPORTE,
                 'estados' => self::ESTADOS,
                 'frecuencias' => EjecutorTareas::FRECUENCIAS,
+                'dias_semana' => EjecutorTareas::DIAS_SEMANA,
                 'ahora' => EjecutorTareas::ahora(),
                 'session' => $_SESSION ?? [],
                 'app_url' => app_url(),
@@ -152,7 +153,9 @@ class TareaProgramadaController extends BaseController
             if (($entrada['tipo_tarea'] ?? '') === 'copias_alma') {
                 return $this->guardarTareaAlma($response, $entrada, null);
             }
+            [$entrada, $dias] = $this->prepararSemanal($entrada);
             $datos = $this->validar($entrada, true);
+            $datos['dias_semana'] = $dias;
 
             $ids = [];
             DB::connection()->transaction(function () use ($datos, &$ids) {
@@ -166,6 +169,7 @@ class TareaProgramadaController extends BaseController
                         'carrera_id' => $carrera['id'],
                         'fecha_programada' => $datos['fecha_programada'],
                         'frecuencia' => $datos['frecuencia'],
+                        'dias_semana' => $datos['dias_semana'] ?? null,
                         'fecha_inicio' => $datos['fecha_programada'],
                         'fecha_fin' => $datos['fecha_fin'],
                         'estado' => 'pendiente',
@@ -214,6 +218,8 @@ class TareaProgramadaController extends BaseController
             'tipos' => $tipos,
             'frecuencia' => $tarea->frecuencia ?? 'unica',
             'fecha_programada' => date('Y-m-d\TH:i', strtotime($tarea->fecha_programada)),
+            'dias_semana' => EjecutorTareas::diasSemana($tarea->dias_semana ?? null),
+            'hora' => date('H:i', strtotime($tarea->fecha_inicio ?: $tarea->fecha_programada)),
             'fecha_fin' => $tarea->fecha_fin ? date('Y-m-d', strtotime($tarea->fecha_fin)) : '',
             'estado' => $tarea->estado,
         ]]);
@@ -237,7 +243,9 @@ class TareaProgramadaController extends BaseController
             if ($tarea->tipo_reporte === ActualizadorCopiasAlma::TIPO) {
                 return $this->guardarTareaAlma($response, $this->leerJson($request), $id);
             }
-            $datos = $this->validar($this->leerJson($request), false, (int) $tarea->carrera_id);
+            [$entrada, $dias] = $this->prepararSemanal($this->leerJson($request));
+            $datos = $this->validar($entrada, false, (int) $tarea->carrera_id);
+            $datos['dias_semana'] = $dias;
             $carrera = $datos['carreras'][0];
 
             $actualizadas = DB::table('tareas_programadas')
@@ -252,6 +260,7 @@ class TareaProgramadaController extends BaseController
                     'carrera_id' => $carrera['id'],
                     'fecha_programada' => $datos['fecha_programada'],
                     'frecuencia' => $datos['frecuencia'],
+                    'dias_semana' => $datos['dias_semana'] ?? null,
                     'fecha_inicio' => $datos['fecha_programada'],
                     'fecha_fin' => $datos['fecha_fin'],
                     'estado' => 'pendiente',
@@ -536,9 +545,10 @@ class TareaProgramadaController extends BaseController
     private function guardarTareaAlma(Response $response, array $data, ?int $id): Response
     {
         try {
+            [$data, $dias] = $this->prepararSemanal($data);
             $frecuencia = (string) ($data['frecuencia'] ?? '');
-            if (!in_array($frecuencia, ['mensual', 'anual'], true)) {
-                throw new \InvalidArgumentException('Esta tarea solo se puede programar de forma mensual o anual');
+            if (!in_array($frecuencia, ['semanal', 'mensual', 'anual'], true)) {
+                throw new \InvalidArgumentException('Esta tarea solo se puede programar de forma semanal, mensual o anual');
             }
             $zona = new \DateTimeZone(EjecutorTareas::ZONA_HORARIA);
             $fecha = \DateTime::createFromFormat('Y-m-d\TH:i', (string) ($data['fecha_programada'] ?? ''), $zona);
@@ -575,6 +585,7 @@ class TareaProgramadaController extends BaseController
                 'carrera_id' => null,
                 'fecha_programada' => $fecha->format('Y-m-d H:i:00'),
                 'frecuencia' => $frecuencia,
+                'dias_semana' => $dias,
                 'simulacion' => $simulacion ? 1 : 0,
                 'fecha_inicio' => $fecha->format('Y-m-d H:i:00'),
                 'fecha_fin' => $fechaFin,
@@ -735,6 +746,33 @@ class TareaProgramadaController extends BaseController
         }
 
         return implode('; ', $partes);
+    }
+
+    /**
+     * Frecuencia semanal: valida los días y la hora, y calcula la primera ejecución (fecha_programada).
+     * Para otras frecuencias no cambia los datos y los días quedan vacíos.
+     *
+     * @return array{0: array, 1: ?string} datos y días como "1,3,6"
+     */
+    private function prepararSemanal(array $data): array
+    {
+        if (($data['frecuencia'] ?? '') !== 'semanal') {
+            return [$data, null];
+        }
+        $dias = EjecutorTareas::diasSemana($data['dias_semana'] ?? []);
+        if (!$dias) {
+            throw new \InvalidArgumentException('Seleccione al menos un día de la semana');
+        }
+        $hora = (string) ($data['hora'] ?? '');
+        if (!preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $hora)) {
+            throw new \InvalidArgumentException('Indique una hora válida');
+        }
+        $lista = implode(',', $dias);
+        $ahora = EjecutorTareas::ahora();
+        $primera = EjecutorTareas::siguienteFecha(substr($ahora, 0, 10) . ' ' . $hora . ':00', $ahora, 'semanal', null, $ahora, $lista);
+        $data['fecha_programada'] = str_replace(' ', 'T', substr($primera, 0, 16));
+
+        return [$data, $lista];
     }
 
     private function leerJson(Request $request): array

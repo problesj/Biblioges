@@ -32,6 +32,9 @@ class EjecutorTareas
         'anual' => 'Anual',
     ];
 
+    /** Días de la semana según ISO-8601 (1 = lunes ... 7 = domingo) */
+    public const DIAS_SEMANA = [1 => 'Lunes', 2 => 'Martes', 3 => 'Miércoles', 4 => 'Jueves', 5 => 'Viernes', 6 => 'Sábado', 7 => 'Domingo'];
+
     /** Minutos tras los cuales una tarea "en proceso" se considera interrumpida */
     private const MINUTOS_INTERRUMPIDA = 120;
 
@@ -235,7 +238,7 @@ class EjecutorTareas
                 $tarea->fecha_programada,
                 $frecuencia,
                 $tarea->fecha_fin ?? null,
-                $fin
+                $fin, $tarea->dias_semana ?? null
             );
             if ($siguiente === null) {
                 $cambios['estado'] = 'completada';
@@ -266,7 +269,7 @@ class EjecutorTareas
      *
      * @return string|null null si la tarea es única o la siguiente fecha supera fecha_fin
      */
-    public static function siguienteFecha(string $inicio, string $actual, string $frecuencia, ?string $fechaFin, ?string $ahora = null): ?string
+    public static function siguienteFecha(string $inicio, string $actual, string $frecuencia, ?string $fechaFin, ?string $ahora = null, ?string $diasSemana = null): ?string
     {
         if (!in_array($frecuencia, ['diaria', 'semanal', 'mensual', 'anual'], true)) {
             return null;
@@ -274,6 +277,22 @@ class EjecutorTareas
         $zona = new \DateTimeZone(self::ZONA_HORARIA);
         $base = new \DateTime($inicio, $zona);
         $limite = max(new \DateTime($actual, $zona), new \DateTime($ahora ?? self::ahora(), $zona));
+
+        // Semanal con días elegidos: el próximo de esos días, a la hora de la primera ejecución
+        $diasElegidos = self::diasSemana($diasSemana);
+        if ($frecuencia === 'semanal' && $diasElegidos) {
+            $hora = (int) $base->format('H');
+            $minuto = (int) $base->format('i');
+            $candidata = (clone $limite)->setTime($hora, $minuto);
+            for ($i = 0; $i < 8 && !($candidata > $limite && in_array((int) $candidata->format('N'), $diasElegidos, true)); $i++) {
+                $candidata->modify('+1 day')->setTime($hora, $minuto);
+            }
+            if ($fechaFin !== null && $fechaFin !== '' && $candidata > new \DateTime($fechaFin, $zona)) {
+                return null;
+            }
+
+            return $candidata->format('Y-m-d H:i:s');
+        }
 
         // Estimación del número de periodos ya transcurridos para no iterar desde el inicio
         $dias = (int) floor(($limite->getTimestamp() - $base->getTimestamp()) / 86400);
@@ -303,6 +322,21 @@ class EjecutorTareas
         }
 
         return $candidata->format('Y-m-d H:i:s');
+    }
+
+    /** Días ISO (1 = lunes ... 7 = domingo) de una lista como "1,3,6" o [1, 3, 6]; vacía si no hay ninguno válido. */
+    public static function diasSemana($valor): array
+    {
+        $dias = [];
+        foreach (is_array($valor) ? $valor : explode(',', (string) $valor) as $dia) {
+            $dia = (int) trim((string) $dia);
+            if ($dia >= 1 && $dia <= 7) {
+                $dias[$dia] = $dia;
+            }
+        }
+        ksort($dias);
+
+        return array_values($dias);
     }
 
     private static function sumarPeriodos(\DateTime $base, string $frecuencia, int $k): \DateTime
