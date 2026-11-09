@@ -210,9 +210,14 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Bibliografías Declaradas</h1>
-        <a href="{{ app_url }}bibliografias-declaradas/create" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Nueva Bibliografía Declarada
-        </a>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{{ app_url }}bibliografias-declaradas/duplicadas" class="btn btn-outline-primary">
+                <i class="fas fa-clone"></i> Detectar duplicadas
+            </a>
+            <a href="{{ app_url }}bibliografias-declaradas/create" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Nueva Bibliografía Declarada
+            </a>
+        </div>
     </div>
 
     {% if error %}

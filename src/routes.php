@@ -8,6 +8,7 @@ use App\Controllers\AsignaturaController;
 use App\Controllers\CarreraController;
 use App\Controllers\BibliografiaDeclaradaController;
 use App\Controllers\BibliografiaDisponibleController;
+use App\Controllers\DeclaradasDuplicadasController;
 use App\Controllers\AutorController;
 use App\Controllers\ReporteController;
 use App\Controllers\CoberturaController;
@@ -160,6 +161,9 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
 
     // Bibliografías Declaradas
     $group->get('/bibliografias-declaradas', [BibliografiaDeclaradaController::class, 'index'])->setName('bibliografias-declaradas.index');
+    $group->get('/bibliografias-declaradas/duplicadas', [DeclaradasDuplicadasController::class, 'index']);
+    $group->post('/bibliografias-declaradas/duplicadas/previsualizar', [DeclaradasDuplicadasController::class, 'previsualizar']);
+    $group->post('/bibliografias-declaradas/duplicadas/resolver', [DeclaradasDuplicadasController::class, 'resolver']);
     $group->get('/bibliografias-declaradas/clear-state', [BibliografiaDeclaradaController::class, 'clearState'])->setName('bibliografias-declaradas.clear-state');
     $group->get('/bibliografias-declaradas/create', [BibliografiaDeclaradaController::class, 'create'])->setName('bibliografias-declaradas.create');
     $group->post('/bibliografias-declaradas', [BibliografiaDeclaradaController::class, 'store'])->setName('bibliografias-declaradas.store');

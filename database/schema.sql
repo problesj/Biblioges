@@ -1,7 +1,7 @@
 -- =====================================================
 -- ESQUEMA DE BASE DE DATOS BIBLIOGES
 -- =====================================================
--- Generado a partir de la estructura en uso (2026-11-07, MySQL 8.0.46-0ubuntu0.24.04.4).
+-- Generado a partir de la estructura en uso (2026-11-09, MySQL 8.0.46-0ubuntu0.24.04.4).
 -- Instalación nueva (base de datos vacía):
 --   mysql -u <usuario> -p <base_de_datos> < database/schema.sql
 -- Datos de ejemplo, solo para desarrollo/pruebas (NO en producción):
@@ -475,6 +475,21 @@ CREATE TABLE IF NOT EXISTS `tareas_programadas_ejecuciones` (
   PRIMARY KEY (`id`),
   KEY `idx_tarea` (`tarea_id`,`fecha_inicio`),
   CONSTRAINT `fk_ejec_tarea` FOREIGN KEY (`tarea_id`) REFERENCES `tareas_programadas` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabla bibliografias_declaradas_historial
+CREATE TABLE IF NOT EXISTS `bibliografias_declaradas_historial` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `accion` enum('fusion','eliminacion') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `bibliografia_id` int NOT NULL COMMENT 'Declarada eliminada',
+  `bibliografia_destino_id` int DEFAULT NULL COMMENT 'Declarada que se mantuvo, si fue una fusión',
+  `usuario_id` int DEFAULT NULL,
+  `copia` json NOT NULL COMMENT 'Declarada, detalle, autores, asignaturas y disponibles antes del cambio',
+  `resumen` json DEFAULT NULL COMMENT 'Asignaturas y disponibles traspasadas, tipos ajustados y disponibles eliminadas',
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_bibliografia` (`bibliografia_id`),
+  KEY `idx_destino` (`bibliografia_destino_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Tabla tareas_alma_detalle
