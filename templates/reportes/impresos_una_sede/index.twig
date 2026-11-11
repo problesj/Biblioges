@@ -1,0 +1,354 @@
+{% extends "base.twig" %}
+
+{% block title %}Impresos en una sola sede - Sistema de Bibliografía{% endblock %}
+
+{% block head %}
+<style>
+    .impresos-table {
+        font-size: 0.8rem !important;
+        width: 100% !important;
+        table-layout: fixed !important;
+    }
+    .impresos-table thead th {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%) !important;
+        color: white !important;
+        font-weight: 600 !important;
+        font-size: 0.75rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.3px !important;
+        padding: 8px 4px !important;
+        border: none !important;
+        vertical-align: middle !important;
+    }
+    .impresos-table thead th:nth-child(1) { width: 20%; }
+    .impresos-table thead th:nth-child(2) { width: 13%; }
+    .impresos-table thead th:nth-child(3) { width: 6%; }
+    .impresos-table thead th:nth-child(4) { width: 10%; }
+    .impresos-table thead th:nth-child(5) { width: 6%; }
+    .impresos-table thead th:nth-child(6) { width: 14%; }
+    .impresos-table thead th:nth-child(7) { width: 10%; }
+    .impresos-table thead th:nth-child(8) { width: 7%; }
+    .impresos-table thead th:nth-child(9) { width: 8%; }
+    .impresos-table thead th:nth-child(10) { width: 6%; }
+    .impresos-table thead th a {
+        color: white !important;
+        text-decoration: none !important;
+        display: block !important;
+        padding: 6px !important;
+        border-radius: 4px !important;
+    }
+    .impresos-table thead th a:hover {
+        background: linear-gradient(135deg, #224abe 0%, #1a3a8f 100%) !important;
+    }
+    .impresos-table thead th a .fas {
+        margin-left: 4px !important;
+        font-size: 0.7rem !important;
+        opacity: 0.8 !important;
+    }
+    .impresos-table tbody td {
+        font-size: 0.8rem !important;
+        padding: 8px 6px !important;
+        vertical-align: middle !important;
+        line-height: 1.35 !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    .impresos-table tbody td.recortar { white-space: nowrap !important; }
+    .impresos-table tbody td.titulo { font-weight: 500; color: #212529; }
+    .impresos-table .badge-sede { display: inline-block; margin: 1px 2px 1px 0; white-space: normal; text-align: left; }
+    .impresos-table tr.detalle-fila > td { background: #f8f9fc !important; white-space: normal !important; overflow: visible !important; }
+    .detalle-sede h6 { font-size: 0.8rem; font-weight: 700; margin-bottom: 0.35rem; }
+    .detalle-sede ul { padding-left: 1.1rem; margin-bottom: 0; }
+    .detalle-sede li { font-size: 0.78rem; }
+
+    /* Resumen por sede con ejemplares */
+    .resumen-sedes a {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        border: 1px solid #e3e6f0;
+        border-radius: 0.5rem;
+        padding: 0.6rem 0.9rem;
+        background: #fff;
+        transition: box-shadow 0.15s ease;
+    }
+    .resumen-sedes a:hover { box-shadow: 0 2px 6px rgba(58, 59, 69, 0.15); }
+    .resumen-sedes a.activo { border: 2px solid #4e73df; }
+    .resumen-sedes .cantidad { font-size: 1.35rem; font-weight: 700; line-height: 1.1; }
+    .resumen-sedes .nombre { font-size: 0.8rem; color: #5a5c69; }
+
+    .records-counter { font-size: 0.875rem; color: #6c757d; }
+    .per-page-selector label { font-size: 0.875rem; color: #6c757d; margin-bottom: 0; white-space: nowrap; }
+    .page-link { color: #4e73df; font-size: 0.875rem; }
+    .page-item.active .page-link { background-color: #4e73df; border-color: #4e73df; color: white; }
+    .badge { font-size: 0.7rem !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h1 class="h3 mb-0 text-gray-800">Impresos en una sola sede</h1>
+    </div>
+    <p class="text-muted small mb-4">
+        Bibliografías declaradas vinculadas a asignaturas de dos o más sedes, cuyas bibliografías disponibles activas
+        son solo impresas (ninguna electrónica ni "ambos") y tienen ejemplares en una única sede.
+    </p>
+
+    <!-- Filtros -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Filtros de Búsqueda</h6>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ app_url }}reportes/impresos-una-sede">
+                <input type="hidden" name="page" value="1">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label for="tipo_bibliografia" class="form-label">Bibliografía</label>
+                        <select class="form-select" id="tipo_bibliografia" name="tipo_bibliografia">
+                            <option value="ambas" {% if filtros.tipo_bibliografia == 'ambas' %}selected{% endif %}>Básica y complementaria</option>
+                            <option value="basica" {% if filtros.tipo_bibliografia == 'basica' %}selected{% endif %}>Solo básica</option>
+                            <option value="complementaria" {% if filtros.tipo_bibliografia == 'complementaria' %}selected{% endif %}>Solo complementaria</option>
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label for="titulo" class="form-label">Título</label>
+                        <input type="text" class="form-control" id="titulo" name="titulo" value="{{ filtros.titulo }}" placeholder="Buscar por título...">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="autor" class="form-label">Autor</label>
+                        <input type="text" class="form-control" id="autor" name="autor" value="{{ filtros.autor }}" placeholder="Buscar por autor...">
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        <label for="sede_ejemplares" class="form-label">Sede con ejemplares</label>
+                        <select class="form-select" id="sede_ejemplares" name="sede_ejemplares">
+                            <option value="">Todas</option>
+                            {% for id, nombre in sedes %}
+                                <option value="{{ id }}" {% if filtros.sede_ejemplares == (id ~ '') %}selected{% endif %}>{{ nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="sede_faltante" class="form-label">Sede sin ejemplares</label>
+                        <select class="form-select" id="sede_faltante" name="sede_faltante">
+                            <option value="">Todas</option>
+                            {% for id, nombre in sedes %}
+                                <option value="{{ id }}" {% if filtros.sede_faltante == (id ~ '') %}selected{% endif %}>{{ nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="tipo" class="form-label">Tipo de bibliografía</label>
+                        <select class="form-select" id="tipo" name="tipo">
+                            <option value="">Todos</option>
+                            {% for valor, nombre in {'libro': 'Libro', 'articulo': 'Artículo', 'tesis': 'Tesis', 'software': 'Software', 'sitio_web': 'Sitio Web', 'generico': 'Genérico'} %}
+                                <option value="{{ valor }}" {% if filtros.tipo == valor %}selected{% endif %}>{{ nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="estado" class="form-label">Estado</label>
+                        <select class="form-select" id="estado" name="estado">
+                            <option value="">Todos</option>
+                            <option value="1" {% if filtros.estado == '1' %}selected{% endif %}>Activo</option>
+                            <option value="0" {% if filtros.estado == '0' %}selected{% endif %}>Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 mt-3">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Aplicar Filtros</button>
+                    <a href="{{ app_url }}reportes/impresos-una-sede/clear-state" class="btn btn-secondary"><i class="fas fa-times"></i> Limpiar Filtros</a>
+                    <a href="{{ url_exportar }}" class="btn btn-success"><i class="fas fa-file-excel"></i> Exportar a Excel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resumen por sede con ejemplares -->
+    <div class="row g-3 mb-4 resumen-sedes">
+        {% for id, nombre in sedes %}
+            {% if resumen[id] > 0 or filtros.sede_ejemplares == (id ~ '') %}
+            <div class="col-6 col-md-3">
+                <a href="{{ build_page_url(1, ordenamiento.column, ordenamiento.direction, filtros|merge({'sede_ejemplares': (filtros.sede_ejemplares == (id ~ '') ? '' : id)}), paginacion.per_page) }}"
+                   class="{% if filtros.sede_ejemplares == (id ~ '') %}activo{% endif %}" title="Ejemplares impresos solo en {{ nombre }}">
+                    <div class="nombre"><i class="fas fa-book"></i> Ejemplares solo en <strong>{{ nombre }}</strong></div>
+                    <div class="cantidad mt-1">{{ resumen[id]|number_format(0, ',', '.') }}</div>
+                    <div class="nombre">
+                        {% if total_sin_filtro_sede > 0 %}{{ (resumen[id] * 100 / total_sin_filtro_sede)|number_format(1, ',', '.') }} %{% else %}0 %{% endif %}
+                        {% if filtros.sede_ejemplares == (id ~ '') %}· <em>filtro activo (clic para quitar)</em>{% endif %}
+                    </div>
+                </a>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Tabla -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h6 class="m-0 font-weight-bold text-primary">Bibliografías declaradas con ejemplares impresos en una sola sede</h6>
+            <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-2 per-page-selector">
+                    <label for="per_page">Registros por página:</label>
+                    <select id="per_page" class="form-select form-select-sm" style="width: auto;">
+                        {% for option in paginacion.allowed_per_page %}
+                            <option value="{{ option }}" {% if paginacion.per_page == option %}selected{% endif %}>{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="records-counter">
+                    Mostrando {{ bibliografias|length }} de {{ paginacion.total_records|number_format(0, ',', '.') }} registros
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                {# El detalle de la bibliografía declarada solo está disponible para estos roles (AuthMiddleware) #}
+                {% set puede_ver_detalle = session.user_rol == 'admin' or session.user_rol == 'admin_bidoc' %}
+                <table class="table table-hover impresos-table">
+                    <thead>
+                        <tr>
+                            {% set columnas = [
+                                ['titulo', 'Título', ''], ['autores', 'Autor(es)', ''], ['anio_publicacion', 'Año<br>Edición', 'text-center'],
+                                ['editorial', 'Editorial', ''], ['num_asignaturas', 'N° Asig.', 'text-center'],
+                                ['num_sedes', 'Sedes con<br>asignaturas', ''], ['sede_ejemplares', 'Sede con<br>ejemplares', 'text-center'],
+                                ['ejemplares', 'Ejem-<br>plares', 'text-center']
+                            ] %}
+                            {% for col in columnas %}
+                                <th class="{{ col[2] }}">
+                                    <a href="{{ build_sort_url(col[0], ordenamiento.column, ordenamiento.direction, filtros, paginacion.current_page, paginacion.per_page) }}">
+                                        {{ col[1]|raw }}
+                                        <i class="fas {{ get_sort_icon(col[0], ordenamiento.column, ordenamiento.direction) }}"></i>
+                                    </a>
+                                </th>
+                            {% endfor %}
+                            <th class="text-center">Sedes sin<br>ejemplares</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in bibliografias %}
+                        <tr>
+                            <td class="titulo" title="{{ b.titulo }}">
+                                {{ b.titulo }}
+                                {% if b.estado != 1 %}<span class="badge bg-danger">Inactivo</span>{% endif %}
+                            </td>
+                            <td class="recortar" title="{{ b.autores }}">{{ b.autores ?: 'Sin autores' }}</td>
+                            <td class="text-center">{{ b.anio_publicacion > 0 ? b.anio_publicacion : 'N/A' }}</td>
+                            <td class="recortar" title="{{ b.editorial }}">{{ b.editorial ?: 'N/A' }}</td>
+                            <td class="text-center">{{ b.num_asignaturas }}</td>
+                            <td>
+                                {% for s in b.sedes %}
+                                    <span class="badge badge-sede {{ s.con_ejemplares ? 'bg-success' : 'bg-secondary' }}"
+                                          title="{{ s.asignaturas|length }} asignatura(s) en {{ s.nombre }}">{{ s.nombre }} ({{ s.asignaturas|length }})</span>
+                                {% endfor %}
+                            </td>
+                            <td class="text-center"><span class="badge badge-sede bg-success">{{ b.sede_ejemplares }}</span></td>
+                            <td class="text-center" title="{{ b.num_disponibles }} bibliografía(s) disponible(s)">{{ b.ejemplares }}</td>
+                            <td class="text-center">
+                                {% for nombre in b.sedes_sin_ejemplares %}
+                                    <span class="badge badge-sede bg-danger">{{ nombre }}</span>
+                                {% endfor %}
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse"
+                                        data-bs-target="#detalle-{{ b.id }}" aria-expanded="false" aria-controls="detalle-{{ b.id }}"
+                                        title="Ver asignaturas por sede">
+                                    <i class="fas fa-list-ul"></i>
+                                </button>
+                                {% if puede_ver_detalle %}
+                                    <a href="{{ app_url }}bibliografias-declaradas/{{ b.id }}?origen=impresos_sede" class="btn btn-sm btn-info" title="Ver bibliografía declarada">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr class="collapse detalle-fila" id="detalle-{{ b.id }}">
+                            <td colspan="10">
+                                <div class="row g-3">
+                                    {% for s in b.sedes %}
+                                        <div class="col-md-4 detalle-sede">
+                                            <h6>
+                                                {{ s.nombre }}
+                                                {% if s.con_ejemplares %}
+                                                    <span class="badge bg-success">{{ b.ejemplares }} ejemplar(es)</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Sin ejemplares</span>
+                                                {% endif %}
+                                            </h6>
+                                            <ul>
+                                                {% for a in s.asignaturas %}
+                                                    <li>{{ a.codigo }} – {{ a.nombre }} <span class="text-muted">({{ a.tipo }})</span></li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="10" class="text-center text-muted py-4">No hay bibliografías que coincidan con los filtros.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <p class="small text-muted mb-3">
+                La sede de una asignatura es la de la unidad de cada uno de sus códigos. Se consideran solo los vínculos activos
+                y las bibliografías disponibles activas; no se considera la sede "Sin Sede". En verde, la sede con ejemplares.
+            </p>
+
+            {% if paginacion.total_pages > 1 %}
+            <nav aria-label="Navegación de páginas">
+                <ul class="pagination justify-content-center">
+                    {% if paginacion.has_previous %}
+                        <li class="page-item"><a class="page-link" href="{{ build_page_url(paginacion.previous_page, ordenamiento.column, ordenamiento.direction, filtros, paginacion.per_page) }}"><i class="fas fa-chevron-left"></i> Anterior</a></li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link"><i class="fas fa-chevron-left"></i> Anterior</span></li>
+                    {% endif %}
+
+                    {% set start_page = max(1, paginacion.current_page - 2) %}
+                    {% set end_page = min(paginacion.total_pages, paginacion.current_page + 2) %}
+                    {% if start_page > 1 %}
+                        <li class="page-item"><a class="page-link" href="{{ build_page_url(1, ordenamiento.column, ordenamiento.direction, filtros, paginacion.per_page) }}">1</a></li>
+                        {% if start_page > 2 %}<li class="page-item disabled"><span class="page-link">...</span></li>{% endif %}
+                    {% endif %}
+                    {% for page_num in start_page..end_page %}
+                        {% if page_num == paginacion.current_page %}
+                            <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+                        {% else %}
+                            <li class="page-item"><a class="page-link" href="{{ build_page_url(page_num, ordenamiento.column, ordenamiento.direction, filtros, paginacion.per_page) }}">{{ page_num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if end_page < paginacion.total_pages %}
+                        {% if end_page < paginacion.total_pages - 1 %}<li class="page-item disabled"><span class="page-link">...</span></li>{% endif %}
+                        <li class="page-item"><a class="page-link" href="{{ build_page_url(paginacion.total_pages, ordenamiento.column, ordenamiento.direction, filtros, paginacion.per_page) }}">{{ paginacion.total_pages }}</a></li>
+                    {% endif %}
+
+                    {% if paginacion.has_next %}
+                        <li class="page-item"><a class="page-link" href="{{ build_page_url(paginacion.next_page, ordenamiento.column, ordenamiento.direction, filtros, paginacion.per_page) }}">Siguiente <i class="fas fa-chevron-right"></i></a></li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">Siguiente <i class="fas fa-chevron-right"></i></span></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('per_page').addEventListener('change', function () {
+        const url = new URL(window.location);
+        url.searchParams.set('per_page', this.value);
+        url.searchParams.set('page', '1');
+        window.location.href = url.toString();
+    });
+</script>
+{% endblock %}

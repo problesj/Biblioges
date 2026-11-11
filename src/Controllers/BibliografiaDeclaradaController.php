@@ -794,7 +794,8 @@ class BibliografiaDeclaradaController
             $bibliografiasDisponibles = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             // Vista de origen para el botón Volver (lista fija: no se aceptan rutas arbitrarias)
-            $origen = ($request->getQueryParams()['origen'] ?? '') === 'antiguedad' ? 'antiguedad' : '';
+            $origen = (string) ($request->getQueryParams()['origen'] ?? '');
+            $origen = in_array($origen, ['antiguedad', 'impresos_sede'], true) ? $origen : '';
 
             return $this->render($response, 'bibliografias_declaradas/show.twig', [
                 'bibliografia' => $bibliografia,
@@ -1973,7 +1974,8 @@ class BibliografiaDeclaradaController
             return '';
         }
         $ruta = 'bibliografias-declaradas/' . (int) $id;
-        return (($_GET['origen'] ?? '') === 'antiguedad') ? $ruta . '?origen=antiguedad' : $ruta;
+        $origen = (string) ($_GET['origen'] ?? '');
+        return in_array($origen, ['antiguedad', 'impresos_sede'], true) ? $ruta . '?origen=' . $origen : $ruta;
     }
 
     protected function render(Response $response = null, string $template, array $data = []): Response

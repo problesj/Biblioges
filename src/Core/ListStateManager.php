@@ -211,6 +211,20 @@ class ListStateManager
                 ];
                 break;
 
+            case 'reporte_impresos_sede':
+                $defaults['sort'] = 'titulo';
+                $defaults['allowed_columns'] = ['titulo', 'autores', 'anio_publicacion', 'editorial', 'num_asignaturas', 'num_sedes', 'sede_ejemplares', 'ejemplares'];
+                $defaults['filters'] = [
+                    'titulo' => '',
+                    'autor' => '',
+                    'estado' => '',
+                    'tipo' => '',
+                    'tipo_bibliografia' => 'ambas',
+                    'sede_ejemplares' => '',
+                    'sede_faltante' => ''
+                ];
+                break;
+
             case 'tareas_programadas':
                 $defaults['sort'] = 'fecha_programada';
                 $defaults['direction'] = 'DESC';

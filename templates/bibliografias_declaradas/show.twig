@@ -10,10 +10,10 @@
                 <div class="card-header">
                     <h3 class="card-title">Detalles de la Bibliografía Declarada</h3>
                     <div class="card-tools" align="right">
-                        <a href="{{ app_url }}{{ origen == 'antiguedad' ? 'reportes/antiguedad-bibliografias' : 'bibliografias-declaradas' }}" class="btn btn-secondary">
+                        <a href="{{ app_url }}{{ {'antiguedad': 'reportes/antiguedad-bibliografias', 'impresos_sede': 'reportes/impresos-una-sede'}[origen] ?? 'bibliografias-declaradas' }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Volver
                         </a>
-                        {% set param_desde = '?desde=show' ~ (origen == 'antiguedad' ? '&origen=antiguedad' : '') %}
+                        {% set param_desde = '?desde=show' ~ (origen ? '&origen=' ~ origen : '') %}
                         <a href="{{ app_url }}bibliografias-declaradas/{{ bibliografia.id }}/vincular{{ param_desde }}" class="btn btn-success">
                             <i class="fas fa-link"></i> Vincular Asignaturas
                         </a>
@@ -226,7 +226,7 @@ function confirmarEliminacion(id, titulo) {
             const volverInput = document.createElement('input');
             volverInput.type = 'hidden';
             volverInput.name = 'volver';
-            volverInput.value = {{ ('bibliografias-declaradas/' ~ bibliografia.id ~ (origen == 'antiguedad' ? '?origen=antiguedad' : ''))|json_encode|raw }};
+            volverInput.value = {{ ('bibliografias-declaradas/' ~ bibliografia.id ~ (origen ? '?origen=' ~ origen : ''))|json_encode|raw }};
             form.appendChild(volverInput);
             
             // Agregar token CSRF si es necesario

@@ -247,6 +247,9 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->get('/reportes/antiguedad-bibliografias', [\App\Controllers\AntiguedadBibliografiaController::class, 'index']);
     $group->get('/reportes/antiguedad-bibliografias/clear-state', [\App\Controllers\AntiguedadBibliografiaController::class, 'clearState']);
     $group->get('/reportes/antiguedad-bibliografias/exportar', [\App\Controllers\AntiguedadBibliografiaController::class, 'exportar']);
+    $group->get('/reportes/impresos-una-sede', [\App\Controllers\ImpresosUnaSedeController::class, 'index']);
+    $group->get('/reportes/impresos-una-sede/clear-state', [\App\Controllers\ImpresosUnaSedeController::class, 'clearState']);
+    $group->get('/reportes/impresos-una-sede/exportar', [\App\Controllers\ImpresosUnaSedeController::class, 'exportar']);
     $group->get('/reportes/ejemplares', [ReporteController::class, 'ejemplares']);
     $group->get('/reportes/estudiantes', [ReporteController::class, 'estudiantes']);
     $group->get('/reportes/profesores', [ReporteController::class, 'profesores']);
