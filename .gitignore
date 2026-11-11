@@ -24,3 +24,4 @@ biblioges-installer.tar.gz
 
 # Caché compilada de Twig (se regenera sola)
 /cache/twig/
+/cache/dashboard_indicadores.json
