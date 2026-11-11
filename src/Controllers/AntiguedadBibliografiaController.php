@@ -244,6 +244,23 @@ class AntiguedadBibliografiaController
     }
 
     /**
+     * Cantidad de bibliografías declaradas por antigüedad con los filtros por defecto del reporte
+     * (básicas y complementarias, sin otros filtros). Lo usa el Dashboard.
+     *
+     * @return array<string, int> clave de self::ANTIGUEDADES => cantidad
+     */
+    public function resumenGeneral(): array
+    {
+        [$base, $params] = $this->consultaBase($this->filtros([]));
+        $resumen = array_fill_keys(array_keys(self::ANTIGUEDADES), 0);
+        foreach (DB::select("SELECT t.antiguedad, COUNT(*) AS n FROM ({$base}) t GROUP BY t.antiguedad", $params) as $fila) {
+            $resumen[$fila->antiguedad] = (int) $fila->n;
+        }
+
+        return $resumen;
+    }
+
+    /**
      * Normaliza los filtros del estado del listado (todos como texto, '' = sin filtro).
      */
     private function filtros(array $state): array

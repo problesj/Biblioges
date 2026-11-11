@@ -474,6 +474,12 @@ class ReporteController extends BaseController
     }
 
     /**
+     * Títulos declarados por plan y tipo (basica/complementaria) del último coberturasTiempoRealLote(),
+     * indexados por clavePlanCobertura(): permite distinguir un 0 % real de un plan sin títulos declarados.
+     */
+    public array $declaradosLote = [];
+
+    /**
      * Cobertura básica y complementaria en tiempo real de varios planes a la vez.
      * Usa exactamente la misma regla que calcularCoberturaBasicaTiempoReal() y
      * calcularCoberturaComplementariaTiempoReal() (mismo plan, mismas asignaturas de vw_mallas, títulos activos
@@ -485,6 +491,7 @@ class ReporteController extends BaseController
      */
     public function coberturasTiempoRealLote(iterable $planes, ?array $tiposFormacion = null): array
     {
+        $this->declaradosLote = [];
         $lista = [];
         foreach ($planes as $p) {
             $lista[] = $p;
@@ -626,6 +633,7 @@ class ReporteController extends BaseController
                     $ids += $titulos[$codigo][$tipoBib] ?? [];
                 }
                 $declarados = count($ids);
+                $this->declaradosLote[$clave][$tipoBib] = $declarados;
                 if ($declarados === 0) {
                     $resultado[$clave][$tipoBib] = 0;
                     continue;

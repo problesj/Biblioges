@@ -3,6 +3,7 @@
 {% block title %}Dashboard - Sistema de Bibliografía{% endblock %}
 
 {% block content %}
+{% set es_admin = session.user_rol == 'admin' %}
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
@@ -10,14 +11,14 @@
 
     <!-- Tarjetas de resumen -->
     <div class="row">
-        <div class="col-xl-3 col-md-6 mb-4">
+        <div class="col-xl col-md-6 mb-4">
             <div class="card border-left-primary shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                 Bibliografías Declaradas</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totalBibliografias }}</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totalBibliografias|number_format(0, ',', '.') }}</div>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-list fa-2x text-gray-300"></i>
@@ -27,14 +28,14 @@
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
+        <div class="col-xl col-md-6 mb-4">
             <div class="card border-left-success shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                 Bibliografías Disponibles</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totalDisponibles }}</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totalDisponibles|number_format(0, ',', '.') }}</div>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-book fa-2x text-gray-300"></i>
@@ -44,14 +45,35 @@
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
+        <div class="col-xl col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1"
+                                 title="Bibliografías declaradas que no tienen ninguna bibliografía disponible activa">
+                                Declaradas sin disponible</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ sinDisponible|number_format(0, ',', '.') }}
+                                <small class="text-muted fw-normal">({{ porcentajeSinDisponible|number_format(1, ',', '.') }} %)</small>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl col-md-6 mb-4">
             <div class="card border-left-info shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
                                 Asignaturas</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totalAsignaturas }}</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totalAsignaturas|number_format(0, ',', '.') }}</div>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-book-open fa-2x text-gray-300"></i>
@@ -61,14 +83,14 @@
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
+        <div class="col-xl col-md-6 mb-4">
             <div class="card border-left-warning shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                                 Carreras</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totalCarreras }}</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totalCarreras|number_format(0, ',', '.') }}</div>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-graduation-cap fa-2x text-gray-300"></i>
@@ -79,29 +101,146 @@
         </div>
     </div>
 
+    <!-- Coberturas básicas: mayores y menores (datos por AJAX desde dashboard/indicadores) -->
+    <p class="small text-muted mb-2" id="indicadoresGenerado"></p>
     <div class="row">
-        <!-- Gráfico de cobertura básica por carrera -->
-        <div class="col-xl-12 mb-4">
-            <div class="card shadow">
+        {% for grafico in [
+            {id: 'graficoMayores', titulo: 'Carreras con mayor cobertura básica'},
+            {id: 'graficoMenores', titulo: 'Carreras con menor cobertura básica'}
+        ] %}
+        <div class="col-xl-6 mb-4">
+            <div class="card shadow h-100">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">Cobertura Básica por Carrera (Pregrado)</h6>
+                    <h6 class="m-0 font-weight-bold text-primary">{{ grafico.titulo }}</h6>
                     <a href="{{ app_url }}reportes/coberturas" class="btn btn-primary btn-sm">
                         <i class="fas fa-chart-bar"></i> Ver Reportes
                     </a>
                 </div>
                 <div class="card-body">
-                    {% if coberturaCarreras|length > 0 %}
-                        <canvas id="coberturaChart" width="400" height="200"></canvas>
+                    <div style="position: relative; height: 380px;">
+                        <canvas id="{{ grafico.id }}" aria-label="{{ grafico.titulo }}" role="img"></canvas>
+                        <div class="dashboard-estado position-absolute top-50 start-50 translate-middle text-muted text-center w-100 px-3" id="estado-{{ grafico.id }}">
+                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Calculando...
+                            </div>
+                    </div>
+                </div>
+                <div class="card-footer small text-muted">
+                    Planes vigentes de pregrado con bibliografía básica declarada (<span data-dato="planes_evaluados">…</span>), cobertura en tiempo real.
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Distribuciones y tareas -->
+    {% set col_panel = es_admin ? 'col-xl-4' : 'col-xl-6' %}
+    <div class="row">
+        <div class="{{ col_panel }} col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Bibliografía disponible por tipo de recurso</h6>
+                </div>
+                <div class="card-body">
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="graficoDisponibilidad" aria-label="Bibliografía disponible por tipo de recurso" role="img"></canvas>
+                        <div class="dashboard-estado position-absolute top-50 start-50 translate-middle text-muted text-center w-100 px-3" id="estado-graficoDisponibilidad">
+                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Calculando...
+                            </div>
+                    </div>
+                </div>
+                <div class="card-footer small text-muted">
+                    <span data-dato="total_disponibles_activas">…</span> bibliografías disponibles activas.
+                </div>
+            </div>
+        </div>
+
+        <div class="{{ col_panel }} col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Antigüedad de bibliografías</h6>
+                    <a href="{{ app_url }}reportes/antiguedad-bibliografias" class="btn btn-primary btn-sm">
+                        <i class="fas fa-history"></i> Ver Reporte
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="graficoAntiguedad" aria-label="Antigüedad de bibliografías" role="img"></canvas>
+                        <div class="dashboard-estado position-absolute top-50 start-50 translate-middle text-muted text-center w-100 px-3" id="estado-graficoAntiguedad">
+                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Calculando...
+                            </div>
+                    </div>
+                </div>
+                <div class="card-footer small text-muted">
+                    <span data-dato="total_antiguedad">…</span> declaradas básicas y complementarias con disponibles activas.
+                </div>
+            </div>
+        </div>
+
+        {% if es_admin %}
+        <div class="col-xl-4 col-md-12 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Tareas programadas</h6>
+                    <a href="{{ app_url }}tareas-programadas" class="btn btn-primary btn-sm">
+                        <i class="fas fa-clock"></i> Ver Todas
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if tareas|length > 0 %}
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Tarea</th>
+                                    <th>Última ejecución</th>
+                                    <th class="text-center">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for t in tareas %}
+                                <tr>
+                                    <td>
+                                        <div>{{ t.nombre }}</div>
+                                        <small class="text-muted">{{ t.tipo_etiqueta }}</small>
+                                    </td>
+                                    <td>
+                                        {% if t.fecha_inicio %}
+                                            <a href="{{ app_url ~ t.url }}">{{ t.fecha_inicio|date('d/m/Y H:i') }}</a>
+                                        {% else %}
+                                            <span class="text-muted">Sin ejecuciones</span>
+                                        {% endif %}
+                                        {% if t.estado == 'pendiente' and t.fecha_programada %}
+                                            <br><small class="text-muted">Próxima: {{ t.fecha_programada|date('d/m/Y H:i') }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if t.estado == 'en_proceso' %}
+                                            <span class="badge bg-info">En proceso</span>
+                                        {% elseif t.estado_ejecucion == 'completada' %}
+                                            <span class="badge bg-success">Completada</span>
+                                        {% elseif t.estado_ejecucion == 'error' %}
+                                            <span class="badge bg-danger">Error</span>
+                                        {% elseif t.estado_ejecucion == 'detenida' %}
+                                            <span class="badge bg-warning text-dark">Detenida</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Pendiente</span>
+                                        {% endif %}
+                                        {% if t.simulacion %}
+                                            <br><span class="badge bg-light text-dark border mt-1">Simulación</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                     {% else %}
-                        <div class="text-center py-4">
-                            <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
-                            <h5 class="text-muted">No hay datos de cobertura básica disponibles</h5>
-                            <p class="text-muted">Los datos de cobertura se mostrarán aquí una vez que se generen los reportes de cobertura básica.</p>
-                        </div>
+                        <p class="text-muted text-center py-4 mb-0">No hay tareas programadas.</p>
                     {% endif %}
                 </div>
             </div>
         </div>
+        {% endif %}
     </div>
 
     <div class="row">
@@ -196,111 +335,178 @@
 
 {% block scripts %}
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
 <script>
-    // Datos para el gráfico de cobertura
-    {% if coberturaCarreras|length > 0 %}
-    const coberturaData = {
-        labels: [
-            {% for carrera in coberturaCarreras %}
-                '{{ carrera.carrera_nombre|slice(0, 30) }}{% if carrera.carrera_nombre|length > 30 %}...{% endif %}',
-            {% endfor %}
-        ],
-        datasets: [{
-            label: 'Cobertura Básica (%)',
-            data: [
-                {% for carrera in coberturaCarreras %}
-                    {{ carrera.cobertura_basica }},
-                {% endfor %}
-            ],
-            backgroundColor: [
-                'rgba(54, 162, 235, 0.8)',
-                'rgba(75, 192, 192, 0.8)',
-                'rgba(255, 206, 86, 0.8)',
-                'rgba(255, 99, 132, 0.8)',
-                'rgba(153, 102, 255, 0.8)',
-                'rgba(255, 159, 64, 0.8)',
-                'rgba(199, 199, 199, 0.8)',
-                'rgba(83, 102, 255, 0.8)',
-                'rgba(78, 252, 3, 0.8)',
-                'rgba(252, 3, 244, 0.8)'
-            ],
-            borderColor: [
-                'rgba(54, 162, 235, 1)',
-                'rgba(75, 192, 192, 1)',
-                'rgba(255, 206, 86, 1)',
-                'rgba(255, 99, 132, 1)',
-                'rgba(153, 102, 255, 1)',
-                'rgba(255, 159, 64, 1)',
-                'rgba(199, 199, 199, 1)',
-                'rgba(83, 102, 255, 1)',
-                'rgba(78, 252, 3, 1)',
-                'rgba(252, 3, 244, 1)'
-            ],
-            borderWidth: 1
-        }]
-    };
+(function () {
+    const URL_INDICADORES = {{ (app_url ~ 'dashboard/indicadores')|json_encode|raw }};
 
-    // Configuración del gráfico
-    const config = {
-        type: 'bar',
-        data: coberturaData,
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                },
-                title: {
-                    display: true,
-                    text: 'Cobertura Básica por Carrera de Pregrado'
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return 'Cobertura: ' + context.parsed.y.toFixed(1) + '%';
-                        }
-                    }
-                }
+    function mostrarEstado(id, texto) {
+        const estado = document.getElementById('estado-' + id);
+        if (!estado) {
+            return;
+        }
+        if (texto === null) {
+            estado.style.display = 'none';
+        } else {
+            estado.textContent = texto;
+        }
+    }
+
+    function ponerDato(nombre, valor) {
+        document.querySelectorAll('[data-dato="' + nombre + '"]').forEach(function (el) {
+            el.textContent = Number(valor).toLocaleString('es-CL');
+        });
+    }
+
+    // Verde desde 80 %, amarillo desde 50 %, rojo bajo 50 %
+    function colorCobertura(valor) {
+        if (valor >= 80) {
+            return 'rgba(28, 200, 138, 0.85)';
+        }
+        if (valor >= 50) {
+            return 'rgba(246, 194, 62, 0.85)';
+        }
+        return 'rgba(231, 74, 59, 0.85)';
+    }
+
+    function recortar(texto, maximo) {
+        texto = String(texto);
+        return texto.length > maximo ? texto.slice(0, maximo - 1) + '…' : texto;
+    }
+
+    function formatoPorcentaje(valor) {
+        return Number(valor).toLocaleString('es-CL', { maximumFractionDigits: 1 }) + ' %';
+    }
+
+    function graficoCobertura(id, filas) {
+        const lienzo = document.getElementById(id);
+        if (!lienzo) {
+            return;
+        }
+        if (!filas.length) {
+            mostrarEstado(id, 'No hay datos de cobertura básica para los planes vigentes de pregrado.');
+            return;
+        }
+        mostrarEstado(id, null);
+        new Chart(lienzo, {
+            type: 'bar',
+            data: {
+                labels: filas.map(function (f) { return f.etiqueta; }),
+                datasets: [{
+                    label: 'Cobertura básica (%)',
+                    data: filas.map(function (f) { return f.cobertura; }),
+                    backgroundColor: filas.map(function (f) { return colorCobertura(f.cobertura); }),
+                    borderWidth: 0
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    ticks: {
-                        callback: function(value) {
-                            return value + '%';
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: function (items) { return items.length ? items[0].label : ''; },
+                            label: function (contexto) {
+                                const f = filas[contexto.dataIndex];
+                                return 'Cobertura: ' + formatoPorcentaje(f.cobertura) +
+                                    ' (' + f.disponibles + ' de ' + f.declarados + ' títulos)';
+                            }
                         }
-                    },
-                    title: {
-                        display: true,
-                        text: 'Cobertura Básica (%)'
                     }
                 },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Carreras'
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { callback: function (valor) { return valor + ' %'; } }
                     },
-                    ticks: {
-                        maxRotation: 45,
-                        minRotation: 45
+                    y: {
+                        ticks: {
+                            autoSkip: false,
+                            callback: function (valor) { return recortar(this.getLabelForValue(valor), 38); }
+                        }
                     }
                 }
             }
-        }
-    };
+        });
+    }
 
-    // Crear el gráfico
-    document.addEventListener('DOMContentLoaded', function() {
-        {% if coberturaCarreras|length > 0 %}
-        const ctx = document.getElementById('coberturaChart').getContext('2d');
-        new Chart(ctx, config);
-        {% endif %}
+    function graficoTorta(id, filas) {
+        const lienzo = document.getElementById(id);
+        if (!lienzo) {
+            return;
+        }
+        if (!filas.length) {
+            mostrarEstado(id, 'No hay datos.');
+            return;
+        }
+        mostrarEstado(id, null);
+        new Chart(lienzo, {
+            type: 'pie',
+            data: {
+                labels: filas.map(function (f) { return f.etiqueta + ' (' + formatoPorcentaje(f.porcentaje) + ')'; }),
+                datasets: [{
+                    data: filas.map(function (f) { return f.cantidad; }),
+                    backgroundColor: filas.map(function (f) { return f.color; }),
+                    borderColor: '#ffffff',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: function (contexto) {
+                                const f = filas[contexto.dataIndex];
+                                return f.etiqueta + ': ' + f.cantidad.toLocaleString('es-CL') +
+                                    ' (' + formatoPorcentaje(f.porcentaje) + ')';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    const GRAFICOS = ['graficoMayores', 'graficoMenores', 'graficoDisponibilidad', 'graficoAntiguedad'];
+
+    document.addEventListener('DOMContentLoaded', function () {
+        fetch(URL_INDICADORES, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (respuesta) {
+                if (!respuesta.ok) {
+                    throw new Error('HTTP ' + respuesta.status);
+                }
+                return respuesta.json();
+            })
+            .then(function (datos) {
+                if (typeof Chart === 'undefined') {
+                    throw new Error('Chart.js no está disponible');
+                }
+                ponerDato('planes_evaluados', datos.planes_evaluados);
+                ponerDato('total_disponibles_activas', datos.total_disponibles_activas);
+                ponerDato('total_antiguedad', datos.total_antiguedad);
+                const generado = document.getElementById('indicadoresGenerado');
+                if (generado && datos.generado) {
+                    generado.textContent = 'Indicadores calculados el ' + datos.generado + ' (se recalculan cada 10 minutos).';
+                }
+                graficoCobertura('graficoMayores', datos.mayores || []);
+                graficoCobertura('graficoMenores', datos.menores || []);
+                graficoTorta('graficoDisponibilidad', datos.disponibilidad || []);
+                graficoTorta('graficoAntiguedad', datos.antiguedad || []);
+            })
+            .catch(function (error) {
+                console.error('Dashboard: no se pudieron cargar los indicadores', error);
+                GRAFICOS.forEach(function (id) {
+                    mostrarEstado(id, 'No se pudieron cargar los indicadores. Recargue la página para reintentar.');
+                });
+            });
     });
-    {% endif %}
+})();
 </script>
-{% endblock %} 
+{% endblock %}

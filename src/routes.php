@@ -47,6 +47,7 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     });
     // Dashboard
     $group->get('/dashboard', [DashboardController::class, 'index']);
+    $group->get('/dashboard/indicadores', [DashboardController::class, 'indicadores']);
 
     // Ruta para limpiar mensajes de sesión
     $group->post('/clear-session-messages', [AuthController::class, 'clearSessionMessages']);
