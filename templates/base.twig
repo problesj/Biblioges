@@ -90,11 +90,11 @@
             color: rgba(255,255,255,.75);
             padding: 0.5rem 1rem;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 0.5rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            /* Los textos largos pasan a una segunda línea alineada con el texto */
+            white-space: normal;
+            overflow-wrap: anywhere;
         }
         
         .sidebar .nav-link:hover {
@@ -111,6 +111,8 @@
             flex-shrink: 0;
             width: 20px;
             text-align: center;
+            /* Centra el ícono con la primera línea del texto */
+            line-height: inherit;
         }
         
         .sidebar .menu-group {
