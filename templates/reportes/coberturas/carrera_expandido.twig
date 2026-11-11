@@ -22,9 +22,11 @@
                                 <button type="button" class="btn btn-secondary" onclick="window.history.back()">
                                     <i class="fas fa-arrow-left"></i> Volver
                                 </button>
+                                {% if session.user_rol != 'usuario' %}
                                 <button type="button" class="btn btn-success" onclick="guardarReporte()">
                                     <i class="fas fa-save"></i> Guardar Reporte
                                 </button>
+                                {% endif %}
                                 <button type="button" class="btn btn-excel" onclick="exportarExcel()">
                                     <i class="fas fa-file-excel"></i> Exportar Excel
                                 </button>
@@ -111,9 +113,11 @@
                                         <button type="submit" class="btn btn-primary btn-sm mt-2">
                                             <i class="fas fa-filter"></i> Aplicar Filtros
                                         </button>
+                                        {% if session.user_rol != 'usuario' %}
                                         <button type="button" class="btn btn-success btn-sm mt-2" onclick="guardarFiltros()">
                                             <i class="fas fa-save"></i> Guardar Filtros
                                         </button>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>

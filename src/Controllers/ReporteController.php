@@ -4477,9 +4477,27 @@ class ReporteController extends BaseController
         return $response->withHeader('Content-Type', 'text/html');
     }
 
+    /**
+     * El rol "usuario" solo consulta los reportes: no puede guardar filtros de formación
+     * ni mediciones de cobertura (básica, complementaria o fusionada).
+     */
+    private function denegarSiSoloLectura(Response $response): ?Response
+    {
+        if (($_SESSION['user_rol'] ?? '') !== 'usuario') {
+            return null;
+        }
+        $mensaje = 'Su rol no tiene permiso para guardar filtros ni reportes de cobertura.';
+        $response->getBody()->write(json_encode(['success' => false, 'error' => $mensaje, 'message' => $mensaje]));
+
+        return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
+    }
+
     // Método para guardar filtros de formación
     public function guardarFiltrosFormacion(Request $request, Response $response, array $args): Response
     {
+        if ($denegado = $this->denegarSiSoloLectura($response)) {
+            return $denegado;
+        }
         try {
             error_log('ReporteController@guardarFiltrosFormacion: Iniciando método');
         
@@ -4969,6 +4987,9 @@ class ReporteController extends BaseController
 
     public function guardarCoberturaBasica(Request $request, Response $response, array $args): Response
     {
+        if ($denegado = $this->denegarSiSoloLectura($response)) {
+            return $denegado;
+        }
         error_log('INICIO guardarCoberturaBasica');
         error_log('Args: ' . print_r($args, true));
             
@@ -5065,6 +5086,9 @@ class ReporteController extends BaseController
 
     public function guardarCoberturaComplementaria(Request $request, Response $response, array $args): Response
     {
+        if ($denegado = $this->denegarSiSoloLectura($response)) {
+            return $denegado;
+        }
         error_log('INICIO guardarCoberturaComplementaria');
         error_log('Args: ' . print_r($args, true));
             
@@ -6438,6 +6462,9 @@ class ReporteController extends BaseController
     // Guardar reporte fusionado
     public function guardarCoberturaFusionado(Request $request, Response $response, array $args): Response
     {
+        if ($denegado = $this->denegarSiSoloLectura($response)) {
+            return $denegado;
+        }
         error_log('ReporteController@guardarCoberturaFusionado: Iniciando método');
         
         $sedeId = $args['sede_id'];
