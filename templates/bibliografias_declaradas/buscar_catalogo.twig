@@ -8,7 +8,12 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Datos de la Bibliografía Declarada</h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Datos de la Bibliografía Declarada</h5>
+                        <a href="{{ app_url }}{{ volver_show ?: 'bibliografias-declaradas' }}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -368,7 +373,11 @@ async function saveSelectedResults() {
                 timer: 3000
             }).then(() => {
                 // Redirigir a la página de bibliografías
+                {% if volver_show %}
+                window.location.href = {{ (app_url ~ volver_show)|json_encode|raw }};
+                {% else %}
                 window.location.href = `${baseUrl}/biblioges/bibliografias-declaradas`;
+                {% endif %}
             });
         } else {
             throw new Error(data.message || 'Error desconocido');

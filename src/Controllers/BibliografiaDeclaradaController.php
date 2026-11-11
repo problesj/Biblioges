@@ -1352,6 +1352,7 @@ class BibliografiaDeclaradaController
                 'sedes' => $sedes,
                 'asignaturas_vinculadas' => $asignaturas_vinculadas,
                 'asignaturas_disponibles' => $asignaturas_disponibles,
+                'volver_show' => $this->volverShow($id),
                 'app_url' => Config::get('app_url'),
                 'session' => $_SESSION,
                 'current_page' => 'bibliografias-declaradas'
@@ -1962,6 +1963,19 @@ class BibliografiaDeclaradaController
         return $bibliografia;
     }
 
+    /**
+     * Ruta (relativa a app_url) de la vista de la bibliografía declarada cuando
+     * se llegó desde ella (?desde=show). Lista fija: no se aceptan rutas arbitrarias.
+     */
+    private function volverShow($id): string
+    {
+        if (($_GET['desde'] ?? '') !== 'show' || !ctype_digit((string) $id)) {
+            return '';
+        }
+        $ruta = 'bibliografias-declaradas/' . (int) $id;
+        return (($_GET['origen'] ?? '') === 'antiguedad') ? $ruta . '?origen=antiguedad' : $ruta;
+    }
+
     protected function render(Response $response = null, string $template, array $data = []): Response
     {
         try {
@@ -2168,6 +2182,7 @@ class BibliografiaDeclaradaController
             // Renderizar la vista
             return $this->render($response, 'bibliografias_declaradas/buscar_catalogo.twig', [
                 'bibliografia' => $bibliografia,
+                'volver_show' => $this->volverShow($args['id']),
                 'app_url' => Config::get('app_url'),
                 'session' => $_SESSION,
                 'current_page' => 'bibliografias-declaradas'

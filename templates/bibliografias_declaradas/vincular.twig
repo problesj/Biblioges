@@ -11,7 +11,7 @@
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Vincular Asignaturas</h1>
-        <a href="{{ app_url }}bibliografias-declaradas" class="btn btn-secondary">
+        <a href="{{ app_url }}{{ volver_show ?: 'bibliografias-declaradas' }}" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Volver
         </a>
     </div>
@@ -344,6 +344,20 @@ function verificarFiltrosIniciales() {
     }
 }
 
+// Si se llegó desde la vista de la bibliografía, volver a ella al terminar
+{% if volver_show %}
+const VOLVER_SHOW = {{ (app_url ~ volver_show)|json_encode|raw }};
+{% else %}
+const VOLVER_SHOW = null;
+{% endif %}
+function irTrasOperacion() {
+    if (VOLVER_SHOW) {
+        window.location.href = VOLVER_SHOW;
+    } else {
+        window.location.reload();
+    }
+}
+
 // Función para aplicar filtros
 function aplicarFiltros() {
     const unidad = document.getElementById('ubicacion').value;
@@ -376,6 +390,14 @@ function aplicarFiltros() {
     
     url += params.toString();
     
+    // Mantener el retorno a la vista de la bibliografía
+    const actuales = new URLSearchParams(window.location.search);
+    const extra = new URLSearchParams();
+    ['desde', 'origen'].forEach(k => { if (actuales.get(k)) extra.append(k, actuales.get(k)); });
+    if (extra.toString()) {
+        url += (url.endsWith('?') ? '' : '&') + extra.toString();
+    }
+
     // Recargar la página con los filtros
     window.location.href = url;
 }
@@ -715,7 +737,7 @@ function agregarSeleccionadas() {
                 text: data.message,
                 icon: 'success'
             }).then(() => {
-                window.location.reload();
+                irTrasOperacion();
             });
         } else {
             Swal.fire({
@@ -791,7 +813,7 @@ function quitarSeleccionadas() {
                         text: data.message,
                         icon: 'success'
                     }).then(() => {
-                        window.location.reload();
+                        irTrasOperacion();
                     });
                 } else {
                     Swal.fire({
@@ -870,7 +892,9 @@ function agregarAsignatura(asignaturaId) {
         console.log('Datos recibidos:', data);
         if (data.success) {
             alert(data.message);
-            if (data.redirect) {
+            if (VOLVER_SHOW) {
+                window.location.href = VOLVER_SHOW;
+            } else if (data.redirect) {
                 window.location.href = data.redirect;
             } else {
                 window.location.reload();
@@ -971,7 +995,9 @@ function vincularAsignaturas() {
         console.log('Datos recibidos:', data);
             if (data.success) {
             alert(data.message);
-            if (data.redirect) {
+            if (VOLVER_SHOW) {
+                window.location.href = VOLVER_SHOW;
+            } else if (data.redirect) {
                 window.location.href = data.redirect;
             } else {
                 window.location.reload();
