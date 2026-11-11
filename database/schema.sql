@@ -1,7 +1,7 @@
 -- =====================================================
 -- ESQUEMA DE BASE DE DATOS BIBLIOGES
 -- =====================================================
--- Generado a partir de la estructura en uso (2026-11-09, MySQL 8.0.46-0ubuntu0.24.04.4).
+-- Generado a partir de la estructura en uso (2026-11-11, MySQL 8.0.46-0ubuntu0.24.04.4).
 -- Instalación nueva (base de datos vacía):
 --   mysql -u <usuario> -p <base_de_datos> < database/schema.sql
 -- Datos de ejemplo, solo para desarrollo/pruebas (NO en producción):
@@ -499,7 +499,7 @@ CREATE TABLE IF NOT EXISTS `bibliografias_declaradas_historial` (
 CREATE TABLE IF NOT EXISTS `tareas_alma_detalle` (
   `id` int NOT NULL AUTO_INCREMENT,
   `ejecucion_id` int NOT NULL,
-  `accion` enum('actualizada','mms_discrepante','a_electronico','eliminada','sin_copias','duplicada','revisar','discrepancia') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `accion` enum('actualizada','mms_corregido','mms_discrepante','a_electronico','eliminada','sin_copias','duplicada','revisar','discrepancia') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `bibliografia_disponible_id` int NOT NULL,
   `bibliografia_declarada_id` int DEFAULT NULL,
   `titulo` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
