@@ -241,6 +241,16 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link {% if current_page == 'coberturas-impresos' %}active{% endif %}" href="{{ app_url }}reportes/coberturas?recursos=impresos">
+                            <i class="fas fa-book-open"></i> Cobertura impresa
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if current_page == 'coberturas-electronicos' %}active{% endif %}" href="{{ app_url }}reportes/coberturas?recursos=electronicos">
+                            <i class="fas fa-laptop"></i> Cobertura electrónica
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {% if current_page == 'listado-bibliografias' %}active{% endif %}" href="{{ app_url }}reportes/listado-bibliografias">
                             <i class="fas fa-list"></i> Listado de Bibliografías
                         </a>

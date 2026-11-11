@@ -18,6 +18,73 @@ use PDOException;
 class ReporteController extends BaseController
 {
     protected $pdo;
+
+    /** Recursos que cuentan como disponibles en los reportes de cobertura (listado y detalle) */
+    public const RECURSOS = [
+        'todos' => 'Todos los recursos',
+        'impresos' => 'Recursos impresos',
+        'electronicos' => 'Recursos electrónicos',
+    ];
+
+    private const AYUDA_RECURSOS = [
+        'todos' => 'Una bibliografía cuenta como disponible si tiene una edición electrónica o "ambos", o una impresa con copias en la sede de la carrera.',
+        'impresos' => 'Una bibliografía cuenta como disponible si tiene una edición impresa o "ambos" con copias en la sede de la carrera.',
+        'electronicos' => 'Una bibliografía cuenta como disponible si tiene una edición electrónica o "ambos".',
+    ];
+
+    /** Recursos considerados en esta petición: 'todos' (regla general), 'impresos' o 'electronicos' */
+    private string $recursos = 'todos';
+
+    private function leerRecursos(array $params): string
+    {
+        $recursos = (string) ($params['recursos'] ?? 'todos');
+
+        return array_key_exists($recursos, self::RECURSOS) ? $recursos : 'todos';
+    }
+
+    /** Variables de las plantillas de cobertura según los recursos considerados. */
+    private function datosRecursos(): array
+    {
+        return [
+            'current_page' => $this->recursos === 'todos' ? 'coberturas' : 'coberturas-' . $this->recursos,
+            'recursos' => $this->recursos,
+            'recursos_etiqueta' => self::RECURSOS[$this->recursos],
+            'recursos_ayuda' => self::AYUDA_RECURSOS[$this->recursos],
+            'recursos_opciones' => self::RECURSOS,
+            'param_recursos' => $this->recursos === 'todos' ? '' : '&recursos=' . $this->recursos,
+        ];
+    }
+
+    /**
+     * Condición de "bibliografía disponible" sobre bibliografias_disponibles para una sede, según los recursos:
+     *  - todos: electrónico o "ambos" (cualquier sede), o impreso con copias en la sede
+     *  - impresos: impreso o "ambos" con copias en la sede
+     *  - electronicos: electrónico o "ambos"
+     */
+    private function condicionDisponible($query, $sedeId): void
+    {
+        $conCopias = static function ($q) use ($sedeId) {
+            $q->whereExists(function ($sub) use ($sedeId) {
+                $sub->select(DB::raw(1))
+                    ->from('bibliografias_disponibles_sedes')
+                    ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
+                    ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
+                    ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
+            });
+        };
+        if ($this->recursos === 'impresos') {
+            $query->whereIn('bibliografias_disponibles.disponibilidad', ['impreso', 'ambos'])->where($conCopias);
+        } elseif ($this->recursos === 'electronicos') {
+            $query->whereIn('bibliografias_disponibles.disponibilidad', ['electronico', 'ambos']);
+        } else {
+            $query->where(function ($q) use ($conCopias) {
+                $q->whereIn('bibliografias_disponibles.disponibilidad', ['electronico', 'ambos'])
+                    ->orWhere(function ($q2) use ($conCopias) {
+                        $q2->where('bibliografias_disponibles.disponibilidad', 'impreso')->where($conCopias);
+                    });
+            });
+        }
+    }
     
     /**
      * Convierte valores especiales de ejemplares a números para la base de datos
@@ -114,17 +181,7 @@ class ReporteController extends BaseController
                 ->where('bibliografia_declarada_id', $bibliografia->id)
                 ->where('estado', 1)
                 ->where(function ($query) use ($sedeId) {
-                    $query->whereIn('disponibilidad', ['electronico', 'ambos'])
-                          ->orWhere(function ($q) use ($sedeId) {
-                              $q->where('disponibilidad', 'impreso')
-                                ->whereExists(function ($sub) use ($sedeId) {
-                                    $sub->select(DB::raw(1))
-                                        ->from('bibliografias_disponibles_sedes')
-                                        ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
-                                        ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
-                                        ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
-                                });
-                          });
+                    $this->condicionDisponible($query, $sedeId);
                 })
                 ->exists();
             if ($disponible) {
@@ -203,17 +260,7 @@ class ReporteController extends BaseController
                     ->whereRaw('bibliografias_disponibles.bibliografia_declarada_id = bibliografias_declaradas.id')
                     ->where('bibliografias_disponibles.estado', 1)
                     ->where(function ($subQuery) use ($sedeId) {
-                        $subQuery->whereIn('bibliografias_disponibles.disponibilidad', ['electronico', 'ambos'])
-                                ->orWhere(function ($q) use ($sedeId) {
-                                    $q->where('bibliografias_disponibles.disponibilidad', 'impreso')
-                                      ->whereExists(function ($sub) use ($sedeId) {
-                                          $sub->select(DB::raw(1))
-                                              ->from('bibliografias_disponibles_sedes')
-                                              ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
-                                              ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
-                                              ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
-                                      });
-                                });
+                        $this->condicionDisponible($subQuery, $sedeId);
                     });
             })
             ->distinct('bibliografias_declaradas.id')
@@ -398,17 +445,7 @@ class ReporteController extends BaseController
                     ->whereRaw('bibliografias_disponibles.bibliografia_declarada_id = bibliografias_declaradas.id')
                     ->where('bibliografias_disponibles.estado', 1)
                     ->where(function ($subQuery) use ($sedeId) {
-                        $subQuery->whereIn('bibliografias_disponibles.disponibilidad', ['electronico', 'ambos'])
-                                ->orWhere(function ($q) use ($sedeId) {
-                                    $q->where('bibliografias_disponibles.disponibilidad', 'impreso')
-                                      ->whereExists(function ($sub) use ($sedeId) {
-                                          $sub->select(DB::raw(1))
-                                              ->from('bibliografias_disponibles_sedes')
-                                              ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
-                                              ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
-                                              ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
-                                      });
-                                });
+                        $this->condicionDisponible($subQuery, $sedeId);
                     });
             })
             ->distinct('bibliografias_declaradas.id')
@@ -555,18 +592,25 @@ class ReporteController extends BaseController
             }
         }
 
-        // 5) Disponibilidad: electrónico/ambos (cualquier sede) o impreso con ejemplares en la sede
-        $electronicos = array_flip(array_map('intval', DB::table('bibliografias_disponibles')
-            ->where('estado', 1)->whereIn('disponibilidad', ['electronico', 'ambos'])
-            ->whereNotNull('bibliografia_declarada_id')->distinct()->pluck('bibliografia_declarada_id')->all()));
+        // 5) Disponibilidad según los recursos considerados (misma regla que condicionDisponible()):
+        //    electrónico/ambos en cualquier sede y/o impreso (o "ambos" en el reporte de impresos) con copias en la sede
+        $electronicos = [];
+        if ($this->recursos !== 'impresos') {
+            $electronicos = array_flip(array_map('intval', DB::table('bibliografias_disponibles')
+                ->where('estado', 1)->whereIn('disponibilidad', ['electronico', 'ambos'])
+                ->whereNotNull('bibliografia_declarada_id')->distinct()->pluck('bibliografia_declarada_id')->all()));
+        }
         $impresos = [];
-        $filasImpresos = DB::table('bibliografias_disponibles as bdis')
-            ->join('bibliografias_disponibles_sedes as bds', 'bds.bibliografia_disponible_id', '=', 'bdis.id')
-            ->where('bdis.estado', 1)->where('bdis.disponibilidad', 'impreso')->where('bds.ejemplares', '>', 0)
-            ->whereNotNull('bdis.bibliografia_declarada_id')
-            ->select('bdis.bibliografia_declarada_id', 'bds.sede_id')->distinct()->get();
-        foreach ($filasImpresos as $fila) {
-            $impresos[(int) $fila->sede_id][(int) $fila->bibliografia_declarada_id] = true;
+        if ($this->recursos !== 'electronicos') {
+            $filasImpresos = DB::table('bibliografias_disponibles as bdis')
+                ->join('bibliografias_disponibles_sedes as bds', 'bds.bibliografia_disponible_id', '=', 'bdis.id')
+                ->where('bdis.estado', 1)->whereIn('bdis.disponibilidad', $this->recursos === 'impresos' ? ['impreso', 'ambos'] : ['impreso'])
+                ->where('bds.ejemplares', '>', 0)
+                ->whereNotNull('bdis.bibliografia_declarada_id')
+                ->select('bdis.bibliografia_declarada_id', 'bds.sede_id')->distinct()->get();
+            foreach ($filasImpresos as $fila) {
+                $impresos[(int) $fila->sede_id][(int) $fila->bibliografia_declarada_id] = true;
+            }
         }
 
         // 6) Porcentajes por plan
@@ -1139,7 +1183,7 @@ class ReporteController extends BaseController
             $stateManager->clearState();
 
             return $response
-                ->withHeader('Location', app_url('reportes/coberturas'))
+                ->withHeader('Location', app_url('reportes/coberturas' . (($r = $this->leerRecursos($request->getQueryParams())) === 'todos' ? '' : '?recursos=' . $r)))
                 ->withStatus(302);
 
         } catch (\Exception $e) {
@@ -1912,6 +1956,7 @@ class ReporteController extends BaseController
         
         // Obtener parámetros de la URL
         $urlParams = $_GET;
+        $this->recursos = $this->leerRecursos($urlParams);
         
         // Obtener estado (combinando sesión y URL)
         $state = $stateManager->getState($urlParams);
@@ -2116,14 +2161,14 @@ class ReporteController extends BaseController
             'carreras' => $carreras,
             'session' => $sessionData,
             'app_url' => app_url(),
-            'current_page' => 'coberturas',
+            ...$this->datosRecursos(),
             'anio_actual' => $anioActual,
             'filtros' => [
                 'sede' => $sede ?? '',
                 'tipo_programa' => $tipoPrograma ?? '',
                 'estado' => $estado ?? '',
                 'nombre' => $nombre ?? ''
-            ],
+            ] + ($this->recursos === 'todos' ? [] : ['recursos' => $this->recursos]),
             'tipos_formacion_seleccionados' => $tiposFormacionFiltro,
             'hay_filtros_asignaturas' => !empty($tiposFormacionFiltro),
             'paginacion' => [
@@ -2153,6 +2198,7 @@ class ReporteController extends BaseController
     {
         // Definir variables de filtro ANTES de cualquier log o uso
         $queryParams = $request->getQueryParams();
+        $this->recursos = $this->leerRecursos($queryParams);
         $tiposFormacionFiltro = $queryParams['tipos_formacion'] ?? [];
         if (!is_array($tiposFormacionFiltro)) {
             $tiposFormacionFiltro = [$tiposFormacionFiltro];
@@ -2432,17 +2478,7 @@ class ReporteController extends BaseController
                     ->whereRaw('bibliografias_disponibles.bibliografia_declarada_id = bibliografias_declaradas.id')
                     ->where('bibliografias_disponibles.estado', 1)
                     ->where(function ($subQuery) use ($sedeId) {
-                        $subQuery->whereIn('bibliografias_disponibles.disponibilidad', ['electronico', 'ambos'])
-                                ->orWhere(function ($q) use ($sedeId) {
-                                    $q->where('bibliografias_disponibles.disponibilidad', 'impreso')
-                                      ->whereExists(function ($sub) use ($sedeId) {
-                                          $sub->select(DB::raw(1))
-                                              ->from('bibliografias_disponibles_sedes')
-                                              ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
-                                              ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
-                                              ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
-                                      });
-                                });
+                        $this->condicionDisponible($subQuery, $sedeId);
                     });
             })
             ->distinct('bibliografias_declaradas.id')
@@ -2501,7 +2537,7 @@ class ReporteController extends BaseController
             'todos_filtros_guardados_en_cero' => $todosFiltrosGuardadosEnCero,
             'totales_carrera' => $totalesCarrera,
             'cobertura_basica_total' => $coberturaBasicaTotal,
-            'current_page' => 'coberturas'
+            ...$this->datosRecursos(),
         ]);
         
         error_log('ReporteController@reporteBibliografiaBasica: Vista renderizada correctamente');
@@ -4145,6 +4181,7 @@ class ReporteController extends BaseController
         $sedeId = $args['sede_id'];
         $carreraId = $args['carrera_id'];
         $queryParams = $request->getQueryParams();
+        $this->recursos = $this->leerRecursos($queryParams);
         $codigoPlan = $queryParams['codigo'] ?? null;
         $vigenciaDesdePlan = $queryParams['vigencia_desde'] ?? null;
         $vigenciaHastaPlan = $queryParams['vigencia_hasta'] ?? null;
@@ -4374,17 +4411,7 @@ class ReporteController extends BaseController
                     ->whereRaw('bibliografias_disponibles.bibliografia_declarada_id = bibliografias_declaradas.id')
                     ->where('bibliografias_disponibles.estado', 1)
                     ->where(function ($subQuery) use ($sedeId) {
-                        $subQuery->whereIn('bibliografias_disponibles.disponibilidad', ['electronico', 'ambos'])
-                                ->orWhere(function ($q) use ($sedeId) {
-                                    $q->where('bibliografias_disponibles.disponibilidad', 'impreso')
-                                      ->whereExists(function ($sub) use ($sedeId) {
-                                          $sub->select(DB::raw(1))
-                                              ->from('bibliografias_disponibles_sedes')
-                                              ->whereRaw('bibliografias_disponibles_sedes.bibliografia_disponible_id = bibliografias_disponibles.id')
-                                              ->where('bibliografias_disponibles_sedes.sede_id', $sedeId)
-                                              ->where('bibliografias_disponibles_sedes.ejemplares', '>', 0);
-                                      });
-                                });
+                        $this->condicionDisponible($subQuery, $sedeId);
                     });
             })
             ->distinct('bibliografias_declaradas.id')
@@ -4435,7 +4462,7 @@ class ReporteController extends BaseController
             'cobertura_complementaria_total' => $coberturaComplementariaTotal,
             'session' => $_SESSION ?? [],
             'app_url' => app_url(),
-            'current_page' => 'coberturas'
+            ...$this->datosRecursos(),
         ]);
         
         $response->getBody()->write($html);
