@@ -61,8 +61,12 @@ ini_set('session.use_strict_mode', 1);
 ini_set('session.save_path', __DIR__ . '/../storage/framework/sessions');
 
 
-// Iniciar sesión si no está iniciada
-if (session_status() === PHP_SESSION_NONE) {
+// Iniciar sesión si no está iniciada. La API v1 (/biblioges/api/v1/) se autentica con API key y no usa
+// sesión: así no se crea un archivo de sesión por cada llamada.
+$esApiV1 = strpos((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/biblioges/api/v1/') === 0;
+if ($esApiV1) {
+    $_SESSION = [];
+} elseif (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 

@@ -1,0 +1,274 @@
+{% extends "base.twig" %}
+
+{% block title %}API Keys - Sistema de Bibliografía{% endblock %}
+
+{% block head %}
+<style>
+    .keys-table { font-size: 0.8rem !important; width: 100% !important; }
+    .keys-table thead th {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%) !important;
+        color: white !important;
+        font-weight: 600 !important;
+        font-size: 0.75rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.3px !important;
+        padding: 8px 6px !important;
+        border: none !important;
+        vertical-align: middle !important;
+    }
+    .keys-table tbody td { font-size: 0.8rem !important; padding: 8px 6px !important; vertical-align: middle !important; }
+    .keys-table tr.inactiva td { color: #858796; }
+    .prefijo { font-family: SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.8rem; }
+    .info-api { font-size: 0.85rem; }
+    .info-api code { font-size: 0.8rem; }
+    .swal-bitacora { font-size: 0.75rem; text-align: left; }
+    .swal-bitacora td, .swal-bitacora th { padding: 3px 6px !important; white-space: nowrap; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h1 class="h3 mb-0 text-gray-800">API Keys</h1>
+        <div class="d-flex gap-2">
+            <a href="{{ url_docs }}" target="_blank" rel="noopener" class="btn btn-outline-primary">
+                <i class="fas fa-book"></i> Documentación de la API
+            </a>
+            <button type="button" class="btn btn-primary" id="btnNuevaKey">
+                <i class="fas fa-plus"></i> Nueva API key
+            </button>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-body info-api">
+            <p class="mb-2">
+                Las API keys permiten a otros sistemas consultar Biblioges (solo lectura) mediante la
+                <strong>API de consulta v1</strong>: <code>{{ url_base_api }}</code>.
+                Cada sistema debe enviar su key en la cabecera <code>X-API-Key</code>.
+            </p>
+            <p class="mb-0 text-muted">
+                La key completa se muestra <strong>una sola vez</strong>, al crearla; Biblioges solo guarda una huella (hash).
+                Si se pierde, revóquela y cree otra. Use una key por sistema para poder revocarlas por separado.
+            </p>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Keys registradas</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover keys-table">
+                    <thead>
+                        <tr>
+                            <th>Sistema</th>
+                            <th>Prefijo</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-center">Límite/min</th>
+                            <th class="text-center">Expira</th>
+                            <th class="text-center">Último uso</th>
+                            <th class="text-center">Usos 30 días</th>
+                            <th>Creada</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for k in keys %}
+                        {% set activa = k.estado == 1 and not k.expirada %}
+                        <tr class="{{ activa ? '' : 'inactiva' }}">
+                            <td>
+                                <strong>{{ k.nombre }}</strong>
+                                {% if k.descripcion %}<br><span class="text-muted">{{ k.descripcion }}</span>{% endif %}
+                            </td>
+                            <td class="prefijo">{{ k.prefijo }}…</td>
+                            <td class="text-center">
+                                {% if k.estado != 1 %}
+                                    <span class="badge bg-danger" title="Revocada {{ k.fecha_revocacion ? k.fecha_revocacion|date('d-m-Y H:i') : '' }}{{ k.revocado_por ? ' por ' ~ k.revocado_por : '' }}">Revocada</span>
+                                {% elseif k.expirada %}
+                                    <span class="badge bg-secondary">Expirada</span>
+                                {% else %}
+                                    <span class="badge bg-success">Activa</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">{{ k.limite_por_minuto }}</td>
+                            <td class="text-center">{{ k.fecha_expiracion ? k.fecha_expiracion|date('d-m-Y') : 'No expira' }}</td>
+                            <td class="text-center">{{ k.ultimo_uso ? k.ultimo_uso|date('d-m-Y H:i') : 'Nunca' }}</td>
+                            <td class="text-center">{{ k.usos_30_dias|number_format(0, ',', '.') }}</td>
+                            <td>
+                                {{ k.fecha_creacion|date('d-m-Y H:i') }}
+                                {% if k.creado_por %}<br><span class="text-muted">{{ k.creado_por }}</span>{% endif %}
+                            </td>
+                            <td class="text-center text-nowrap">
+                                <button type="button" class="btn btn-sm btn-info btn-bitacora" data-id="{{ k.id }}" data-nombre="{{ k.nombre }}" title="Ver uso">
+                                    <i class="fas fa-chart-line"></i>
+                                </button>
+                                {% if k.estado == 1 %}
+                                <button type="button" class="btn btn-sm btn-danger btn-revocar" data-id="{{ k.id }}" data-nombre="{{ k.nombre }}" title="Revocar">
+                                    <i class="fas fa-ban"></i>
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4">No hay API keys registradas.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    const APP_URL = {{ app_url|json_encode|raw }};
+    const CSRF = {{ csrf|json_encode|raw }};
+    const HOY = {{ hoy|json_encode|raw }};
+
+    function escHtml(valor) {
+        return String(valor ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+    }
+
+    async function enviar(url, cuerpo) {
+        const resp = await fetch(APP_URL + url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRF-Token': CSRF, 'X-Requested-With': 'XMLHttpRequest'},
+            body: JSON.stringify(cuerpo || {})
+        });
+        let datos = {};
+        try { datos = await resp.json(); } catch (e) { datos = {success: false, message: 'Respuesta no válida del servidor.'}; }
+        return datos;
+    }
+
+    document.getElementById('btnNuevaKey').addEventListener('click', function () {
+        Swal.fire({
+            title: 'Nueva API key',
+            html:
+                '<div class="text-start">' +
+                '<label class="form-label" for="ak_nombre">Sistema o integración *</label>' +
+                '<input id="ak_nombre" class="form-control mb-2" maxlength="100" placeholder="Ej.: Portal de asignaturas">' +
+                '<label class="form-label" for="ak_desc">Descripción</label>' +
+                '<input id="ak_desc" class="form-control mb-2" maxlength="255" placeholder="Responsable, uso, etc.">' +
+                '<div class="row g-2"><div class="col-6">' +
+                '<label class="form-label" for="ak_limite">Solicitudes por minuto</label>' +
+                '<input id="ak_limite" type="number" class="form-control" min="1" max="1000" value="60">' +
+                '</div><div class="col-6">' +
+                '<label class="form-label" for="ak_exp">Expira el (opcional)</label>' +
+                '<input id="ak_exp" type="date" class="form-control" min="' + HOY + '">' +
+                '</div></div></div>',
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'Crear',
+            cancelButtonText: 'Cancelar',
+            showLoaderOnConfirm: true,
+            preConfirm: async () => {
+                const nombre = document.getElementById('ak_nombre').value.trim();
+                if (!nombre) {
+                    Swal.showValidationMessage('Indique el sistema o integración.');
+                    return false;
+                }
+                const datos = await enviar('api-keys', {
+                    nombre: nombre,
+                    descripcion: document.getElementById('ak_desc').value.trim(),
+                    limite_por_minuto: document.getElementById('ak_limite').value,
+                    fecha_expiracion: document.getElementById('ak_exp').value
+                });
+                if (!datos.success) {
+                    Swal.showValidationMessage(escHtml(datos.message || 'No fue posible crear la API key.'));
+                    return false;
+                }
+                return datos;
+            },
+            allowOutsideClick: () => !Swal.isLoading()
+        }).then(resultado => {
+            if (!resultado.isConfirmed || !resultado.value) {
+                return;
+            }
+            Swal.fire({
+                icon: 'success',
+                title: 'API key creada',
+                html:
+                    '<p class="mb-2">Copie la key ahora: <strong>no se volverá a mostrar</strong>.</p>' +
+                    '<div class="input-group">' +
+                    '<input id="ak_valor" class="form-control font-monospace" readonly value="' + escHtml(resultado.value.key) + '">' +
+                    '<button class="btn btn-outline-secondary" type="button" id="ak_copiar"><i class="fas fa-copy"></i> Copiar</button>' +
+                    '</div>',
+                confirmButtonText: 'Ya la copié',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    document.getElementById('ak_copiar').addEventListener('click', async () => {
+                        const campo = document.getElementById('ak_valor');
+                        campo.select();
+                        try { await navigator.clipboard.writeText(campo.value); } catch (e) { document.execCommand('copy'); }
+                        document.getElementById('ak_copiar').innerHTML = '<i class="fas fa-check"></i> Copiada';
+                    });
+                }
+            }).then(() => window.location.reload());
+        });
+    });
+
+    document.querySelectorAll('.btn-revocar').forEach(boton => {
+        boton.addEventListener('click', () => {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Revocar API key',
+                html: 'El sistema <strong>' + escHtml(boton.dataset.nombre) + '</strong> dejará de poder consultar la API de inmediato. Esta acción no se puede deshacer.',
+                showCancelButton: true,
+                confirmButtonText: 'Revocar',
+                confirmButtonColor: '#e74a3b',
+                cancelButtonText: 'Cancelar'
+            }).then(async r => {
+                if (!r.isConfirmed) {
+                    return;
+                }
+                const datos = await enviar('api-keys/' + encodeURIComponent(boton.dataset.id) + '/revocar');
+                if (datos.success) {
+                    window.location.reload();
+                } else {
+                    Swal.fire('Error', escHtml(datos.message || 'No fue posible revocar la API key.'), 'error');
+                }
+            });
+        });
+    });
+
+    document.querySelectorAll('.btn-bitacora').forEach(boton => {
+        boton.addEventListener('click', async () => {
+            let datos;
+            try {
+                const resp = await fetch(APP_URL + 'api-keys/' + encodeURIComponent(boton.dataset.id) + '/bitacora', {headers: {'Accept': 'application/json'}});
+                datos = await resp.json();
+            } catch (e) {
+                datos = {success: false, message: 'No fue posible obtener la bitácora.'};
+            }
+            if (!datos.success) {
+                Swal.fire('Error', escHtml(datos.message), 'error');
+                return;
+            }
+            const resumen = datos.resumen_30_dias.length
+                ? datos.resumen_30_dias.map(r => 'HTTP ' + escHtml(r.codigo_http) + ': <strong>' + escHtml(r.cantidad) + '</strong>').join(' · ')
+                : 'Sin llamadas en los últimos 30 días.';
+            const filas = datos.ultimas.map(u =>
+                '<tr><td>' + escHtml(u.fecha) + '</td><td>' + escHtml(u.codigo_http) + '</td><td>' + escHtml(u.ruta) +
+                (u.parametros ? '?' + escHtml(u.parametros) : '') + '</td><td class="text-end">' + escHtml(u.duracion_ms) + ' ms</td><td>' + escHtml(u.ip) + '</td></tr>'
+            ).join('');
+            Swal.fire({
+                title: 'Uso de ' + escHtml(boton.dataset.nombre),
+                width: '60rem',
+                html:
+                    '<p class="mb-2">Últimos 30 días: ' + resumen + '</p>' +
+                    (filas
+                        ? '<div style="max-height: 50vh; overflow: auto;"><table class="table table-sm table-striped swal-bitacora"><thead><tr><th>Fecha</th><th>HTTP</th><th>Ruta</th><th>Duración</th><th>IP</th></tr></thead><tbody>' + filas + '</tbody></table></div><p class="small text-muted mb-0">Se muestran las últimas 100 llamadas.</p>'
+                        : '<p class="text-muted mb-0">Esta key aún no se ha usado.</p>'),
+                confirmButtonText: 'Cerrar'
+            });
+        });
+    });
+})();
+</script>
+{% endblock %}

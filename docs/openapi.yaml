@@ -1,0 +1,365 @@
+openapi: 3.0.3
+info:
+  title: API de consulta Biblioges
+  version: 1.0.0
+  description: |
+    API REST de solo lectura para consultar las bibliografías declaradas y disponibles de Biblioges
+    por carrera (plan de estudio) y por asignatura. Todas las respuestas son JSON en UTF-8.
+    Solo se entregan bibliografías activas (vínculos, declaradas y disponibles).
+
+    **Autenticación:** envíe la API key en la cabecera `X-API-Key` (también se acepta
+    `Authorization: Bearer <key>`). Las keys las genera un administrador en Biblioges
+    (Administración → API Keys).
+
+    **Límite:** cada key tiene un máximo de solicitudes por minuto (por defecto 60). Las cabeceras
+    `X-RateLimit-Limit` y `X-RateLimit-Remaining` informan el límite y lo que queda; al superarlo se
+    responde `429` con `Retry-After`.
+
+    Guía completa: `docs/API.md` en el repositorio.
+servers:
+  - url: /biblioges/api/v1
+    description: Servidor actual
+security:
+  - ApiKey: []
+tags:
+  - name: Carreras
+  - name: Asignaturas
+paths:
+  /carreras:
+    get:
+      tags: [Carreras]
+      summary: Lista los planes de estudio (código de carrera, sede y vigencias)
+      description: Sirve para conocer el código y la vigencia que se usan en las demás consultas por carrera.
+      operationId: listarCarreras
+      parameters:
+        - name: tipo_programa
+          in: query
+          description: "P = pregrado, G = postgrado, O = otro."
+          schema: { type: string, enum: [P, G, O] }
+        - name: sede
+          in: query
+          description: Código de la sede (por ejemplo S001).
+          schema: { type: string, example: S001 }
+        - name: solo_vigentes
+          in: query
+          description: "Solo planes vigentes: carrera y plan activos y vigencia_hasta igual o posterior al año en curso."
+          schema: { type: boolean, default: false }
+      responses:
+        '200':
+          description: Planes de estudio.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ListaCarreras' }
+        '400': { $ref: '#/components/responses/ParametroInvalido' }
+        '401': { $ref: '#/components/responses/NoAutorizado' }
+        '429': { $ref: '#/components/responses/LimiteExcedido' }
+  /carreras/{codigo}/bibliografias-declaradas:
+    get:
+      tags: [Carreras]
+      summary: Bibliografías declaradas de una carrera, agrupadas por asignatura
+      operationId: declaradasCarrera
+      parameters:
+        - $ref: '#/components/parameters/CodigoCarrera'
+        - $ref: '#/components/parameters/VigenciaDesde'
+        - $ref: '#/components/parameters/TipoBibliografia'
+        - $ref: '#/components/parameters/Formacion'
+      responses:
+        '200':
+          description: Asignaturas del plan con sus bibliografías declaradas.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RespuestaCarreraDeclaradas' }
+        '400': { $ref: '#/components/responses/ParametroInvalido' }
+        '401': { $ref: '#/components/responses/NoAutorizado' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '429': { $ref: '#/components/responses/LimiteExcedido' }
+  /carreras/{codigo}/bibliografias-disponibles:
+    get:
+      tags: [Carreras]
+      summary: Bibliografías disponibles de una carrera, agrupadas por asignatura y bibliografía declarada
+      description: Solo se incluyen las bibliografías declaradas que tienen al menos una bibliografía disponible activa.
+      operationId: disponiblesCarrera
+      parameters:
+        - $ref: '#/components/parameters/CodigoCarrera'
+        - $ref: '#/components/parameters/VigenciaDesde'
+        - $ref: '#/components/parameters/TipoBibliografia'
+        - $ref: '#/components/parameters/Formacion'
+        - $ref: '#/components/parameters/Ediciones'
+      responses:
+        '200':
+          description: Asignaturas del plan con sus bibliografías disponibles.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RespuestaCarreraDisponibles' }
+        '400': { $ref: '#/components/responses/ParametroInvalido' }
+        '401': { $ref: '#/components/responses/NoAutorizado' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '429': { $ref: '#/components/responses/LimiteExcedido' }
+  /asignaturas/{codigo}/bibliografias-declaradas:
+    get:
+      tags: [Asignaturas]
+      summary: Bibliografías declaradas de una asignatura
+      operationId: declaradasAsignatura
+      parameters:
+        - $ref: '#/components/parameters/CodigoAsignatura'
+        - $ref: '#/components/parameters/TipoBibliografia'
+      responses:
+        '200':
+          description: Asignatura y sus bibliografías declaradas.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RespuestaAsignaturaDeclaradas' }
+        '400': { $ref: '#/components/responses/ParametroInvalido' }
+        '401': { $ref: '#/components/responses/NoAutorizado' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '429': { $ref: '#/components/responses/LimiteExcedido' }
+  /asignaturas/{codigo}/bibliografias-disponibles:
+    get:
+      tags: [Asignaturas]
+      summary: Bibliografías disponibles de una asignatura, por bibliografía declarada
+      description: Solo se incluyen las bibliografías declaradas que tienen al menos una bibliografía disponible activa.
+      operationId: disponiblesAsignatura
+      parameters:
+        - $ref: '#/components/parameters/CodigoAsignatura'
+        - $ref: '#/components/parameters/TipoBibliografia'
+        - $ref: '#/components/parameters/Ediciones'
+      responses:
+        '200':
+          description: Asignatura y sus bibliografías disponibles.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RespuestaAsignaturaDisponibles' }
+        '400': { $ref: '#/components/responses/ParametroInvalido' }
+        '401': { $ref: '#/components/responses/NoAutorizado' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '429': { $ref: '#/components/responses/LimiteExcedido' }
+components:
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+  parameters:
+    CodigoCarrera:
+      name: codigo
+      in: path
+      required: true
+      description: Código de la carrera (plan), por ejemplo 8213.
+      schema: { type: string, example: '8213' }
+    CodigoAsignatura:
+      name: codigo
+      in: path
+      required: true
+      description: Código de la asignatura, por ejemplo ECDE-00666.
+      schema: { type: string, example: ECDE-00666 }
+    VigenciaDesde:
+      name: vigencia_desde
+      in: query
+      description: |
+        Vigencia de inicio del plan (AAAASS, por ejemplo 202610). Si se omite se usa el plan vigente de
+        vigencia más reciente; si no hay planes vigentes, el de vigencia más reciente.
+      schema: { type: string, pattern: '^[0-9]{1,6}$', example: '202610' }
+    TipoBibliografia:
+      name: tipo_bibliografia
+      in: query
+      description: Tipo de vínculo con la asignatura.
+      schema: { type: string, enum: [basica, complementaria, otro, todas], default: todas }
+    Formacion:
+      name: formacion
+      in: query
+      description: |
+        Asignaturas de formación que se incluyen además de las asignaturas regulares de la malla.
+        `todas` (por defecto), `ninguna`, `plan` (los filtros de formación guardados para el plan en los
+        reportes de cobertura; si no tiene, todas) o una lista separada por comas de:
+        `basica`, `general`, `idiomas`, `profesional`, `valores`, `especialidad`, `especial`.
+      schema: { type: string, default: todas, example: 'general,profesional' }
+    Ediciones:
+      name: ediciones
+      in: query
+      description: "`todas` las disponibles activas o solo la `ultima` (mayor año de edición) de cada bibliografía declarada."
+      schema: { type: string, enum: [todas, ultima], default: todas }
+  responses:
+    ParametroInvalido:
+      description: Parámetro con un valor no válido.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: { codigo: parametro_invalido, mensaje: 'Valores permitidos: basica, complementaria, otro o todas.', parametro: tipo_bibliografia } }
+    NoAutorizado:
+      description: Falta la API key, no es válida, fue revocada o expiró.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: { codigo: no_autorizado, mensaje: 'La API key no es válida, fue revocada o expiró.' } }
+    NoEncontrado:
+      description: "La carrera, la vigencia o la asignatura no existen (códigos: carrera_no_encontrada, vigencia_no_encontrada, asignatura_no_encontrada)."
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: { codigo: vigencia_no_encontrada, mensaje: 'La carrera 8213 no tiene un plan con vigencia desde 199910.', vigencias_disponibles: ['202610', '201410'] } }
+    LimiteExcedido:
+      description: Se superó el límite de solicitudes por minuto de la key.
+      headers:
+        Retry-After:
+          schema: { type: integer, example: 60 }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [codigo, mensaje]
+          properties:
+            codigo: { type: string, example: parametro_invalido }
+            mensaje: { type: string }
+            parametro: { type: string, description: Parámetro con problemas (solo en parametro_invalido). }
+            vigencias_disponibles: { type: array, items: { type: string }, description: Solo en vigencia_no_encontrada. }
+    Sede:
+      type: object
+      properties:
+        codigo: { type: string, example: S001 }
+        nombre: { type: string, example: Antofagasta }
+    Plan:
+      type: object
+      properties:
+        codigo: { type: string, example: '8213' }
+        nombre: { type: string, example: ARQUITECTURA }
+        tipo_programa: { type: string, enum: [P, G, O] }
+        sede: { $ref: '#/components/schemas/Sede' }
+        vigencia_desde: { type: string, example: '202610' }
+        vigencia_hasta: { type: string, example: '999999', description: '999999 = sin término.' }
+        vigente: { type: boolean }
+    ListaCarreras:
+      type: object
+      properties:
+        total: { type: integer }
+        carreras: { type: array, items: { $ref: '#/components/schemas/Plan' } }
+    Declarada:
+      type: object
+      properties:
+        id: { type: integer }
+        tipo_bibliografia: { type: string, enum: [basica, complementaria, otro] }
+        titulo: { type: string }
+        tipo: { type: string, nullable: true, enum: [libro, articulo, tesis, software, sitio_web, otro, generico] }
+        autores: { type: array, items: { type: string }, example: ['Glock, Hans-Johann'] }
+        anio_publicacion: { type: integer, nullable: true }
+        editorial: { type: string, nullable: true }
+        edicion: { type: string, nullable: true }
+        formato: { type: string, enum: [impreso, electronico, ambos] }
+        isbn: { type: string, nullable: true }
+        doi: { type: string, nullable: true }
+        url: { type: string, nullable: true }
+    Ejemplares:
+      type: object
+      properties:
+        sede: { $ref: '#/components/schemas/Sede' }
+        cantidad: { type: integer }
+    Disponible:
+      type: object
+      properties:
+        id: { type: integer }
+        titulo: { type: string }
+        autores: { type: array, items: { type: string } }
+        anio_edicion: { type: integer, nullable: true }
+        editorial: { type: string, nullable: true }
+        disponibilidad: { type: string, enum: [impreso, electronico, ambos] }
+        id_mms: { type: string, nullable: true, description: Identificador MMS en Alma. }
+        url_acceso: { type: string, nullable: true }
+        url_catalogo: { type: string, nullable: true }
+        ejemplares_digitales: { type: integer, nullable: true }
+        ejemplares: { type: array, description: Ejemplares impresos por sede (solo sedes con ejemplares)., items: { $ref: '#/components/schemas/Ejemplares' } }
+        total_ejemplares: { type: integer }
+        ejemplares_en_sede: { type: integer, description: Ejemplares en la sede del plan (o de la asignatura). }
+    DeclaradaConDisponibles:
+      allOf:
+        - $ref: '#/components/schemas/Declarada'
+        - type: object
+          properties:
+            disponibles: { type: array, items: { $ref: '#/components/schemas/Disponible' } }
+    AsignaturaMalla:
+      type: object
+      properties:
+        codigo: { type: string }
+        nombre: { type: string }
+    AsignaturaPlan:
+      type: object
+      properties:
+        codigo: { type: string }
+        nombre: { type: string }
+        tipo: { type: string, description: 'REGULAR o tipo de formación (FORMACION_GENERAL, FORMACION_PROFESIONAL, ...).' }
+        asignaturas_malla:
+          type: array
+          description: En asignaturas de formación, asignatura(s) de la malla de la que forman parte.
+          items: { $ref: '#/components/schemas/AsignaturaMalla' }
+    ParametrosCarrera:
+      type: object
+      properties:
+        vigencia_desde: { type: string, nullable: true }
+        tipo_bibliografia: { type: string }
+        formacion: { type: array, items: { type: string } }
+        formacion_origen: { type: string, description: Solo con formacion=plan. }
+        ediciones: { type: string, description: Solo en disponibles. }
+    Resumen:
+      type: object
+      properties:
+        asignaturas: { type: integer, description: Solo en consultas por carrera. }
+        bibliografias_declaradas: { type: integer, description: Bibliografías declaradas distintas. }
+        por_tipo: { type: object, additionalProperties: { type: integer }, example: { basica: 40, complementaria: 55, otro: 0 } }
+        declaradas_con_disponibles: { type: integer, description: Solo en disponibles. }
+        disponibles: { type: integer, description: Solo en disponibles. }
+    RespuestaCarreraDeclaradas:
+      type: object
+      properties:
+        carrera: { $ref: '#/components/schemas/Plan' }
+        parametros: { $ref: '#/components/schemas/ParametrosCarrera' }
+        resumen: { $ref: '#/components/schemas/Resumen' }
+        asignaturas:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/AsignaturaPlan'
+              - type: object
+                properties:
+                  bibliografias: { type: array, items: { $ref: '#/components/schemas/Declarada' } }
+    RespuestaCarreraDisponibles:
+      type: object
+      properties:
+        carrera: { $ref: '#/components/schemas/Plan' }
+        parametros: { $ref: '#/components/schemas/ParametrosCarrera' }
+        resumen: { $ref: '#/components/schemas/Resumen' }
+        asignaturas:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/AsignaturaPlan'
+              - type: object
+                properties:
+                  bibliografias: { type: array, items: { $ref: '#/components/schemas/DeclaradaConDisponibles' } }
+    Asignatura:
+      type: object
+      properties:
+        codigo: { type: string }
+        nombre: { type: string }
+        tipo: { type: string }
+        periodicidad: { type: string, enum: [anual, semestral] }
+        activa: { type: boolean }
+        unidad: { type: object, properties: { codigo: { type: string }, nombre: { type: string } } }
+        sede: { $ref: '#/components/schemas/Sede' }
+    RespuestaAsignaturaDeclaradas:
+      type: object
+      properties:
+        asignatura: { $ref: '#/components/schemas/Asignatura' }
+        parametros: { type: object, properties: { tipo_bibliografia: { type: string } } }
+        resumen: { $ref: '#/components/schemas/Resumen' }
+        bibliografias: { type: array, items: { $ref: '#/components/schemas/Declarada' } }
+    RespuestaAsignaturaDisponibles:
+      type: object
+      properties:
+        asignatura: { $ref: '#/components/schemas/Asignatura' }
+        parametros: { type: object, properties: { tipo_bibliografia: { type: string }, ediciones: { type: string } } }
+        resumen: { $ref: '#/components/schemas/Resumen' }
+        bibliografias: { type: array, items: { $ref: '#/components/schemas/DeclaradaConDisponibles' } }

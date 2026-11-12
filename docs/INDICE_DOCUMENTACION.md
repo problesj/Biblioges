@@ -56,6 +56,14 @@ Configuración de seguridad y certificados SSL.
   - Redirección HTTP a HTTPS
   - Headers de seguridad
 
+### 🔌 API de consulta v1
+API REST de solo lectura (JSON) para integrar Biblioges con otros sistemas.
+- **Ubicación:** `docs/API.md` (especificación OpenAPI en `docs/openapi.yaml`; Swagger UI en `/biblioges/api/v1/docs`)
+- **Contenido:**
+  - Autenticación con API key, límite de solicitudes y bitácora
+  - Endpoints de carreras, asignaturas y bibliografías declaradas y disponibles
+  - Administración de API keys, errores y despliegue
+
 ## Estructura de Documentación
 
 ```

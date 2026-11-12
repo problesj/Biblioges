@@ -293,6 +293,11 @@
                             <i class="fas fa-clock"></i> Tareas Programadas
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if current_page == 'api-keys' %}active{% endif %}" href="{{ app_url }}api-keys">
+                            <i class="fas fa-key"></i> API Keys
+                        </a>
+                    </li>
                     {% endif %}
                     {% if session.user_rol == 'admin' or session.user_rol == 'admin_bidoc' %}
                     <li class="nav-item">

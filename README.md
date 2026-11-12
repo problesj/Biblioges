@@ -27,6 +27,11 @@ Sistema web para la gestión de bibliografías universitarias, permitiendo la ad
 - **Estadísticas en tiempo real**
 - **Generación de listados** personalizables
 
+### API de Consulta
+- **API REST v1 de solo lectura** (JSON) para integrar otros sistemas: carreras, asignaturas y bibliografías declaradas y disponibles
+- **API keys** generadas por un administrador (Administración → API Keys), con límite por minuto, expiración y bitácora de uso
+- Documentación: [docs/API.md](docs/API.md), especificación [docs/openapi.yaml](docs/openapi.yaml) y Swagger UI en `/biblioges/api/v1/docs`
+
 ### Interfaz de Usuario
 - **Diseño responsive** compatible con móviles y tablets
 - **Navegación intuitiva** con breadcrumbs

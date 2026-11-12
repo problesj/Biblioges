@@ -21,6 +21,9 @@ use App\Controllers\TareaProgramadaController;
 use App\Controllers\UnidadController;
 use App\Middleware\AuthMiddleware;
 use App\Controllers\MallaController;
+use App\Controllers\ApiV1Controller;
+use App\Controllers\ApiKeyController;
+use App\Middleware\ApiKeyMiddleware;
 
 /** @var App $app */
 
@@ -30,6 +33,19 @@ $app->post('/biblioges/login', [AuthController::class, 'login']);
 $app->get('/biblioges/logout', [AuthController::class, 'logout']);
 $app->get('/login', [AuthController::class, 'showLogin']);
 $app->post('/login', [AuthController::class, 'login']);
+
+// API de consulta v1 (JSON, solo lectura): se autentica con API key, sin sesión. Ver docs/API.md
+$app->get('/biblioges/api/v1/docs', [ApiV1Controller::class, 'docs']);
+$app->get('/biblioges/api/v1/openapi.yaml', [ApiV1Controller::class, 'openapi']);
+$app->group('/biblioges/api/v1', function (RouteCollectorProxy $group) {
+    $group->get('/carreras', [ApiV1Controller::class, 'carreras']);
+    $group->get('/carreras/{codigo}/bibliografias-declaradas', [ApiV1Controller::class, 'carreraDeclaradas']);
+    $group->get('/carreras/{codigo}/bibliografias-disponibles', [ApiV1Controller::class, 'carreraDisponibles']);
+    $group->get('/asignaturas/{codigo}/bibliografias-declaradas', [ApiV1Controller::class, 'asignaturaDeclaradas']);
+    $group->get('/asignaturas/{codigo}/bibliografias-disponibles', [ApiV1Controller::class, 'asignaturaDisponibles']);
+    // Debe ir al final: cualquier otra ruta o método responde en JSON
+    $group->any('/{ruta:.*}', [ApiV1Controller::class, 'noEncontrada']);
+})->add(new ApiKeyMiddleware());
 
 // Rutas protegidas con middleware de autenticación
 $app->group('/biblioges', function (RouteCollectorProxy $group) {
@@ -317,6 +333,12 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->post('/tareas-programadas/{id:[0-9]+}/ejecutar', [TareaProgramadaController::class, 'ejecutarAhora']);
     $group->get('/tareas-programadas/ejecuciones/{id:[0-9]+}', [TareaProgramadaController::class, 'detalleAlma']);
     $group->get('/tareas-programadas/ejecuciones/{id:[0-9]+}/exportar', [TareaProgramadaController::class, 'exportarDetalleAlma']);
+
+    // Administración de API keys de la API de consulta v1 (solo admin)
+    $group->get('/api-keys', [ApiKeyController::class, 'index']);
+    $group->post('/api-keys', [ApiKeyController::class, 'crear']);
+    $group->post('/api-keys/{id:[0-9]+}/revocar', [ApiKeyController::class, 'revocar']);
+    $group->get('/api-keys/{id:[0-9]+}/bitacora', [ApiKeyController::class, 'bitacora']);
 
     // API para actualizar el perfil del usuario autenticado
     $group->post('/perfil/actualizar', [UsuarioController::class, 'actualizarPerfil']);

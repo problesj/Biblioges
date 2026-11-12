@@ -1,7 +1,7 @@
 -- =====================================================
 -- ESQUEMA DE BASE DE DATOS BIBLIOGES
 -- =====================================================
--- Generado a partir de la estructura en uso (2026-11-11, MySQL 8.0.46-0ubuntu0.24.04.4).
+-- Generado a partir de la estructura en uso (2026-11-12, MySQL 8.0.46-0ubuntu0.24.04.4).
 -- Instalación nueva (base de datos vacía):
 --   mysql -u <usuario> -p <base_de_datos> < database/schema.sql
 -- Datos de ejemplo, solo para desarrollo/pruebas (NO en producción):
@@ -479,6 +479,46 @@ CREATE TABLE IF NOT EXISTS `tareas_programadas_ejecuciones` (
   KEY `idx_tarea` (`tarea_id`,`fecha_inicio`),
   CONSTRAINT `fk_ejec_tarea` FOREIGN KEY (`tarea_id`) REFERENCES `tareas_programadas` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+-- Tabla api_keys
+CREATE TABLE IF NOT EXISTS `api_keys` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Sistema o integración que usa la key',
+  `descripcion` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `prefijo` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Inicio visible de la key, para identificarla',
+  `hash_key` char(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'SHA-256 de la key completa',
+  `limite_por_minuto` int NOT NULL DEFAULT '60' COMMENT 'Solicitudes permitidas por minuto',
+  `fecha_expiracion` date DEFAULT NULL COMMENT 'Último día válido; NULL = no expira',
+  `estado` tinyint(1) NOT NULL DEFAULT '1' COMMENT '1 = activa, 0 = revocada',
+  `creado_por` int DEFAULT NULL,
+  `revocado_por` int DEFAULT NULL,
+  `fecha_revocacion` datetime DEFAULT NULL,
+  `ultimo_uso` datetime DEFAULT NULL,
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_api_keys_hash` (`hash_key`),
+  KEY `fk_api_keys_creado_por` (`creado_por`),
+  KEY `fk_api_keys_revocado_por` (`revocado_por`),
+  CONSTRAINT `fk_api_keys_creado_por` FOREIGN KEY (`creado_por`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_api_keys_revocado_por` FOREIGN KEY (`revocado_por`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabla api_keys_bitacora
+CREATE TABLE IF NOT EXISTS `api_keys_bitacora` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `api_key_id` int NOT NULL,
+  `fecha` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `metodo` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ruta` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `parametros` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `codigo_http` smallint NOT NULL,
+  `duracion_ms` int DEFAULT NULL,
+  `ip` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_api_bitacora_key_fecha` (`api_key_id`,`fecha`),
+  CONSTRAINT `fk_api_bitacora_key` FOREIGN KEY (`api_key_id`) REFERENCES `api_keys` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Tabla bibliografias_declaradas_historial
 CREATE TABLE IF NOT EXISTS `bibliografias_declaradas_historial` (
