@@ -1,5 +1,7 @@
 # APIs de Google y Mejoras en Duplicados de Autores
 
+> **Actualización nov-2026:** Google Scholar y Google Custom Search fueron retirados (sin API oficial / API dada de baja); ver `docs/BUSQUEDA_FUENTES_EXTERNAS.md`. Lo relativo a esas APIs es histórico.
+
 ## Descripción General
 
 Este documento describe las nuevas funcionalidades implementadas en el sistema de gestión de bibliografías, incluyendo la integración con APIs de Google (Scholar y Books) y las mejoras significativas en la detección y gestión de duplicados de autores.

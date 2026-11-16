@@ -1,5 +1,7 @@
 # Integración de Semantic Scholar API
 
+> **Actualización nov-2026:** la búsqueda en fuentes externas se reescribió; ver `docs/BUSQUEDA_FUENTES_EXTERNAS.md`. Lo que sigue es histórico.
+
 ## Descripción
 
 Este documento describe la integración de Semantic Scholar API en el sistema de gestión de bibliografías UCN, que permite buscar artículos académicos y papers científicos como alternativa a las búsquedas en catálogo y Google.

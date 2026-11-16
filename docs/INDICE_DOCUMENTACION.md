@@ -56,6 +56,11 @@ Configuración de seguridad y certificados SSL.
   - Redirección HTTP a HTTPS
   - Headers de seguridad
 
+### 🔎 Búsqueda en fuentes externas
+Búsqueda de bibliografías en Semantic Scholar, CrossRef, OpenAlex y Google Books desde "Buscar en Catálogo".
+- **Ubicación:** `docs/BUSQUEDA_FUENTES_EXTERNAS.md`
+- **Contenido:** fuentes, keys y variables de `.env`, mensajes de error y fuentes retiradas
+
 ### 🔌 API de consulta v1
 API REST de solo lectura (JSON) para integrar Biblioges con otros sistemas.
 - **Ubicación:** `docs/API.md` (especificación OpenAPI en `docs/openapi.yaml`; Swagger UI en `/biblioges/api/v1/docs`)
