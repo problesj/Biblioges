@@ -373,9 +373,9 @@ document.addEventListener('DOMContentLoaded', function() {
         autorElement.dataset.autorId = autor.id;
         autorElement.innerHTML = `
             <div>
-                <strong>${autor.apellidos}, ${autor.nombres}</strong>
+                <strong>${bgEsc(autor.apellidos)}, ${bgEsc(autor.nombres)}</strong>
                 <br>
-                <small class="text-muted">${autor.genero}</small>
+                <small class="text-muted">${bgEsc(autor.genero)}</small>
             </div>
             <button type="button" class="btn btn-sm btn-danger" onclick="eliminarAutor('${autor.id}')">
                 <i class="fas fa-times"></i>

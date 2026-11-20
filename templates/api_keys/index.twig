@@ -127,9 +127,9 @@
 {% block scripts %}
 <script>
 (function () {
-    const APP_URL = {{ app_url|json_encode|raw }};
-    const CSRF = {{ csrf|json_encode|raw }};
-    const HOY = {{ hoy|json_encode|raw }};
+    const APP_URL = {{ app_url|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+    const CSRF = {{ csrf|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+    const HOY = {{ hoy|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 
     function escHtml(valor) {
         return String(valor ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));

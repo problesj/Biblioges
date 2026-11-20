@@ -338,16 +338,8 @@ $twig->addFunction(new \Twig\TwigFunction('build_per_page_url', function ($perPa
 }));
 
 // Función para generar token CSRF
-$twig->addFunction(new \Twig\TwigFunction('csrf_token', function() {
-    // Obtener el token CSRF del middleware de Slim
-    if (isset($_SESSION['csrf'])) {
-        return $_SESSION['csrf']['name'] . ':' . $_SESSION['csrf']['value'];
-    }
-    // Fallback si no hay token CSRF configurado
-    if (!isset($_SESSION['csrf_token'])) {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-    }
-    return $_SESSION['csrf_token'];
+$twig->addFunction(new \Twig\TwigFunction('csrf_token', function () {
+    return \App\Middleware\CsrfMiddleware::token();
 }));
 
 

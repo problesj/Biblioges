@@ -478,6 +478,7 @@ class EjecutorTareas
                 $GLOBALS['twig'] = new \Twig\Environment(
                     new \Twig\Loader\FilesystemLoader(dirname(__DIR__, 2) . '/templates')
                 );
+                $GLOBALS['twig']->addFunction(new \Twig\TwigFunction('csrf_token', static fn () => \App\Middleware\CsrfMiddleware::token()));
             }
             $this->reporteController = new \App\Controllers\ReporteController();
         }

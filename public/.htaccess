@@ -61,4 +61,9 @@ Options -Indexes
 
 # Redirección de errores
 ErrorDocument 404 /index.php
-ErrorDocument 403 /index.php 
+ErrorDocument 403 /index.php
+
+# No servir archivos de configuración
+<Files "php.ini">
+    Require all denied
+</Files>

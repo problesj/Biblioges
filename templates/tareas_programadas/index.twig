@@ -492,7 +492,7 @@
 {% block scripts %}
 <script>
 (function () {
-    const URL_BASE = {{ (app_url ~ 'tareas-programadas')|json_encode|raw }};
+    const URL_BASE = {{ (app_url ~ 'tareas-programadas')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
     const CARRERAS = {{ carreras|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
     const FRECUENCIAS = {{ frecuencias|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP'))|raw }};
     const CORREO_USUARIO = {{ correo_usuario|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};

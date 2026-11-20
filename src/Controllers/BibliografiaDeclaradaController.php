@@ -1130,7 +1130,13 @@ class BibliografiaDeclaradaController
     public function destroy(Request $request, Response $response, array $args = []): Response
     {
         try {
-            $id = $args['id'] ?? null;
+            $id = (string) ($args['id'] ?? '');
+            if (!ctype_digit($id)) {
+                $this->session->set('swal', ['icon' => 'error', 'title' => 'Error', 'text' => 'Bibliografía no válida.']);
+                header('Location: ' . Config::get('app_url') . 'bibliografias-declaradas');
+                exit;
+            }
+            $id = (int) $id;
             
             // Verificar autenticación
             if (!$this->session->get('user_id')) {
@@ -1166,18 +1172,18 @@ class BibliografiaDeclaradaController
             $this->pdo->beginTransaction();
 
             // Eliminar relaciones primero
-            $this->pdo->exec("DELETE FROM bibliografias_autores WHERE bibliografia_id = " . $id);
+            $this->pdo->prepare("DELETE FROM bibliografias_autores WHERE bibliografia_id = ?")->execute([$id]);
 
             // Eliminar detalles específicos según el tipo
-            $this->pdo->exec("DELETE FROM libros WHERE bibliografia_id = " . $id);
-            $this->pdo->exec("DELETE FROM tesis WHERE bibliografia_id = " . $id);
-            $this->pdo->exec("DELETE FROM articulos WHERE bibliografia_id = " . $id);
-            $this->pdo->exec("DELETE FROM genericos WHERE bibliografia_id = " . $id);
-            $this->pdo->exec("DELETE FROM sitios_web WHERE bibliografia_id = " . $id);
-            $this->pdo->exec("DELETE FROM software WHERE bibliografia_id = " . $id);
+            $this->pdo->prepare("DELETE FROM libros WHERE bibliografia_id = ?")->execute([$id]);
+            $this->pdo->prepare("DELETE FROM tesis WHERE bibliografia_id = ?")->execute([$id]);
+            $this->pdo->prepare("DELETE FROM articulos WHERE bibliografia_id = ?")->execute([$id]);
+            $this->pdo->prepare("DELETE FROM genericos WHERE bibliografia_id = ?")->execute([$id]);
+            $this->pdo->prepare("DELETE FROM sitios_web WHERE bibliografia_id = ?")->execute([$id]);
+            $this->pdo->prepare("DELETE FROM software WHERE bibliografia_id = ?")->execute([$id]);
 
             // Finalmente, eliminar la bibliografía base
-            $this->pdo->exec("DELETE FROM bibliografias_declaradas WHERE id = " . $id);
+            $this->pdo->prepare("DELETE FROM bibliografias_declaradas WHERE id = ?")->execute([$id]);
 
             // Confirmar transacción
             $this->pdo->commit();
@@ -2270,6 +2276,44 @@ class BibliografiaDeclaradaController
     }
 
     // Método para la API de búsqueda en el catálogo
+    /**
+     * Deja solo los resultados cuyo título es igual al buscado (casilla «Título exacto» de Buscar en Catálogo).
+     */
+    private function filtrarTituloExacto(array $resultados, string $tituloBuscado): array
+    {
+        if (trim($tituloBuscado) === '') {
+            return $resultados;
+        }
+        return array_values(array_filter($resultados, fn ($r) => $this->tituloCoincide($tituloBuscado, (string) ($r['titulo'] ?? ''))));
+    }
+
+    /**
+     * Título exacto: el título encontrado, sin la mención de responsabilidad (« / autor»), es igual al buscado,
+     * o lo es su parte anterior al subtítulo (« : »). No distingue mayúsculas, tildes, puntuación ni espacios.
+     */
+    private function tituloCoincide(string $buscado, string $encontrado): bool
+    {
+        $normalizar = static function (string $texto): string {
+            $texto = mb_strtolower(strip_tags(html_entity_decode($texto, ENT_QUOTES | ENT_HTML5, 'UTF-8')), 'UTF-8');
+            if (class_exists('Normalizer')) {
+                $texto = (string) \Normalizer::normalize($texto, \Normalizer::FORM_D);
+                $texto = (string) preg_replace('/\p{Mn}+/u', '', $texto);
+            } else {
+                $texto = strtr($texto, ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n', 'à' => 'a', 'è' => 'e', 'ì' => 'i', 'ò' => 'o', 'ù' => 'u', 'â' => 'a', 'ê' => 'e', 'î' => 'i', 'ô' => 'o', 'û' => 'u', 'ç' => 'c', 'ã' => 'a', 'õ' => 'o']);
+            }
+            return trim((string) preg_replace('/[^\p{L}\p{N}]+/u', ' ', $texto));
+        };
+        $buscado = $normalizar($buscado);
+        if ($buscado === '') {
+            return true;
+        }
+        $principal = preg_split('#\s+/\s*#u', $encontrado)[0];
+        if ($normalizar($principal) === $buscado) {
+            return true;
+        }
+        return $normalizar(preg_split('/\s*[:=]\s*/u', $principal)[0]) === $buscado;
+    }
+
     private function procesarCampoBusqueda(string $campo): string
     {
         // Eliminar puntuaciones
@@ -2292,8 +2336,8 @@ class BibliografiaDeclaradaController
         );
         $campo = strtr($campo, $unwanted_array);
         $campo = str_replace([',', ';', '"', "'", '.', ':', ';', '¿', '?'], '', $campo);
-        // Reemplazar espacios por +
-        return str_replace(' ', '+', trim($campo));
+        // Espacios simples: la URL se codifica al armar cada consulta (antes se usaba + sin codificar)
+        return trim(preg_replace('/\s+/u', ' ', $campo));
     }
 
     private function obtenerRegistrosGrupoFRBR(string $titulo, string $frbrGroupId): array
@@ -2374,6 +2418,9 @@ class BibliografiaDeclaradaController
             $autor = $this->procesarCampoBusqueda($data['autor'] ?? '');
             $busquedaAdicional = $this->procesarCampoBusqueda($data['busqueda_adicional'] ?? '');
             $tipoRecurso = $data['tipo_recurso'] ?? '';
+            // Título exacto (casilla del buscador, activa por defecto)
+            $tituloExacto = !array_key_exists('titulo_exacto', $data) || filter_var($data['titulo_exacto'], FILTER_VALIDATE_BOOLEAN);
+            $tituloBuscado = (string) ($data['titulo'] ?? '');
 
             // Validar que al menos uno de los campos tenga contenido
             if (empty($titulo) && empty($autor)) {
@@ -2383,11 +2430,12 @@ class BibliografiaDeclaradaController
                 ])->withStatus(400);
             }
 
-            // Construir la consulta
+            // Construir la consulta (los valores se codifican al armar la URL)
             $query = '';
+            $qInclude = '';
 
             if (!empty($titulo)) {
-                $query .= "title,exact," . $titulo;
+                $query .= ($tituloExacto ? "title,exact," : "title,contains,") . $titulo;
             }
 
             if (!empty($autor)) {
@@ -2405,7 +2453,7 @@ class BibliografiaDeclaradaController
             }
 
             if (!empty($tipoRecurso)) {
-                $query .= "&qInclude=facet_rtype,exact," . $tipoRecurso;
+                $qInclude = 'facet_rtype,exact,' . $tipoRecurso;
             }
 
             //error_log('Query construida: ' . $query);
@@ -2416,7 +2464,8 @@ class BibliografiaDeclaradaController
                    '&tab=ALL' .
                    '&inst=' . ($_ENV['PRIMO_INST'] ?? '56UCN_INST') .
                    '&scope=MyInst_and_CI' .
-                   '&q=' . $query .
+                   '&q=' . rawurlencode($query) .
+                   ($qInclude !== '' ? '&qInclude=' . rawurlencode($qInclude) : '') .
                    '&mode=advanced' .
                    '&offset=0' .
                    '&limit=50' .
@@ -2581,6 +2630,11 @@ class BibliografiaDeclaradaController
             }
             
             // Si no se encontraron resultados en el catálogo, devolver mensaje para mostrar botón de Google
+            // Título exacto: solo títulos iguales al buscado
+            if ($tituloExacto) {
+                $results = $this->filtrarTituloExacto($results, $tituloBuscado);
+            }
+
             if (empty($results)) {
                 return $this->jsonResponse([
                     'success' => true,
@@ -2628,6 +2682,7 @@ class BibliografiaDeclaradaController
             return $this->jsonResponse(['success' => false, 'message' => 'Fuente de búsqueda no válida.'])->withStatus(400);
         }
         $nombre = \App\Services\BusquedaExternaService::FUENTES[$fuente];
+        $tituloExacto = !array_key_exists('titulo_exacto', $data) || filter_var($data['titulo_exacto'], FILTER_VALIDATE_BOOLEAN);
 
         try {
             $resultados = (new \App\Services\BusquedaExternaService())->buscar($fuente, $titulo, $autor, $busquedaAdicional);
@@ -2647,6 +2702,10 @@ class BibliografiaDeclaradaController
                 $resultado['autores'] = implode('; ', array_values(array_filter($autores, 'strlen')));
             }
             unset($resultado);
+        }
+
+        if ($tituloExacto) {
+            $resultados = $this->filtrarTituloExacto($resultados, (string) ($data['titulo'] ?? ''));
         }
 
         return $this->jsonResponse([

@@ -124,6 +124,8 @@ $twig->addFunction(new \Twig\TwigFunction('asset', function ($path) use ($baseUr
     return $baseUrl . '/assets/' . ltrim($path, '/');
 }));
 
+$twig->addFunction(new \Twig\TwigFunction('csrf_token', static fn () => ''));
+
 // Cargar las rutas del frontend
 require_once __DIR__ . '/routes.php';
 

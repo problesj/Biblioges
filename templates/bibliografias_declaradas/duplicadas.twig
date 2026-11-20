@@ -84,7 +84,7 @@
 <script>
 (function () {
     const GRUPOS = {{ grupos|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
-    const URL_BASE = {{ (app_url ~ 'bibliografias-declaradas')|json_encode|raw }};
+    const URL_BASE = {{ (app_url ~ 'bibliografias-declaradas')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
     const modal = new bootstrap.Modal(document.getElementById('modalGrupo'));
     const cuerpo = document.getElementById('cuerpoGrupo');
     const OPCIONES = [['mantener', 'Mantener'], ['fusionar', 'Fusionar'], ['eliminar', 'Eliminar'], ['no_tocar', 'No tocar']];

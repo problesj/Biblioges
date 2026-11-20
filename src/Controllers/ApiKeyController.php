@@ -175,18 +175,18 @@ class ApiKeyController
 
     private function tokenCsrf(): string
     {
-        if (empty($_SESSION['api_keys_csrf'])) {
-            $_SESSION['api_keys_csrf'] = bin2hex(random_bytes(32));
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         }
 
-        return $_SESSION['api_keys_csrf'];
+        return $_SESSION['csrf_token'];
     }
 
     private function csrfValido(Request $request): bool
     {
         $token = $request->getHeaderLine('X-CSRF-Token');
 
-        return !empty($_SESSION['api_keys_csrf']) && $token !== '' && hash_equals($_SESSION['api_keys_csrf'], $token);
+        return !empty($_SESSION['csrf_token']) && $token !== '' && hash_equals($_SESSION['csrf_token'], $token);
     }
 
     private function datos(Request $request): array

@@ -339,7 +339,7 @@
 
 <script>
 (function () {
-    const URL_INDICADORES = {{ (app_url ~ 'dashboard/indicadores')|json_encode|raw }};
+    const URL_INDICADORES = {{ (app_url ~ 'dashboard/indicadores')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 
     function mostrarEstado(id, texto) {
         const estado = document.getElementById('estado-' + id);

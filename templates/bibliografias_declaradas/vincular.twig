@@ -346,7 +346,7 @@ function verificarFiltrosIniciales() {
 
 // Si se llegó desde la vista de la bibliografía, volver a ella al terminar
 {% if volver_show %}
-const VOLVER_SHOW = {{ (app_url ~ volver_show)|json_encode|raw }};
+const VOLVER_SHOW = {{ (app_url ~ volver_show)|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 {% else %}
 const VOLVER_SHOW = null;
 {% endif %}
@@ -622,35 +622,35 @@ function actualizarTablaAsignaturas(asignaturas) {
         
         newRow.innerHTML = `
             <td class="align-top">
-                <input type="checkbox" class="form-check-input" name="asignaturas[]" value="${asignatura.id}" data-nombre="${asignatura.nombre}" data-tipo="${asignatura.tipo}">
+                <input type="checkbox" class="form-check-input" name="asignaturas[]" value="${bgEsc(asignatura.id)}" data-nombre="${bgEsc(asignatura.nombre)}" data-tipo="${bgEsc(asignatura.tipo)}">
             </td>
             <td class="align-top">
                 <div style="font-size: 0.9em; word-break: break-all;">
-                    ${asignatura.codigos ? asignatura.codigos.replace(/, /g, '\n') : ''}
+                    ${bgEsc(asignatura.codigos ? asignatura.codigos.replace(/, /g, '\n') : '')}
                 </div>
             </td>
-            <td class="align-top">${asignatura.nombre}</td>
+            <td class="align-top">${bgEsc(asignatura.nombre)}</td>
             <td class="align-top">
                 <div class="form-check">
                     <input class="form-check-input tipo-bibliografia" type="radio" 
-                           name="tipo_bibliografia_${asignatura.id}" 
+                           name="tipo_bibliografia_${bgEsc(asignatura.id)}" 
                            value="basica" 
-                           data-asignatura-id="${asignatura.id}"
+                           data-asignatura-id="${bgEsc(asignatura.id)}"
                            checked>
                     <label class="form-check-label">Básica</label>
                 </div>
                 <div class="form-check">
                     <input class="form-check-input tipo-bibliografia" type="radio" 
-                           name="tipo_bibliografia_${asignatura.id}" 
+                           name="tipo_bibliografia_${bgEsc(asignatura.id)}" 
                            value="complementaria" 
-                           data-asignatura-id="${asignatura.id}">
+                           data-asignatura-id="${bgEsc(asignatura.id)}">
                     <label class="form-check-label">Complementaria</label>
                 </div>
                 <div class="form-check">
                     <input class="form-check-input tipo-bibliografia" type="radio" 
-                           name="tipo_bibliografia_${asignatura.id}" 
+                           name="tipo_bibliografia_${bgEsc(asignatura.id)}" 
                            value="otro" 
-                           data-asignatura-id="${asignatura.id}">
+                           data-asignatura-id="${bgEsc(asignatura.id)}">
                     <label class="form-check-label">Otro</label>
                 </div>
             </td>

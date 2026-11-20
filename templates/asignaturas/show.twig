@@ -452,7 +452,7 @@ function mostrarBibliografiasDisponibles(bibliografiaId, titulo) {
             document.getElementById('modalBibliografiasDisponiblesBody').innerHTML = `
                 <div class="alert alert-danger">
                     <i class="fas fa-exclamation-triangle"></i>
-                    Error al cargar las bibliografías disponibles: ${data.message}
+                    Error al cargar las bibliografías disponibles: ${bgEsc(data.message)}
                 </div>
             `;
         }
@@ -473,7 +473,7 @@ function mostrarBibliografiasDisponiblesEnModal(bibliografias, titulo) {
         document.getElementById('modalBibliografiasDisponiblesBody').innerHTML = `
             <div class="text-center py-4">
                 <i class="fas fa-info-circle fa-3x text-muted mb-3"></i>
-                <p class="text-muted">No hay bibliografías disponibles para "${titulo}".</p>
+                <p class="text-muted">No hay bibliografías disponibles para "${bgEsc(titulo)}".</p>
             </div>
         `;
         return;
@@ -502,21 +502,21 @@ function mostrarBibliografiasDisponiblesEnModal(bibliografias, titulo) {
                  html += `
              <tr>
                  <td>
-                     <strong>${bib.titulo}</strong>
-                     ${bib.anio_edicion ? `<br><small class="text-muted">Año: ${bib.anio_edicion}</small>` : ''}
+                     <strong>${bgEsc(bib.titulo)}</strong>
+                     ${bib.anio_edicion ? `<br><small class="text-muted">Año: ${bgEsc(bib.anio_edicion)}</small>` : ''}
                  </td>
-                <td>${bib.anio_edicion || 'N/A'}</td>
-                <td>${bib.editorial || 'N/A'}</td>
+                <td>${bgEsc(bib.anio_edicion || 'N/A')}</td>
+                <td>${bgEsc(bib.editorial || 'N/A')}</td>
                 <td>
-                    <span class="badge ${disponibilidadClass}">${bib.disponibilidad || 'N/A'}</span>
+                    <span class="badge ${disponibilidadClass}">${bgEsc(bib.disponibilidad || 'N/A')}</span>
                 </td>
                 <td>
-                    ${bib.ejemplares_digitales ? `<span class="badge bg-info">${bib.ejemplares_digitales}</span>` : 'N/A'}
+                    ${bib.ejemplares_digitales ? `<span class="badge bg-info">${bgEsc(bib.ejemplares_digitales)}</span>` : 'N/A'}
                 </td>
                 <td>
-                    ${bib.url_acceso ? `<a href="${bib.url_acceso}" target="_blank" class="btn btn-sm btn-success me-1"><i class="fas fa-external-link-alt"></i> Acceso</a>` : ''}
-                    ${bib.url_catalogo ? `<a href="${bib.url_catalogo}" target="_blank" class="btn btn-sm btn-info"><i class="fas fa-search"></i> Catálogo</a>` : ''}
-                    ${!bib.url_acceso && !bib.url_catalogo ? '<span class="text-muted">Sin enlaces</span>' : ''}
+                    ${bgUrl(bib.url_acceso) ? `<a href="${bgEsc(bgUrl(bib.url_acceso))}" rel="noopener" target="_blank" class="btn btn-sm btn-success me-1"><i class="fas fa-external-link-alt"></i> Acceso</a>` : ''}
+                    ${bgUrl(bib.url_catalogo) ? `<a href="${bgEsc(bgUrl(bib.url_catalogo))}" rel="noopener" target="_blank" class="btn btn-sm btn-info"><i class="fas fa-search"></i> Catálogo</a>` : ''}
+                    ${!bgUrl(bib.url_acceso) && !bgUrl(bib.url_catalogo) ? '<span class="text-muted">Sin enlaces</span>' : ''}
                 </td>
             </tr>
         `;
@@ -534,7 +534,7 @@ function mostrarBibliografiasDisponiblesEnModal(bibliografias, titulo) {
 <script>
 // Desvincular una bibliografía declarada de esta asignatura (no la elimina)
 (function () {
-    const URL_DESVINCULAR = {{ (app_url ~ 'asignaturas/' ~ asignatura.id ~ '/bibliografias/')|json_encode|raw }};
+    const URL_DESVINCULAR = {{ (app_url ~ 'asignaturas/' ~ asignatura.id ~ '/bibliografias/')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
     const NOMBRE_TIPO = {basica: 'básica', complementaria: 'complementaria', otro: 'de tipo otro'};
     const escHtml = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
 

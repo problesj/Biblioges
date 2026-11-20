@@ -5,6 +5,77 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Biblioges{% endblock %}</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script>
+    /* bg-seguridad-inicio */
+    // Escape de texto para insertar en HTML y validación de enlaces (solo http/https)
+    window.bgEsc = function (valor) {
+        return String(valor === null || valor === undefined ? '' : valor).replace(/[&<>"'`]/g, function (c) {
+            return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;'}[c];
+        });
+    };
+    window.bgUrl = function (url) {
+        url = String(url === null || url === undefined ? '' : url).trim();
+        return /^https?:\/\//i.test(url) ? url : '';
+    };
+    // Token CSRF: se agrega a fetch, XMLHttpRequest (incluye jQuery) y formularios del mismo sitio
+    (function () {
+        window.BG_CSRF = '{{ csrf_token() }}';
+        function mismoOrigen(url) {
+            try { return new URL(url, window.location.href).origin === window.location.origin; } catch (e) { return false; }
+        }
+        function modifica(metodo) {
+            return !/^(GET|HEAD|OPTIONS)$/i.test(metodo || 'GET');
+        }
+        var fetchOriginal = window.fetch;
+        if (fetchOriginal) {
+            window.fetch = function (entrada, opciones) {
+                opciones = opciones || {};
+                var esRequest = typeof Request !== 'undefined' && entrada instanceof Request;
+                var url = esRequest ? entrada.url : String(entrada);
+                var metodo = opciones.method || (esRequest ? entrada.method : 'GET');
+                if (modifica(metodo) && mismoOrigen(url)) {
+                    var cabeceras = new Headers(opciones.headers || (esRequest ? entrada.headers : undefined));
+                    if (!cabeceras.has('X-CSRF-Token')) {
+                        cabeceras.set('X-CSRF-Token', window.BG_CSRF);
+                    }
+                    opciones = Object.assign({}, opciones, {headers: cabeceras});
+                }
+                return fetchOriginal.call(this, entrada, opciones);
+            };
+        }
+        var xhr = XMLHttpRequest.prototype, abrir = xhr.open, enviar = xhr.send, fijar = xhr.setRequestHeader;
+        xhr.open = function (metodo, url) {
+            this._bgCsrf = modifica(metodo) && mismoOrigen(url);
+            this._bgTiene = false;
+            return abrir.apply(this, arguments);
+        };
+        xhr.setRequestHeader = function (nombre) {
+            if (String(nombre).toLowerCase() === 'x-csrf-token') { this._bgTiene = true; }
+            return fijar.apply(this, arguments);
+        };
+        xhr.send = function () {
+            if (this._bgCsrf && !this._bgTiene) { fijar.call(this, 'X-CSRF-Token', window.BG_CSRF); }
+            return enviar.apply(this, arguments);
+        };
+        function agregarToken(form) {
+            if (!form || !modifica(form.getAttribute('method') || 'GET')) { return; }
+            if (!mismoOrigen(form.getAttribute('action') || window.location.href)) { return; }
+            var campo = form.querySelector('input[name="_csrf"]');
+            if (!campo) {
+                campo = document.createElement('input');
+                campo.type = 'hidden';
+                campo.name = '_csrf';
+                form.appendChild(campo);
+            }
+            campo.value = window.BG_CSRF;
+        }
+        document.addEventListener('submit', function (e) { agregarToken(e.target); }, true);
+        var submitOriginal = HTMLFormElement.prototype.submit;
+        HTMLFormElement.prototype.submit = function () { agregarToken(this); return submitOriginal.call(this); };
+    })();
+    /* bg-seguridad-fin */
+    </script>
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ app_url }}favicon.ico">

@@ -18,10 +18,5 @@ $app->get('/asignatura-biblio/{sede_id}/{asignatura_id}', [FrontendController::c
 // API endpoints
 $app->get('/api/bibliografias-disponibles/{bibliografia_id}', [FrontendController::class, 'apiGetBibliografiasDisponibles'])->setName('frontend.api.bibliografias');
 
-// Ruta de prueba para debug
-$app->get('/test', function ($request, $response) {
-    $response->getBody()->write('Frontend funcionando correctamente');
-    return $response;
-})->setName('frontend.test');
 
  

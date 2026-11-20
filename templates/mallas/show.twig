@@ -339,7 +339,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const mallaGraficaContenedor = document.getElementById('mallaGraficaContenedor');
     const modalMallaGraficaElement = document.getElementById('modalMallaGrafica');
     const modalMallaGrafica = new bootstrap.Modal(modalMallaGraficaElement);
-    const asignaturasMalla = {{ carrera.asignaturas|default([])|json_encode|raw }};
+    const asignaturasMalla = {{ carrera.asignaturas|default([])|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
     let generandoPng = false;
 
     function construirMallaGrafica() {
@@ -373,8 +373,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const tipo = item.tipo || '';
                 html += `
                     <div class="malla-asignatura-item">
-                        ${nombre}
-                        <span class="malla-asignatura-tipo">${tipo}</span>
+                        ${bgEsc(nombre)}
+                        <span class="malla-asignatura-tipo">${bgEsc(tipo)}</span>
                     </div>
                 `;
             });
@@ -483,10 +483,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 data.forEach(detalle => {
                     tbody.innerHTML += `
                         <tr>
-                            <td>${detalle.codigo || '-'}</td>
-                            <td>${detalle.departamento || '-'}</td>
-                            <td>${detalle.vigencia_desde || '-'}</td>
-                            <td>${detalle.vigencia_hasta || '-'}</td>
+                            <td>${bgEsc(detalle.codigo || '-')}</td>
+                            <td>${bgEsc(detalle.departamento || '-')}</td>
+                            <td>${bgEsc(detalle.vigencia_desde || '-')}</td>
+                            <td>${bgEsc(detalle.vigencia_hasta || '-')}</td>
                         </tr>
                     `;
                 });
@@ -508,13 +508,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 data.forEach(asignatura => {
                     tbody.innerHTML += `
                         <tr>
-                            <td>${asignatura.nombre}</td>
+                            <td>${bgEsc(asignatura.nombre)}</td>
                             <td>
                                 ${asignatura.estado == 1 
                                     ? '<span class="badge bg-success">Activo</span>' 
                                     : '<span class="badge bg-danger">Inactivo</span>'}
                             </td>
-                            <td>${asignatura.periodicidad}</td>
+                            <td>${bgEsc(asignatura.periodicidad)}</td>
                         </tr>
                     `;
                 });

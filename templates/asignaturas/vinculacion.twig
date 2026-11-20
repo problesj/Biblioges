@@ -644,8 +644,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             row.innerHTML = `
-                <td><input type="checkbox" value="${asignatura.id}"></td>
-                <td>${codigosTexto}${asignatura.nombre}</td>
+                <td><input type="checkbox" value="${bgEsc(asignatura.id)}"></td>
+                <td>${bgEsc(codigosTexto)}${bgEsc(asignatura.nombre)}</td>
             `;
         });
     }
@@ -661,8 +661,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             row.innerHTML = `
-                <td><input type="checkbox" value="${asignatura.id}"></td>
-                <td>${codigosTexto}${asignatura.nombre}</td>
+                <td><input type="checkbox" value="${bgEsc(asignatura.id)}"></td>
+                <td>${bgEsc(codigosTexto)}${bgEsc(asignatura.nombre)}</td>
             `;
         });
     }

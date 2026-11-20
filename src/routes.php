@@ -24,6 +24,7 @@ use App\Controllers\MallaController;
 use App\Controllers\ApiV1Controller;
 use App\Controllers\ApiKeyController;
 use App\Middleware\ApiKeyMiddleware;
+use App\Middleware\CsrfMiddleware;
 
 /** @var App $app */
 
@@ -318,6 +319,7 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     // Rutas para Reporte Fusionado de Coberturas
     $group->get('/reportes/coberturas-fusionado/{sede_id}/{carrera_id}', [ReporteController::class, 'reporteCoberturasFusionado']);
     $group->get('/reportes/coberturas-fusionado-excel/{sede_id}/{carrera_id}', [ReporteController::class, 'exportarCoberturasFusionadoExcel']);
+    $group->get('/reportes/exports/{archivo}', [ReporteController::class, 'descargarExport']);
     $group->post('/reportes/guardar-cobertura-fusionado/{sede_id}/{carrera_id}', [ReporteController::class, 'guardarCoberturaFusionado']);
 
     // Rutas para Tareas Programadas
@@ -348,4 +350,4 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
 
     // Ruta para el perfil de usuario autenticado (debe ir al final para evitar conflictos)
     $group->get('/perfil', [UsuarioController::class, 'perfil']);
-})->add(new AuthMiddleware()); 
+})->add(new CsrfMiddleware())->add(new AuthMiddleware()); 

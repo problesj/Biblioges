@@ -254,7 +254,7 @@
 {% block scripts %}
 <script id="bibliografiasBusquedaData" type="application/json">{{ bibliografias_busqueda_json|default('[]')|raw }}</script>
 <script>
-window.APP_URL = {{ app_url|json_encode|raw }};
+window.APP_URL = {{ app_url|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 
 /**
  * Normaliza texto para búsqueda: minúsculas, sin acentos/diacríticos ni caracteres especiales.

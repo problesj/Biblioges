@@ -111,34 +111,20 @@ class AuthController extends BaseController
                 }
             }
 
+            // Límite de intentos fallidos por correo e IP
+            $ip = (string) ($request->getServerParams()['REMOTE_ADDR'] ?? '');
+            $limite = new \App\Core\LimiteIntentosLogin();
+            $espera = $limite->bloqueo($email, $ip);
+            if ($espera > 0) {
+                return $this->loginFallido($response, $isAjax, $email, 'Demasiados intentos fallidos. Intente nuevamente en ' . (int) ceil($espera / 60) . ' minuto(s).');
+            }
+
             // Buscar usuario por email en la base de datos local
             $user = $this->userModel->findByEmail($email);
             
             if (!$user) {
-                if ($isAjax) {
-                    return $this->slimJsonResponse($response, [
-                        'success' => false,
-                        'message' => 'Usuario no encontrado en el sistema'
-                    ]);
-                } else {
-                    $this->session->setFlash('error', 'Usuario no encontrado en el sistema');
-                    $this->session->setFlash('email', $email);
-                    return $response->withHeader('Location', Config::get('app_url') . 'login')->withStatus(302);
-                }
-            }
-
-            // Verificar si el usuario está activo
-            if ($user['estado'] != 1) {
-                if ($isAjax) {
-                    return $this->slimJsonResponse($response, [
-                        'success' => false,
-                        'message' => 'Tu cuenta está inactiva. Por favor, contacta al administrador.'
-                    ]);
-                } else {
-                    $this->session->setFlash('error', 'Tu cuenta está inactiva. Por favor, contacta al administrador.');
-                    $this->session->setFlash('email', $email);
-                    return $response->withHeader('Location', Config::get('app_url') . 'login')->withStatus(302);
-                }
+                $limite->registrarFallo($email, $ip);
+                return $this->loginFallido($response, $isAjax, $email, 'Credenciales inválidas');
             }
 
             // Intentar autenticación LDAP primero
@@ -179,6 +165,14 @@ class AuthController extends BaseController
 
             // Si la autenticación fue exitosa (LDAP o local)
             if ($ldapAuthenticated) {
+                // La inactividad se informa solo a quien acreditó la clave correcta
+                if ((int) $user['estado'] !== 1) {
+                    return $this->loginFallido($response, $isAjax, $email, 'Tu cuenta está inactiva. Por favor, contacta al administrador.');
+                }
+                $limite->limpiar($email, $ip);
+                // Nuevo identificador de sesión al iniciar sesión (evita la fijación de sesión)
+                $this->session->regenerate();
+
                 // Si la autenticación fue por LDAP, actualizar información del usuario si es necesario
                 if ($ldapUserInfo) {
                     $this->updateUserInfoFromLdap($user['id'], $ldapUserInfo);
@@ -208,16 +202,8 @@ class AuthController extends BaseController
             }
 
             // Si llegamos aquí, la autenticación falló
-            if ($isAjax) {
-                return $this->slimJsonResponse($response, [
-                    'success' => false,
-                    'message' => 'Credenciales inválidas'
-                ]);
-            } else {
-                $this->session->setFlash('error', 'Credenciales inválidas');
-                $this->session->setFlash('email', $email);
-                return $response->withHeader('Location', Config::get('app_url') . 'login')->withStatus(302);
-            }
+            $limite->registrarFallo($email, $ip);
+            return $this->loginFallido($response, $isAjax, $email, 'Credenciales inválidas');
 
         } catch (\Exception $e) {
             error_log("Error en el login: " . $e->getMessage());
@@ -285,5 +271,16 @@ class AuthController extends BaseController
         return $response
             ->withHeader('Content-Type', 'application/json')
             ->withStatus($statusCode);
+    }
+
+    private function loginFallido(ResponseInterface $response, bool $isAjax, string $email, string $mensaje): ResponseInterface
+    {
+        if ($isAjax) {
+            return $this->slimJsonResponse($response, ['success' => false, 'message' => $mensaje]);
+        }
+        $this->session->setFlash('error', $mensaje);
+        $this->session->setFlash('email', $email);
+
+        return $response->withHeader('Location', Config::get('app_url') . 'login')->withStatus(302);
     }
 } 

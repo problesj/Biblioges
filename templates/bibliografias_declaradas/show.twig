@@ -226,7 +226,7 @@ function confirmarEliminacion(id, titulo) {
             const volverInput = document.createElement('input');
             volverInput.type = 'hidden';
             volverInput.name = 'volver';
-            volverInput.value = {{ ('bibliografias-declaradas/' ~ bibliografia.id ~ (origen ? '?origen=' ~ origen : ''))|json_encode|raw }};
+            volverInput.value = {{ ('bibliografias-declaradas/' ~ bibliografia.id ~ (origen ? '?origen=' ~ origen : ''))|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
             form.appendChild(volverInput);
             
             // Agregar token CSRF si es necesario

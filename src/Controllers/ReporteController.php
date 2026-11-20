@@ -1271,9 +1271,24 @@ class ReporteController extends BaseController
         return $response->withHeader('Content-Type', 'application/json');
     }
     
+    /**
+     * Entorno Twig de la aplicación (public/index.php), con csrf_token() y las demás funciones de las plantillas.
+     * Solo si no existe (por ejemplo, fuera de la web) se crea uno local con csrf_token().
+     */
+    private function vistaTwig(): \Twig\Environment
+    {
+        if (isset($GLOBALS['twig']) && $GLOBALS['twig'] instanceof \Twig\Environment) {
+            return $GLOBALS['twig'];
+        }
+        $vista = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
+        $vista->addFunction(new \Twig\TwigFunction('csrf_token', static fn () => \App\Middleware\CsrfMiddleware::token()));
+
+        return $vista;
+    }
+
     public function bibliografias(Request $request, Response $response, array $args): Response
     {
-        $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
+        $view = $this->vistaTwig();
         $template = $view->load('reportes/bibliografias.twig');
         
         $response->getBody()->write($template->render([]));
@@ -1282,7 +1297,7 @@ class ReporteController extends BaseController
     
     public function ejemplares(Request $request, Response $response, array $args): Response
     {
-        $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
+        $view = $this->vistaTwig();
         $template = $view->load('reportes/ejemplares.twig');
         
         $response->getBody()->write($template->render([]));
@@ -1291,7 +1306,7 @@ class ReporteController extends BaseController
     
     public function estudiantes(Request $request, Response $response, array $args): Response
     {
-        $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
+        $view = $this->vistaTwig();
         $template = $view->load('reportes/estudiantes.twig');
         
         $response->getBody()->write($template->render([]));
@@ -1300,7 +1315,7 @@ class ReporteController extends BaseController
     
     public function profesores(Request $request, Response $response, array $args): Response
     {
-        $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
+        $view = $this->vistaTwig();
         $template = $view->load('reportes/profesores.twig');
         
         $response->getBody()->write($template->render([]));
@@ -1309,7 +1324,7 @@ class ReporteController extends BaseController
     
     public function asignaturas(Request $request, Response $response, array $args): Response
     {
-        $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
+        $view = $this->vistaTwig();
         $template = $view->load('reportes/asignaturas.twig');
         
         $response->getBody()->write($template->render([]));
@@ -1318,7 +1333,7 @@ class ReporteController extends BaseController
     
     public function carreras(Request $request, Response $response, array $args): Response
     {
-        $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
+        $view = $this->vistaTwig();
         $template = $view->load('reportes/carreras.twig');
         
         $response->getBody()->write($template->render([]));
@@ -1327,7 +1342,7 @@ class ReporteController extends BaseController
     
     public function autores(Request $request, Response $response, array $args): Response
     {
-        $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
+        $view = $this->vistaTwig();
         $template = $view->load('reportes/autores.twig');
         
         $response->getBody()->write($template->render([]));
@@ -1934,7 +1949,7 @@ class ReporteController extends BaseController
     
     public function editoriales(Request $request, Response $response, array $args): Response
     {
-        $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
+        $view = $this->vistaTwig();
         $template = $view->load('reportes/editoriales.twig');
         
         $response->getBody()->write($template->render([]));
@@ -2529,7 +2544,7 @@ class ReporteController extends BaseController
             'user_rol' => $_SESSION['user_rol'] ?? null
         ];
 
-        $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
+        $view = $this->vistaTwig();
         $template = $view->load('reportes/coberturas/carrera.twig');
         
         error_log('ReporteController@reporteBibliografiaBasica: Tipos formación seleccionados para plantilla: ' . print_r($tiposFormacionFiltro, true));
@@ -2808,7 +2823,7 @@ class ReporteController extends BaseController
             $bibliografia->disponible = $disponible;
         }
 
-        $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
+        $view = $this->vistaTwig();
         $template = $view->load('reportes/coberturas/asignatura.twig');
         $html = $template->render([
             'carrera' => $carrera,
@@ -3029,7 +3044,7 @@ class ReporteController extends BaseController
             'user_rol' => $_SESSION['user_rol'] ?? null
         ];
 
-        $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
+        $view = $this->vistaTwig();
         $template = $view->load('reportes/coberturas_complementaria/asignatura.twig');
         $html = $template->render([
             'carrera' => $carrera,
@@ -3462,7 +3477,7 @@ class ReporteController extends BaseController
             'user_rol' => $_SESSION['user_rol'] ?? null
         ];
 
-        $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
+        $view = $this->vistaTwig();
         $template = $view->load('reportes/coberturas/carrera_expandido.twig');
         $html = $template->render([
             'carrera' => $carrera,
@@ -4168,7 +4183,7 @@ class ReporteController extends BaseController
             ->get();
         error_log('ReporteController@coberturaComplementaria: Total carreras encontradas: ' . count($carreras));
 
-        $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
+        $view = $this->vistaTwig();
         $template = $view->load('reportes/coberturas_complementaria/index.twig');
         $html = $template->render([
             'carreras' => $carreras,
@@ -4456,7 +4471,7 @@ class ReporteController extends BaseController
             'cobertura_complementaria_total' => $coberturaComplementariaTotalValor
         ];
 
-        $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
+        $view = $this->vistaTwig();
         $template = $view->load('reportes/coberturas_complementaria/carrera.twig');
         
         error_log('ReporteController@reporteBibliografiaComplementaria: Tipos formación seleccionados para plantilla: ' . print_r($tiposFormacionFiltro, true));
@@ -4963,7 +4978,7 @@ class ReporteController extends BaseController
             $tiposFormacionFiltro
         );
 
-        $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
+        $view = $this->vistaTwig();
         $template = $view->load('reportes/coberturas_complementaria/carrera_expandido.twig');
         
         error_log('ReporteController@reporteBibliografiaComplementariaExpandido: Tipos formación seleccionados para plantilla: ' . print_r($tiposFormacionFiltro, true));
@@ -5982,7 +5997,7 @@ class ReporteController extends BaseController
         if ($datosBasicos->isEmpty() && $datosComplementarios->isEmpty()) {
             error_log('ReporteController@reporteCoberturasFusionado: No hay reportes generados');
             
-            $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
+            $view = $this->vistaTwig();
             $template = $view->load('reportes/coberturas/carrera_fusionado.twig');
             
             $html = $template->render([
@@ -6195,7 +6210,7 @@ class ReporteController extends BaseController
         $this->ordenarAsignaturasFusionadoPorNombre($asignaturas);
 
         // Renderizar la vista
-        $view = new \Twig\Environment(new \Twig\Loader\FilesystemLoader(__DIR__ . '/../../templates'));
+        $view = $this->vistaTwig();
         $template = $view->load('reportes/coberturas/carrera_fusionado.twig');
         
         $html = $template->render([
@@ -6447,16 +6462,34 @@ class ReporteController extends BaseController
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
         $filename = 'Reporte_Fusionado_Coberturas_' . $carrera->sede . '_' . $carrera->codigo . '_' . str_replace(' ', '_', $carrera->nombre) . '.xlsx';
-        $filepath = __DIR__ . '/../../public/exports/' . $filename;
+        $filepath = dirname(__DIR__, 2) . '/storage/exports/' . $filename;
         if (!is_dir(dirname($filepath))) {
             mkdir(dirname($filepath), 0755, true);
         }
         $writer = new Xlsx($spreadsheet);
         $writer->save($filepath);
         $response->getBody()->write(json_encode([
-            'url' => '/biblioges/exports/' . $filename
+            'url' => app_url('reportes/exports/' . rawurlencode($filename))
         ]));
         return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    /**
+     * Descarga un Excel generado en storage/exports (requiere sesión; antes quedaban públicos en public/exports).
+     */
+    public function descargarExport(Request $request, Response $response, array $args): Response
+    {
+        $nombre = (string) ($args['archivo'] ?? '');
+        $ruta = dirname(__DIR__, 2) . '/storage/exports/' . $nombre;
+        if ($nombre === '' || $nombre !== basename($nombre) || !preg_match('/^Reporte_[^\/\\\\]+\.xlsx$/u', $nombre) || !is_file($ruta)) {
+            return $response->withStatus(404);
+        }
+        $response->getBody()->write((string) file_get_contents($ruta));
+
+        return $response
+            ->withHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            ->withHeader('Content-Disposition', "attachment; filename*=UTF-8''" . rawurlencode($nombre))
+            ->withHeader('Cache-Control', 'no-store');
     }
 
     // Guardar reporte fusionado

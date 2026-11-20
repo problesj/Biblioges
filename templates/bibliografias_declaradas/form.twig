@@ -498,10 +498,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const autorInfo = document.createElement('div');
         autorInfo.innerHTML = `
-            <span class="autor-apellidos">${autor.apellidos}</span>, 
-            <span class="autor-nombres">${autor.nombres}</span>
+            <span class="autor-apellidos">${bgEsc(autor.apellidos)}</span>, 
+            <span class="autor-nombres">${bgEsc(autor.nombres)}</span>
                 <br>
-            <small class="text-muted autor-genero">${autor.genero}</small>
+            <small class="text-muted autor-genero">${bgEsc(autor.genero)}</small>
         `;
         
         const eliminarBtn = document.createElement('button');
@@ -779,7 +779,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Mostrar duplicados si existen (para peticiones no AJAX)
     {% if duplicados %}
         document.addEventListener('DOMContentLoaded', function() {
-            mostrarAlertaDuplicados({{ duplicados|json_encode|raw }}, {});
+            mostrarAlertaDuplicados({{ duplicados|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}, {});
         });
     {% endif %}
 
