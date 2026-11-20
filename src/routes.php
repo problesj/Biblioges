@@ -331,6 +331,8 @@ $app->group('/biblioges', function (RouteCollectorProxy $group) {
     $group->get('/tareas-programadas/{id:[0-9]+}', [TareaProgramadaController::class, 'obtener']);
     $group->post('/tareas-programadas/{id:[0-9]+}', [TareaProgramadaController::class, 'actualizar']);
     $group->post('/tareas-programadas/{id:[0-9]+}/cancelar', [TareaProgramadaController::class, 'cancelar']);
+    $group->post('/tareas-programadas/{id:[0-9]+}/activar', [TareaProgramadaController::class, 'activar']);
+    $group->post('/tareas-programadas/{id:[0-9]+}/desactivar', [TareaProgramadaController::class, 'desactivar']);
     $group->get('/tareas-programadas/{id:[0-9]+}/historial', [TareaProgramadaController::class, 'historial']);
     $group->post('/tareas-programadas/{id:[0-9]+}/ejecutar', [TareaProgramadaController::class, 'ejecutarAhora']);
     $group->get('/tareas-programadas/ejecuciones/{id:[0-9]+}', [TareaProgramadaController::class, 'detalleAlma']);

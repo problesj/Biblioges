@@ -75,7 +75,7 @@ class ActualizadorCopiasAlma
 
     public static function hayPendientes(): bool
     {
-        return DB::table('tareas_programadas')->where('tipo_reporte', self::TIPO)->where('estado', 'pendiente')
+        return DB::table('tareas_programadas')->where('tipo_reporte', self::TIPO)->where('estado', 'pendiente')->where('activa', 1)
             ->where('fecha_programada', '<=', EjecutorTareas::ahora())->exists();
     }
 
@@ -88,7 +88,7 @@ class ActualizadorCopiasAlma
     public function ejecutarPendientes(): array
     {
         $resultados = [];
-        $ids = DB::table('tareas_programadas')->where('tipo_reporte', self::TIPO)->where('estado', 'pendiente')
+        $ids = DB::table('tareas_programadas')->where('tipo_reporte', self::TIPO)->where('estado', 'pendiente')->where('activa', 1)
             ->where('fecha_programada', '<=', EjecutorTareas::ahora())->orderBy('fecha_programada')->pluck('id');
         foreach ($ids as $id) {
             $r = $this->ejecutarTarea((int) $id, false);
@@ -122,7 +122,7 @@ class ActualizadorCopiasAlma
             if ($manual) {
                 $reserva->where('estado', '!=', 'en_proceso');
             } else {
-                $reserva->where('estado', 'pendiente')->where('fecha_programada', '<=', EjecutorTareas::ahora());
+                $reserva->where('estado', 'pendiente')->where('activa', 1)->where('fecha_programada', '<=', EjecutorTareas::ahora());
             }
             if ($reserva->update(['estado' => 'en_proceso', 'fecha_ejecucion' => EjecutorTareas::ahora(), 'progreso_actual' => 0, 'progreso_total' => null]) !== 1) {
                 return null;

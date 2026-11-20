@@ -1,7 +1,7 @@
 -- =====================================================
 -- ESQUEMA DE BASE DE DATOS BIBLIOGES
 -- =====================================================
--- Generado a partir de la estructura en uso (2026-11-12, MySQL 8.0.46-0ubuntu0.24.04.4).
+-- Generado a partir de la estructura en uso (2026-11-20, MySQL 8.0.46-0ubuntu0.24.04.5).
 -- Instalación nueva (base de datos vacía):
 --   mysql -u <usuario> -p <base_de_datos> < database/schema.sql
 -- Datos de ejemplo, solo para desarrollo/pruebas (NO en producción):
@@ -445,6 +445,7 @@ CREATE TABLE IF NOT EXISTS `tareas_programadas` (
   `fecha_inicio` datetime DEFAULT NULL COMMENT 'Primera ejecución; base para calcular las repeticiones',
   `fecha_fin` datetime DEFAULT NULL,
   `estado` enum('pendiente','en_proceso','completada','error','cancelada') COLLATE utf8mb4_unicode_ci DEFAULT 'pendiente',
+  `activa` tinyint(1) NOT NULL DEFAULT '1' COMMENT '1 = el cron la ejecuta; 0 = pausada',
   `filtros_formacion` json DEFAULT NULL,
   `resultado` text COLLATE utf8mb4_unicode_ci,
   `error_mensaje` text COLLATE utf8mb4_unicode_ci,
@@ -459,7 +460,8 @@ CREATE TABLE IF NOT EXISTS `tareas_programadas` (
   KEY `idx_estado` (`estado`),
   KEY `idx_fecha_programada` (`fecha_programada`),
   KEY `idx_sede_carrera` (`sede_id`,`carrera_id`),
-  KEY `idx_tipo_reporte` (`tipo_reporte`)
+  KEY `idx_tipo_reporte` (`tipo_reporte`),
+  KEY `idx_activa_estado_fecha` (`activa`,`estado`,`fecha_programada`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 -- Historial de ejecuciones de las tareas programadas

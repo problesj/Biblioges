@@ -65,6 +65,7 @@ class TareaProgramadaController extends BaseController
             $tipoReporte = array_key_exists($q['tipo_reporte'] ?? '', self::TIPOS_REPORTE) ? $q['tipo_reporte'] : '';
             $estado = array_key_exists($q['estado'] ?? '', self::ESTADOS) ? $q['estado'] : '';
             $frecuencia = array_key_exists($q['frecuencia'] ?? '', EjecutorTareas::FRECUENCIAS) ? $q['frecuencia'] : '';
+            $activa = in_array((string) ($q['activa'] ?? ''), ['0', '1'], true) ? (string) $q['activa'] : '';
 
             $consulta = DB::table('tareas_programadas as tp')
                 ->leftJoin('sedes as s', 'tp.sede_id', '=', 's.id')
@@ -85,6 +86,9 @@ class TareaProgramadaController extends BaseController
             }
             if ($frecuencia !== '') {
                 $consulta->where('tp.frecuencia', $frecuencia);
+            }
+            if ($activa !== '') {
+                $consulta->where('tp.activa', (int) $activa);
             }
 
             $totalRecords = (clone $consulta)->count();
@@ -120,6 +124,7 @@ class TareaProgramadaController extends BaseController
                     'tipo_reporte' => $tipoReporte,
                     'estado' => $estado,
                     'frecuencia' => $frecuencia,
+                    'activa' => $activa,
                 ],
                 'paginacion' => [
                     'current_page' => $page,
@@ -308,28 +313,108 @@ class TareaProgramadaController extends BaseController
     }
 
     /**
-     * Cancelar una tarea pendiente
+     * Cancelar: elimina definitivamente la tarea y, en cascada, su historial de ejecuciones (incluido el
+     * detalle de las copias desde Alma). No se permite mientras la tarea se está ejecutando.
      */
     public function cancelar(Request $request, Response $response, array $args): Response
     {
         try {
             $id = (int) $args['id'];
-            if (!DB::table('tareas_programadas')->where('id', $id)->exists()) {
+            $tarea = DB::table('tareas_programadas')->where('id', $id)->first(['id', 'estado']);
+            if (!$tarea) {
                 return $this->json($response, ['success' => false, 'message' => 'Tarea no encontrada'], 404);
             }
-            $actualizadas = DB::table('tareas_programadas')
-                ->where('id', $id)
-                ->where('estado', 'pendiente')
-                ->update(['estado' => 'cancelada']);
-            if ($actualizadas !== 1) {
-                return $this->json($response, ['success' => false, 'message' => 'Solo se pueden cancelar tareas pendientes'], 400);
+            if ($tarea->estado === 'en_proceso') {
+                return $this->json($response, ['success' => false, 'message' => 'La tarea se está ejecutando; espere a que termine para cancelarla.'], 409);
             }
+            $ejecuciones = DB::table('tareas_programadas_ejecuciones')->where('tarea_id', $id)->count();
+            $eliminadas = DB::table('tareas_programadas')->where('id', $id)->where('estado', '!=', 'en_proceso')->delete();
+            if ($eliminadas !== 1) {
+                return $this->json($response, ['success' => false, 'message' => 'La tarea cambió de estado. Recargue la página e intente nuevamente.'], 409);
+            }
+            error_log("Tareas: tarea #{$id} cancelada y eliminada por el usuario #" . ($_SESSION['user_id'] ?? '?') . " ({$ejecuciones} ejecuciones en el historial)");
 
-            return $this->json($response, ['success' => true, 'message' => 'Tarea cancelada correctamente']);
+            return $this->json($response, ['success' => true, 'message' => "Tarea eliminada junto con {$ejecuciones} ejecución(es) de su historial."]);
         } catch (\Throwable $e) {
             error_log('TareaProgramadaController@cancelar: ' . $e->getMessage());
 
             return $this->json($response, ['success' => false, 'message' => 'Error al cancelar la tarea'], 500);
+        }
+    }
+
+    /**
+     * Desactivar (pausar): el cron deja de ejecutarla; conserva su programación, estado e historial.
+     * "Ejecutar ahora" sigue disponible.
+     */
+    public function desactivar(Request $request, Response $response, array $args): Response
+    {
+        try {
+            $id = (int) $args['id'];
+            $tarea = DB::table('tareas_programadas')->where('id', $id)->first(['id', 'estado', 'activa']);
+            if (!$tarea) {
+                return $this->json($response, ['success' => false, 'message' => 'Tarea no encontrada'], 404);
+            }
+            if ($tarea->estado === 'en_proceso') {
+                return $this->json($response, ['success' => false, 'message' => 'La tarea se está ejecutando; espere a que termine para desactivarla.'], 409);
+            }
+            if ((int) $tarea->activa === 1) {
+                DB::table('tareas_programadas')->where('id', $id)->where('estado', '!=', 'en_proceso')->update(['activa' => 0]);
+            }
+
+            return $this->json($response, ['success' => true, 'message' => 'Tarea desactivada. No se ejecutará hasta que la active nuevamente.']);
+        } catch (\Throwable $e) {
+            error_log('TareaProgramadaController@desactivar: ' . $e->getMessage());
+
+            return $this->json($response, ['success' => false, 'message' => 'Error al desactivar la tarea'], 500);
+        }
+    }
+
+    /**
+     * Activar: una tarea recurrente cuya fecha ya pasó salta a la próxima fecha futura (no se recuperan las
+     * ejecuciones perdidas). Una tarea única con la fecha vencida no se activa: hay que editar su fecha.
+     */
+    public function activar(Request $request, Response $response, array $args): Response
+    {
+        try {
+            $id = (int) $args['id'];
+            $tarea = DB::table('tareas_programadas')->where('id', $id)->first();
+            if (!$tarea) {
+                return $this->json($response, ['success' => false, 'message' => 'Tarea no encontrada'], 404);
+            }
+            if ((int) $tarea->activa === 1) {
+                return $this->json($response, ['success' => true, 'message' => 'La tarea ya estaba activa.']);
+            }
+            $cambios = ['activa' => 1];
+            $ahora = EjecutorTareas::ahora();
+            if ($tarea->estado === 'pendiente' && (string) $tarea->fecha_programada <= $ahora) {
+                $fecha = date('d/m/Y H:i', strtotime((string) $tarea->fecha_programada));
+                if (($tarea->frecuencia ?? 'unica') === 'unica') {
+                    return $this->json($response, ['success' => false, 'message' => "La fecha programada ({$fecha}) ya pasó. Edite la tarea para elegir una nueva fecha o use «Ejecutar ahora»."], 409);
+                }
+                $siguiente = EjecutorTareas::siguienteFecha(
+                    (string) ($tarea->fecha_inicio ?: $tarea->fecha_programada),
+                    (string) $tarea->fecha_programada,
+                    (string) $tarea->frecuencia,
+                    $tarea->fecha_fin,
+                    $ahora,
+                    $tarea->dias_semana
+                );
+                if ($siguiente === null) {
+                    return $this->json($response, ['success' => false, 'message' => 'La tarea ya no tiene ejecuciones futuras (terminó su período). Edítela para reprogramarla.'], 409);
+                }
+                $cambios['fecha_programada'] = $siguiente;
+            }
+            DB::table('tareas_programadas')->where('id', $id)->update($cambios);
+            $mensaje = 'Tarea activada.';
+            if (isset($cambios['fecha_programada'])) {
+                $mensaje .= ' Próxima ejecución: ' . date('d/m/Y H:i', strtotime($cambios['fecha_programada'])) . ' (se omitieron las ejecuciones perdidas mientras estuvo desactivada).';
+            }
+
+            return $this->json($response, ['success' => true, 'message' => $mensaje]);
+        } catch (\Throwable $e) {
+            error_log('TareaProgramadaController@activar: ' . $e->getMessage());
+
+            return $this->json($response, ['success' => false, 'message' => 'Error al activar la tarea'], 500);
         }
     }
 

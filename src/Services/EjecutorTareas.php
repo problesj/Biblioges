@@ -155,6 +155,7 @@ class EjecutorTareas
         // Las tareas de copias desde Alma corren en su propio proceso (ActualizadorCopiasAlma)
         $ids = DB::table('tareas_programadas')
             ->where('estado', 'pendiente')
+            ->where('activa', 1)
             ->where('tipo_reporte', '!=', ActualizadorCopiasAlma::TIPO)
             ->where('fecha_programada', '<=', self::ahora())
             ->orderBy('fecha_programada')
@@ -192,7 +193,7 @@ class EjecutorTareas
         if ($manual) {
             $reserva->where('estado', '!=', 'en_proceso');
         } else {
-            $reserva->where('estado', 'pendiente')->where('fecha_programada', '<=', self::ahora());
+            $reserva->where('estado', 'pendiente')->where('activa', 1)->where('fecha_programada', '<=', self::ahora());
         }
         if ($reserva->update(['estado' => 'en_proceso', 'fecha_ejecucion' => self::ahora()]) !== 1) {
             return null;

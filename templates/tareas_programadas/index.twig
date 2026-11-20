@@ -79,6 +79,8 @@
     .btn-action.btn-edit { background-color: #f6c23e !important; border-color: #f6c23e !important; color: #2c3e50 !important; }
     .btn-action.btn-history { background-color: #4e73df !important; border-color: #4e73df !important; color: white !important; }
     .btn-action.btn-cancel { background-color: #e74a3b !important; border-color: #e74a3b !important; color: white !important; }
+    .btn-action.btn-pause { background-color: #858796 !important; border-color: #858796 !important; color: white !important; }
+    .btn-action.btn-resume { background-color: #36b9cc !important; border-color: #36b9cc !important; color: white !important; }
 
     .card {
         margin-bottom: 1.5rem !important;
@@ -159,6 +161,13 @@
                             </select>
                         </div>
                         <div class="col-md-2">
+                            <select class="form-select" name="activa">
+                                <option value="">Activas e inactivas</option>
+                                <option value="1" {% if filtros.activa == '1' %}selected{% endif %}>Solo activas</option>
+                                <option value="0" {% if filtros.activa == '0' %}selected{% endif %}>Solo inactivas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
                             <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search me-2"></i>Aplicar Filtros</button>
                         </div>
                     </form>
@@ -236,8 +245,8 @@
                                             <span class="text-muted">Única</span>
                                         {% endif %}
                                     </td>
-                                    <td class="text-center nowrap {% if tarea.estado != 'pendiente' %}fecha-inactiva{% endif %}"
-                                        {% if tarea.estado != 'pendiente' %}title="Fecha programada (la tarea no está pendiente)"{% endif %}>
+                                    <td class="text-center nowrap {% if tarea.estado != 'pendiente' or not tarea.activa %}fecha-inactiva{% endif %}"
+                                        {% if not tarea.activa %}title="Tarea desactivada: no se ejecutará en esta fecha"{% elseif tarea.estado != 'pendiente' %}title="Fecha programada (la tarea no está pendiente)"{% endif %}>
                                         {{ tarea.fecha_programada|date('d/m/Y H:i') }}
                                         {% if tarea.frecuencia and tarea.frecuencia != 'unica' and tarea.fecha_fin %}
                                             <div class="small text-muted">hasta {{ tarea.fecha_fin|date('d/m/Y') }}</div>
@@ -257,6 +266,9 @@
                                             <span class="badge bg-dark">Cancelada</span>
                                         {% else %}
                                             <span class="badge bg-secondary">Desconocido</span>
+                                        {% endif %}
+                                        {% if not tarea.activa %}
+                                            <div><span class="badge bg-warning text-dark mt-1" title="El cron no la ejecuta hasta que se active"><i class="fas fa-pause me-1"></i>Inactiva</span></div>
                                         {% endif %}
                                     </td>
                                     <td class="text-center nowrap">
@@ -284,9 +296,18 @@
                                         <button type="button" class="btn btn-action btn-history" data-accion="historial" data-id="{{ tarea.id }}" title="Historial de ejecuciones">
                                             <i class="fas fa-history"></i>
                                         </button>
-                                        {% if tarea.estado == 'pendiente' %}
-                                            <button type="button" class="btn btn-action btn-cancel" data-accion="cancelar" data-id="{{ tarea.id }}" title="Cancelar">
-                                                <i class="fas fa-ban"></i>
+                                        {% if tarea.estado != 'en_proceso' %}
+                                            {% if tarea.activa %}
+                                                <button type="button" class="btn btn-action btn-pause" data-accion="desactivar" data-id="{{ tarea.id }}" title="Desactivar (pausar)">
+                                                    <i class="fas fa-pause"></i>
+                                                </button>
+                                            {% else %}
+                                                <button type="button" class="btn btn-action btn-resume" data-accion="activar" data-id="{{ tarea.id }}" title="Activar">
+                                                    <i class="fas fa-play-circle"></i>
+                                                </button>
+                                            {% endif %}
+                                            <button type="button" class="btn btn-action btn-cancel" data-accion="cancelar" data-id="{{ tarea.id }}" data-nombre="{{ tarea.nombre }}" title="Cancelar y eliminar">
+                                                <i class="fas fa-trash"></i>
                                             </button>
                                         {% endif %}
                                     </td>
@@ -862,23 +883,60 @@
         window.location.reload();
     }
 
-    async function cancelarTarea(id) {
+    async function cancelarTarea(id, boton) {
+        let ejecuciones = null;
+        try { ejecuciones = (await pedir(URL_BASE + '/' + id + '/historial')).ejecuciones.length; } catch (e) { ejecuciones = null; }
+        const nombre = boton && boton.dataset.nombre ? boton.dataset.nombre : 'esta tarea';
+        const historial = ejecuciones
+            ? ' junto con su historial de <strong>' + ejecuciones + (ejecuciones >= 200 ? ' o más' : '') + ' ejecución(es)</strong> (incluido el detalle de las copias desde Alma, si corresponde)'
+            : ' y su historial de ejecuciones';
         const conf = await Swal.fire({
-            title: '¿Está seguro?',
-            text: 'Esta acción cancelará la tarea programada. Podrá reprogramarla editándola.',
+            title: '¿Cancelar y eliminar la tarea?',
+            html: '<p>Se eliminará definitivamente <strong>' + escHtml(nombre) + '</strong>' + historial + '.</p>' +
+                  '<p class="mb-0 text-danger"><strong>Esta acción no se puede deshacer.</strong> Si solo quiere detenerla por un tiempo, use Desactivar.</p>',
             icon: 'warning',
             showCancelButton: true,
+            focusCancel: true,
             confirmButtonColor: '#d33',
-            confirmButtonText: 'Sí, cancelar',
+            confirmButtonText: 'Sí, eliminar',
             cancelButtonText: 'No, mantener'
         });
         if (!conf.isConfirmed) return;
         try {
             const r = await pedir(URL_BASE + '/' + id + '/cancelar', {method: 'POST', body: '{}'});
-            await alerta('success', 'Listo', r.message);
+            await alerta('success', 'Tarea eliminada', r.message);
             window.location.reload();
         } catch (e) {
             alerta('error', 'Error', e.message);
+        }
+    }
+
+    async function desactivarTarea(id) {
+        const conf = await Swal.fire({
+            title: '¿Desactivar la tarea?',
+            text: 'No se ejecutará hasta que la active nuevamente. Se conservan su programación y su historial, y puede usar «Ejecutar ahora» cuando quiera.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, desactivar',
+            cancelButtonText: 'No'
+        });
+        if (!conf.isConfirmed) return;
+        try {
+            const r = await pedir(URL_BASE + '/' + id + '/desactivar', {method: 'POST', body: '{}'});
+            await alerta('success', 'Tarea desactivada', r.message);
+            window.location.reload();
+        } catch (e) {
+            alerta('error', 'Error', e.message);
+        }
+    }
+
+    async function activarTarea(id) {
+        try {
+            const r = await pedir(URL_BASE + '/' + id + '/activar', {method: 'POST', body: '{}'});
+            await alerta('success', 'Tarea activada', r.message);
+            window.location.reload();
+        } catch (e) {
+            alerta('error', 'No se pudo activar', e.message);
         }
     }
 
@@ -931,7 +989,7 @@
         if (!boton) return;
         const id = parseInt(boton.dataset.id, 10);
         if (!id) return;
-        ({ejecutar: ejecutarAhora, editar: editarTarea, historial: verHistorial, cancelar: cancelarTarea})[boton.dataset.accion](id, boton);
+        ({ejecutar: ejecutarAhora, editar: editarTarea, historial: verHistorial, cancelar: cancelarTarea, activar: activarTarea, desactivar: desactivarTarea})[boton.dataset.accion](id, boton);
     });
 })();
 </script>
